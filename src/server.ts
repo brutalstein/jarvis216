@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import Fastify, { type FastifyRequest } from "fastify";
 import { z } from "zod";
 import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
+import type { ConversationService } from "./conversation.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
@@ -11,6 +12,7 @@ export interface ServerOptions {
   onCancel(id: string): void;
   // Called after a task is admitted so idle workers can claim it without waiting.
   onAdmit?(): void;
+  conversation?: ConversationService;
 }
 const TaskId = z.strictObject({ id: z.uuid() });
 export function buildServer(
@@ -227,5 +229,33 @@ export function buildServer(
     invariant(task.principal === "n8n", "FORBIDDEN", 403);
     return { id: task.id, status: task.status, result: task.result };
   });
+  const { conversation } = options;
+  if (conversation) {
+    app.post("/v1/conversation/turns", async (request) => {
+      authenticate(request, "operator");
+      const body = z
+        .strictObject({
+          utterance: z.string().trim().min(1).max(4000),
+          followUp: z.boolean().default(false),
+        })
+        .parse(request.body);
+      // A turn may wait longer than the server-wide 10 s socket idle limit (injected test
+      // requests have no real socket).
+      request.raw.socket.setTimeout?.(conversation.deadlineMs + 5000);
+      return conversation.turn(body);
+    });
+    app.get("/v1/conversation/turns", async (request) => {
+      authenticate(request, "operator");
+      const { limit } = z
+        .object({ limit: z.coerce.number().int().min(1).max(500).default(100) })
+        .parse(request.query);
+      return { turns: await conversation.list(limit) };
+    });
+    app.delete("/v1/conversation/turns", async (request, reply) => {
+      authenticate(request, "operator");
+      await conversation.deleteAll();
+      return reply.code(204).send();
+    });
+  }
   return app;
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
+import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
@@ -34,15 +35,22 @@ async function main() {
       { length: config.WORKER_CONCURRENCY },
       () => new Worker(tasks, registry, (text) => secrets.redact(text)),
     );
+    const wake = () => {
+      for (const worker of workers) worker.wake();
+    };
+    const conversation = new ConversationService(tasks, {
+      providers: conversationProviders(registry.list().map((p) => (p as { id: string }).id)),
+      wake,
+    });
+    await conversation.purge(30 * 86_400_000);
     const server = buildServer(tasks, registry, {
       operatorToken: config.JARVIS_TOKEN,
       webhookToken: config.N8N_INGRESS_TOKEN,
       onCancel: (id) => {
         for (const worker of workers) worker.cancel(id);
       },
-      onAdmit: () => {
-        for (const worker of workers) worker.wake();
-      },
+      onAdmit: wake,
+      conversation,
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";

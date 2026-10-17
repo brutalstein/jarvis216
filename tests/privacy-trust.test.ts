@@ -63,8 +63,14 @@ describe("JARVIS_PRIVATE_PROVIDERS", () => {
       { ...env, JARVIS_PRIVATE_PROVIDERS: " gemini, ,other" },
       secrets,
     );
-    expect(plain.list()).toMatchObject([{ id: "gemini", trustedForPrivate: false }]);
-    expect(trusted.list()).toMatchObject([{ id: "gemini", trustedForPrivate: true }]);
+    expect(plain.list()).toMatchObject([
+      { id: "gemini", trustedForPrivate: false },
+      { id: "gemini-live", trustedForPrivate: false },
+    ]);
+    expect(trusted.list()).toMatchObject([
+      { id: "gemini", trustedForPrivate: true },
+      { id: "gemini-live", trustedForPrivate: false },
+    ]);
     expect(plain.select(task, []).configuration).toBe("gemini-api:m:tools-none");
     expect(trusted.select(task, []).configuration).toBe("gemini-api:m:tools-none:trusted-private");
   });

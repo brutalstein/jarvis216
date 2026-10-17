@@ -99,4 +99,19 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=2")).rows.length)
+      return;
+    const ddl = `
+      CREATE TABLE conversation_turns (
+        id uuid PRIMARY KEY, created_at bigint NOT NULL, utterance text NOT NULL,
+        follow_up boolean NOT NULL, task_id uuid NOT NULL REFERENCES tasks(id),
+        reply jsonb NOT NULL, provider text
+      );
+      CREATE INDEX conversation_recency ON conversation_turns(created_at);
+      INSERT INTO schema_migrations VALUES (2);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

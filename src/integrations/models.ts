@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type ThinkingLevel } from "@google/genai";
 import { Codex, type CodexOptions } from "@openai/codex-sdk";
 import type { ExecutionResult, Executor, Task } from "../contracts.js";
 import { ProviderFailure } from "../routing.js";
@@ -63,7 +63,7 @@ export class ClaudeExecutor implements Executor {
   }
 }
 export class GeminiExecutor implements Executor {
-  readonly id = "gemini";
+  readonly id: string;
   readonly capability = "text.generate";
   readonly external = true;
   readonly retrySafe = true;
@@ -72,7 +72,10 @@ export class GeminiExecutor implements Executor {
     key: string,
     private model: string,
     client?: GoogleGenAI,
+    // Realtime turns use their own id with minimal thinking, so thinking cannot eat the budget.
+    private options: { id?: string; thinkingLevel?: ThinkingLevel } = {},
   ) {
+    this.id = options.id ?? "gemini";
     this.client =
       client ??
       new GoogleGenAI({
@@ -88,11 +91,18 @@ export class GeminiExecutor implements Executor {
       this.client.models.generateContent({
         model: this.model,
         contents: task.spec.objective,
-        config: { maxOutputTokens: task.spec.budget.maxOutputTokens, abortSignal: signal },
+        config: {
+          maxOutputTokens: task.spec.budget.maxOutputTokens,
+          abortSignal: signal,
+          ...(this.options.thinkingLevel
+            ? { thinkingConfig: { thinkingLevel: this.options.thinkingLevel } }
+            : {}),
+        },
       }),
     );
+    // A truncated or blocked reply says nothing about other providers: allow fallback.
     if (result.candidates?.[0]?.finishReason !== "STOP")
-      throw new ProviderFailure("invalid-response", false);
+      throw new ProviderFailure("invalid-response", true);
     return { text: result.text ?? "", source: `gemini:${this.model}:model-output` };
   }
 }

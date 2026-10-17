@@ -1,5 +1,6 @@
 import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 import type { Executor } from "./contracts.js";
 import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
@@ -72,9 +73,14 @@ export async function configuredProviders(
   }
   if (env.ENABLE_GEMINI === "true") {
     const model = z.string().min(1).parse(env.GEMINI_MODEL);
+    const key = secrets.resolve("GEMINI_API_KEY");
+    register(new GeminiExecutor(key, model), `gemini-api:${model}:tools-none`, 20);
     register(
-      new GeminiExecutor(secrets.resolve("GEMINI_API_KEY"), model),
-      `gemini-api:${model}:tools-none`,
+      new GeminiExecutor(key, model, undefined, {
+        id: "gemini-live",
+        thinkingLevel: ThinkingLevel.MINIMAL,
+      }),
+      `gemini-api:${model}:tools-none:thinking-minimal`,
       20,
     );
   }
