@@ -1,12 +1,13 @@
 import { PGlite } from "@electric-sql/pglite";
 import fc from "fast-check";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TaskSpecSchema, canTransition, fingerprint } from "../src/contracts.js";
-import { migrate, type Database, type Sql } from "../src/database.js";
-import { TaskService } from "../src/tasks.js";
+import { canTransition, fingerprint, TaskSpecSchema } from "../src/contracts.js";
+import { type Database, migrate, type Sql } from "../src/database.js";
 import { ActionGateway } from "../src/gateway.js";
+import { ProviderFailure } from "../src/routing.js";
+import { TaskService } from "../src/tasks.js";
 
-export function spec(overrides: Record<string, unknown> = {}) {
+function spec(overrides: Record<string, unknown> = {}) {
   return TaskSpecSchema.parse({
     objective: "Return an engineering proposal",
     capability: "text.generate",
@@ -26,27 +27,34 @@ beforeEach(async () => {
   const query: Sql["query"] = async (text, params) => pg.query(text, params as unknown[]);
   db = {
     query,
-    transaction: (fn) => pg.transaction((tx) => fn({ query: (s, p) => tx.query(s, p as unknown[]) })),
+    transaction: (fn) =>
+      pg.transaction((tx) => fn({ query: (s, p) => tx.query(s, p as unknown[]) })),
     close: () => pg.close(),
   };
   await migrate(db);
   tasks = new TaskService(db, { concurrency: 2 });
 });
-afterEach(async () => { await db.close(); });
+afterEach(async () => {
+  await db.close();
+});
 
 describe("task authority", () => {
   it("rejects terminal-state regression for every status", () => {
-    fc.assert(fc.property(fc.string(), (state) => {
-      expect(canTransition("COMPLETED", state)).toBe(false);
-      expect(canTransition("CANCELLED", state)).toBe(false);
-    }));
+    fc.assert(
+      fc.property(fc.string(), (state) => {
+        expect(canTransition("COMPLETED", state)).toBe(false);
+        expect(canTransition("CANCELLED", state)).toBe(false);
+      }),
+    );
   });
 
   it("deduplicates identical input and rejects identity reuse for different input", async () => {
     const input = spec();
     const first = await tasks.create(input, "same-key", "operator");
     expect((await tasks.create(input, "same-key", "operator")).id).toBe(first.id);
-    await expect(tasks.create({ ...input, objective: "Different" }, "same-key", "operator")).rejects.toThrow("IDEMPOTENCY_CONFLICT");
+    await expect(
+      tasks.create({ ...input, objective: "Different" }, "same-key", "operator"),
+    ).rejects.toThrow("IDEMPOTENCY_CONFLICT");
   });
 
   it("only one competing worker acquires a task", async () => {
@@ -70,13 +78,18 @@ describe("task authority", () => {
     await tasks.recover();
     const second = await tasks.claim("new", 10_000);
     expect(second?.fence).toBeGreaterThan(first?.fence ?? 0);
-    await expect(tasks.heartbeat(task.id, "dead", first?.fence ?? 0, 10_000)).rejects.toThrow("LEASE_LOST");
+    await expect(tasks.heartbeat(task.id, "dead", first?.fence ?? 0, 10_000)).rejects.toThrow(
+      "LEASE_LOST",
+    );
   });
 });
 
 describe("execution gateway", () => {
   const executor = {
-    id: "test", capability: "text.generate" as const, external: false, retrySafe: true,
+    id: "test",
+    capability: "text.generate" as const,
+    external: false,
+    retrySafe: true,
     execute: async () => ({ text: "verified result", source: "test-fixture" }),
   };
 
@@ -84,7 +97,9 @@ describe("execution gateway", () => {
     const task = await tasks.create(spec({ risk: "HIGH" }), "approval", "operator");
     const gateway = new ActionGateway(tasks);
     const claim = await tasks.claim("w", 10_000);
-    expect(await gateway.run(claim!, executor, new AbortController().signal)).toBe("WAITING_FOR_APPROVAL");
+    expect(await gateway.run(claim!, executor, new AbortController().signal)).toBe(
+      "WAITING_FOR_APPROVAL",
+    );
     const [action] = await tasks.actions(task.id);
     expect(action?.status).toBe("AWAITING_APPROVAL");
     await tasks.approve(action!.id, "operator", Date.now() + 30_000);
@@ -98,7 +113,11 @@ describe("execution gateway", () => {
     const task = await tasks.create(spec(), "verify", "operator");
     const gateway = new ActionGateway(tasks);
     const claim = await tasks.claim("w", 10_000);
-    await gateway.run(claim!, { ...executor, execute: async () => ({ text: "wrong", source: "fixture" }) }, new AbortController().signal);
+    await gateway.run(
+      claim!,
+      { ...executor, execute: async () => ({ text: "wrong", source: "fixture" }) },
+      new AbortController().signal,
+    );
     expect((await tasks.get(task.id)).status).toBe("FAILED");
   });
 
@@ -107,7 +126,18 @@ describe("execution gateway", () => {
     const claim = await tasks.claim("w", 10_000);
     const gateway = new ActionGateway(tasks);
     let calls = 0;
-    await gateway.run(claim!, { ...executor, retrySafe: false, execute: async () => { calls++; throw new Error("connection lost"); } }, new AbortController().signal);
+    await gateway.run(
+      claim!,
+      {
+        ...executor,
+        retrySafe: false,
+        execute: async () => {
+          calls++;
+          throw new Error("connection lost");
+        },
+      },
+      new AbortController().signal,
+    );
     expect((await tasks.get(task.id)).status).toBe("RECOVERY_REQUIRED");
     await tasks.recover();
     expect(await tasks.claim("again", 10_000)).toBeNull();
@@ -124,7 +154,105 @@ describe("execution gateway", () => {
     const claim = await tasks.claim("w", 10_000);
     let ran = false;
     const gateway = new ActionGateway(tasks);
-    await expect(gateway.run(claim!, { ...executor, capability: "browser.extract", execute: async () => { ran = true; return { text: "verified", source: "x" }; } }, new AbortController().signal)).rejects.toThrow("CAPABILITY_DENIED");
+    await expect(
+      gateway.run(
+        claim!,
+        {
+          ...executor,
+          capability: "browser.extract",
+          execute: async () => {
+            ran = true;
+            return { text: "verified", source: "x" };
+          },
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("CAPABILITY_DENIED");
     expect(ran).toBe(false);
+  });
+
+  it("uses bounded compatible fallback only after a known retry-safe failure", async () => {
+    const task = await tasks.create(
+      spec({ providers: ["test", "second"] }),
+      "fallback",
+      "operator",
+    );
+    const gateway = new ActionGateway(tasks);
+    await gateway.run(
+      (await tasks.claim("w", 10_000))!,
+      {
+        ...executor,
+        execute: async () => {
+          throw new ProviderFailure("rate-limited", true);
+        },
+      },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("READY");
+    await db.query("UPDATE tasks SET not_before=0 WHERE id=$1", [task.id]);
+    await gateway.run(
+      (await tasks.claim("w", 10_000))!,
+      { ...executor, id: "second" },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("COMPLETED");
+    expect((await tasks.get(task.id)).calls).toBe(2);
+  });
+
+  it("cancellation racing the result cannot become completed", async () => {
+    const task = await tasks.create(spec(), "cancel-race", "operator");
+    const gateway = new ActionGateway(tasks);
+    const claim = (await tasks.claim("w", 10_000))!;
+    await gateway.run(
+      claim,
+      {
+        ...executor,
+        execute: async () => {
+          await tasks.cancel(task.id);
+          return { text: "verified", source: "late" };
+        },
+      },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("RECOVERY_REQUIRED");
+  });
+
+  it("expires an approval and prevents execution after policy configuration changes", async () => {
+    const task = await tasks.create(spec({ risk: "HIGH" }), "changed", "operator");
+    const gateway = new ActionGateway(tasks);
+    await gateway.run(
+      (await tasks.claim("w", 10_000))!,
+      { ...executor, configuration: "model-v1" },
+      new AbortController().signal,
+    );
+    const [action] = await tasks.actions(task.id);
+    await tasks.approve(action!.id, "operator", Date.now() + 30_000);
+    await gateway.run(
+      (await tasks.claim("w", 10_000))!,
+      { ...executor, configuration: "model-v2" },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("WAITING_FOR_APPROVAL");
+    expect((await tasks.get(task.id)).calls).toBe(0);
+  });
+
+  it("never consumes more than the admitted call budget", async () => {
+    const task = await tasks.create(
+      spec({ providers: ["test", "second"], budget: { maxCalls: 1 } }),
+      "budget",
+      "operator",
+    );
+    await new ActionGateway(tasks).run(
+      (await tasks.claim("w", 10_000))!,
+      {
+        ...executor,
+        execute: async () => {
+          throw new ProviderFailure("rate-limited", true);
+        },
+      },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("FAILED");
+    expect((await tasks.get(task.id)).calls).toBe(1);
   });
 });
