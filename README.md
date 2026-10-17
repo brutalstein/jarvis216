@@ -63,6 +63,32 @@ for another project fails startup instead of being migrated. Clear it with
 Shutdown: `docker compose stop` (Core drains in-flight actions for up to 20 s, then exits).
 `docker compose down` keeps data volumes. Never use `down -v` on valued data.
 
+## Native subscription mode (Windows)
+
+Core and OpenClaw 2026.10.4 use verified Node 24.22.0. This host uses the existing portable
+runtime; system Node remains 24.11.0 because automatic MSI execution was denied.
+
+```powershell
+$env:PATH = (Join-Path $PWD '.tools/node-v24.22.0-win-x64') + ';' + $env:PATH
+node --version  # v24.22.0
+Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+docker compose stop core
+docker compose -f compose.yaml -f compose.dev.yaml up -d postgres
+openclaw gateway run  # dedicated terminal; no Scheduled Task
+# Second terminal with the same PATH and cleared DATABASE_URL:
+npm run build
+npm start
+# Third terminal:
+npm run cli -- ready
+```
+
+See [INTEGRATIONS.md](docs/INTEGRATIONS.md) for official CLI logins and configuration.
+Codex and OpenClaw require exact HIGH approval per task. Native read-only Codex can still
+read host data. Claude's organization currently blocks subscription access; Gemini needs
+an operator-supplied API key. Credential presence does not prove entitlement.
+After testing, stop native Core and the Gateway, then `docker compose up -d postgres`
+to remove the temporary PostgreSQL publication. The engineering report records live evidence.
+
 ## Developer commands
 
 | Command | What it runs |

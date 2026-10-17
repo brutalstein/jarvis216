@@ -25,6 +25,14 @@ This is not a multi-tenant authorization system or a hostile-host sandbox.
 | Service compromise / lateral movement between services | Loopback publication; segmented Compose networks (data: PostgreSQL+Core, automation: n8n+Core, browser: worker+Core), so n8n and the browser worker cannot resolve or reach PostgreSQL (verified live), which is not published by default; no Docker socket or shared host profile; Core non-root; resource limits | Docker 28+ accepts a published container port from every bridge network, so n8n's and Core's loopback-published ports are reachable from other segments by IP, and `compose.dev.yaml` does the same for PostgreSQL; default dev database role is privileged; separate migration/runtime roles before sensitive deployment |
 | Provider outage amplification | Per-provider circuit breaker, bounded retries with jitter, call budget and total deadline | Circuit state is per process and resets on restart |
 
+Subscription-mode additions:
+
+| Threat | Controls | Residual |
+| --- | --- | --- |
+| Subscription login theft | Vendor-owned logins, dedicated Codex home, API keys excluded from subscription child environments; Core never reads OAuth files | Native Codex can read host files and machine-wide guidance; OS user compromise exposes vendor logins; read-only is not an OS read boundary |
+| OpenClaw operator-scope token theft | Random 48-byte shared secret, loopback Gateway, dedicated agent denying every tool; URL input fetching disabled | Bearer grants operator authority; protect profile config and `.env`, rotate together after compromise |
+| Claude customization injection | `--safe-mode`, no tools/MCP/slash commands, empty working directory, bounded JSON and stderr | Enterprise-managed policy may still apply; account entitlement is checked by live calls |
+
 Production gates: Docker/WSL isolation, non-bypassable OpenClaw tool policy, browser egress
 controls, image scans, backup restoration, credential rotation, provider entitlement checks,
 least-privilege DB roles and signed release/upgrade procedure. No production-readiness claim.

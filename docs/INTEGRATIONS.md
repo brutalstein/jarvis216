@@ -2,8 +2,8 @@
 
 All integrations start disabled. Health “configured” means local configuration exists;
 it never means remote authentication, billing entitlement or runtime policy was verified.
-Choose explicit model IDs available to your account. Do not substitute account or CLI
-subscription credentials for documented API authentication.
+Choose explicit model IDs available to your account. Keep subscription credentials inside
+the official CLI paths below; never substitute them for an API key.
 
 ## Claude and Gemini APIs
 
@@ -14,7 +14,49 @@ output tokens, context size and total deadline. Financial cost caps and measured
 routing are not implemented; do not use these modes for tasks requiring a hard money cap.
 Private tasks require exact per-action approval before remote disclosure.
 
+## Claude Code subscription
+
+Set `ENABLE_CLAUDE_CODE=true`, an existing absolute `CLAUDE_CODE_PATH`, and
+`CLAUDE_CODE_MODEL` (for example `sonnet`). Run `claude auth login --claudeai` as the
+operator. Core runs the official binary with no tools, MCP, slash commands, persistence
+or user customizations (`--safe-mode`), in `data/claude-code`, with the objective on stdin.
+The child receives only the environment allowlist; Windows adds OS identity variables.
+API keys and arbitrary parent variables are excluded. Core never reads OAuth tokens.
+Managed enterprise policy can still apply. One JSON result is capped at 1 MiB of UTF-8;
+stderr is bounded for classification and never logged.
+
+Claude Code and Codex do **not** enforce `budget.maxOutputTokens`. Their readiness entries
+explicitly report `outputTokenLimitEnforced: false`; omitted means unknown for other
+providers. Size checks and deadlines do not cap generated tokens or subscription quota.
+Choose a provider with supported token limits when the task requires a hard ceiling.
+
+[Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance) distinguish ordinary
+individual Claude Code use from routing third-party traffic through subscription tokens.
+This harness is for its single local operator. The live request returned 403
+`oauth_not_allowed_for_organization` (organization disabled subscription access), classified
+as `policy-denied`; this provider stays disabled until account access is enabled.
+
+Gemini remains API-key only. No Gemini CLI or Antigravity OAuth path is implemented;
+see [Google's deprecation notice](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals),
+[Gemini CLI terms](https://github.com/google-gemini/gemini-cli/blob/main/docs/resources/tos-privacy.md)
+and [Antigravity terms](https://antigravity.google/terms). No Gemini key was available.
+
 ## OpenClaw
+
+On this host 2026.10.4 is installed under the portable Node 24.22.0 npm prefix. Installed
+schema validation accepted `gateway.mode=local`, `gateway.bind=loopback`,
+`gateway.port=18789`, `gateway.auth.mode=token`, `gateway.http.endpoints.responses.enabled=true`,
+and both `tools.deny=["*"]` and `agents.entries.jarvis-reader.tools.deny=["*"]`.
+The agent uses `openai/gpt-5.6-sol` and `agents.ownership=explicit`. File/image URL inputs
+are disabled under the Responses endpoint. The random 48-byte Gateway token matches
+`OPENCLAW_TOKEN`; secrets were supplied via `openclaw config patch --stdin`, not argv.
+The intended login command is `openclaw models auth login --provider openai --agent jarvis-reader`.
+
+Gateway startup and login confirmation are currently blocked by OpenClaw's native SQLite
+ownership/maintenance failure. The read-only `openclaw doctor --json` reproduces it even
+with temporary state. Do not delete locks or relax tool policy to make startup pass.
+Both enablement and policy attestation stay false until the three adversarial probes,
+session-log inspection and approved Core task actually pass.
 
 Provision the researched version separately, bind the Gateway to loopback/private container
 network, require bearer authentication and enable its documented Responses endpoint.
@@ -57,7 +99,7 @@ combination is not live-tested here; never “fix” it by disabling Chromium se
 
 Provision a dedicated container/VM with no personal files, host home, `.env`, Docker socket
 or unrelated provider credentials. Create dedicated directories under `data/workspaces` and
-`data/codex-homes`. The adapter receives only a Codex API key and its isolated home. Make
+`data/codex-homes`. The adapter receives an explicit auth mode and its isolated home. Make
 the relevant configuration immutable for the action lifetime. Read-only mode alone does
 not prevent all host file reads and does not establish isolation.
 
@@ -66,6 +108,26 @@ workspace and isolated-home paths, `OPENAI_API_KEY` and `ENABLE_CODEX=true`. Thi
 currently produces proposals; repository edits/test/promotion orchestration is unsupported.
 The default read-only Core container cannot run this path without additional provisioned
 workspace mounts, and no unsafe automatic override is supplied.
+
+The approved native subscription mode sets `CODEX_AUTH=chatgpt` instead of the default
+`api-key`. Create dedicated directories, then sign in with the official CLI:
+
+```powershell
+New-Item -ItemType Directory -Force data/codex-homes/jarvis, data/workspaces/jarvis
+$env:CODEX_HOME = Join-Path $PWD 'data/codex-homes/jarvis'
+codex -c 'cli_auth_credentials_store="file"' login
+codex login status
+Remove-Item Env:CODEX_HOME
+```
+
+Set `CODEX_WORKSPACE` and `CODEX_ISOLATED_HOME` to those absolute directories, select
+`CODEX_MODEL`, and retain the attestation and HIGH approval gates. Core checks only
+`auth.json` presence, never its contents, and supplies no API key in ChatGPT mode. Native
+host reads remain possible: the live run saw machine-wide skill guidance. The operator
+accepted this residual risk; use a container/VM for an actual host-read boundary. See
+[OpenAI authentication](https://learn.chatgpt.com/docs/auth) and
+[OpenClaw's supported subscription route](https://docs.openclaw.ai/providers/openai).
+Auth mode is part of the action configuration fingerprint, so changing it invalidates approval.
 
 ## n8n
 

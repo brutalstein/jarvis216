@@ -8,12 +8,12 @@ is discovery evidence, not proof that a complete deployment works.
 | --- | --- | --- | --- |
 | Node.js | 24.22.0 LTS, 2026-10-14 | 24.22.0 official Windows ZIP, SHA256 checked | Type checking and suite run; 24.11.0 also tested |
 | TypeScript | 7.0.2 | 7.0.2 | Strict type checking + build |
-| OpenClaw | v2026.10.4 | Operator must provision this version | Local HTTP contract only; live pending |
+| OpenClaw | v2026.10.4 | 2026.10.4, portable Node global prefix | Config validated; native Gateway and login blocked by SQLite state ownership failure |
 | Browser Use | GitHub 0.13.13; PyPI 0.13.11 | 0.13.11, Python 3.12.10 | Real ephemeral browser DOM readback passed |
 | n8n | n8n@2.43.7 | 2.43.7 image | Live: ingress roundtrip and Core-invoked webhook with dedup; API key client not exercised |
-| Claude Code | v2.1.302 | Research reference; CLI not launched | Claude API path below; Code harness pending |
+| Claude Code | v2.1.302 researched | Existing official CLI 2.1.281 | Subscription login detected; live request denied by organization (403); harness 14 tests |
 | Claude API SDK | npm 0.135.0 | @anthropic-ai/sdk 0.135.0 | Compiled adapter; live credentials not exercised |
-| Codex | rust-v0.163.0 | @openai/codex-sdk 0.163.0 | Typed SDK path; isolated execution pending |
+| Codex | rust-v0.163.0 | @openai/codex-sdk 0.163.0 | ChatGPT login in isolated home; approved Core task COMPLETED on gpt-5.6-sol |
 | Gemini CLI | v0.64.0 | Research reference; CLI not launched | Gemini API path below; CLI harness pending |
 | Gemini API SDK | npm 2.30.0 | @google/genai 2.30.0 | Compiled adapter; live credentials not exercised |
 | PostgreSQL | Selected existing 18.3 image | 18.3-bookworm, amd64 digest pinned | Live: concurrent migrate, competing claims, reconnect after backend kill, benchmark |
@@ -27,6 +27,16 @@ substantial transitive dependency set; it remains isolated from Core's TypeScrip
 Container tags/manifest existence does not establish image security or successful startup.
 Python base 3.12.10 matches the local interpreter; patch/security upgrade review remains due.
 No broad “latest stable = tested compatible” claim is made.
+
+Subscription follow-up: Node's existing portable 24.22.0 ZIP was freshly SHA256-verified;
+system MSI execution was denied by automatic policy review, so system Node stays 24.11.0.
+OpenClaw 2026.10.4 configuration uses `agents.entries` and explicit ownership, not legacy
+default-agent markers. Global and `jarvis-reader` tool policies both deny `*`; file/image
+URL fetching is off. Configuration validates, but Gateway bootstrap fails and read-only
+doctor reproduces state ownership/offline-maintenance failures even in its temporary state.
+No lock was deleted, no maintenance boundary bypassed, and policy attestation remains false.
+The operator completed browser OAuth, but OpenClaw's CLI exited on the state failure; its
+saved login and model access remain unverified. Runtime evidence is in the engineering report.
 
 ## OpenClaw
 
@@ -90,7 +100,9 @@ The implemented path uses the official Messages SDK, explicit model ID, API key,
 token cap, abort signal and disabled SDK retries. It registers no tools. Only an end-turn
 response qualifies for output verification. Authentication, rate-limit and server errors are
 classified without retaining exception bodies. Claude Code/Agent SDK execution and its
-subscription permissions are separate, pending a validated sandbox. Streaming exists
+subscription permissions are separate. The new official CLI harness is described in
+[INTEGRATIONS.md](INTEGRATIONS.md#claude-code-subscription) and ADR 0008; its live call
+was blocked by organization entitlement. Streaming exists
 upstream but this adapter currently buffers bounded text. No subscription entitlement is
 assumed from API access.
 
@@ -103,12 +115,14 @@ Sources: [official SDK documentation](https://learn.chatgpt.com/docs/codex-sdk),
 
 The official SDK wraps a CLI process; it creates a thread and accepts an abort signal.
 The adapter selects read-only sandbox, no web search, no network permission and no runtime
-approval escalation. Only a dedicated workspace, isolated CODEX_HOME and explicit API-key
-environment are supplied. Those settings do not prove host filesystem isolation: deployment
-inside an independently verified container/VM is required before enabling. Configuration
-identity includes model, workspace and isolated home. SDK thread execution, native app-server
+approval escalation. A dedicated workspace, isolated CODEX_HOME and explicit `api-key` or
+`chatgpt` auth mode are supplied. ChatGPT mode has no API key and checks only login-file
+presence. Those settings do not prove host filesystem isolation; a container/VM is required
+for sensitive isolation. The approved single-operator native mode accepts that residual risk.
+Configuration identity includes model, workspace, isolated home and auth mode. SDK thread execution, native app-server
 and OpenClaw-managed ACP are distinct paths; only the standalone SDK adapter exists here.
-No live model call, coding edit or sandbox-escape test has been run.
+An approved native Core text task completed with durable events on `gpt-5.6-sol`.
+No coding edit or sandbox-escape test has been run; machine-wide skill guidance was visible.
 
 ## Gemini
 

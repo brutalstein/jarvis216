@@ -14,7 +14,7 @@
       "file_type": "code",
       "norm_label": "action",
       "source_file": "src/contracts.ts",
-      "source_location": "L150"
+      "source_location": "L152"
     },
     {
       "id": "src_contracts_capability",
@@ -40,20 +40,7 @@
       "file_type": "code",
       "norm_label": "eventtype",
       "source_file": "src/contracts.ts",
-      "source_location": "L197"
-    },
-    {
-      "id": "src_contracts_executor",
-      "label": "Executor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "executor",
-      "source_file": "src/contracts.ts",
-      "source_location": "L124"
+      "source_location": "L199"
     },
     {
       "id": "src_contracts_risk",
@@ -106,110 +93,6 @@
       "norm_label": "actiongateway",
       "source_file": "src/gateway.ts",
       "source_location": "L18"
-    },
-    {
-      "id": "src_integrations_models_claudeexecutor",
-      "label": "ClaudeExecutor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "claudeexecutor",
-      "source_file": "src/integrations/models.ts",
-      "source_location": "L23"
-    },
-    {
-      "id": "src_integrations_models_codexexecutor",
-      "label": "CodexExecutor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "codexexecutor",
-      "source_file": "src/integrations/models.ts",
-      "source_location": "L102"
-    },
-    {
-      "id": "src_integrations_services_browserexecutor",
-      "label": "BrowserExecutor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "browserexecutor",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L75"
-    },
-    {
-      "id": "src_integrations_services_openclawexecutor",
-      "label": "OpenClawExecutor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "openclawexecutor",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L27"
-    },
-    {
-      "id": "src_integrations_services_workflowexecutor",
-      "label": "WorkflowExecutor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "workflowexecutor",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L138"
-    },
-    {
-      "id": "src_routing_provider",
-      "label": "Provider",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "provider",
-      "source_file": "src/routing.ts",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_routing_providerregistry",
-      "label": "ProviderRegistry",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "providerregistry",
-      "source_file": "src/routing.ts",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_security_envsecrets",
-      "label": "EnvSecrets",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "envsecrets",
-      "source_file": "src/security.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_worker_worker",
@@ -303,45 +186,6 @@
       "source_location": "L20"
     },
     {
-      "id": "src_contracts_coreerror",
-      "label": "CoreError",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": "coreerror",
-      "source_file": "src/contracts.ts",
-      "source_location": "L47"
-    },
-    {
-      "id": "src_integrations_services_n8nclient",
-      "label": "N8nClient",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": "n8nclient",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L111"
-    },
-    {
-      "id": "src_telemetry_jsonspanexporter",
-      "label": "JsonSpanExporter",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "jsonspanexporter",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L8"
-    },
-    {
       "id": "workers_browser_test_worker_boundarytests",
       "label": "BoundaryTests",
       "_callable": true,
@@ -381,6 +225,19 @@
       "source_location": "L17"
     },
     {
+      "id": "src_contracts_coreerror",
+      "label": "CoreError",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "coreerror",
+      "source_file": "src/contracts.ts",
+      "source_location": "L47"
+    },
+    {
       "id": "src_contracts_executionresult",
       "label": "ExecutionResult",
       "_callable": true,
@@ -394,6 +251,19 @@
       "source_location": "L123"
     },
     {
+      "id": "src_contracts_executor",
+      "label": "Executor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "executor",
+      "source_file": "src/contracts.ts",
+      "source_location": "L124"
+    },
+    {
       "id": "src_contracts_task",
       "label": "Task",
       "_callable": true,
@@ -404,7 +274,59 @@
       "file_type": "code",
       "norm_label": "task",
       "source_file": "src/contracts.ts",
-      "source_location": "L134"
+      "source_location": "L136"
+    },
+    {
+      "id": "src_integrations_claude_code_claudecodeexecutor",
+      "label": "ClaudeCodeExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claudecodeexecutor",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "src_integrations_models_claudeexecutor",
+      "label": "ClaudeExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claudeexecutor",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "src_integrations_models_codexauth",
+      "label": "CodexAuth",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "codexauth",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L100"
+    },
+    {
+      "id": "src_integrations_models_codexexecutor",
+      "label": "CodexExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "codexexecutor",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L115"
     },
     {
       "id": "src_integrations_models_geminiexecutor",
@@ -420,6 +342,71 @@
       "source_location": "L65"
     },
     {
+      "id": "src_integrations_services_browserexecutor",
+      "label": "BrowserExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "browserexecutor",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L75"
+    },
+    {
+      "id": "src_integrations_services_n8nclient",
+      "label": "N8nClient",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "n8nclient",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L111"
+    },
+    {
+      "id": "src_integrations_services_openclawexecutor",
+      "label": "OpenClawExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "openclawexecutor",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "src_integrations_services_workflowexecutor",
+      "label": "WorkflowExecutor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "workflowexecutor",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L138"
+    },
+    {
+      "id": "src_routing_provider",
+      "label": "Provider",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "provider",
+      "source_file": "src/routing.ts",
+      "source_location": "L20"
+    },
+    {
       "id": "src_routing_providerfailure",
       "label": "ProviderFailure",
       "_callable": true,
@@ -431,6 +418,45 @@
       "norm_label": "providerfailure",
       "source_file": "src/routing.ts",
       "source_location": "L3"
+    },
+    {
+      "id": "src_routing_providerregistry",
+      "label": "ProviderRegistry",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "providerregistry",
+      "source_file": "src/routing.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "src_security_envsecrets",
+      "label": "EnvSecrets",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "envsecrets",
+      "source_file": "src/security.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_telemetry_jsonspanexporter",
+      "label": "JsonSpanExporter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "code",
+      "norm_label": "jsonspanexporter",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L8"
     },
     {
       "id": "scripts_benchmark_percentile",
@@ -457,42 +483,6 @@
       "source_location": "L31"
     },
     {
-      "id": "src_config_configuredproviders",
-      "label": "configuredProviders()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "configuredproviders()",
-      "source_file": "src/config.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_config_generated",
-      "label": "generated()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "generated()",
-      "source_file": "src/config.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_config_localdatabase",
-      "label": "localDatabase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "localdatabase()",
-      "source_file": "src/config.ts",
-      "source_location": "L12"
-    },
-    {
       "id": "src_contracts_cantransition",
       "label": "canTransition()",
       "_callable": true,
@@ -503,6 +493,18 @@
       "norm_label": "cantransition()",
       "source_file": "src/contracts.ts",
       "source_location": "L44"
+    },
+    {
+      "id": "src_contracts_fingerprint",
+      "label": "fingerprint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "contracts.ts",
+      "file_type": "code",
+      "norm_label": "fingerprint()",
+      "source_file": "src/contracts.ts",
+      "source_location": "L162"
     },
     {
       "id": "src_database_database_close",
@@ -553,7 +555,7 @@
       "source_location": "L13"
     },
     {
-      "id": "src_integrations_models_claudeexecutor_constructor",
+      "id": "src_gateway_actiongateway_constructor",
       "label": ".constructor()",
       "_callable": true,
       "_origin": "ast",
@@ -561,92 +563,8 @@
       "community_name": "contracts.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
-      "source_file": "src/integrations/models.ts",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_integrations_models_codexexecutor_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/integrations/models.ts",
-      "source_location": "L109"
-    },
-    {
-      "id": "src_main_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "src/main.ts",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_routing_providerregistry_open",
-      "label": ".open()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": ".open()",
-      "source_file": "src/routing.ts",
-      "source_location": "L43"
-    },
-    {
-      "id": "src_security_containedpath",
-      "label": "containedPath()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "containedpath()",
-      "source_file": "src/security.ts",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_security_envsecrets_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/security.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_security_envsecrets_redact",
-      "label": ".redact()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": ".redact()",
-      "source_file": "src/security.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_security_envsecrets_resolve",
-      "label": ".resolve()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": ".resolve()",
-      "source_file": "src/security.ts",
-      "source_location": "L7"
+      "source_file": "src/gateway.ts",
+      "source_location": "L19"
     },
     {
       "id": "src_tasks_taskservice_constructor",
@@ -745,18 +663,6 @@
       "source_location": "L36"
     },
     {
-      "id": "tests_integrations_test_task",
-      "label": "task()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "task()",
-      "source_file": "tests/integrations.test.ts",
-      "source_location": "L8"
-    },
-    {
       "id": "tests_review_fixes_test_provider",
       "label": "provider()",
       "_callable": true,
@@ -841,30 +747,6 @@
       "source_location": "L6"
     },
     {
-      "id": "src_contracts_executor_execute",
-      "label": ".execute()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TaskService",
-      "file_type": "code",
-      "norm_label": ".execute()",
-      "source_file": "src/contracts.ts",
-      "source_location": "L132"
-    },
-    {
-      "id": "src_contracts_fingerprint",
-      "label": "fingerprint()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TaskService",
-      "file_type": "code",
-      "norm_label": "fingerprint()",
-      "source_file": "src/contracts.ts",
-      "source_location": "L160"
-    },
-    {
       "id": "src_contracts_invariant",
       "label": "invariant()",
       "_callable": true,
@@ -886,7 +768,7 @@
       "file_type": "code",
       "norm_label": "taskdeadline()",
       "source_file": "src/contracts.ts",
-      "source_location": "L176"
+      "source_location": "L178"
     },
     {
       "id": "src_database_sql_query",
@@ -901,18 +783,6 @@
       "source_location": "L4"
     },
     {
-      "id": "src_gateway_actiongateway_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TaskService",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/gateway.ts",
-      "source_location": "L19"
-    },
-    {
       "id": "src_gateway_actiongateway_run",
       "label": ".run()",
       "_callable": true,
@@ -923,18 +793,6 @@
       "norm_label": ".run()",
       "source_file": "src/gateway.ts",
       "source_location": "L24"
-    },
-    {
-      "id": "src_routing_providerregistry_list",
-      "label": ".list()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TaskService",
-      "file_type": "code",
-      "norm_label": ".list()",
-      "source_file": "src/routing.ts",
-      "source_location": "L46"
     },
     {
       "id": "src_server_buildserver",
@@ -1249,186 +1107,6 @@
       "source_location": "L111"
     },
     {
-      "id": "src_contracts_coreerror_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/contracts.ts",
-      "source_location": "L48"
-    },
-    {
-      "id": "src_integrations_http_serviceurl",
-      "label": "serviceUrl()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": "serviceurl()",
-      "source_file": "src/integrations/http.ts",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_integrations_services_browserexecutor_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L81"
-    },
-    {
-      "id": "src_integrations_services_n8nclient_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L113"
-    },
-    {
-      "id": "src_integrations_services_n8nclient_execution",
-      "label": ".execution()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".execution()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L122"
-    },
-    {
-      "id": "src_integrations_services_n8nclient_get",
-      "label": ".get()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".get()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L129"
-    },
-    {
-      "id": "src_integrations_services_n8nclient_stop",
-      "label": ".stop()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".stop()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L126"
-    },
-    {
-      "id": "src_integrations_services_n8nclient_workflows",
-      "label": ".workflows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".workflows()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L119"
-    },
-    {
-      "id": "src_integrations_services_openclawexecutor_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L36"
-    },
-    {
-      "id": "src_integrations_services_workflowexecutor_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L145"
-    },
-    {
-      "id": "src_routing_providerregistry_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "CoreError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/routing.ts",
-      "source_location": "L36"
-    },
-    {
-      "id": "src_telemetry_inittracing",
-      "label": "initTracing()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "inittracing()",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L34"
-    },
-    {
-      "id": "src_telemetry_jsonspanexporter_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_telemetry_jsonspanexporter_export",
-      "label": ".export()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": ".export()",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_telemetry_jsonspanexporter_shutdown",
-      "label": ".shutdown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": ".shutdown()",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L32"
-    },
-    {
       "id": "workers_browser_test_worker_boundarytests_payload",
       "label": ".payload()",
       "_callable": true,
@@ -1633,6 +1311,102 @@
       "source_location": "L35"
     },
     {
+      "id": "src_config_configuredproviders",
+      "label": "configuredProviders()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "configuredproviders()",
+      "source_file": "src/config.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_config_generated",
+      "label": "generated()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "generated()",
+      "source_file": "src/config.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_config_localdatabase",
+      "label": "localDatabase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "localdatabase()",
+      "source_file": "src/config.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_contracts_coreerror_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/contracts.ts",
+      "source_location": "L48"
+    },
+    {
+      "id": "src_contracts_executor_execute",
+      "label": ".execute()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".execute()",
+      "source_file": "src/contracts.ts",
+      "source_location": "L134"
+    },
+    {
+      "id": "src_integrations_claude_code_claudecodeexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "label": ".execute()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".execute()",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L49"
+    },
+    {
+      "id": "src_integrations_claude_code_failure",
+      "label": "failure()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "failure()",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L27"
+    },
+    {
       "id": "src_integrations_http_jsonrequest",
       "label": "jsonRequest()",
       "_callable": true,
@@ -1669,6 +1443,18 @@
       "source_location": "L32"
     },
     {
+      "id": "src_integrations_http_serviceurl",
+      "label": "serviceUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "serviceurl()",
+      "source_file": "src/integrations/http.ts",
+      "source_location": "L4"
+    },
+    {
       "id": "src_integrations_models_classify",
       "label": "classify()",
       "_callable": true,
@@ -1679,6 +1465,18 @@
       "norm_label": "classify()",
       "source_file": "src/integrations/models.ts",
       "source_location": "L8"
+    },
+    {
+      "id": "src_integrations_models_claudeexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L29"
     },
     {
       "id": "src_integrations_models_claudeexecutor_execute",
@@ -1693,6 +1491,18 @@
       "source_location": "L43"
     },
     {
+      "id": "src_integrations_models_codexexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L123"
+    },
+    {
       "id": "src_integrations_models_codexexecutor_execute",
       "label": ".execute()",
       "_callable": true,
@@ -1702,7 +1512,19 @@
       "file_type": "code",
       "norm_label": ".execute()",
       "source_file": "src/integrations/models.ts",
-      "source_location": "L125"
+      "source_location": "L131"
+    },
+    {
+      "id": "src_integrations_models_codexoptions",
+      "label": "codexOptions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "codexoptions()",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L101"
     },
     {
       "id": "src_integrations_models_geminiexecutor_constructor",
@@ -1729,6 +1551,18 @@
       "source_location": "L86"
     },
     {
+      "id": "src_integrations_services_browserexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L81"
+    },
+    {
       "id": "src_integrations_services_browserexecutor_execute",
       "label": ".execute()",
       "_callable": true,
@@ -1739,6 +1573,78 @@
       "norm_label": ".execute()",
       "source_file": "src/integrations/services.ts",
       "source_location": "L87"
+    },
+    {
+      "id": "src_integrations_services_n8nclient_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L113"
+    },
+    {
+      "id": "src_integrations_services_n8nclient_execution",
+      "label": ".execution()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".execution()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L122"
+    },
+    {
+      "id": "src_integrations_services_n8nclient_get",
+      "label": ".get()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".get()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L129"
+    },
+    {
+      "id": "src_integrations_services_n8nclient_stop",
+      "label": ".stop()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".stop()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L126"
+    },
+    {
+      "id": "src_integrations_services_n8nclient_workflows",
+      "label": ".workflows()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".workflows()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L119"
+    },
+    {
+      "id": "src_integrations_services_openclawexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L36"
     },
     {
       "id": "src_integrations_services_openclawexecutor_execute",
@@ -1753,6 +1659,18 @@
       "source_location": "L43"
     },
     {
+      "id": "src_integrations_services_workflowexecutor_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L145"
+    },
+    {
       "id": "src_integrations_services_workflowexecutor_execute",
       "label": ".execute()",
       "_callable": true,
@@ -1763,6 +1681,18 @@
       "norm_label": ".execute()",
       "source_file": "src/integrations/services.ts",
       "source_location": "L150"
+    },
+    {
+      "id": "src_main_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "src/main.ts",
+      "source_location": "L10"
     },
     {
       "id": "src_routing_providerfailure_constructor",
@@ -1777,6 +1707,30 @@
       "source_location": "L4"
     },
     {
+      "id": "src_routing_providerregistry_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/routing.ts",
+      "source_location": "L36"
+    },
+    {
+      "id": "src_routing_providerregistry_list",
+      "label": ".list()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".list()",
+      "source_file": "src/routing.ts",
+      "source_location": "L46"
+    },
+    {
       "id": "src_routing_providerregistry_observe",
       "label": ".observe()",
       "_callable": true,
@@ -1786,7 +1740,19 @@
       "file_type": "code",
       "norm_label": ".observe()",
       "source_file": "src/routing.ts",
-      "source_location": "L88"
+      "source_location": "L90"
+    },
+    {
+      "id": "src_routing_providerregistry_open",
+      "label": ".open()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".open()",
+      "source_file": "src/routing.ts",
+      "source_location": "L43"
     },
     {
       "id": "src_routing_providerregistry_select",
@@ -1798,7 +1764,103 @@
       "file_type": "code",
       "norm_label": ".select()",
       "source_file": "src/routing.ts",
-      "source_location": "L71"
+      "source_location": "L73"
+    },
+    {
+      "id": "src_security_containedpath",
+      "label": "containedPath()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "containedpath()",
+      "source_file": "src/security.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_security_envsecrets_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/security.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_security_envsecrets_redact",
+      "label": ".redact()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".redact()",
+      "source_file": "src/security.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_security_envsecrets_resolve",
+      "label": ".resolve()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": ".resolve()",
+      "source_file": "src/security.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "tests_claude_code_test_failure",
+      "label": "failure()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "failure()",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L76"
+    },
+    {
+      "id": "tests_claude_code_test_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L51"
+    },
+    {
+      "id": "tests_claude_code_test_task",
+      "label": "task()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "task()",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_integrations_test_task",
+      "label": "task()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "task()",
+      "source_file": "tests/integrations.test.ts",
+      "source_location": "L8"
     },
     {
       "id": "tests_model_contracts_test_body",
@@ -1825,6 +1887,66 @@
       "source_location": "L14"
     },
     {
+      "id": "tests_subscription_config_test_codexenv",
+      "label": "codexEnv()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "codexenv()",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_telemetry_inittracing",
+      "label": "initTracing()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "code",
+      "norm_label": "inittracing()",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L34"
+    },
+    {
+      "id": "src_telemetry_jsonspanexporter_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_telemetry_jsonspanexporter_export",
+      "label": ".export()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "code",
+      "norm_label": ".export()",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_telemetry_jsonspanexporter_shutdown",
+      "label": ".shutdown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "code",
+      "norm_label": ".shutdown()",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L32"
+    },
+    {
       "id": "src_cli_main",
       "label": "main()",
       "_callable": true,
@@ -1835,6 +1957,18 @@
       "norm_label": "main()",
       "source_file": "src/cli.ts",
       "source_location": "L3"
+    },
+    {
+      "id": "tests_fixtures_fake_claude_result",
+      "label": "result()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "fake-claude.mjs",
+      "file_type": "code",
+      "norm_label": "result()",
+      "source_file": "tests/fixtures/fake-claude.mjs",
+      "source_location": "L5"
     },
     {
       "id": "scripts_benchmark",
@@ -1859,26 +1993,15 @@
       "source_location": "L1"
     },
     {
-      "id": "src_config",
-      "label": "config.ts",
+      "id": "src_context",
+      "label": "context.ts",
       "_origin": "ast",
       "community": 0,
       "community_name": "contracts.ts",
       "file_type": "code",
-      "norm_label": "config.ts",
-      "source_file": "src/config.ts",
+      "norm_label": "context.ts",
+      "source_file": "src/context.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_config_configschema",
-      "label": "ConfigSchema",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "configschema",
-      "source_file": "src/config.ts",
-      "source_location": "L14"
     },
     {
       "id": "src_contracts",
@@ -1900,7 +2023,7 @@
       "file_type": "code",
       "norm_label": "attemptedstatuses",
       "source_file": "src/contracts.ts",
-      "source_location": "L149"
+      "source_location": "L151"
     },
     {
       "id": "src_contracts_browserinputschema",
@@ -1944,7 +2067,7 @@
       "file_type": "code",
       "norm_label": "envelopeschema",
       "source_file": "src/contracts.ts",
-      "source_location": "L198"
+      "source_location": "L200"
     },
     {
       "id": "src_contracts_eventtypeschema",
@@ -1955,7 +2078,7 @@
       "file_type": "code",
       "norm_label": "eventtypeschema",
       "source_file": "src/contracts.ts",
-      "source_location": "L183"
+      "source_location": "L185"
     },
     {
       "id": "src_contracts_resultschema",
@@ -2057,72 +2180,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_integrations_services",
-      "label": "services.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "services.ts",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_integrations_services_openresponse",
-      "label": "OpenResponse",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "openresponse",
-      "source_file": "src/integrations/services.ts",
-      "source_location": "L14"
-    },
-    {
-      "id": "src_main",
-      "label": "main.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "main.ts",
-      "source_file": "src/main.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_routing",
-      "label": "routing.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "routing.ts",
-      "source_file": "src/routing.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_routing_outagekinds",
-      "label": "outageKinds",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "outagekinds",
-      "source_file": "src/routing.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_security",
-      "label": "security.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "security.ts",
-      "source_file": "src/security.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "src_server",
       "label": "server.ts",
       "_origin": "ast",
@@ -2178,28 +2235,6 @@
       "source_location": "L1"
     },
     {
-      "id": "tests_browser_contract_test",
-      "label": "browser-contract.test.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "browser-contract.test.ts",
-      "source_file": "tests/browser-contract.test.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_browser_contract_test_contract",
-      "label": "contract",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "contract",
-      "source_file": "tests/browser-contract.test.ts",
-      "source_location": "L9"
-    },
-    {
       "id": "tests_context_test",
       "label": "context.test.ts",
       "_origin": "ast",
@@ -2244,17 +2279,6 @@
       "source_location": "L1"
     },
     {
-      "id": "tests_endtoend_test",
-      "label": "endtoend.test.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "endtoend.test.ts",
-      "source_file": "tests/endtoend.test.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "tests_hardening_test",
       "label": "hardening.test.ts",
       "_origin": "ast",
@@ -2263,17 +2287,6 @@
       "file_type": "code",
       "norm_label": "hardening.test.ts",
       "source_file": "tests/hardening.test.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_integrations_test",
-      "label": "integrations.test.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "integrations.test.ts",
-      "source_file": "tests/integrations.test.ts",
       "source_location": "L1"
     },
     {
@@ -2308,28 +2321,6 @@
       "norm_label": "review-fixes.test.ts",
       "source_file": "tests/review-fixes.test.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "tests_security_test",
-      "label": "security.test.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "code",
-      "norm_label": "security.test.ts",
-      "source_file": "tests/security.test.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_anthropic_ai_sdk",
-      "label": "@anthropic-ai/sdk",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "contracts.ts",
-      "file_type": "concept",
-      "norm_label": "@anthropic-ai/sdk",
-      "source_file": "package.json",
-      "source_location": "L24"
     },
     {
       "id": "ref_electric_sql_pglite",
@@ -2385,17 +2376,6 @@
       "norm_label": "zod",
       "source_file": "package.json",
       "source_location": "L32"
-    },
-    {
-      "id": "src_context",
-      "label": "context.ts",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TaskService",
-      "file_type": "code",
-      "norm_label": "context.ts",
-      "source_file": "src/context.ts",
-      "source_location": "L1"
     },
     {
       "id": "biome",
@@ -2693,6 +2673,50 @@
       "norm_label": "typecheck",
       "source_file": "package.json",
       "source_location": "L11"
+    },
+    {
+      "id": "schemas_task_schema_dependencies_default",
+      "label": "default",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "default",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L101"
+    },
+    {
+      "id": "schemas_task_schema_dependencies_maxitems",
+      "label": "maxItems",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "maxitems",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L102"
+    },
+    {
+      "id": "schemas_task_schema_dependencies_type",
+      "label": "type",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "type",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L103"
+    },
+    {
+      "id": "schemas_task_schema_properties_dependencies",
+      "label": "dependencies",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "dependencies",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L100"
     },
     {
       "id": "tsconfig",
@@ -3095,7 +3119,7 @@
       "label": "ARCHITECTURE.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "architecture.md",
@@ -3103,11 +3127,71 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_architecture_event_families",
+      "label": "Event families",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "event families",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": "L65"
+    },
+    {
+      "id": "docs_architecture_execution_and_failure_classification",
+      "label": "Execution and failure classification",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "execution and failure classification",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": "L41"
+    },
+    {
+      "id": "docs_architecture_jarvis_core_architecture",
+      "label": "JARVIS Core architecture",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "jarvis core architecture",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_architecture_not_enabled",
+      "label": "Not enabled",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "not enabled",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": "L88"
+    },
+    {
+      "id": "docs_architecture_risk_and_approval",
+      "label": "Risk and approval",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "risk and approval",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": "L32"
+    },
+    {
       "id": "docs_engineering_report",
       "label": "ENGINEERING_REPORT.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "engineering_report.md",
@@ -3115,11 +3199,107 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_integrations",
+      "label": "INTEGRATIONS.md",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "integrations.md",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_integrations_browser_use",
+      "label": "Browser Use",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "browser use",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L76"
+    },
+    {
+      "id": "docs_integrations_claude_and_gemini_apis",
+      "label": "Claude and Gemini APIs",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "claude and gemini apis",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "docs_integrations_claude_code_subscription",
+      "label": "Claude Code subscription",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "claude code subscription",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L17"
+    },
+    {
+      "id": "docs_integrations_codex_sdk",
+      "label": "Codex SDK",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "codex sdk",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L98"
+    },
+    {
+      "id": "docs_integrations_integration_setup",
+      "label": "Integration setup",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "integration setup",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_integrations_n8n",
+      "label": "n8n",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "n8n",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L132"
+    },
+    {
+      "id": "docs_integrations_openclaw",
+      "label": "OpenClaw",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "openclaw",
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L44"
+    },
+    {
       "id": "docs_recovery_runbook",
       "label": "RECOVERY_RUNBOOK.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "recovery_runbook.md",
@@ -3131,7 +3311,7 @@
       "label": "Data recovery",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "data recovery",
@@ -3143,7 +3323,7 @@
       "label": "Recovery and operations",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "recovery and operations",
@@ -3155,10 +3335,106 @@
       "label": "RESEARCH_AND_COMPATIBILITY.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "research_and_compatibility.md",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_research_and_compatibility_browser_use",
+      "label": "Browser Use",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "browser use",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L59"
+    },
+    {
+      "id": "docs_research_and_compatibility_claude",
+      "label": "Claude",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "claude",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L92"
+    },
+    {
+      "id": "docs_research_and_compatibility_codex",
+      "label": "Codex",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "codex",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L109"
+    },
+    {
+      "id": "docs_research_and_compatibility_evidence_boundaries",
+      "label": "Evidence boundaries",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "evidence boundaries",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L142"
+    },
+    {
+      "id": "docs_research_and_compatibility_gemini",
+      "label": "Gemini",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "gemini",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L127"
+    },
+    {
+      "id": "docs_research_and_compatibility_n8n",
+      "label": "n8n",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "n8n",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L75"
+    },
+    {
+      "id": "docs_research_and_compatibility_openclaw",
+      "label": "OpenClaw",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "openclaw",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L41"
+    },
+    {
+      "id": "docs_research_and_compatibility_research_and_compatibility_2026_10_17",
+      "label": "Research and compatibility \u2014 2026-10-17",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "research and compatibility \u2014 2026-10-17",
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
       "source_location": "L1"
     },
@@ -3167,7 +3443,7 @@
       "label": "THREAT_MODEL.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "threat_model.md",
@@ -3179,7 +3455,7 @@
       "label": "Threat model",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "threat model",
@@ -3191,12 +3467,108 @@
       "label": "README.md",
       "_origin": "ast",
       "community": 16,
-      "community_name": "README.md",
+      "community_name": "Research and compatibility \u2014 2026-10-17",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "readme.md",
       "source_file": "README.md",
       "source_location": "L1"
+    },
+    {
+      "id": "readme_configuration",
+      "label": "Configuration",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "configuration",
+      "source_file": "README.md",
+      "source_location": "L122"
+    },
+    {
+      "id": "readme_control_api",
+      "label": "Control API",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "control api",
+      "source_file": "README.md",
+      "source_location": "L103"
+    },
+    {
+      "id": "readme_developer_commands",
+      "label": "Developer commands",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "developer commands",
+      "source_file": "README.md",
+      "source_location": "L92"
+    },
+    {
+      "id": "readme_documentation",
+      "label": "Documentation",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "documentation",
+      "source_file": "README.md",
+      "source_location": "L139"
+    },
+    {
+      "id": "readme_jarvis_core",
+      "label": "JARVIS Core",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "jarvis core",
+      "source_file": "README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "readme_layout",
+      "label": "Layout",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "layout",
+      "source_file": "README.md",
+      "source_location": "L16"
+    },
+    {
+      "id": "readme_native_subscription_mode_windows",
+      "label": "Native subscription mode (Windows)",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "native subscription mode (windows)",
+      "source_file": "README.md",
+      "source_location": "L66"
+    },
+    {
+      "id": "readme_windows_quick_start",
+      "label": "Windows quick start",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "windows quick start",
+      "source_file": "README.md",
+      "source_location": "L35"
     },
     {
       "id": "schemas_task_schema",
@@ -3504,215 +3876,6 @@
       "source_location": "L1"
     },
     {
-      "id": "package_dependencies",
-      "label": "dependencies",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "dependencies",
-      "source_file": "package.json",
-      "source_location": "L23"
-    },
-    {
-      "id": "package_dependencies_anthropic_ai_sdk",
-      "label": "@anthropic-ai/sdk",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@anthropic-ai/sdk",
-      "source_file": "package.json",
-      "source_location": "L24"
-    },
-    {
-      "id": "package_dependencies_fastify",
-      "label": "fastify",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "fastify",
-      "source_file": "package.json",
-      "source_location": "L30"
-    },
-    {
-      "id": "package_dependencies_google_genai",
-      "label": "@google/genai",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@google/genai",
-      "source_file": "package.json",
-      "source_location": "L25"
-    },
-    {
-      "id": "package_dependencies_openai_codex_sdk",
-      "label": "@openai/codex-sdk",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@openai/codex-sdk",
-      "source_file": "package.json",
-      "source_location": "L26"
-    },
-    {
-      "id": "package_dependencies_opentelemetry_api",
-      "label": "@opentelemetry/api",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@opentelemetry/api",
-      "source_file": "package.json",
-      "source_location": "L27"
-    },
-    {
-      "id": "package_dependencies_opentelemetry_sdk_trace_base",
-      "label": "@opentelemetry/sdk-trace-base",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@opentelemetry/sdk-trace-base",
-      "source_file": "package.json",
-      "source_location": "L28"
-    },
-    {
-      "id": "package_dependencies_opentelemetry_sdk_trace_node",
-      "label": "@opentelemetry/sdk-trace-node",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@opentelemetry/sdk-trace-node",
-      "source_file": "package.json",
-      "source_location": "L29"
-    },
-    {
-      "id": "package_dependencies_pg",
-      "label": "pg",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "pg",
-      "source_file": "package.json",
-      "source_location": "L31"
-    },
-    {
-      "id": "package_dependencies_zod",
-      "label": "zod",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "zod",
-      "source_file": "package.json",
-      "source_location": "L32"
-    },
-    {
-      "id": "package_devdependencies",
-      "label": "devDependencies",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "devdependencies",
-      "source_file": "package.json",
-      "source_location": "L34"
-    },
-    {
-      "id": "package_devdependencies_biomejs_biome",
-      "label": "@biomejs/biome",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@biomejs/biome",
-      "source_file": "package.json",
-      "source_location": "L35"
-    },
-    {
-      "id": "package_devdependencies_electric_sql_pglite",
-      "label": "@electric-sql/pglite",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@electric-sql/pglite",
-      "source_file": "package.json",
-      "source_location": "L36"
-    },
-    {
-      "id": "package_devdependencies_fast_check",
-      "label": "fast-check",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "fast-check",
-      "source_file": "package.json",
-      "source_location": "L39"
-    },
-    {
-      "id": "package_devdependencies_tsx",
-      "label": "tsx",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "tsx",
-      "source_file": "package.json",
-      "source_location": "L40"
-    },
-    {
-      "id": "package_devdependencies_types_node",
-      "label": "@types/node",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@types/node",
-      "source_file": "package.json",
-      "source_location": "L37"
-    },
-    {
-      "id": "package_devdependencies_types_pg",
-      "label": "@types/pg",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "@types/pg",
-      "source_file": "package.json",
-      "source_location": "L38"
-    },
-    {
-      "id": "package_devdependencies_typescript",
-      "label": "typescript",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "typescript",
-      "source_file": "package.json",
-      "source_location": "L41"
-    },
-    {
-      "id": "package_devdependencies_vitest",
-      "label": "vitest",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "vitest",
-      "source_file": "package.json",
-      "source_location": "L42"
-    },
-    {
       "id": "package_engines",
       "label": "engines",
       "_origin": "ast",
@@ -3779,28 +3942,6 @@
       "source_location": "L3"
     },
     {
-      "id": "src_telemetry",
-      "label": "telemetry.ts",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "telemetry.ts",
-      "source_file": "src/telemetry.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_telemetry_test",
-      "label": "telemetry.test.ts",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "telemetry.test.ts",
-      "source_file": "tests/telemetry.test.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "ref_biomejs_biome",
       "label": "@biomejs/biome",
       "_origin": "ast",
@@ -3832,39 +3973,6 @@
       "norm_label": "@openai/codex-sdk",
       "source_file": "package.json",
       "source_location": "L26"
-    },
-    {
-      "id": "ref_opentelemetry_api",
-      "label": "@opentelemetry/api",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "@opentelemetry/api",
-      "source_file": "package.json",
-      "source_location": "L27"
-    },
-    {
-      "id": "ref_opentelemetry_sdk_trace_base",
-      "label": "@opentelemetry/sdk-trace-base",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "@opentelemetry/sdk-trace-base",
-      "source_file": "package.json",
-      "source_location": "L28"
-    },
-    {
-      "id": "ref_opentelemetry_sdk_trace_node",
-      "label": "@opentelemetry/sdk-trace-node",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "@opentelemetry/sdk-trace-node",
-      "source_file": "package.json",
-      "source_location": "L29"
     },
     {
       "id": "ref_tsx",
@@ -3911,100 +4019,148 @@
       "source_location": "L41"
     },
     {
-      "id": "docs_research_and_compatibility_browser_use",
-      "label": "Browser Use",
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design",
+      "label": "2026-10-17-subscription-providers-openclaw-design.md",
       "_origin": "ast",
       "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
       "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "browser use",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L49"
-    },
-    {
-      "id": "docs_research_and_compatibility_claude",
-      "label": "Claude",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "claude",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L82"
-    },
-    {
-      "id": "docs_research_and_compatibility_codex",
-      "label": "Codex",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "codex",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L97"
-    },
-    {
-      "id": "docs_research_and_compatibility_evidence_boundaries",
-      "label": "Evidence boundaries",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "evidence boundaries",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L128"
-    },
-    {
-      "id": "docs_research_and_compatibility_gemini",
-      "label": "Gemini",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "gemini",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L113"
-    },
-    {
-      "id": "docs_research_and_compatibility_n8n",
-      "label": "n8n",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "n8n",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L65"
-    },
-    {
-      "id": "docs_research_and_compatibility_openclaw",
-      "label": "OpenClaw",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "openclaw",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L31"
-    },
-    {
-      "id": "docs_research_and_compatibility_research_and_compatibility_2026_10_17",
-      "label": "Research and compatibility \u2014 2026-10-17",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "Research and compatibility \u2014 2026-10-17",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "research and compatibility \u2014 2026-10-17",
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "node_kind": "page",
+      "norm_label": "2026-10-17-subscription-providers-openclaw-design.md",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_claudecodeexecutor_new_src_integrations_claude_code_ts",
+      "label": "ClaudeCodeExecutor (new, `src/integrations/claude-code.ts`)",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "claudecodeexecutor (new, `src/integrations/claude-code.ts`)",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L56"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_codex_subscription_mode_existing_codexexecutor",
+      "label": "Codex subscription mode (existing `CodexExecutor`)",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "codex subscription mode (existing `codexexecutor`)",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L81"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_components",
+      "label": "Components",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "components",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L54"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_constraints_from_primary_sources",
+      "label": "Constraints from primary sources",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "constraints from primary sources",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L15"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_deployment",
+      "label": "Deployment",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "deployment",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L38"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_intent",
+      "label": "Intent",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "intent",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L5"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_open_item_resolved_during_implementation",
+      "label": "Open item resolved during implementation",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "open item resolved during implementation",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L116"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_openclaw_and_gemini",
+      "label": "OpenClaw and Gemini",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "openclaw and gemini",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L91"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_out_of_scope",
+      "label": "Out of scope",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "out of scope",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L111"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "label": "Subscription providers and local OpenClaw \u2014 design",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "subscription providers and local openclaw \u2014 design",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_testing_and_verification",
+      "label": "Testing and verification",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Subscription providers and local OpenClaw \u2014 design",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "testing and verification",
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L96"
     },
     {
       "id": "schemas_envelope_schema",
@@ -4183,88 +4339,48 @@
       "source_location": "L39"
     },
     {
-      "id": "docs_integrations",
-      "label": "INTEGRATIONS.md",
+      "id": "schemas_task_schema_objective_maxlength",
+      "label": "maxLength",
       "_origin": "ast",
       "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "integrations.md",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_integrations_browser_use",
-      "label": "Browser Use",
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "browser use",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L34"
-    },
-    {
-      "id": "docs_integrations_claude_and_gemini_apis",
-      "label": "Claude and Gemini APIs",
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "claude and gemini apis",
-      "source_file": "docs/INTEGRATIONS.md",
+      "community_name": "objective",
+      "file_type": "code",
+      "norm_label": "maxlength",
+      "source_file": "schemas/task.schema.json",
       "source_location": "L8"
     },
     {
-      "id": "docs_integrations_codex_sdk",
-      "label": "Codex SDK",
+      "id": "schemas_task_schema_objective_minlength",
+      "label": "minLength",
       "_origin": "ast",
       "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "codex sdk",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L56"
+      "community_name": "objective",
+      "file_type": "code",
+      "norm_label": "minlength",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L7"
     },
     {
-      "id": "docs_integrations_integration_setup",
-      "label": "Integration setup",
+      "id": "schemas_task_schema_objective_type",
+      "label": "type",
       "_origin": "ast",
       "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "integration setup",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L1"
+      "community_name": "objective",
+      "file_type": "code",
+      "norm_label": "type",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L6"
     },
     {
-      "id": "docs_integrations_n8n",
-      "label": "n8n",
+      "id": "schemas_task_schema_properties_objective",
+      "label": "objective",
       "_origin": "ast",
       "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "n8n",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L70"
-    },
-    {
-      "id": "docs_integrations_openclaw",
-      "label": "OpenClaw",
-      "_origin": "ast",
-      "community": 23,
-      "community_name": "Integration setup",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "openclaw",
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L17"
+      "community_name": "objective",
+      "file_type": "code",
+      "norm_label": "objective",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L5"
     },
     {
       "id": "docs_master_directive_17_testing_and_code_level_guarantees",
@@ -4435,88 +4551,114 @@
       "source_location": "L40"
     },
     {
-      "id": "readme_configuration",
-      "label": "Configuration",
+      "id": "package_dependencies",
+      "label": "dependencies",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "configuration",
-      "source_file": "README.md",
-      "source_location": "L96"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "dependencies",
+      "source_file": "package.json",
+      "source_location": "L23"
     },
     {
-      "id": "readme_control_api",
-      "label": "Control API",
+      "id": "package_dependencies_anthropic_ai_sdk",
+      "label": "@anthropic-ai/sdk",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "control api",
-      "source_file": "README.md",
-      "source_location": "L77"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@anthropic-ai/sdk",
+      "source_file": "package.json",
+      "source_location": "L24"
     },
     {
-      "id": "readme_developer_commands",
-      "label": "Developer commands",
+      "id": "package_dependencies_fastify",
+      "label": "fastify",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "developer commands",
-      "source_file": "README.md",
-      "source_location": "L66"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "fastify",
+      "source_file": "package.json",
+      "source_location": "L30"
     },
     {
-      "id": "readme_documentation",
-      "label": "Documentation",
+      "id": "package_dependencies_google_genai",
+      "label": "@google/genai",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "documentation",
-      "source_file": "README.md",
-      "source_location": "L113"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@google/genai",
+      "source_file": "package.json",
+      "source_location": "L25"
     },
     {
-      "id": "readme_jarvis_core",
-      "label": "JARVIS Core",
+      "id": "package_dependencies_openai_codex_sdk",
+      "label": "@openai/codex-sdk",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "jarvis core",
-      "source_file": "README.md",
-      "source_location": "L1"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@openai/codex-sdk",
+      "source_file": "package.json",
+      "source_location": "L26"
     },
     {
-      "id": "readme_layout",
-      "label": "Layout",
+      "id": "package_dependencies_opentelemetry_api",
+      "label": "@opentelemetry/api",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "layout",
-      "source_file": "README.md",
-      "source_location": "L16"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@opentelemetry/api",
+      "source_file": "package.json",
+      "source_location": "L27"
     },
     {
-      "id": "readme_windows_quick_start",
-      "label": "Windows quick start",
+      "id": "package_dependencies_opentelemetry_sdk_trace_base",
+      "label": "@opentelemetry/sdk-trace-base",
       "_origin": "ast",
       "community": 26,
-      "community_name": "JARVIS Core",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "windows quick start",
-      "source_file": "README.md",
-      "source_location": "L35"
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@opentelemetry/sdk-trace-base",
+      "source_file": "package.json",
+      "source_location": "L28"
+    },
+    {
+      "id": "package_dependencies_opentelemetry_sdk_trace_node",
+      "label": "@opentelemetry/sdk-trace-node",
+      "_origin": "ast",
+      "community": 26,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@opentelemetry/sdk-trace-node",
+      "source_file": "package.json",
+      "source_location": "L29"
+    },
+    {
+      "id": "package_dependencies_pg",
+      "label": "pg",
+      "_origin": "ast",
+      "community": 26,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "pg",
+      "source_file": "package.json",
+      "source_location": "L31"
+    },
+    {
+      "id": "package_dependencies_zod",
+      "label": "zod",
+      "_origin": "ast",
+      "community": 26,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "zod",
+      "source_file": "package.json",
+      "source_location": "L32"
     },
     {
       "id": "schemas_task_schema_additionalproperties_ref",
@@ -5322,64 +5464,112 @@
       "source_location": "L10"
     },
     {
-      "id": "docs_architecture_event_families",
-      "label": "Event families",
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw",
+      "label": "2026-10-17-subscription-providers-openclaw.md",
       "_origin": "ast",
       "community": 38,
-      "community_name": "JARVIS Core architecture",
+      "community_name": "Review Focus",
       "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "event families",
-      "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L65"
-    },
-    {
-      "id": "docs_architecture_execution_and_failure_classification",
-      "label": "Execution and failure classification",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "JARVIS Core architecture",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "execution and failure classification",
-      "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L41"
-    },
-    {
-      "id": "docs_architecture_jarvis_core_architecture",
-      "label": "JARVIS Core architecture",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "JARVIS Core architecture",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "jarvis core architecture",
-      "source_file": "docs/ARCHITECTURE.md",
+      "node_kind": "page",
+      "norm_label": "2026-10-17-subscription-providers-openclaw.md",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
       "source_location": "L1"
     },
     {
-      "id": "docs_architecture_not_enabled",
-      "label": "Not enabled",
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_global_constraints",
+      "label": "Global Constraints",
       "_origin": "ast",
       "community": 38,
-      "community_name": "JARVIS Core architecture",
+      "community_name": "Review Focus",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "not enabled",
-      "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L88"
+      "norm_label": "global constraints",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L13"
     },
     {
-      "id": "docs_architecture_risk_and_approval",
-      "label": "Risk and approval",
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "label": "Review Focus",
       "_origin": "ast",
       "community": 38,
-      "community_name": "JARVIS Core architecture",
+      "community_name": "Review Focus",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "risk and approval",
-      "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L32"
+      "norm_label": "review focus",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L25"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_subscription_providers_and_local_openclaw_implementation_plan",
+      "label": "Subscription Providers and Local OpenClaw Implementation Plan",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "subscription providers and local openclaw implementation plan",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_1_claudecodeexecutor",
+      "label": "Task 1: ClaudeCodeExecutor",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 1: claudecodeexecutor",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L35"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_2_configuration_for_claude_code_and_codex_chatgpt_mode",
+      "label": "Task 2: Configuration for Claude Code and Codex ChatGPT mode",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 2: configuration for claude code and codex chatgpt mode",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L68"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_3_host_setup_node_24_22_0_and_openclaw_gateway",
+      "label": "Task 3: Host setup \u2014 Node 24.22.0 and OpenClaw Gateway",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 3: host setup \u2014 node 24.22.0 and openclaw gateway",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L95"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_4_logins_and_live_verification",
+      "label": "Task 4: Logins and live verification",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 4: logins and live verification",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L109"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_5_documentation_review_and_commit",
+      "label": "Task 5: Documentation, review and commit",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Review Focus",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 5: documentation, review and commit",
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L132"
     },
     {
       "id": "docs_master_directive_8_human_approval_and_risk_classification",
@@ -5442,6 +5632,61 @@
       "source_location": "L520"
     },
     {
+      "id": "src_config",
+      "label": "config.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "config.ts",
+      "source_file": "src/config.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_config_configschema",
+      "label": "ConfigSchema",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "configschema",
+      "source_file": "src/config.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_integrations_claude_code",
+      "label": "claude-code.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claude-code.ts",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_integrations_claude_code_claudecodeenvkeys",
+      "label": "claudeCodeEnvKeys",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claudecodeenvkeys",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_integrations_claude_code_output",
+      "label": "Output",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "output",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L19"
+    },
+    {
       "id": "src_integrations_http",
       "label": "http.ts",
       "_origin": "ast",
@@ -5475,6 +5720,160 @@
       "source_location": "L1"
     },
     {
+      "id": "src_integrations_services",
+      "label": "services.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "services.ts",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_integrations_services_openresponse",
+      "label": "OpenResponse",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "openresponse",
+      "source_file": "src/integrations/services.ts",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_main",
+      "label": "main.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "main.ts",
+      "source_file": "src/main.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_routing",
+      "label": "routing.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "routing.ts",
+      "source_file": "src/routing.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_routing_outagekinds",
+      "label": "outageKinds",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "outagekinds",
+      "source_file": "src/routing.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_security",
+      "label": "security.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "security.ts",
+      "source_file": "src/security.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_browser_contract_test",
+      "label": "browser-contract.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "browser-contract.test.ts",
+      "source_file": "tests/browser-contract.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_browser_contract_test_contract",
+      "label": "contract",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "contract",
+      "source_file": "tests/browser-contract.test.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "tests_claude_code_test",
+      "label": "claude-code.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claude-code.test.ts",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_claude_code_test_dir",
+      "label": "dir",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "dir",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L10"
+    },
+    {
+      "id": "tests_claude_code_test_fixture",
+      "label": "fixture",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "fixture",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "tests_claude_code_test_flags",
+      "label": "flags",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "flags",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "tests_endtoend_test",
+      "label": "endtoend.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "endtoend.test.ts",
+      "source_file": "tests/endtoend.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_integrations_test",
+      "label": "integrations.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "integrations.test.ts",
+      "source_file": "tests/integrations.test.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "tests_model_contracts_test",
       "label": "model-contracts.test.ts",
       "_origin": "ast",
@@ -5484,6 +5883,72 @@
       "norm_label": "model-contracts.test.ts",
       "source_file": "tests/model-contracts.test.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "tests_security_test",
+      "label": "security.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "security.test.ts",
+      "source_file": "tests/security.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_subscription_config_test",
+      "label": "subscription-config.test.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "subscription-config.test.ts",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_subscription_config_test_claude",
+      "label": "claude",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "claude",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "tests_subscription_config_test_paths",
+      "label": "paths",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "paths",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "tests_subscription_config_test_secrets",
+      "label": "secrets",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "code",
+      "norm_label": "secrets",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L30"
+    },
+    {
+      "id": "ref_anthropic_ai_sdk",
+      "label": "@anthropic-ai/sdk",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Task",
+      "file_type": "concept",
+      "norm_label": "@anthropic-ai/sdk",
+      "source_file": "package.json",
+      "source_location": "L24"
     },
     {
       "id": "ref_google_genai",
@@ -6224,136 +6689,206 @@
       "source_location": "L76"
     },
     {
-      "id": "schemas_task_schema_dependencies_default",
-      "label": "default",
+      "id": "src_telemetry",
+      "label": "telemetry.ts",
       "_origin": "ast",
       "community": 50,
-      "community_name": "dependencies",
+      "community_name": "telemetry.ts",
       "file_type": "code",
-      "norm_label": "default",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L101"
+      "norm_label": "telemetry.ts",
+      "source_file": "src/telemetry.ts",
+      "source_location": "L1"
     },
     {
-      "id": "schemas_task_schema_dependencies_maxitems",
-      "label": "maxItems",
+      "id": "tests_telemetry_test",
+      "label": "telemetry.test.ts",
       "_origin": "ast",
       "community": 50,
-      "community_name": "dependencies",
+      "community_name": "telemetry.ts",
       "file_type": "code",
-      "norm_label": "maxitems",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L102"
+      "norm_label": "telemetry.test.ts",
+      "source_file": "tests/telemetry.test.ts",
+      "source_location": "L1"
     },
     {
-      "id": "schemas_task_schema_dependencies_type",
-      "label": "type",
+      "id": "ref_opentelemetry_api",
+      "label": "@opentelemetry/api",
       "_origin": "ast",
       "community": 50,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "type",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L103"
+      "community_name": "telemetry.ts",
+      "file_type": "concept",
+      "norm_label": "@opentelemetry/api",
+      "source_file": "package.json",
+      "source_location": "L27"
     },
     {
-      "id": "schemas_task_schema_properties_dependencies",
-      "label": "dependencies",
+      "id": "ref_opentelemetry_sdk_trace_base",
+      "label": "@opentelemetry/sdk-trace-base",
       "_origin": "ast",
       "community": 50,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "dependencies",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L100"
+      "community_name": "telemetry.ts",
+      "file_type": "concept",
+      "norm_label": "@opentelemetry/sdk-trace-base",
+      "source_file": "package.json",
+      "source_location": "L28"
     },
     {
-      "id": "schemas_task_schema_objective_maxlength",
-      "label": "maxLength",
+      "id": "ref_opentelemetry_sdk_trace_node",
+      "label": "@opentelemetry/sdk-trace-node",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "telemetry.ts",
+      "file_type": "concept",
+      "norm_label": "@opentelemetry/sdk-trace-node",
+      "source_file": "package.json",
+      "source_location": "L29"
+    },
+    {
+      "id": "package_devdependencies",
+      "label": "devDependencies",
       "_origin": "ast",
       "community": 51,
-      "community_name": "objective",
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "maxlength",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L8"
+      "norm_label": "devdependencies",
+      "source_file": "package.json",
+      "source_location": "L34"
     },
     {
-      "id": "schemas_task_schema_objective_minlength",
-      "label": "minLength",
+      "id": "package_devdependencies_biomejs_biome",
+      "label": "@biomejs/biome",
       "_origin": "ast",
       "community": 51,
-      "community_name": "objective",
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "minlength",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L7"
+      "norm_label": "@biomejs/biome",
+      "source_file": "package.json",
+      "source_location": "L35"
     },
     {
-      "id": "schemas_task_schema_objective_type",
-      "label": "type",
+      "id": "package_devdependencies_electric_sql_pglite",
+      "label": "@electric-sql/pglite",
       "_origin": "ast",
       "community": 51,
-      "community_name": "objective",
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "type",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L6"
+      "norm_label": "@electric-sql/pglite",
+      "source_file": "package.json",
+      "source_location": "L36"
     },
     {
-      "id": "schemas_task_schema_properties_objective",
-      "label": "objective",
+      "id": "package_devdependencies_fast_check",
+      "label": "fast-check",
       "_origin": "ast",
       "community": 51,
-      "community_name": "objective",
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "objective",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L5"
+      "norm_label": "fast-check",
+      "source_file": "package.json",
+      "source_location": "L39"
     },
     {
-      "id": "schemas_task_schema_parentid_format",
-      "label": "format",
+      "id": "package_devdependencies_tsx",
+      "label": "tsx",
       "_origin": "ast",
-      "community": 52,
-      "community_name": "parentId",
+      "community": 51,
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "format",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L97"
+      "norm_label": "tsx",
+      "source_file": "package.json",
+      "source_location": "L40"
     },
     {
-      "id": "schemas_task_schema_parentid_pattern",
-      "label": "pattern",
+      "id": "package_devdependencies_types_node",
+      "label": "@types/node",
       "_origin": "ast",
-      "community": 52,
-      "community_name": "parentId",
+      "community": 51,
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "pattern",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L98"
+      "norm_label": "@types/node",
+      "source_file": "package.json",
+      "source_location": "L37"
     },
     {
-      "id": "schemas_task_schema_parentid_type",
-      "label": "type",
+      "id": "package_devdependencies_types_pg",
+      "label": "@types/pg",
       "_origin": "ast",
-      "community": 52,
-      "community_name": "parentId",
+      "community": 51,
+      "community_name": "devDependencies",
       "file_type": "code",
-      "norm_label": "type",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L96"
+      "norm_label": "@types/pg",
+      "source_file": "package.json",
+      "source_location": "L38"
     },
     {
-      "id": "schemas_task_schema_properties_parentid",
-      "label": "parentId",
+      "id": "package_devdependencies_typescript",
+      "label": "typescript",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "typescript",
+      "source_file": "package.json",
+      "source_location": "L41"
+    },
+    {
+      "id": "package_devdependencies_vitest",
+      "label": "vitest",
+      "_origin": "ast",
+      "community": 51,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "vitest",
+      "source_file": "package.json",
+      "source_location": "L42"
+    },
+    {
+      "id": "docs_adr_0008_subscription_cli_harness",
+      "label": "0008-subscription-cli-harness.md",
       "_origin": "ast",
       "community": 52,
-      "community_name": "parentId",
-      "file_type": "code",
-      "norm_label": "parentid",
-      "source_file": "schemas/task.schema.json",
-      "source_location": "L95"
+      "community_name": "ADR 0008 \u2014 Subscription CLI harnesses on native Windows",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "0008-subscription-cli-harness.md",
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_adr_0008_subscription_cli_harness_adr_0008_subscription_cli_harnesses_on_native_windows",
+      "label": "ADR 0008 \u2014 Subscription CLI harnesses on native Windows",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "ADR 0008 \u2014 Subscription CLI harnesses on native Windows",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "adr 0008 \u2014 subscription cli harnesses on native windows",
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_adr_0008_subscription_cli_harness_alternatives",
+      "label": "Alternatives",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "ADR 0008 \u2014 Subscription CLI harnesses on native Windows",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "alternatives",
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L11"
+    },
+    {
+      "id": "docs_adr_0008_subscription_cli_harness_consequences_and_implementation_rulings",
+      "label": "Consequences and implementation rulings",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "ADR 0008 \u2014 Subscription CLI harnesses on native Windows",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "consequences and implementation rulings",
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L19"
     },
     {
       "id": "schemas_task_schema_privacy_default",
@@ -6867,6 +7402,72 @@
       "source_location": "L1"
     },
     {
+      "id": "schemas_task_schema_parentid_format",
+      "label": "format",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "parentId",
+      "file_type": "code",
+      "norm_label": "format",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L97"
+    },
+    {
+      "id": "schemas_task_schema_parentid_pattern",
+      "label": "pattern",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "parentId",
+      "file_type": "code",
+      "norm_label": "pattern",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L98"
+    },
+    {
+      "id": "schemas_task_schema_parentid_type",
+      "label": "type",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "parentId",
+      "file_type": "code",
+      "norm_label": "type",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L96"
+    },
+    {
+      "id": "schemas_task_schema_properties_parentid",
+      "label": "parentId",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "parentId",
+      "file_type": "code",
+      "norm_label": "parentid",
+      "source_file": "schemas/task.schema.json",
+      "source_location": "L95"
+    },
+    {
+      "id": "tests_fixtures_fake_claude",
+      "label": "fake-claude.mjs",
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "fake-claude.mjs",
+      "file_type": "code",
+      "norm_label": "fake-claude.mjs",
+      "source_file": "tests/fixtures/fake-claude.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_fixtures_fake_claude_mode_record_argv",
+      "label": "[mode, record, ...argv]",
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "fake-claude.mjs",
+      "file_type": "code",
+      "norm_label": "[mode, record, ...argv]",
+      "source_file": "tests/fixtures/fake-claude.mjs",
+      "source_location": "L4"
+    },
+    {
       "id": "docs_engineering_report_10_test_results_and_evidence",
       "label": "10. Test results and evidence",
       "_origin": "ast",
@@ -6876,7 +7477,7 @@
       "node_kind": "heading",
       "norm_label": "10. test results and evidence",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L114"
+      "source_location": "L133"
     },
     {
       "id": "docs_engineering_report_11_security_controls",
@@ -6888,7 +7489,7 @@
       "node_kind": "heading",
       "norm_label": "11. security controls",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L133"
+      "source_location": "L152"
     },
     {
       "id": "docs_engineering_report_12_failure_recovery",
@@ -6900,7 +7501,7 @@
       "node_kind": "heading",
       "norm_label": "12. failure recovery",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L144"
+      "source_location": "L163"
     },
     {
       "id": "docs_engineering_report_13_known_risks_and_limitations",
@@ -6912,7 +7513,7 @@
       "node_kind": "heading",
       "norm_label": "13. known risks and limitations",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L152"
+      "source_location": "L171"
     },
     {
       "id": "docs_engineering_report_14_unverified_external_dependencies",
@@ -6924,7 +7525,7 @@
       "node_kind": "heading",
       "norm_label": "14. unverified external dependencies",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L166"
+      "source_location": "L187"
     },
     {
       "id": "docs_engineering_report_15_performance_baseline",
@@ -6936,7 +7537,7 @@
       "node_kind": "heading",
       "norm_label": "15. performance baseline",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L172"
+      "source_location": "L194"
     },
     {
       "id": "docs_engineering_report_16_extension_points",
@@ -6948,7 +7549,7 @@
       "node_kind": "heading",
       "norm_label": "16. extension points",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L184"
+      "source_location": "L206"
     },
     {
       "id": "docs_engineering_report_17_next_milestones",
@@ -6960,7 +7561,7 @@
       "node_kind": "heading",
       "norm_label": "17. next milestones",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L191"
+      "source_location": "L213"
     },
     {
       "id": "docs_engineering_report_1_architecture_summary",
@@ -6984,7 +7585,7 @@
       "node_kind": "heading",
       "norm_label": "\u00a721 acceptance matrix",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L200"
+      "source_location": "L222"
     },
     {
       "id": "docs_engineering_report_23_review",
@@ -6996,7 +7597,7 @@
       "node_kind": "heading",
       "norm_label": "\u00a723 review",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L232"
+      "source_location": "L254"
     },
     {
       "id": "docs_engineering_report_2_component_responsibility_matrix",
@@ -7032,7 +7633,7 @@
       "node_kind": "heading",
       "norm_label": "4. verified dependency versions",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L63"
+      "source_location": "L64"
     },
     {
       "id": "docs_engineering_report_5_integration_paths",
@@ -7044,7 +7645,7 @@
       "node_kind": "heading",
       "norm_label": "5. integration paths",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L71"
+      "source_location": "L72"
     },
     {
       "id": "docs_engineering_report_6_local_windows_installation",
@@ -7056,7 +7657,7 @@
       "node_kind": "heading",
       "norm_label": "6. local windows installation",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L85"
+      "source_location": "L104"
     },
     {
       "id": "docs_engineering_report_7_startup_and_shutdown",
@@ -7068,7 +7669,7 @@
       "node_kind": "heading",
       "norm_label": "7. startup and shutdown",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L92"
+      "source_location": "L111"
     },
     {
       "id": "docs_engineering_report_8_environment_variables",
@@ -7080,7 +7681,7 @@
       "node_kind": "heading",
       "norm_label": "8. environment variables",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L102"
+      "source_location": "L121"
     },
     {
       "id": "docs_engineering_report_9_test_commands",
@@ -7092,7 +7693,7 @@
       "node_kind": "heading",
       "norm_label": "9. test commands",
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L108"
+      "source_location": "L127"
     },
     {
       "id": "docs_engineering_report_engineering_report_jarvis_core_foundation",
@@ -7105,6 +7706,18 @@
       "norm_label": "engineering report \u2014 jarvis core foundation",
       "source_file": "docs/ENGINEERING_REPORT.md",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_engineering_report_subscription_follow_up_evidence_2026_10_17",
+      "label": "Subscription follow-up evidence (2026-10-17)",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "Engineering report \u2014 JARVIS Core foundation",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "subscription follow-up evidence (2026-10-17)",
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L87"
     },
     {
       "id": "schemas_task_schema_context_default",
@@ -7517,66 +8130,6 @@
   "links": [
     {
       "source": "src_config_configuredproviders",
-      "target": "src_integrations_services_workflowexecutor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/config.ts",
-      "source_location": "L108",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config_configuredproviders",
-      "target": "src_routing_providerregistry",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/config.ts",
-      "source_location": "L110",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config_configuredproviders",
-      "target": "src_integrations_models_claudeexecutor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/config.ts",
-      "source_location": "L50",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config_configuredproviders",
-      "target": "src_integrations_models_geminiexecutor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/config.ts",
-      "source_location": "L58",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config_configuredproviders",
-      "target": "src_integrations_services_openclawexecutor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/config.ts",
-      "source_location": "L71",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config_configuredproviders",
       "target": "src_integrations_services_browserexecutor",
       "relation": "calls",
       "_origin": "ast",
@@ -7584,7 +8137,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/config.ts",
-      "source_location": "L79",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -7596,7 +8149,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/config.ts",
-      "source_location": "L87",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -7608,7 +8161,79 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/config.ts",
-      "source_location": "L90",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_integrations_services_workflowexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L138",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_routing_providerregistry",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_integrations_models_claudeexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_integrations_models_geminiexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_integrations_claude_code_claudecodeexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_configuredproviders",
+      "target": "src_integrations_services_openclawexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/config.ts",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -7756,6 +8381,42 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "target": "src_integrations_claude_code_failure",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "target": "src_routing_providerfailure",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code_failure",
+      "target": "src_routing_providerfailure",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_http_jsonrequest",
       "target": "src_integrations_http_neverdispatched",
       "relation": "calls",
@@ -7849,6 +8510,18 @@
       "context": "call",
       "source_file": "src/integrations/models.ts",
       "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_models_codexexecutor_constructor",
+      "target": "src_integrations_models_codexoptions",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -8148,7 +8821,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routing.ts",
-      "source_location": "L85",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -8160,7 +8833,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routing.ts",
-      "source_location": "L86",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -8968,6 +9641,30 @@
       "weight": 1.0
     },
     {
+      "source": "tests_claude_code_test_run",
+      "target": "src_integrations_claude_code_claudecodeexecutor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test_run",
+      "target": "tests_claude_code_test_task",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
       "source": "tests_hardening_test_closedport",
       "target": "tests_hardening_test_listen",
       "relation": "calls",
@@ -9256,6 +9953,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "target": "src_contracts_executionresult",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "generic_arg",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_models_claudeexecutor_execute",
       "target": "src_contracts_executionresult",
       "relation": "references",
@@ -9276,7 +9985,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "src/integrations/models.ts",
-      "source_location": "L125",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -9732,7 +10441,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L2",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config",
+      "target": "src_integrations_claude_code_claudecodeexecutor",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/config.ts",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -9744,7 +10465,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -9756,7 +10477,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -9768,7 +10489,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -9780,7 +10501,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -9792,7 +10513,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -9804,7 +10525,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -9816,7 +10537,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -9828,7 +10549,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -9840,7 +10561,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L6",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -9852,7 +10573,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L6",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -10069,6 +10790,54 @@
       "context": "import",
       "source_file": "src/gateway.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_contracts_executionresult",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_contracts_executor",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_contracts_task",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_routing_providerfailure",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -10861,6 +11630,66 @@
       "context": "import",
       "source_file": "tests/browser-contract.test.ts",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_contracts_task",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_contracts_taskspecschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_integrations_claude_code_claudecodeenvkeys",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_integrations_claude_code_claudecodeexecutor",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_routing_providerfailure",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -11704,6 +12533,66 @@
       "weight": 1.0
     },
     {
+      "source": "tests_subscription_config_test",
+      "target": "src_config_configuredproviders",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_contracts_task",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_contracts_taskspecschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_integrations_models_codexoptions",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_security_envsecrets",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
       "source": "tests_telemetry_test",
       "target": "src_telemetry_inittracing",
       "relation": "imports",
@@ -11868,7 +12757,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L1",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -11880,37 +12769,13 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/config.ts",
-      "source_location": "L2",
+      "source_location": "L4",
       "type_only": true,
       "weight": 1.0
     },
     {
       "source": "src_config",
-      "target": "src_integrations_models",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/config.ts",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config",
-      "target": "src_integrations_services",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/config.ts",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
-      "source": "src_config",
-      "target": "src_routing",
+      "target": "src_integrations_claude_code",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11922,7 +12787,7 @@
     },
     {
       "source": "src_config",
-      "target": "src_security",
+      "target": "src_integrations_models",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11930,6 +12795,42 @@
       "context": "import",
       "source_file": "src/config.ts",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config",
+      "target": "src_integrations_services",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/config.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config",
+      "target": "src_routing",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/config.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config",
+      "target": "src_security",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/config.ts",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -12041,6 +12942,43 @@
       "context": "import",
       "source_file": "src/gateway.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "ref_zod",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_contracts",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L3",
+      "type_only": true,
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_routing",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -12599,6 +13537,54 @@
       "context": "import",
       "source_file": "tests/browser-contract.test.ts",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_contracts",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_integrations_claude_code",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "src_routing",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -13468,6 +14454,66 @@
       "weight": 1.0
     },
     {
+      "source": "tests_subscription_config_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_config",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_contracts",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_integrations_models",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "src_security",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
       "source": "tests_telemetry_test",
       "target": "ref_opentelemetry_api",
       "relation": "imports_from",
@@ -13576,6 +14622,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "target": "src_contracts_task",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_models_claudeexecutor_execute",
       "target": "src_contracts_task",
       "relation": "references",
@@ -13596,7 +14654,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/integrations/models.ts",
-      "source_location": "L125",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -13656,7 +14714,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/routing.ts",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -13668,7 +14726,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/routing.ts",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -13888,6 +14946,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code_claudecodeexecutor",
+      "target": "src_contracts_executor",
+      "relation": "implements",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "type",
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_models_claudeexecutor",
       "target": "src_contracts_executor",
       "relation": "implements",
@@ -13908,7 +14978,7 @@
       "confidence_score": 1.0,
       "context": "type",
       "source_file": "src/integrations/models.ts",
-      "source_location": "L102",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -14402,6 +15472,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_adr_0008_subscription_cli_harness",
+      "target": "docs_adr_0008_subscription_cli_harness_adr_0008_subscription_cli_harnesses_on_native_windows",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_adr_0008_subscription_cli_harness_adr_0008_subscription_cli_harnesses_on_native_windows",
+      "target": "docs_adr_0008_subscription_cli_harness_alternatives",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_adr_0008_subscription_cli_harness_adr_0008_subscription_cli_harnesses_on_native_windows",
+      "target": "docs_adr_0008_subscription_cli_harness_consequences_and_implementation_rulings",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ADR/0008-subscription-cli-harness.md",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
       "source": "docs_architecture",
       "target": "docs_architecture_jarvis_core_architecture",
       "relation": "contains",
@@ -14468,6 +15571,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_engineering_report_5_integration_paths",
+      "target": "docs_engineering_report_subscription_follow_up_evidence_2026_10_17",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
+      "target": "docs_engineering_report_6_local_windows_installation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
+      "target": "docs_engineering_report_7_startup_and_shutdown",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
       "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
       "target": "docs_engineering_report_8_environment_variables",
       "relation": "contains",
@@ -14475,7 +15611,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L102",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -14486,7 +15622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L108",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -14497,7 +15633,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L114",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -14508,7 +15644,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L133",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -14519,29 +15655,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L144",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
-      "target": "docs_engineering_report_13_known_risks_and_limitations",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L152",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
-      "target": "docs_engineering_report_14_unverified_external_dependencies",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L166",
+      "source_location": "L163",
       "weight": 1.0
     },
     {
@@ -14557,13 +15671,35 @@
     },
     {
       "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
+      "target": "docs_engineering_report_13_known_risks_and_limitations",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
+      "target": "docs_engineering_report_14_unverified_external_dependencies",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
       "target": "docs_engineering_report_15_performance_baseline",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L172",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -14574,7 +15710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L184",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -14585,7 +15721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L191",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -14596,7 +15732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L200",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -14607,7 +15743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L232",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -14640,7 +15776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -14651,29 +15787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L71",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
-      "target": "docs_engineering_report_6_local_windows_installation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_engineering_report_engineering_report_jarvis_core_foundation",
-      "target": "docs_engineering_report_7_startup_and_shutdown",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L92",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -14689,7 +15803,18 @@
     },
     {
       "source": "docs_integrations_integration_setup",
-      "target": "docs_integrations_openclaw",
+      "target": "docs_integrations_n8n",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_integrations_integration_setup",
+      "target": "docs_integrations_claude_code_subscription",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -14700,35 +15825,24 @@
     },
     {
       "source": "docs_integrations_integration_setup",
+      "target": "docs_integrations_openclaw",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_integrations_integration_setup",
       "target": "docs_integrations_browser_use",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L34",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_integrations_integration_setup",
-      "target": "docs_integrations_codex_sdk",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L56",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_integrations_integration_setup",
-      "target": "docs_integrations_n8n",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/INTEGRATIONS.md",
-      "source_location": "L70",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -14740,6 +15854,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/INTEGRATIONS.md",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_integrations_integration_setup",
+      "target": "docs_integrations_codex_sdk",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/INTEGRATIONS.md",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -15525,13 +16650,24 @@
     },
     {
       "source": "docs_research_and_compatibility_research_and_compatibility_2026_10_17",
+      "target": "docs_research_and_compatibility_codex",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_research_and_compatibility_research_and_compatibility_2026_10_17",
       "target": "docs_research_and_compatibility_gemini",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L113",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -15542,7 +16678,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L128",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -15553,7 +16689,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L31",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -15564,7 +16700,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L49",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -15575,7 +16711,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L65",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -15586,18 +16722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_research_and_compatibility_research_and_compatibility_2026_10_17",
-      "target": "docs_research_and_compatibility_codex",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
-      "source_location": "L97",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -15653,6 +16778,215 @@
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-10-17-core-foundation.md",
       "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_subscription_providers_and_local_openclaw_implementation_plan",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_4_logins_and_live_verification",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_5_documentation_review_and_commit",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_1_claudecodeexecutor",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_2_configuration_for_claude_code_and_codex_chatgpt_mode",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_task_3_host_setup_node_24_22_0_and_openclaw_gateway",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_subscription_providers_and_local_openclaw_implementation_plan",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_global_constraints",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_subscription_providers_and_local_openclaw_implementation_plan",
+      "target": "docs_superpowers_plans_2026_10_17_subscription_providers_openclaw_review_focus",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-17-subscription-providers-openclaw.md",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_components",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_claudecodeexecutor_new_src_integrations_claude_code_ts",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_components",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_codex_subscription_mode_existing_codexexecutor",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_components",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_openclaw_and_gemini",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_out_of_scope",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_open_item_resolved_during_implementation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_constraints_from_primary_sources",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_deployment",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_intent",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_components",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_subscription_providers_and_local_openclaw_design",
+      "target": "docs_superpowers_specs_2026_10_17_subscription_providers_openclaw_design_testing_and_verification",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-17-subscription-providers-openclaw-design.md",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -16097,13 +17431,35 @@
     },
     {
       "source": "readme_jarvis_core",
+      "target": "readme_control_api",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "readme_jarvis_core",
+      "target": "readme_configuration",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "readme_jarvis_core",
       "target": "readme_documentation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L113",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -16130,7 +17486,7 @@
     },
     {
       "source": "readme_jarvis_core",
-      "target": "readme_developer_commands",
+      "target": "readme_native_subscription_mode_windows",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -16141,24 +17497,13 @@
     },
     {
       "source": "readme_jarvis_core",
-      "target": "readme_control_api",
+      "target": "readme_developer_commands",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L77",
-      "weight": 1.0
-    },
-    {
-      "source": "readme_jarvis_core",
-      "target": "readme_configuration",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "README.md",
-      "source_location": "L96",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -18237,7 +19582,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/config.ts",
-      "source_location": "L14",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -18248,7 +19593,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/config.ts",
-      "source_location": "L28",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -18325,7 +19670,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L134",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -18336,7 +19681,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -18347,7 +19692,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L150",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -18358,7 +19703,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L160",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -18369,7 +19714,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -18380,7 +19725,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L183",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -18402,18 +19747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L197",
-      "weight": 1.0
-    },
-    {
-      "source": "src_contracts",
-      "target": "src_contracts_envelopeschema",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/contracts.ts",
-      "source_location": "L198",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -18425,6 +19759,17 @@
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
       "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_contracts",
+      "target": "src_contracts_envelopeschema",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/contracts.ts",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -18626,6 +19971,50 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code",
+      "target": "src_integrations_claude_code_output",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_integrations_claude_code_failure",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_integrations_claude_code_claudecodeexecutor",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code",
+      "target": "src_integrations_claude_code_claudecodeenvkeys",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_http",
       "target": "src_integrations_http_notconnected",
       "relation": "contains",
@@ -18682,13 +20071,35 @@
     },
     {
       "source": "src_integrations_models",
+      "target": "src_integrations_models_codexauth",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_models",
+      "target": "src_integrations_models_codexoptions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/models.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_models",
       "target": "src_integrations_models_codexexecutor",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/models.ts",
-      "source_location": "L102",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -18956,6 +20367,72 @@
       "weight": 1.0
     },
     {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_dir",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_flags",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_task",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_failure",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_claude_code_test",
+      "target": "tests_claude_code_test_fixture",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "tests_core_test",
       "target": "tests_core_test_spec",
       "relation": "contains",
@@ -18964,6 +20441,28 @@
       "confidence_score": 1.0,
       "source_file": "tests/core.test.ts",
       "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_fixtures_fake_claude",
+      "target": "tests_fixtures_fake_claude_mode_record_argv",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/fixtures/fake-claude.mjs",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_fixtures_fake_claude",
+      "target": "tests_fixtures_fake_claude_result",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/fixtures/fake-claude.mjs",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -19063,6 +20562,50 @@
       "confidence_score": 1.0,
       "source_file": "tests/review-fixes.test.ts",
       "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "tests_subscription_config_test_codexenv",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "tests_subscription_config_test_secrets",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "tests_subscription_config_test_claude",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_subscription_config_test",
+      "target": "tests_subscription_config_test_paths",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/subscription-config.test.ts",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -19445,7 +20988,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/contracts.ts",
-      "source_location": "L132",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -19504,6 +21047,28 @@
       "weight": 1.0
     },
     {
+      "source": "src_integrations_claude_code_claudecodeexecutor",
+      "target": "src_integrations_claude_code_claudecodeexecutor_constructor",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "src_integrations_claude_code_claudecodeexecutor",
+      "target": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/integrations/claude-code.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
       "source": "src_integrations_models_claudeexecutor",
       "target": "src_integrations_models_claudeexecutor_constructor",
       "relation": "method",
@@ -19533,7 +21098,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/models.ts",
-      "source_location": "L109",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -19544,7 +21109,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/integrations/models.ts",
-      "source_location": "L125",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -19742,7 +21307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routing.ts",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -19753,7 +21318,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routing.ts",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -20253,13 +21818,24 @@
     },
     {
       "source": "docs_engineering_report",
+      "target": "readme",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/ENGINEERING_REPORT.md",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_engineering_report",
       "target": "docs_threat_model",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L142",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -20270,7 +21846,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L150",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -20281,18 +21857,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
-      "source": "docs_engineering_report",
-      "target": "readme",
+      "source": "docs_research_and_compatibility",
+      "target": "docs_integrations",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "docs/ENGINEERING_REPORT.md",
-      "source_location": "L87",
+      "source_file": "docs/RESEARCH_AND_COMPATIBILITY.md",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -20303,7 +21879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L115",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -20314,7 +21890,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L116",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -20325,7 +21901,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L117",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -20336,7 +21912,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L117",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -20347,7 +21923,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L119",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -20370,7 +21946,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/config.ts",
-      "source_location": "L50",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -21034,6 +22610,18 @@
       "weight": 1.0
     },
     {
+      "source": "tests_claude_code_test_run",
+      "target": "src_integrations_claude_code_claudecodeexecutor_execute",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "tests/claude-code.test.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
       "source": "tests_hardening_test_runapproved",
       "target": "src_gateway_actiongateway_run",
       "relation": "calls",
@@ -21054,7 +22642,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/config.ts",
-      "source_location": "L18",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -21066,7 +22654,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/config.ts",
-      "source_location": "L19",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -21093,5 +22681,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4b4d1cd9110c1245225f5fe60f63959c136e13b0"
+  "built_at_commit": "6cc69a39a512e766c606bf26e4e1d300a75d38e3"
 }

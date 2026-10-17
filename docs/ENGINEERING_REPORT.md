@@ -54,7 +54,8 @@ routing and a circuit breaker. Browser Use runs in a separate Python worker. Det
 | `src/context.ts` | Verified (local) | Bounded, redacted, expiring context with provenance |
 | `src/security.ts`, `src/telemetry.ts` | Verified (local) | Secret references and redaction, path containment, OpenTelemetry spans |
 | `src/integrations/http.ts` | Verified (local) | Bounded HTTP with dispatch classification |
-| `src/integrations/models.ts` | Not live-verified | Claude, Gemini, Codex adapters |
+| `src/integrations/models.ts` | Partial live | Codex ChatGPT subscription completed; Claude and Gemini API paths remain not live-verified |
+| `src/integrations/claude-code.ts` | Verified locally / Blocked live | Official CLI subscription harness, 14 subprocess tests; organization denies access |
 | `src/integrations/services.ts` | Partial live | OpenClaw (not live), Browser Use (live readback), n8n webhook (live) and API client (not live) |
 | `workers/browser/worker.py` | Verified (native) | Authenticated worker, exact URL allowlist, ephemeral browser, DOM readback |
 | `schemas/` | Verified | JSON Schemas generated from runtime contracts; drift test |
@@ -77,10 +78,28 @@ Locks: `package-lock.json`, `workers/browser/uv.lock`. Source and release resear
 | Core → n8n | Registered published webhook | **Verified** | HIGH approval, COMPLETED with n8n execution ID; `taskId` replay returned empty body without re-execution; wrong token 403 |
 | n8n API client | `X-N8N-API-KEY` discovery and status | Not live-verified | Contract tests only; needs an owner API key |
 | Browser Use | Python worker, Actor DOM readback | **Verified** (native) / Not live-verified (container) | Real ephemeral Chromium read example.com; container needs egress attestation |
-| OpenClaw | OpenResponses `POST /v1/responses` | Not live-verified, **Blocked** | No OpenClaw Gateway provisioned |
+| OpenClaw | OpenResponses `POST /v1/responses` | **Partial, Blocked** | 2026.10.4 installed, deny-all config validated; Gateway bootstrap fails on SQLite state ownership |
 | Claude | Messages SDK | Not live-verified, **Blocked** | No API key; 529 to Gemini fallback tested end to end against fixtures |
 | Gemini | GenAI SDK | Not live-verified, **Blocked** | No API key |
-| Codex | Codex SDK in isolated home | Not live-verified, **Blocked** | No API key and no attested isolated workspace |
+| Claude Code | Official CLI, subscription | **Partial, Blocked** | Login detected; real Core task FAILED on organization 403, no API-key fallback |
+| Codex | Codex SDK, ChatGPT login in isolated home | **Verified (native)** | HIGH approval then COMPLETED; host-read isolation remains a documented residual |
+
+### Subscription follow-up evidence (2026-10-17)
+
+| Gate | Evidence / result |
+| --- | --- |
+| Runtime | Existing portable Node 24.22.0 ZIP freshly matched official SHA256; system MSI execution denied, system Node unchanged |
+| Claude Code | CLI 2.1.281, `sonnet`; task `c32a62e3-0288-46da-87e3-bceaae52f3c9` FAILED in 4.4 s. Probe returned 403 `oauth_not_allowed_for_organization`; provider disabled pending entitlement |
+| Codex | `gpt-5.6-sol`, task `3d7c1035-c08f-437f-9cdc-c7c6d76bb1b4` COMPLETED. Durable `approval.requested`, `approval.granted`, `action.intended`, `verification.succeeded`; no API key supplied |
+| OpenClaw | CLI 2026.10.4, config validates loopback/token/Responses and global + agent deny `*`; URL file/image fetching disabled. Startup fails on SQLite state ownership; read-only doctor reproduces offline-maintenance errors in temporary state. Browser login completed by operator, CLI failed before confirmation |
+| OpenClaw live gates | Authenticated models endpoint, adversarial denial, session-log inspection, successful Core task and stopped-Gateway live task remain unverified. `ENABLE_OPENCLAW=false`, `OPENCLAW_POLICY_VERIFIED=false` |
+| Gemini | Blocked: operator key absent; left disabled |
+
+Evidence files under ignored `artifacts/subscription-setup/` contain live task/events/actions,
+official checksums, installation logs, Gateway startup and read-only doctor diagnostics.
+No OAuth credential file was read. Native Codex still saw machine-wide skill guidance;
+read-only and isolated home are not claimed to prevent host reads. Claude's safe-mode
+instruction-isolation live gate remains pending entitlement, despite passing subprocess tests.
 
 ## 6. Local Windows installation
 
@@ -116,7 +135,7 @@ mypy and unittest commands for the worker, `npm run benchmark`. CI runs the same
 | Gate | Result |
 | --- | --- |
 | Type check, Biome lint, build | Pass |
-| Vitest | 65 passed, 1 skipped (the opt-in live PostgreSQL suite) |
+| Vitest | 92 passed, 1 skipped (the opt-in live PostgreSQL suite); 14 Claude Code and 13 subscription config tests |
 | Live PostgreSQL 18.3 suite | Pass |
 | `npm audit` | 0 vulnerabilities |
 | Python ruff, mypy, unittest | Pass, 7 tests |
@@ -162,12 +181,15 @@ eviction; operator reconciliation with redacted evidence. Procedures:
 - The default database role is privileged; separate migration and runtime roles are pending.
 - Attestation flags record operator claims; they do not create isolation.
 - No financial cost cap for model calls.
+- Claude Code and Codex do not enforce the task output-token cap; readiness explicitly
+  reports `outputTokenLimitEnforced: false`. Byte bounds/deadlines do not cap quota usage.
 
 ## 14. Unverified external dependencies
 
-OpenClaw Gateway, Claude API, Gemini API, Codex SDK runtime, the n8n public API key path, the
-browser-worker container with egress controls, and Claude Code / Gemini CLI harnesses
-(researched, not launched).
+OpenClaw Gateway, Claude API, Gemini API, the n8n public API key path, the
+browser-worker container with egress controls, and Gemini CLI harness (not implemented).
+Claude Code's harness is implemented, but its organization blocks subscription execution.
+OpenClaw is installed and configured; native SQLite startup failure blocks its live gates.
 
 ## 15. Performance baseline
 
@@ -191,7 +213,7 @@ integrate; n8n workflows are added by registering webhook URLs.
 ## 17. Next milestones
 
 1. Provision OpenClaw with a verified tool-denied agent, then run live OpenClaw tasks.
-2. Run Claude, Gemini and Codex live with operator-supplied credentials and cost caps.
+2. Enable Claude organization entitlement and supply a Gemini key; Codex subscription is live-verified. Financial cost caps remain outside the implementation.
 3. Browser-worker container with an enforced egress proxy, then live failure injection.
 4. Separate PostgreSQL migration and runtime roles; backup and restore drill.
 5. Model-proposed DAGs converted to typed tasks by deterministic policy.
@@ -204,7 +226,7 @@ integrate; n8n workflows are added by registering webhook URLs.
 | One authoritative owner per responsibility | Verified | Matrix above; ADR 0001 |
 | No conflicting orchestration loops | Verified | One PostgreSQL scheduler; n8n queue mode off |
 | Boundaries documented and enforced in code | Verified | Strict schemas, risk floors, scoped ingress tests |
-| Stable provider interface | Verified | `Executor` with six adapters |
+| Stable provider interface | Verified | `Executor` with seven adapters |
 | Valid persistent transitions | Verified | Transition table plus property tests |
 | No double claims | Verified | Competing-claim tests on PGlite and live PostgreSQL |
 | Unauthorized actions denied | Verified | Capability, privacy, approval and auth tests |
@@ -212,10 +234,10 @@ integrate; n8n workflows are added by registering webhook URLs.
 | Bounded failure recovery | Verified | Call budget, deadline, quarantine, circuit breaker tests |
 | Defined cancellation | Verified | Cancel race and RECOVERY_REQUIRED 409 tests |
 | Side-effect idempotency or reconciliation | Verified | Durable intent, reconciliation tests; n8n dedup live |
-| OpenClaw genuinely integrated | Partial, Blocked | Real adapter against the documented API; no live Gateway |
+| OpenClaw genuinely integrated | Partial, Blocked | Real adapter, installed CLI and validated policy; upstream SQLite startup failure blocks live Gateway |
 | Browser Use genuinely integrated | Verified (native) | Live DOM readback; container pending |
 | n8n genuinely integrated | Verified | Both directions live on 2.43.7 |
-| Claude, Codex, Gemini execution paths tested | Not live-verified | Contract and end-to-end fixture tests; credentials blocked |
+| Claude, Codex, Gemini execution paths tested | Partial | Codex subscription live COMPLETED; Claude org denied; Gemini key absent; automated paths tested |
 | Provider limitations explicit | Verified | Registry fields, attestation flags, this report |
 | Unsupported capabilities rejected | Verified | `NO_COMPATIBLE_PROVIDER`, `policy-denied` tests |
 | No hardcoded production credentials | Verified | Placeholder rejection; `.env` ignored |
@@ -250,3 +272,13 @@ reachable from the n8n network, and native startup would use an inherited remote
 
 Self-review is not proof of correctness; the executable tests and live runs above are the
 evidence.
+
+### Subscription follow-up review
+
+A fresh-context read-only review of the changes since `bcbe124` found one Important
+issue: the Claude CLI cannot enforce the task's requested output-token ceiling. The
+required CLI/environment contract exposes no supported token-cap flag. Readiness now
+reports `outputTokenLimitEnforced: false` for Claude Code and Codex, and integration docs
+state the quota limitation. Two readiness assertions failed before the change and passed
+after it; the full 92-test suite, type check, lint and build passed. No minor findings.
+External live gates remain pending as listed above; review does not establish connectivity.
