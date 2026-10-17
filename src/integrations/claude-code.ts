@@ -49,9 +49,14 @@ export class ClaudeCodeExecutor implements Executor {
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     if (signal.aborted) return Promise.reject(signal.reason ?? new Error("aborted"));
     const { command, model, workdir } = this.options;
-    const env = Object.fromEntries(
-      claudeCodeEnvKeys.flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
-    );
+    const env = {
+      ...Object.fromEntries(
+        claudeCodeEnvKeys.flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
+      ),
+      // Workdir sits inside this repo: keep its git status and any CLAUDE.md out of the prompt.
+      CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
+      CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+    };
     return new Promise((resolve, reject) => {
       const child = spawn(
         command[0],

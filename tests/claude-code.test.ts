@@ -135,6 +135,15 @@ describe("Claude Code subscription executor", () => {
       if (!osKeys.includes(key.toUpperCase())) expect(keys).not.toContain(key);
   });
 
+  it("child env turns off ambient git status and CLAUDE.md context", async () => {
+    const { result, recorded } = run("success");
+    await result;
+    expect(recorded().env).toMatchObject({
+      CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
+      CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+    });
+  });
+
   it("not logged in is authentication-required and not dispatched", async () => {
     const error = await failure(run("login").result);
     expect(error.kind).toBe("authentication-required");
