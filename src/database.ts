@@ -10,13 +10,15 @@ export interface Database extends Sql {
   transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T>;
   close(): Promise<void>;
 }
-export function postgres(url: string): Database {
-  const pool = new Pool({
+export function postgres(
+  url: string,
+  pool = new Pool({
     connectionString: url,
     max: 5,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10_000,
-  });
+  }),
+): Database {
   pool.on("error", () => {
     process.stderr.write('{"level":"error","code":"DATABASE_POOL_ERROR"}\n');
   });
@@ -27,16 +29,21 @@ export function postgres(url: string): Database {
     ...wrap(pool),
     async transaction(fn) {
       const client = await pool.connect();
+      let broken = false;
       try {
         await client.query("BEGIN");
         const value = await fn(wrap(client));
         await client.query("COMMIT");
         return value;
       } catch (error) {
-        await client.query("ROLLBACK");
+        // A failed ROLLBACK means the session is unusable; the server already aborted the
+        // transaction. Destroy the client and surface the original error.
+        await client.query("ROLLBACK").catch(() => {
+          broken = true;
+        });
         throw error;
       } finally {
-        client.release();
+        client.release(broken);
       }
     },
     close: () => pool.end(),
@@ -46,6 +53,7 @@ export function postgres(url: string): Database {
 // Append migrations; never rewrite a migration after a deployed release.
 export async function migrate(db: Database): Promise<void> {
   await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
     await tx.query("CREATE TABLE IF NOT EXISTS schema_migrations (version integer PRIMARY KEY)");
     // Table lock also serializes first-time migration across Core processes.
     await tx.query("LOCK TABLE schema_migrations IN EXCLUSIVE MODE");
@@ -82,6 +90,11 @@ export async function migrate(db: Database): Promise<void> {
         envelope jsonb NOT NULL
       );
       CREATE INDEX task_events ON events(task_id,sequence);
+      CREATE TABLE task_context (
+        id uuid PRIMARY KEY, task_id uuid NOT NULL REFERENCES tasks(id), source text NOT NULL,
+        content text NOT NULL, content_hash text NOT NULL, created_at bigint NOT NULL, expires_at bigint NOT NULL
+      );
+      CREATE INDEX context_retention ON task_context(expires_at);
       INSERT INTO schema_migrations VALUES (1);
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);

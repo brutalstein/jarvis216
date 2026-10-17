@@ -1,3 +1,4 @@
+import { context, propagation } from "@opentelemetry/api";
 import { ProviderFailure } from "../routing.js";
 
 export function serviceUrl(raw: string): string {
@@ -19,12 +20,36 @@ export function serviceUrl(raw: string): string {
   return url.href.replace(/\/$/, "");
 }
 
+// Failures before a TCP connection exists: the request cannot have reached the service.
+const notConnected = new Set(["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN"]);
+export function networkCode(error: unknown): string | undefined {
+  for (let item = error, depth = 0; item && typeof item === "object" && depth < 5; depth++) {
+    if ("code" in item && typeof item.code === "string") return item.code;
+    item = "cause" in item ? item.cause : undefined;
+  }
+  return undefined;
+}
+export function neverDispatched(error: unknown): boolean {
+  return notConnected.has(networkCode(error) ?? "");
+}
+
 export async function jsonRequest(
   url: string,
   init: RequestInit,
   signal: AbortSignal,
 ): Promise<unknown> {
-  const response = await fetch(url, { ...init, signal, redirect: "error" });
+  const headers = new Headers(init.headers);
+  const carrier: Record<string, string> = {};
+  propagation.inject(context.active(), carrier);
+  for (const [key, value] of Object.entries(carrier)) headers.set(key, value);
+  let response: Response;
+  try {
+    response = await fetch(url, { ...init, headers, signal, redirect: "error" });
+  } catch (error) {
+    if (!signal.aborted && neverDispatched(error))
+      throw new ProviderFailure("provider-unavailable", true, false);
+    throw error;
+  }
   if (!response.ok) {
     await response.body?.cancel();
     const kind =

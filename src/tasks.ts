@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto";
+import { insertContext } from "./context.js";
 import {
   type Action,
+  type Capability,
   canTransition,
   EnvelopeSchema,
+  type EventType,
   fingerprint,
   invariant,
   type Task,
   TaskSpecSchema,
   type TaskState,
+  taskDeadline,
   terminal,
 } from "./contracts.js";
 import type { Database, Sql } from "./database.js";
@@ -15,7 +19,13 @@ import type { Database, Sql } from "./database.js";
 export class TaskService {
   constructor(
     public readonly db: Database,
-    private options = { concurrency: 2 },
+    private options: {
+      concurrency: number;
+      redact?: (text: string) => string;
+      limits?: Partial<Record<Capability, number>>;
+    } = {
+      concurrency: 2,
+    },
   ) {}
 
   async locked<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
@@ -32,15 +42,22 @@ export class TaskService {
   async event(
     tx: Sql,
     task: Task,
-    type: string,
+    type: EventType,
     payload: Record<string, never> | Record<string, string | number | boolean | null> = {},
   ): Promise<void> {
     const id = randomUUID();
+    // Every caller holds the scheduler lock, so the previous event is stable.
+    const previous = (
+      await tx.query<{ id: string }>(
+        "SELECT envelope->>'messageId' AS id FROM events WHERE task_id=$1 ORDER BY sequence DESC LIMIT 1",
+        [task.id],
+      )
+    ).rows[0];
     const envelope = EnvelopeSchema.parse({
       protocolVersion: 1,
       messageId: id,
       correlationId: task.correlation_id,
-      causationId: null,
+      causationId: previous?.id ?? null,
       taskId: task.id,
       sender: "jarvis-core",
       recipient: "task-events",
@@ -97,9 +114,19 @@ export class TaskService {
       const id = randomUUID();
       await tx.query(
         "INSERT INTO tasks(id,correlation_id,principal,idempotency_key,request_hash,spec,status,created_at) VALUES($1,$2,$3,$4,$5,$6,'CREATED',$7)",
-        [id, randomUUID(), principal, key, fingerprint(spec), JSON.stringify(spec), Date.now()],
+        [
+          id,
+          randomUUID(),
+          principal,
+          key,
+          fingerprint(spec),
+          JSON.stringify({ ...spec, context: [] }),
+          Date.now(),
+        ],
       );
       const task = await this.get(id, tx);
+      for (const entry of spec.context)
+        await insertContext(tx, task, entry, this.options.redact ?? ((text) => text));
       for (const dependency of spec.dependencies)
         await tx.query(
           "INSERT INTO dependencies(task_id,dependency_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
@@ -143,12 +170,12 @@ export class TaskService {
       if (Number(active?.count) >= this.options.concurrency) return null;
       const candidates = (
         await tx.query<Task>(
-          "SELECT * FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY') AND not_before<=$1 ORDER BY created_at,id LIMIT 100",
+          "SELECT * FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY') AND not_before<=$1 ORDER BY created_at,id LIMIT 1000",
           [Date.now()],
         )
       ).rows;
       for (const task of candidates) {
-        if (Date.parse(task.spec.deadline) <= Date.now()) {
+        if (taskDeadline(task) <= Date.now()) {
           await this.move(tx, task, "FAILED", "deadline expired");
           continue;
         }
@@ -158,15 +185,20 @@ export class TaskService {
             [task.id],
           )
         ).rows;
-        if (
-          deps.some((d) =>
-            ["FAILED", "CANCELLED", "BLOCKED", "RECOVERY_REQUIRED"].includes(d.status),
-          )
-        ) {
+        if (deps.some((d) => ["FAILED", "CANCELLED"].includes(d.status))) {
           await this.move(tx, task, "BLOCKED", "dependency unavailable");
           continue;
         }
         if (deps.some((d) => d.status !== "COMPLETED")) continue;
+        const defaults = { "text.generate": 2, "browser.extract": 1, "workflow.invoke": 1 };
+        const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
+        const activeCapability = (
+          await tx.query<{ count: string }>(
+            "SELECT count(*) FROM tasks WHERE status IN ('RUNNING','VERIFYING') AND spec->>'capability'=$1",
+            [task.spec.capability],
+          )
+        ).rows[0];
+        if (Number(activeCapability?.count) >= limit) continue;
         if (task.status === "WAITING_FOR_DEPENDENCY")
           await this.move(tx, task, "READY", "dependencies completed");
         await this.move(tx, task, "RUNNING", "lease acquired");
@@ -201,6 +233,7 @@ export class TaskService {
     return this.locked(async (tx) => {
       const task = await this.get(id, tx);
       if (terminal.has(task.status) || task.status === "RECOVERY_REQUIRED") return task;
+      await this.event(tx, task, "cancellation.requested", { principal: "operator" });
       const pending =
         (await tx.query("SELECT id FROM actions WHERE task_id=$1 AND status='EXECUTING'", [id]))
           .rows.length > 0;
@@ -221,6 +254,7 @@ export class TaskService {
   }
   async recover(): Promise<void> {
     await this.locked(async (tx) => {
+      await tx.query("DELETE FROM task_context WHERE expires_at<=$1", [Date.now()]);
       const stale = (
         await tx.query<Task>(
           "SELECT * FROM tasks WHERE status IN ('RUNNING','VERIFYING') AND lease_until<=$1",
@@ -236,7 +270,7 @@ export class TaskService {
         await this.move(
           tx,
           task,
-          intents.length ? "RECOVERY_REQUIRED" : "READY",
+          intents.length || task.status === "VERIFYING" ? "RECOVERY_REQUIRED" : "READY",
           "expired worker lease",
         );
         await tx.query(
@@ -246,10 +280,12 @@ export class TaskService {
         await this.release(tx, task.id);
       }
       const expired = (
-        await tx.query<Task>("SELECT * FROM tasks WHERE status='WAITING_FOR_APPROVAL'")
+        await tx.query<Task>(
+          "SELECT * FROM tasks WHERE status IN ('WAITING_FOR_APPROVAL','BLOCKED','READY','WAITING_FOR_DEPENDENCY')",
+        )
       ).rows;
       for (const task of expired)
-        if (Date.parse(task.spec.deadline) <= Date.now())
+        if (taskDeadline(task) <= Date.now())
           await this.move(tx, task, "FAILED", "approval deadline expired");
     });
   }
@@ -265,6 +301,15 @@ export class TaskService {
       )
     ).rows;
   }
+  // Summary rows only: objectives and results stay behind the per-task endpoint.
+  async list(filter: { status?: TaskState; before?: number; limit: number }): Promise<object[]> {
+    return (
+      await this.db.query(
+        "SELECT id,correlation_id,principal,status,spec->>'capability' AS capability,calls,attempt,created_at FROM tasks WHERE ($1::text IS NULL OR status=$1) AND created_at<$2 ORDER BY created_at DESC,id LIMIT $3",
+        [filter.status ?? null, filter.before ?? Number.MAX_SAFE_INTEGER, filter.limit],
+      )
+    ).rows;
+  }
   async approve(actionId: string, approver: string, expiresAt: number): Promise<void> {
     await this.locked(async (tx) => {
       const action = (await tx.query<Action>("SELECT * FROM actions WHERE id=$1", [actionId]))
@@ -274,15 +319,47 @@ export class TaskService {
       invariant(task.status === "WAITING_FOR_APPROVAL", "APPROVAL_NOT_PENDING");
       invariant(
         expiresAt > Date.now() &&
-          expiresAt <= Math.min(Date.now() + 300_000, Date.parse(task.spec.deadline)),
+          expiresAt <= Date.now() + 300_000 &&
+          taskDeadline(task) > Date.now(),
         "INVALID_APPROVAL_EXPIRY",
       );
       await tx.query(
         "INSERT INTO approvals(action_id,hash,approver,expires_at) VALUES($1,$2,$3,$4) ON CONFLICT(action_id) DO UPDATE SET hash=$2,approver=$3,expires_at=$4 WHERE approvals.consumed_at IS NULL",
-        [actionId, action.hash, approver, expiresAt],
+        [actionId, action.hash, approver, Math.min(expiresAt, taskDeadline(task))],
       );
       await this.event(tx, task, "approval.granted", { actionId, approver });
       await this.move(tx, task, "READY", "approval granted");
+    });
+  }
+  async resume(id: string): Promise<void> {
+    await this.locked(async (tx) => {
+      const task = await this.get(id, tx);
+      invariant(
+        task.status === "BLOCKED" &&
+          task.calls < task.spec.budget.maxCalls &&
+          taskDeadline(task) > Date.now(),
+        "RESUME_DENIED",
+      );
+      const uncertain = (
+        await tx.query(
+          "SELECT id FROM actions WHERE task_id=$1 AND status IN ('UNCERTAIN','EXECUTING')",
+          [id],
+        )
+      ).rows.length;
+      invariant(!uncertain, "RECONCILIATION_REQUIRED");
+      await this.move(tx, task, "READY", "operator resumed; admission and routing rechecked");
+    });
+  }
+  async reject(actionId: string, principal: string): Promise<void> {
+    await this.locked(async (tx) => {
+      const action = (await tx.query<Action>("SELECT * FROM actions WHERE id=$1", [actionId]))
+        .rows[0];
+      invariant(action?.status === "AWAITING_APPROVAL", "APPROVAL_NOT_PENDING");
+      const task = await this.get(action.task_id, tx);
+      invariant(task.status === "WAITING_FOR_APPROVAL", "APPROVAL_NOT_PENDING");
+      await tx.query("UPDATE actions SET status='DENIED' WHERE id=$1", [actionId]);
+      await this.event(tx, task, "approval.rejected", { actionId, principal });
+      await this.move(tx, task, "CANCELLED", "operator denied action");
     });
   }
   async reconcile(
@@ -298,12 +375,24 @@ export class TaskService {
       invariant(action?.status === "UNCERTAIN", "ACTION_NOT_UNCERTAIN");
       const task = await this.get(action.task_id, tx);
       invariant(task.status === "RECOVERY_REQUIRED", "TASK_NOT_UNCERTAIN");
+      invariant(
+        outcome !== "COMPLETED" || evidence.includes(task.spec.verification.value),
+        "VERIFICATION_FAILED",
+      );
+      const redacted = (this.options.redact ?? ((text) => text))(evidence);
+      const result = JSON.stringify({ text: redacted, source: `operator:${principal}` });
       await tx.query("UPDATE actions SET status=$2,result=$3 WHERE id=$1", [
         actionId,
         outcome === "COMPLETED" ? "SUCCEEDED" : "FAILED",
-        JSON.stringify({ text: evidence, source: `operator:${principal}` }),
+        result,
       ]);
-      await this.event(tx, task, "action.reconciled", { actionId, outcome, evidence, principal });
+      await tx.query("UPDATE tasks SET result=$2 WHERE id=$1", [task.id, result]);
+      await this.event(tx, task, "action.reconciled", {
+        actionId,
+        outcome,
+        evidence: redacted,
+        principal,
+      });
       await this.move(tx, task, outcome, "operator attested external outcome; no replay");
     });
   }

@@ -5,6 +5,7 @@ import { canTransition, fingerprint, TaskSpecSchema } from "../src/contracts.js"
 import { type Database, migrate, type Sql } from "../src/database.js";
 import { ActionGateway } from "../src/gateway.js";
 import { ProviderFailure } from "../src/routing.js";
+import { EnvSecrets } from "../src/security.js";
 import { TaskService } from "../src/tasks.js";
 
 function spec(overrides: Record<string, unknown> = {}) {
@@ -255,4 +256,101 @@ describe("execution gateway", () => {
     expect((await tasks.get(task.id)).status).toBe("FAILED");
     expect((await tasks.get(task.id)).calls).toBe(1);
   });
+});
+
+it("resumes a DAG after its uncertain dependency is reconciled", async () => {
+  const parent = await tasks.create(spec(), "parent-uncertain", "operator");
+  const child = await tasks.create(
+    spec({ dependencies: [parent.id] }),
+    "child-dependent",
+    "operator",
+  );
+  const claim = (await tasks.claim("w", 10_000))!;
+  await new ActionGateway(tasks).run(
+    claim,
+    {
+      id: "test",
+      capability: "text.generate",
+      external: true,
+      retrySafe: false,
+      execute: async () => {
+        throw new Error("unknown");
+      },
+    },
+    new AbortController().signal,
+  );
+  expect(await tasks.claim("w", 10_000)).toBeNull();
+  const [action] = await tasks.actions(parent.id);
+  await expect(
+    tasks.reconcile(action!.id, "COMPLETED", "Unsubstantiated claim", "operator"),
+  ).rejects.toThrow("VERIFICATION_FAILED");
+  await tasks.reconcile(action!.id, "COMPLETED", "verified by authoritative readback", "operator");
+  expect((await tasks.get(parent.id)).result?.source).toBe("operator:operator");
+  expect((await tasks.claim("w", 10_000))?.id).toBe(child.id);
+});
+
+it("does not persist configured secrets containing JSON special characters", async () => {
+  const task = await tasks.create(spec(), "redact-json", "operator");
+  const secret = 'credential-with-"quotes';
+  const secrets = new EnvSecrets({ API_KEY: secret });
+  await new ActionGateway(tasks, (text) => secrets.redact(text)).run(
+    (await tasks.claim("w", 10_000))!,
+    {
+      id: "test",
+      capability: "text.generate",
+      external: false,
+      retrySafe: true,
+      execute: async () => ({ text: `verified ${secret}`, source: "fixture" }),
+    },
+    new AbortController().signal,
+  );
+  expect((await tasks.get(task.id)).result?.text).toBe("verified [REDACTED]");
+});
+
+it("expired approvals cannot dispatch the action", async () => {
+  const task = await tasks.create(spec({ risk: "HIGH" }), "expired-approval", "operator");
+  const gateway = new ActionGateway(tasks);
+  const executor = {
+    id: "test",
+    capability: "text.generate" as const,
+    external: false,
+    retrySafe: true,
+    execute: async () => ({ text: "verified", source: "fixture" }),
+  };
+  await gateway.run((await tasks.claim("w", 10_000))!, executor, new AbortController().signal);
+  const [action] = await tasks.actions(task.id);
+  await tasks.approve(action!.id, "operator", Date.now() + 30_000);
+  await db.query("UPDATE approvals SET expires_at=0 WHERE action_id=$1", [action!.id]);
+  await gateway.run((await tasks.claim("w", 10_000))!, executor, new AbortController().signal);
+  expect((await tasks.get(task.id)).calls).toBe(0);
+  expect((await tasks.get(task.id)).status).toBe("WAITING_FOR_APPROVAL");
+});
+
+it("does not reset total task duration for a later attempt", async () => {
+  const task = await tasks.create(spec({ budget: { maxDurationMs: 100 } }), "duration", "operator");
+  await db.query("UPDATE tasks SET created_at=$2 WHERE id=$1", [task.id, Date.now() - 500]);
+  expect(await tasks.claim("w", 10_000)).toBeNull();
+  expect((await tasks.get(task.id)).status).toBe("FAILED");
+});
+
+it("applies browser backpressure while allowing a different capability to use capacity", async () => {
+  const browserSpec = spec({
+    capability: "browser.extract",
+    providers: ["browser-use"],
+    input: { url: "https://example.com/", expectedText: "documentation" },
+  });
+  const a = await tasks.create(browserSpec, "browser-a", "operator");
+  const b = await tasks.create(browserSpec, "browser-b", "operator");
+  const model = await tasks.create(spec(), "model-capacity", "operator");
+  expect([a.id, b.id]).toContain((await tasks.claim("browser-worker", 10_000))?.id);
+  expect((await tasks.claim("model-worker", 10_000))?.id).toBe(model.id);
+});
+
+it("allows an operator to resume a blocked task without replaying an uncertain action", async () => {
+  const task = await tasks.create(spec(), "resume", "operator");
+  await tasks.locked(async (tx) => {
+    await tasks.move(tx, await tasks.get(task.id, tx), "BLOCKED", "provider disabled");
+  });
+  await tasks.resume(task.id);
+  expect((await tasks.claim("w", 10_000))?.id).toBe(task.id);
 });

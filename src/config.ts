@@ -5,12 +5,17 @@ import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrati
 import { type Provider, ProviderRegistry } from "./routing.js";
 import { containedPath, type EnvSecrets } from "./security.js";
 
+// .env.example placeholders are long enough to pass length checks; never accept them.
+const generated = (value: string) => !value.includes("REPLACE_");
 export const ConfigSchema = z.object({
-  DATABASE_URL: z.string().url(),
-  JARVIS_TOKEN: z.string().min(32),
-  N8N_INGRESS_TOKEN: z.string().min(32),
+  DATABASE_URL: z.string().url().refine(generated, "Run scripts/bootstrap.ps1"),
+  JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
+  N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
   PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
+  MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
+  BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
+  WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
 });
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
@@ -74,7 +79,7 @@ export async function configuredProviders(
     const home = await containedPath("data/codex-homes", z.string().parse(env.CODEX_ISOLATED_HOME));
     register(
       new CodexExecutor(secrets.resolve("OPENAI_API_KEY"), model, workspace, home),
-      `codex-sdk:${model}:${workspace}:isolated`,
+      `codex-sdk:${model}:${workspace}:${home}:isolated`,
       40,
     );
   }

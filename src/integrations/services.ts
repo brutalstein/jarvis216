@@ -1,10 +1,12 @@
 import { z } from "zod";
 import {
+  BrowserInputSchema,
   CoreError,
   type ExecutionResult,
   type Executor,
   ResultSchema,
   type Task,
+  WorkflowInputSchema,
 } from "../contracts.js";
 import { jsonRequest, serviceUrl } from "./http.js";
 
@@ -67,7 +69,6 @@ export class OpenClawExecutor implements Executor {
   }
 }
 
-const BrowserInput = z.strictObject({ url: z.url(), expectedText: z.string().min(1).max(4096) });
 export class BrowserExecutor implements Executor {
   readonly id = "browser-use";
   readonly capability = "browser.extract";
@@ -81,7 +82,7 @@ export class BrowserExecutor implements Executor {
     this.base = serviceUrl(base);
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
-    const input = BrowserInput.parse(task.spec.input);
+    const input = BrowserInputSchema.parse(task.spec.input);
     return ResultSchema.parse(
       await jsonRequest(
         `${this.base}/v1/extract`,
@@ -142,9 +143,7 @@ export class WorkflowExecutor implements Executor {
     for (const workflow of Object.values(workflows)) serviceUrl(workflow.url);
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
-    const input = z
-      .strictObject({ workflow: z.string(), payload: z.record(z.string(), z.json()) })
-      .parse(task.spec.input);
+    const input = WorkflowInputSchema.parse(task.spec.input);
     const workflow = this.workflows[input.workflow];
     if (!workflow) throw new CoreError("WORKFLOW_NOT_REGISTERED", 403);
     // Registered workflow MUST implement deduplication by taskId; Core itself never retries.

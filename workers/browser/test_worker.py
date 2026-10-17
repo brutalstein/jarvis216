@@ -1,7 +1,14 @@
+import json
 import unittest
+from pathlib import Path
 from uuid import uuid4
 
 from worker import Request, WorkerError, authorize
+
+# Shared with tests/browser-contract.test.ts: both sides must accept the same wire shapes.
+CONTRACT = json.loads(
+    (Path(__file__).parents[2] / "tests" / "fixtures" / "browser-extract.json").read_text()
+)
 
 
 class BoundaryTests(unittest.TestCase):
@@ -36,6 +43,16 @@ class BoundaryTests(unittest.TestCase):
         for token in (None, "Bearer bad", "Bearer " + "x" * 32):
             self.assertFalse(authorize(token, "a" * 32))
         self.assertTrue(authorize("Bearer " + "a" * 32, "a" * 32))
+
+    def test_accepts_the_exact_request_core_sends(self) -> None:
+        payload = CONTRACT["request"]
+        request = Request.parse(payload, frozenset({payload["url"]}))
+        self.assertEqual(request.task_id, payload["taskId"])
+        self.assertEqual(request.timeout_ms, payload["timeoutMs"])
+
+    def test_response_keys_match_core_result_contract(self) -> None:
+        # extract() returns exactly these keys; Core's strict ResultSchema rejects extras.
+        self.assertEqual(set(CONTRACT["response"]), {"text", "source", "externalId"})
 
 
 if __name__ == "__main__":

@@ -1,0 +1,73 @@
+name: jarvis-core
+services:
+  postgres:
+    image: postgres:18.3-bookworm@sha256:4b2a518e377fe4cbb67168b8043724634f144cbad35a306c6bab44fced4ec2c7
+    environment:
+      POSTGRES_DB: jarvis
+      POSTGRES_USER: jarvis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/bootstrap.ps1 first}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 768m
+    cpus: 1
+    restart: unless-stopped
+  core:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://jarvis:${POSTGRES_PASSWORD}@postgres:5432/jarvis
+      JARVIS_CONTAINER: "true"
+      PORT: "2160"
+    ports: ["127.0.0.1:2160:2160"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    read_only: true
+    tmpfs: ["/tmp:size=128m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1
+    stop_grace_period: 30s
+    restart: unless-stopped
+  n8n:
+    profiles: [automations]
+    image: docker.n8n.io/n8nio/n8n:2.43.7
+    ports: ["127.0.0.1:5678:5678"]
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Run scripts/bootstrap.ps1 first}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
+      GENERIC_TIMEZONE: Europe/Istanbul
+    volumes: ["n8n-data:/home/node/.n8n"]
+    mem_limit: 1g
+    cpus: 1
+    restart: unless-stopped
+  browser-worker:
+    profiles: [browser]
+    build: { context: ., dockerfile: workers/browser/Dockerfile }
+    environment:
+      BROWSER_WORKER_TOKEN: ${BROWSER_WORKER_TOKEN:?Run bootstrap}
+      BROWSER_EGRESS_VERIFIED: ${BROWSER_EGRESS_VERIFIED:-false}
+      BROWSER_ALLOWED_URLS: ${BROWSER_ALLOWED_URLS:-[]}
+      ANONYMIZED_TELEMETRY: "false"
+    # No host port, no shared cookies, credentials, home directory or Docker socket.
+    # Profile remains disabled until external egress controls are verified.
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    shm_size: 256m
+    tmpfs: ["/tmp:size=256m"]
+    pids_limit: 256
+    mem_limit: 1g
+    cpus: 1
+    restart: "no"
+volumes:
+  postgres-data:
+  n8n-data:

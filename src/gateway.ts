@@ -9,6 +9,7 @@ import {
   type Risk,
   type Task,
   type TaskState,
+  taskDeadline,
 } from "./contracts.js";
 import { ProviderFailure } from "./routing.js";
 import type { TaskService } from "./tasks.js";
@@ -49,7 +50,7 @@ export class ActionGateway {
     const action = await this.tasks.locked(async (tx) => {
       const task = await this.tasks.get(claim.id, tx);
       this.tasks.assertLease(task, claim.owner, claim.fence);
-      invariant(Date.parse(task.spec.deadline) > Date.now(), "DEADLINE_EXPIRED");
+      invariant(taskDeadline(task) > Date.now(), "DEADLINE_EXPIRED");
       invariant(task.calls < task.spec.budget.maxCalls, "CALL_BUDGET_EXCEEDED");
       let current = (
         await tx.query<Action>("SELECT * FROM actions WHERE task_id=$1 AND hash=$2", [
@@ -109,14 +110,10 @@ export class ActionGateway {
       return current;
     });
     if (!action) return "WAITING_FOR_APPROVAL";
+    const executionStarted = Date.now();
     const combined = AbortSignal.any([
       signal,
-      AbortSignal.timeout(
-        Math.max(
-          1,
-          Math.min(claim.spec.budget.maxDurationMs, Date.parse(claim.spec.deadline) - Date.now()),
-        ),
-      ),
+      AbortSignal.timeout(Math.max(1, taskDeadline(claim) - Date.now())),
     ]);
     return trace
       .getTracer("jarvis-core", "0.1.0")
@@ -127,14 +124,18 @@ export class ActionGateway {
           "provider.id": executor.id,
         });
         try {
-          const result = ResultSchema.parse(
-            JSON.parse(this.redact(JSON.stringify(await executor.execute(claim, combined)))),
-          );
+          const received = ResultSchema.parse(await executor.execute(claim, combined));
+          const result = ResultSchema.parse({
+            ...received,
+            text: this.redact(received.text),
+            source: this.redact(received.source),
+            ...(received.externalId ? { externalId: this.redact(received.externalId) } : {}),
+          });
           combined.throwIfAborted();
           return await this.tasks.locked(async (tx) => {
             const task = await this.tasks.get(claim.id, tx);
             this.tasks.assertLease(task, claim.owner, claim.fence);
-            invariant(Date.parse(task.spec.deadline) > Date.now(), "DEADLINE_EXPIRED");
+            invariant(taskDeadline(task) > Date.now(), "DEADLINE_EXPIRED");
             await this.tasks.move(
               tx,
               task,
@@ -155,7 +156,13 @@ export class ActionGateway {
               tx,
               task,
               verified ? "verification.succeeded" : "verification.failed",
-              { actionId: action.id, evidenceKind: "output-contract", source: result.source },
+              {
+                actionId: action.id,
+                evidenceKind: "output-contract",
+                source: result.source,
+                durationMs: Date.now() - executionStarted,
+                traceId: span.spanContext().traceId,
+              },
             );
             await this.tasks.move(
               tx,
@@ -173,9 +180,13 @@ export class ActionGateway {
           });
           return await this.tasks.locked(async (tx) => {
             const task = await this.tasks.get(claim.id, tx);
-            if (task.fence !== claim.fence || task.status === "RECOVERY_REQUIRED")
+            if (task.fence !== claim.fence || !["RUNNING", "VERIFYING"].includes(task.status))
               return task.status;
-            const safe = executor.retrySafe && !combined.aborted;
+            // Definite failure: no side effect possible. A deadline abort of a retry-safe call
+            // is definite; operator cancel, shutdown or lease loss stays conservative.
+            const safe =
+              (error instanceof ProviderFailure && !error.dispatched) ||
+              (executor.retrySafe && !signal.aborted);
             const targets = (
               await tx.query<{ target: string }>(
                 "SELECT target FROM actions WHERE task_id=$1 AND status<>'AWAITING_APPROVAL'",
@@ -184,6 +195,7 @@ export class ActionGateway {
             ).rows.map((a) => a.target);
             const fallback =
               safe &&
+              !combined.aborted &&
               error instanceof ProviderFailure &&
               error.retryable &&
               task.calls < task.spec.budget.maxCalls &&

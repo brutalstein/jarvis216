@@ -1,6 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Database, migrate } from "../src/database.js";
+import { ActionGateway } from "../src/gateway.js";
 import { ProviderRegistry } from "../src/routing.js";
 import { buildServer } from "../src/server.js";
 import { TaskService } from "../src/tasks.js";
@@ -92,5 +93,51 @@ describe("local control boundary", () => {
       payload: { ...payload, objective: "Changed content" },
     });
     expect(changed.statusCode).toBe(409);
+  });
+  it("lists tasks with bounded pagination and status filter for a future control surface", async () => {
+    const auth = { authorization: `Bearer ${operatorToken}` };
+    expect((await app.inject({ url: "/v1/tasks" })).statusCode).toBe(401);
+    const page = await app.inject({ url: "/v1/tasks?limit=1", headers: auth });
+    expect(page.statusCode).toBe(200);
+    expect(page.json()).toHaveLength(1);
+    expect(page.json()[0]).toMatchObject({ id: expect.any(String), status: expect.any(String) });
+    const ready = await app.inject({ url: "/v1/tasks?status=READY", headers: auth });
+    expect(ready.json().every((t: { status: string }) => t.status === "READY")).toBe(true);
+    expect((await app.inject({ url: "/v1/tasks?limit=1000", headers: auth })).statusCode).toBe(400);
+  });
+  it("reports task duration and retry metrics", async () => {
+    const task = await tasks.create(
+      {
+        objective: "Return verified",
+        capability: "text.generate",
+        providers: ["metric"],
+        deadline: new Date(Date.now() + 60_000).toISOString(),
+        verification: { kind: "contains", value: "verified" },
+      },
+      "metrics-task",
+      "operator",
+    );
+    await db.query("UPDATE tasks SET status='CANCELLED' WHERE id<>$1 AND status='READY'", [
+      task.id,
+    ]);
+    await new ActionGateway(tasks).run(
+      (await tasks.claim("w", 10_000))!,
+      {
+        id: "metric",
+        capability: "text.generate",
+        external: false,
+        retrySafe: true,
+        execute: async () => ({ text: "verified", source: "fixture" }),
+      },
+      new AbortController().signal,
+    );
+    const metrics = await app.inject({
+      url: "/v1/metrics",
+      headers: { authorization: `Bearer ${operatorToken}` },
+    });
+    expect(metrics.json()).toMatchObject({
+      completedDurationMs: { count: 1, p50: expect.any(Number), p95: expect.any(Number) },
+      retries: 0,
+    });
   });
 });

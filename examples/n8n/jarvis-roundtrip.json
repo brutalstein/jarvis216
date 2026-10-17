@@ -1,0 +1,45 @@
+{
+  "name": "JARVIS: trigger, approved OpenClaw run, consume verified result",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    { "id": "trigger", "name": "Manual trigger", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    {
+      "id": "enqueue", "name": "Enqueue Core task", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [240, 0],
+      "parameters": {
+        "method": "POST", "url": "http://core:2160/v1/hooks/n8n",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ eventId: 'n8n-' + $execution.id, sentAt: $now.toISO(), objective: 'Return exactly JARVIS_OK', verificationText: 'JARVIS_OK' }) }}",
+        "options": { "timeout": 10000 }
+      }
+    },
+    { "id": "wait", "name": "Bounded wait", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [480, 0], "parameters": { "resume": "timeInterval", "amount": 5, "unit": "seconds" }, "webhookId": "jarvis-roundtrip-wait" },
+    {
+      "id": "read", "name": "Read Core result", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [720, 0],
+      "parameters": {
+        "url": "={{ 'http://core:2160/v1/hooks/n8n/tasks/' + $('Enqueue Core task').first().json.id }}",
+        "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "completed", "name": "Verified completion", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [960, 0],
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "is-completed", "leftValue": "={{ $json.status }}", "rightValue": "COMPLETED", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+    },
+    { "id": "consume", "name": "Consume verified result", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [1200, -100], "parameters": {} },
+    {
+      "id": "continue", "name": "Still eligible and under poll limit", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [1200, 160],
+      "parameters": { "conditions": { "options": { "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "can-wait", "leftValue": "={{ !['FAILED','CANCELLED','BLOCKED','RECOVERY_REQUIRED'].includes($json.status) && $runIndex < 20 }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }], "combinator": "and" } }
+    },
+    { "id": "stop", "name": "Stop for operator review", "type": "n8n-nodes-base.stopAndError", "typeVersion": 1, "position": [1440, 160], "parameters": { "errorMessage": "Core did not produce verified completion within the bounded poll window; inspect its action records. Do not blindly resubmit." } }
+  ],
+  "connections": {
+    "Manual trigger": { "main": [[{ "node": "Enqueue Core task", "type": "main", "index": 0 }]] },
+    "Enqueue Core task": { "main": [[{ "node": "Bounded wait", "type": "main", "index": 0 }]] },
+    "Bounded wait": { "main": [[{ "node": "Read Core result", "type": "main", "index": 0 }]] },
+    "Read Core result": { "main": [[{ "node": "Verified completion", "type": "main", "index": 0 }]] },
+    "Verified completion": { "main": [[{ "node": "Consume verified result", "type": "main", "index": 0 }], [{ "node": "Still eligible and under poll limit", "type": "main", "index": 0 }]] },
+    "Still eligible and under poll limit": { "main": [[{ "node": "Bounded wait", "type": "main", "index": 0 }], [{ "node": "Stop for operator review", "type": "main", "index": 0 }]] }
+  }
+}

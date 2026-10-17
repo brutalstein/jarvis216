@@ -14,6 +14,9 @@ async function main() {
       method = "POST";
       body = await readFile(argument ?? "", "utf8");
       break;
+    case "list":
+      path = `/v1/tasks${argument ? `?status=${encodeURIComponent(argument)}` : ""}`;
+      break;
     case "get":
       path = `/v1/tasks/${argument}`;
       break;
@@ -42,7 +45,7 @@ async function main() {
       break;
     default:
       throw new Error(
-        "Usage: cli submit <json-file> <idempotency-key> | get/events/actions/cancel <task-id> | approve <action-id> | reconcile <action-id> <json-file> | ready",
+        "Usage: cli submit <json-file> <idempotency-key> | list [status] | get/events/actions/cancel <task-id> | approve <action-id> | reconcile <action-id> <json-file> | ready",
       );
   }
   const response = await fetch(`${base}${path}`, {

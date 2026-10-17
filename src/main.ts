@@ -3,9 +3,11 @@ import { migrate, postgres } from "./database.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
 import { TaskService } from "./tasks.js";
+import { initTracing } from "./telemetry.js";
 import { Worker } from "./worker.js";
 
 async function main() {
+  const shutdownTracing = initTracing();
   const config = ConfigSchema.parse(process.env);
   const secretValues = Object.fromEntries(
     Object.entries(process.env).filter(([key]) =>
@@ -17,7 +19,15 @@ async function main() {
   const db = postgres(config.DATABASE_URL);
   try {
     await migrate(db);
-    const tasks = new TaskService(db, { concurrency: config.WORKER_CONCURRENCY });
+    const tasks = new TaskService(db, {
+      concurrency: config.WORKER_CONCURRENCY,
+      limits: {
+        "text.generate": config.MODEL_CONCURRENCY,
+        "browser.extract": config.BROWSER_CONCURRENCY,
+        "workflow.invoke": config.WORKFLOW_CONCURRENCY,
+      },
+      redact: (text) => secrets.redact(text),
+    });
     await tasks.recover();
     const workers = Array.from(
       { length: config.WORKER_CONCURRENCY },
@@ -56,6 +66,7 @@ async function main() {
     }
   } finally {
     await db.close();
+    await shutdownTracing();
   }
 }
 main().catch(() => {

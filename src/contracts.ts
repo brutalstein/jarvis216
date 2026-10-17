@@ -60,28 +60,60 @@ export const CapabilitySchema = z.enum(["text.generate", "browser.extract", "wor
 export type Capability = z.infer<typeof CapabilitySchema>;
 export const RiskSchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
 export type Risk = z.infer<typeof RiskSchema>;
-export const TaskSpecSchema = z.strictObject({
-  objective: z.string().trim().min(1).max(16_000),
-  capability: CapabilitySchema,
-  input: z.record(z.string(), z.json()).default({}),
-  providers: z
-    .array(z.string().regex(/^[a-z0-9-]{1,40}$/))
-    .min(1)
-    .max(8),
-  risk: RiskSchema.default("LOW"),
-  privacy: z.enum(["public", "private", "local-only"]).default("public"),
-  budget: z
-    .strictObject({
-      maxCalls: z.number().int().min(1).max(5).default(2),
-      maxDurationMs: z.number().int().min(100).max(300_000).default(60_000),
-      maxOutputTokens: z.number().int().min(1).max(8192).default(1024),
-    })
-    .default({ maxCalls: 2, maxDurationMs: 60_000, maxOutputTokens: 1024 }),
-  deadline: z.iso.datetime(),
-  parentId: z.uuid().optional(),
-  dependencies: z.array(z.uuid()).max(32).default([]),
-  verification: z.strictObject({ kind: z.literal("contains"), value: z.string().min(1).max(4096) }),
+export const ContextEntrySchema = z.strictObject({
+  source: z.string().min(1).max(256),
+  text: z.string().min(1).max(16_000),
+  expiresAt: z.number().int().positive(),
 });
+export const BrowserInputSchema = z.strictObject({
+  url: z.url(),
+  expectedText: z.string().min(1).max(4096),
+});
+export const WorkflowInputSchema = z.strictObject({
+  workflow: z.string().min(1).max(100),
+  payload: z.record(z.string(), z.json()),
+});
+export const TaskSpecSchema = z
+  .strictObject({
+    objective: z.string().trim().min(1).max(16_000),
+    capability: CapabilitySchema,
+    input: z.record(z.string(), z.json()).default({}),
+    providers: z
+      .array(z.string().regex(/^[a-z0-9-]{1,40}$/))
+      .min(1)
+      .max(8),
+    risk: RiskSchema.default("LOW"),
+    privacy: z.enum(["public", "private", "local-only"]).default("public"),
+    budget: z
+      .strictObject({
+        maxCalls: z.number().int().min(1).max(5).default(2),
+        maxDurationMs: z.number().int().min(100).max(300_000).default(60_000),
+        maxOutputTokens: z.number().int().min(1).max(8192).default(1024),
+      })
+      .default({ maxCalls: 2, maxDurationMs: 60_000, maxOutputTokens: 1024 }),
+    deadline: z.iso.datetime(),
+    parentId: z.uuid().optional(),
+    dependencies: z.array(z.uuid()).max(32).default([]),
+    context: z.array(ContextEntrySchema).max(8).default([]),
+    verification: z.strictObject({
+      kind: z.literal("contains"),
+      value: z.string().min(1).max(4096),
+    }),
+  })
+  .superRefine((task, ctx) => {
+    const schema =
+      task.capability === "text.generate"
+        ? z.strictObject({})
+        : task.capability === "browser.extract"
+          ? BrowserInputSchema
+          : WorkflowInputSchema;
+    if (!schema.safeParse(task.input).success)
+      ctx.addIssue({
+        code: "custom",
+        path: ["input"],
+        message: "Invalid parameters for capability",
+      });
+  });
 export type TaskSpec = z.infer<typeof TaskSpecSchema>;
 export const ResultSchema = z.strictObject({
   text: z.string().min(1).max(64_000),
@@ -127,7 +159,8 @@ export function fingerprint(value: unknown): string {
     if (input && typeof input === "object")
       return Object.fromEntries(
         Object.entries(input)
-          .sort(([a], [b]) => a.localeCompare(b))
+          // Code-unit order: localeCompare would make hashes depend on the process locale.
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
           .map(([k, v]) => [k, canonical(v)]),
       );
     return input;
@@ -136,6 +169,28 @@ export function fingerprint(value: unknown): string {
     .update(JSON.stringify(canonical(value)))
     .digest("hex");
 }
+export function taskDeadline(task: Task): number {
+  return Math.min(
+    Date.parse(task.spec.deadline),
+    Number(task.created_at) + task.spec.budget.maxDurationMs,
+  );
+}
+// Declared event families. Consumers may rely on this closed set; extend it deliberately.
+export const EventTypeSchema = z.enum([
+  "task.transition",
+  "provider.selected",
+  "context.added",
+  "approval.requested",
+  "approval.granted",
+  "approval.rejected",
+  "action.intended",
+  "execution.failed",
+  "verification.succeeded",
+  "verification.failed",
+  "cancellation.requested",
+  "action.reconciled",
+]);
+export type EventType = z.infer<typeof EventTypeSchema>;
 export const EnvelopeSchema = z.strictObject({
   protocolVersion: z.literal(1),
   messageId: z.uuid(),
@@ -144,7 +199,7 @@ export const EnvelopeSchema = z.strictObject({
   taskId: z.uuid(),
   sender: z.literal("jarvis-core"),
   recipient: z.literal("task-events"),
-  type: z.string().min(1).max(80),
+  type: EventTypeSchema,
   schemaVersion: z.literal(1),
   timestamp: z.iso.datetime(),
   expiresAt: z.iso.datetime(),

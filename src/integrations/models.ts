@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Codex } from "@openai/codex-sdk";
 import type { ExecutionResult, Executor, Task } from "../contracts.js";
 import { ProviderFailure } from "../routing.js";
+import { networkCode, neverDispatched } from "./http.js";
 
 async function classify<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -14,6 +15,8 @@ async function classify<T>(fn: () => Promise<T>): Promise<T> {
     if (status === 401 || status === 403)
       throw new ProviderFailure("authentication-required", false);
     if (status >= 500) throw new ProviderFailure("provider-unavailable", true);
+    if (error instanceof Anthropic.APIConnectionError || networkCode(error))
+      throw new ProviderFailure("transient", true, !neverDispatched(error));
     throw new ProviderFailure("permanent", false);
   }
 }
@@ -26,8 +29,16 @@ export class ClaudeExecutor implements Executor {
   constructor(
     key: string,
     private model: string,
+    client?: Anthropic,
   ) {
-    this.client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 60_000 });
+    this.client =
+      client ??
+      new Anthropic({
+        apiKey: key,
+        baseURL: "https://api.anthropic.com",
+        maxRetries: 0,
+        timeout: 60_000,
+      });
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const result = await classify(() =>
@@ -60,8 +71,17 @@ export class GeminiExecutor implements Executor {
   constructor(
     key: string,
     private model: string,
+    client?: GoogleGenAI,
   ) {
-    this.client = new GoogleGenAI({ apiKey: key, httpOptions: { retryOptions: { attempts: 1 } } });
+    this.client =
+      client ??
+      new GoogleGenAI({
+        apiKey: key,
+        httpOptions: {
+          baseUrl: "https://generativelanguage.googleapis.com",
+          retryOptions: { attempts: 1 },
+        },
+      });
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const result = await classify(() =>

@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+.tools
+node_modules
+workers/browser/.venv
+graphify-out
+artifacts
+data
+dist
+coverage

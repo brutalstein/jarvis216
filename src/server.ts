@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import Fastify, { type FastifyRequest } from "fastify";
 import { z } from "zod";
-import { CoreError, invariant, TaskSpecSchema } from "./contracts.js";
+import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
@@ -69,6 +69,38 @@ export function buildServer(
     });
   });
   app.get("/healthz", async () => ({ status: "alive" }));
+  app.get("/v1/metrics", async (request) => {
+    authenticate(request, "operator");
+    const [taskStates, providers, usage, durations, retries] = await Promise.all([
+      tasks.db.query("SELECT status,count(*) AS count FROM tasks GROUP BY status ORDER BY status"),
+      tasks.db.query(
+        "SELECT target,status,count(*) AS count FROM actions GROUP BY target,status ORDER BY target,status",
+      ),
+      tasks.db.query("SELECT COALESCE(sum(calls),0) AS reserved_calls FROM tasks"),
+      // Admission-to-completion wall time, from the authoritative event timestamps.
+      tasks.db.query<{ count: number; p50: number | null; p95: number | null }>(
+        `SELECT count(*)::int AS count,
+           percentile_cont(0.5) WITHIN GROUP (ORDER BY d) AS p50,
+           percentile_cont(0.95) WITHIN GROUP (ORDER BY d) AS p95
+         FROM (SELECT (max(extract(epoch FROM (e.envelope->>'timestamp')::timestamptz))*1000 - t.created_at)::float8 AS d
+               FROM tasks t JOIN events e ON e.task_id=t.id
+               WHERE t.status='COMPLETED' GROUP BY t.id,t.created_at) completed`,
+      ),
+      tasks.db.query<{ retries: number }>(
+        "SELECT count(*)::int AS retries FROM events WHERE envelope->>'type'='execution.failed' AND envelope->'payload'->>'retryEligible'='true'",
+      ),
+    ]);
+    return {
+      taskStates: taskStates.rows,
+      providerActions: providers.rows,
+      usage: usage.rows[0],
+      completedDurationMs: durations.rows[0],
+      retries: retries.rows[0]?.retries ?? 0,
+      rssBytes: process.memoryUsage().rss,
+      cpuMicros: process.cpuUsage(),
+      observedAt: new Date().toISOString(),
+    };
+  });
   app.get("/readyz", async (request) => {
     authenticate(request, "operator");
     await tasks.db.query("SELECT 1");
@@ -80,6 +112,17 @@ export function buildServer(
     return reply
       .code(201)
       .send(await tasks.create(TaskSpecSchema.parse(request.body), key, "operator"));
+  });
+  app.get("/v1/tasks", async (request) => {
+    authenticate(request, "operator");
+    const query = z
+      .strictObject({
+        status: z.enum(states).optional(),
+        before: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+      })
+      .parse(request.query);
+    return tasks.list(query);
   });
   app.get("/v1/tasks/:id", async (request) => {
     authenticate(request, "operator");
@@ -109,6 +152,16 @@ export function buildServer(
     authenticate(request, "operator");
     const body = z.strictObject({ dependencyId: z.uuid() }).parse(request.body);
     await tasks.addDependency(TaskId.parse(request.params).id, body.dependencyId);
+    return reply.code(204).send();
+  });
+  app.post("/v1/tasks/:id/resume", async (request, reply) => {
+    authenticate(request, "operator");
+    await tasks.resume(TaskId.parse(request.params).id);
+    return reply.code(204).send();
+  });
+  app.post("/v1/actions/:id/reject", async (request, reply) => {
+    authenticate(request, "operator");
+    await tasks.reject(TaskId.parse(request.params).id, "operator");
     return reply.code(204).send();
   });
   app.post("/v1/actions/:id/approve", async (request, reply) => {
@@ -147,6 +200,7 @@ export function buildServer(
         providers: ["openclaw"],
         deadline: new Date(sent + 300_000).toISOString(),
         privacy: "private",
+        budget: { maxCalls: 1, maxDurationMs: 300_000, maxOutputTokens: 1024 },
         verification: { kind: "contains", value: body.verificationText },
       },
       `n8n:${body.eventId}`,

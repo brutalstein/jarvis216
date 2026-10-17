@@ -10,6 +10,8 @@ export class ProviderFailure extends Error {
       | "provider-unavailable"
       | "invalid-response",
     public retryable: boolean,
+    // false only when the request provably never reached the service (no side effect).
+    public dispatched = true,
   ) {
     super(kind);
   }

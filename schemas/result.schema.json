@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64000
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "externalId": {
+      "type": "string",
+      "maxLength": 256
+    }
+  },
+  "required": [
+    "text",
+    "source"
+  ],
+  "additionalProperties": false
+}

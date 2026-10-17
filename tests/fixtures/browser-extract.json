@@ -1,0 +1,13 @@
+{
+  "request": {
+    "url": "https://example.com/",
+    "expectedText": "documentation examples",
+    "taskId": "5b0f2f9e-3c55-4b8e-9a4b-0b6f3e9c1d2a",
+    "timeoutMs": 30000
+  },
+  "response": {
+    "text": "Example Domain. This domain is for use in documentation examples.",
+    "source": "browser-use:dom-readback",
+    "externalId": "5b0f2f9e-3c55-4b8e-9a4b-0b6f3e9c1d2a"
+  }
+}

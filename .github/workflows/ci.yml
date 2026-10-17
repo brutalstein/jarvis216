@@ -1,0 +1,40 @@
+name: backend-verification
+on: [push, pull_request]
+permissions: { contents: read }
+jobs:
+  typescript:
+    strategy:
+      matrix: { os: [ubuntu-latest, windows-latest] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.22.0, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm audit --audit-level=high
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.3-bookworm
+        env: { POSTGRES_USER: jarvis, POSTGRES_PASSWORD: ci-only-local-password, POSTGRES_DB: jarvis_test }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U jarvis" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.22.0, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run test:postgres
+        env: { JARVIS_LIVE_POSTGRES_TEST: "true", TEST_DATABASE_URL: "postgresql://jarvis:ci-only-local-password@127.0.0.1:5432/jarvis_test" }
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: 0.11.23, enable-cache: true }
+      - run: uv sync --project workers/browser --locked --python 3.12
+      - run: uv run --project workers/browser --locked ruff check workers/browser
+      - run: uv run --project workers/browser --locked mypy workers/browser/worker.py
+      - run: uv run --project workers/browser --locked python -m unittest discover -s workers/browser -v
