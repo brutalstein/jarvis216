@@ -53,7 +53,7 @@ enters Core, its logs, its database or its child-process arguments.
 
 ## Components
 
-### ClaudeCodeExecutor (new, `src/integrations/models.ts`)
+### ClaudeCodeExecutor (new, `src/integrations/claude-code.ts`)
 
 - `id: "claude-code"`, capability `text.generate`, `external: true`, `retrySafe: true`
   (no tools, so no side effects), no executor risk floor. Private tasks still require HIGH
