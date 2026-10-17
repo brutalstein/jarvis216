@@ -74,7 +74,7 @@ node --version  # v24.22.0
 Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
 docker compose stop core
 docker compose -f compose.yaml -f compose.dev.yaml up -d postgres
-openclaw gateway run  # dedicated terminal; no Scheduled Task
+.\scripts\openclaw-native.ps1  # gateway run in a dedicated terminal; no Scheduled Task
 # Second terminal with the same PATH and cleared DATABASE_URL:
 npm run build
 npm start
@@ -84,8 +84,8 @@ npm run cli -- ready
 
 See [INTEGRATIONS.md](docs/INTEGRATIONS.md) for official CLI logins and configuration.
 Codex and OpenClaw require exact HIGH approval per task. Native read-only Codex can still
-read host data. Claude's organization currently blocks subscription access; Gemini needs
-an operator-supplied API key. Credential presence does not prove entitlement.
+read host data. Claude Code uses the operator's subscription login; Gemini uses an operator API key in
+`.env`. Credential presence does not prove entitlement.
 After testing, stop native Core and the Gateway, then `docker compose up -d postgres`
 to remove the temporary PostgreSQL publication. The engineering report records live evidence.
 

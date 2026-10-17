@@ -20,7 +20,11 @@ Set `ENABLE_CLAUDE_CODE=true`, an existing absolute `CLAUDE_CODE_PATH`, and
 `CLAUDE_CODE_MODEL` (for example `sonnet`). Run `claude auth login --claudeai` as the
 operator. Core runs the official binary with no tools, MCP, slash commands, persistence
 or user customizations (`--safe-mode`), in `data/claude-code`, with the objective on stdin.
-The child receives only the environment allowlist; Windows adds OS identity variables.
+The child receives only the environment allowlist plus `CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS=1`
+and `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1`: the workdir sits inside this repository, and without
+them Claude Code adds its git status snapshot (branch, file names, commits) to every prompt.
+Claude Code's own built-in prompt still carries the account e-mail and an environment block
+to the operator's subscription. Windows adds OS identity variables.
 API keys and arbitrary parent variables are excluded. Core never reads OAuth tokens.
 Managed enterprise policy can still apply. One JSON result is capped at 1 MiB of UTF-8;
 stderr is bounded for classification and never logged.
@@ -32,14 +36,17 @@ Choose a provider with supported token limits when the task requires a hard ceil
 
 [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance) distinguish ordinary
 individual Claude Code use from routing third-party traffic through subscription tokens.
-This harness is for its single local operator. The live request returned 403
-`oauth_not_allowed_for_organization` (organization disabled subscription access), classified
-as `policy-denied`; this provider stays disabled until account access is enabled.
+This harness is for its single local operator. An earlier live request returned 403
+`oauth_not_allowed_for_organization`; that response is classified as `policy-denied`. It did
+not recur: with the strict flags the subscription login answers, and live Core tasks
+completed (see the engineering report). Without `--setting-sources ""` a user-level
+`apiKeyHelper` or `ANTHROPIC_BASE_URL` would take precedence over the subscription login.
 
 Gemini remains API-key only. No Gemini CLI or Antigravity OAuth path is implemented;
 see [Google's deprecation notice](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals),
 [Gemini CLI terms](https://github.com/google-gemini/gemini-cli/blob/main/docs/resources/tos-privacy.md)
-and [Antigravity terms](https://antigravity.google/terms). No Gemini key was available.
+and [Antigravity terms](https://antigravity.google/terms). The operator's free-tier key is
+in `.env` only; `gemini-3.5-flash` was chosen from the live model list and completed a task.
 
 ## OpenClaw
 
@@ -50,13 +57,34 @@ and both `tools.deny=["*"]` and `agents.entries.jarvis-reader.tools.deny=["*"]`.
 The agent uses `openai/gpt-5.6-sol` and `agents.ownership=explicit`. File/image URL inputs
 are disabled under the Responses endpoint. The random 48-byte Gateway token matches
 `OPENCLAW_TOKEN`; secrets were supplied via `openclaw config patch --stdin`, not argv.
-The intended login command is `openclaw models auth login --provider openai --agent jarvis-reader`.
+OpenAI models run through the official `@openclaw/codex` harness plugin
+(`openclaw plugins install @openclaw/codex`). Start every OpenClaw command with
+`scripts/openclaw-native.ps1`, which prefixes the portable Node and removes `OPENAI_API_KEY`,
+`CODEX_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` and `GOOGLE_API_KEY` from the process
+environment. Log in with:
 
-Gateway startup and login confirmation are currently blocked by OpenClaw's native SQLite
-ownership/maintenance failure. The read-only `openclaw doctor --json` reproduces it even
-with temporary state. Do not delete locks or relax tool policy to make startup pass.
-Both enablement and policy attestation stay false until the three adversarial probes,
-session-log inspection and approved Core task actually pass.
+```powershell
+.\scripts\openclaw-native.ps1 models auth login --provider openai --method oauth --agent jarvis-reader --profile-id openai:default
+```
+
+Keep `--profile-id`. Without it, 2026.10.4 first tries to import the Codex CLI login through
+a managed app-server. On Windows that app-server's transport close is never reported as
+"closed", so every attempt fails with "The Codex credential reader could not stop". The
+explicit profile skips that import and never copies `~/.codex` tokens. The operator
+completes the browser OAuth. Gateway startup on this host takes about 60 s; the SQLite
+failure recorded earlier did not recur with a direct `gateway run`.
+
+`tools.deny=["*"]` does not remove every tool. The Codex harness still exposes code-mode
+`exec`/`wait`, which never appear as Responses output items. On 2026.10.4 `exec` was observed
+running a V8 isolate with an empty nested `tools` object and no `fetch`, `require` or file
+system; that is observed behavior, not an upstream guarantee. `feature.shell_tool=false`, and MCP, apps, plugins, browser and computer use
+are off. Defense in depth: `plugins.entries.codex.config.appServer` sets
+`sandbox: "read-only"` and `approvalPolicy: "never"`; the harness default is
+`danger-full-access`. Two rounds of shell, file and web probes against a random canary file, plus explicit
+`exec`/`wait` probes, showed no leak. The Gateway log showed only agent runs ending
+`stopReason=stop`, and the Codex session rollouts showed no calls beyond the probed
+`exec`/`wait`. `OPENCLAW_POLICY_VERIFIED=true` rests on that evidence. Re-run the probes after any
+OpenClaw or Codex plugin upgrade before trusting the flag again.
 
 Provision the researched version separately, bind the Gateway to loopback/private container
 network, require bearer authentication and enable its documented Responses endpoint.

@@ -8,14 +8,14 @@ is discovery evidence, not proof that a complete deployment works.
 | --- | --- | --- | --- |
 | Node.js | 24.22.0 LTS, 2026-10-14 | 24.22.0 official Windows ZIP, SHA256 checked | Type checking and suite run; 24.11.0 also tested |
 | TypeScript | 7.0.2 | 7.0.2 | Strict type checking + build |
-| OpenClaw | v2026.10.4 | 2026.10.4, portable Node global prefix | Config validated; native Gateway and login blocked by SQLite state ownership failure |
+| OpenClaw | v2026.10.4 | 2026.10.4, portable Node global prefix | Native Gateway, ChatGPT OAuth via `@openclaw/codex`, denial probes and approved Core task COMPLETED |
 | Browser Use | GitHub 0.13.13; PyPI 0.13.11 | 0.13.11, Python 3.12.10 | Real ephemeral browser DOM readback passed |
 | n8n | n8n@2.43.7 | 2.43.7 image | Live: ingress roundtrip and Core-invoked webhook with dedup; API key client not exercised |
-| Claude Code | v2.1.302 researched | Existing official CLI 2.1.281 | Subscription login detected; live request denied by organization (403); harness 14 tests |
-| Claude API SDK | npm 0.135.0 | @anthropic-ai/sdk 0.135.0 | Compiled adapter; live credentials not exercised |
+| Claude Code | v2.1.302 researched | Existing official CLI 2.1.281 | Subscription live tasks COMPLETED with strict flags; earlier 403 did not recur; harness 15 tests |
+| Claude API SDK | npm 0.135.0 | @anthropic-ai/sdk 0.135.0 | Compiled adapter; not live-verified (no API key by design) |
 | Codex | rust-v0.163.0 | @openai/codex-sdk 0.163.0 | ChatGPT login in isolated home; approved Core task COMPLETED on gpt-5.6-sol |
 | Gemini CLI | v0.64.0 | Research reference; CLI not launched | Gemini API path below; CLI harness pending |
-| Gemini API SDK | npm 2.30.0 | @google/genai 2.30.0 | Compiled adapter; live credentials not exercised |
+| Gemini API SDK | npm 2.30.0 | @google/genai 2.30.0 | Operator free-tier key; `gemini-3.5-flash` live task COMPLETED |
 | PostgreSQL | Selected existing 18.3 image | 18.3-bookworm, amd64 digest pinned | Live: concurrent migrate, competing claims, reconnect after backend kill, benchmark |
 | Docker Desktop | Compose v2, WSL2 backend | Core image built locally | Live: health, CLI lifecycle, restart persistence, SIGTERM drain, segmented networks |
 | PGlite | 0.5.10 | Dev/test only | Real SQL, transactions and disk reopen tested |
@@ -101,8 +101,8 @@ token cap, abort signal and disabled SDK retries. It registers no tools. Only an
 response qualifies for output verification. Authentication, rate-limit and server errors are
 classified without retaining exception bodies. Claude Code/Agent SDK execution and its
 subscription permissions are separate. The new official CLI harness is described in
-[INTEGRATIONS.md](INTEGRATIONS.md#claude-code-subscription) and ADR 0008; its live call
-was blocked by organization entitlement. Streaming exists
+[INTEGRATIONS.md](INTEGRATIONS.md#claude-code-subscription) and ADR 0008; its live calls
+completed after an earlier organization 403 that did not recur. Streaming exists
 upstream but this adapter currently buffers bounded text. No subscription entitlement is
 assumed from API access.
 

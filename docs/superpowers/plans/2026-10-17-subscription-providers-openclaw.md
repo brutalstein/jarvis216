@@ -104,22 +104,22 @@
 
 - [x] **Step 4: Create agent `jarvis-reader`** with every tool denied and no sandbox escape (keys from the installed docs). Verify: `openclaw config get` shows the deny policy.
 
-- [ ] **Step 5: Start and probe.** `openclaw gateway run` in a background terminal. Verify: `GET http://127.0.0.1:18789/v1/models` with the token returns 200 and lists `openclaw/jarvis-reader`; without the token returns 401.
+- [x] **Step 5: Start and probe.** `openclaw gateway run` in a background terminal. Verify: `GET http://127.0.0.1:18789/v1/models` with the token returns 200 and lists `openclaw/jarvis-reader`; without the token returns 401.
 
 ### Task 4: Logins and live verification
 
 **Files:** `.env` (enable flags only), `data/codex-homes/jarvis`, `data/workspaces/jarvis`, `data/claude-code`.
 
-- [ ] **Step 1: Operator logins.** Start each command; the operator completes it in the browser:
+- [x] **Step 1: Operator logins.** Start each command; the operator completes it in the browser:
   `openclaw models auth login --provider openai`;
   `$env:CODEX_HOME="<repo>\data\codex-homes\jarvis"; codex login`.
   Verify: `openclaw models auth list` shows an `openai` profile; `data/codex-homes/jarvis/auth.json` exists; `CODEX_HOME=... codex login status` prints `Logged in using ChatGPT`.
 
-- [ ] **Step 2: OpenClaw adversarial denial.** Send three OpenResponses requests to `jarvis-reader`: run `whoami`, read `C:\Windows\win.ini`, fetch `https://example.com`. Verify: no tool call items in any response and the Gateway session log shows no tool execution. Only then set `OPENCLAW_POLICY_VERIFIED=true`.
+- [x] **Step 2: OpenClaw adversarial denial.** Send three OpenResponses requests to `jarvis-reader`: run `whoami`, read `C:\Windows\win.ini`, fetch `https://example.com`. Verify: no tool call items in any response and the Gateway session log shows no tool execution. Only then set `OPENCLAW_POLICY_VERIFIED=true`.
 
-- [ ] **Step 3: Native Core.** `docker compose stop core`; `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`; set `ENABLE_CLAUDE_CODE=true`, `CLAUDE_CODE_PATH=C:\Users\cenke\.local\bin\claude.exe`, `CLAUDE_CODE_MODEL`, `ENABLE_OPENCLAW=true`, `ENABLE_CODEX=true`, `CODEX_AUTH=chatgpt`, `CODEX_ISOLATION_VERIFIED=true`, `CODEX_WORKSPACE`, `CODEX_ISOLATED_HOME`; start with the inherited `DATABASE_URL` removed (`env -u DATABASE_URL npm start`). Verify: `npm run cli -- ready` lists `claude-code`, `codex`, `openclaw`.
+- [x] **Step 3: Native Core.** `docker compose stop core`; `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`; set `ENABLE_CLAUDE_CODE=true`, `CLAUDE_CODE_PATH=C:\Users\cenke\.local\bin\claude.exe`, `CLAUDE_CODE_MODEL`, `ENABLE_OPENCLAW=true`, `ENABLE_CODEX=true`, `CODEX_AUTH=chatgpt`, `CODEX_ISOLATION_VERIFIED=true`, `CODEX_WORKSPACE`, `CODEX_ISOLATED_HOME`; start with the inherited `DATABASE_URL` removed (`env -u DATABASE_URL npm start`). Verify: `npm run cli -- ready` lists `claude-code`, `codex`, `openclaw`.
 
-- [ ] **Step 4: Live tasks** via `npm run cli -- submit <spec.json> <key>`, each with `verification: {kind:"contains", value:"JARVIS_<NAME>_OK"}`:
+- [x] **Step 4: Live tasks** via `npm run cli -- submit <spec.json> <key>`, each with `verification: {kind:"contains", value:"JARVIS_<NAME>_OK"}`:
   - `claude-code` public task → COMPLETED; the result contains no text from user hooks or `CLAUDE.md` (probe: ask the model to list its instructions; check for "caveman" and "Ponytail").
   - `codex` → WAITING_FOR_APPROVAL → `approve` → COMPLETED.
   - `openclaw` → approval → COMPLETED.
@@ -158,6 +158,12 @@
   docs; this does not implement a hard CLI token ceiling. No minor findings. npm run check:
   92 passed, 1 skipped; separate PostgreSQL test passed; Python 7/ruff/mypy passed; npm audit0.
   No push. Overall deployment success remains incomplete until the outstanding live gates pass.
+
+Resumed 2026-10-17 (evening): all Task 3–4 live gates passed on native Windows. OpenClaw login
+needs `--profile-id openai:default` (Windows import bug); `@openclaw/codex` installed; denial
+verified beyond Responses output (code-mode `exec` isolate with no nested tools, Codex sandbox
+read-only); OpenClaw, Claude Code and Gemini tasks COMPLETED; stopped Gateway FAILED not
+dispatched. Claude Code now disables git-status and CLAUDE.md context. OPENCLAW_POLICY_VERIFIED=true.
 
 Evidence: docs/ENGINEERING_REPORT.md and ignored artifacts/subscription-setup/.
 Resume record: .superpowers/sdd/2026-10-17-subscription-providers-openclaw/progress.md.

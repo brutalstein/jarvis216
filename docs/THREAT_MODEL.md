@@ -11,7 +11,7 @@ This is not a multi-tenant authorization system or a hostile-host sandbox.
 | Credential exfiltration | Secret references, restricted child environment, known-secret redaction, no request/exception logs | Unknown secrets and secrets embedded in user input need operator care; disk encryption outside Core |
 | Dependency compromise | Exact npm/uv locks, npm install scripts disabled, vulnerability audit | OS image and Python dependency scans, provenance review remain required |
 | Arbitrary command execution | No shell executor endpoint; Codex disabled without verified isolation | A configuration flag attests isolation; it does not create or prove it |
-| Cross-agent escalation | Capability/provider allowlist, deterministic risk floor (HIGH for OpenClaw, Codex, n8n), no model-owned authorization | OpenClaw runtime tool denial must be independently enforced |
+| Cross-agent escalation | Capability/provider allowlist, deterministic risk floor (HIGH for OpenClaw, Codex, n8n), no model-owned authorization | OpenClaw runtime tool denial must be independently enforced; live probes found only isolated code-mode `exec`/`wait` with no nested tools, Codex sandbox set read-only |
 | Compromised webhook / replay | Separate token, restricted task shape, timestamp window, durable key+content hash | Shared token compromise permits scoped task admission; tokens need rotation |
 | Ingress flood / queue exhaustion | Per-principal cap of 100 queued tasks for non-operator principals, 1000 in total; bounded body size | One compromised token can still fill its own quota |
 | Duplicate external action | Persist intention first, single-use approval, call budget, no automatic replay after uncertainty | No exactly-once external guarantee; n8n workflow must deduplicate too |

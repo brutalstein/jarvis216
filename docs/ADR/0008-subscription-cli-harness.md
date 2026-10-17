@@ -27,8 +27,8 @@ UTF-8 bytes. Windows may inject OS variables beyond the supplied child allowlist
 
 Automatic policy review denied system MSI execution. The existing portable Node 24.22.0
 ZIP was freshly verified against official SHASUMS256.txt and used through process PATH.
-System Node remains unchanged. Claude's live gate is blocked by organization policy;
-Gemini's is blocked by the missing key. Neither is claimed live-verified.
+System Node remains unchanged. Claude Code and Gemini live tasks completed through native Core;
+the engineering report records task ids.
 
 The official CLI exposes no output-token cap flag under the required environment/argv
 contract. Claude Code and existing Codex execution therefore advertise
