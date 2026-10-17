@@ -104,6 +104,7 @@ export class CodexExecutor implements Executor {
   readonly capability = "text.generate";
   readonly external = true;
   readonly retrySafe = false;
+  readonly riskFloor = "HIGH" as const;
   private client: Codex;
   constructor(
     key: string,

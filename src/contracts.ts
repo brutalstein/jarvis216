@@ -126,6 +126,8 @@ export interface Executor {
   capability: Capability;
   external: boolean;
   retrySafe: boolean;
+  // Minimum action risk regardless of the task's declared risk (e.g. agent runtimes).
+  riskFloor?: Risk;
   configuration?: string;
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult>;
 }
@@ -143,6 +145,8 @@ export interface Task {
   result: ExecutionResult | null;
   created_at: string | number;
 }
+// Action statuses meaning the executor was (or may have been) invoked for that target.
+export const attemptedStatuses = ["EXECUTING", "SUCCEEDED", "FAILED", "UNCERTAIN"] as const;
 export interface Action {
   id: string;
   task_id: string;

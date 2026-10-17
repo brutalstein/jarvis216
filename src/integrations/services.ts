@@ -8,6 +8,7 @@ import {
   type Task,
   WorkflowInputSchema,
 } from "../contracts.js";
+import { ProviderFailure } from "../routing.js";
 import { jsonRequest, serviceUrl } from "./http.js";
 
 const OpenResponse = z.object({
@@ -29,6 +30,8 @@ export class OpenClawExecutor implements Executor {
   readonly external = true;
   // Runtime tool restrictions must be verified by deployment. Even disconnect is uncertain.
   readonly retrySafe = false;
+  // An agent runtime may act, not just answer: every run needs exact operator approval.
+  readonly riskFloor = "HIGH" as const;
   private base: string;
   constructor(
     base: string,
@@ -137,6 +140,8 @@ export class WorkflowExecutor implements Executor {
   readonly capability = "workflow.invoke";
   readonly external = true;
   readonly retrySafe = false;
+  // External automation side effects: always exact per-action approval.
+  readonly riskFloor = "HIGH" as const;
   constructor(
     private workflows: Readonly<Record<string, { url: string; token: string; version: string }>>,
   ) {
@@ -144,8 +149,11 @@ export class WorkflowExecutor implements Executor {
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const input = WorkflowInputSchema.parse(task.spec.input);
-    const workflow = this.workflows[input.workflow];
-    if (!workflow) throw new CoreError("WORKFLOW_NOT_REGISTERED", 403);
+    // Own-property lookup: "__proto__"/"constructor" must not resolve to Object internals.
+    const workflow = Object.hasOwn(this.workflows, input.workflow)
+      ? this.workflows[input.workflow]
+      : undefined;
+    if (!workflow) throw new ProviderFailure("policy-denied", false, false);
     // Registered workflow MUST implement deduplication by taskId; Core itself never retries.
     return ResultSchema.parse(
       await jsonRequest(

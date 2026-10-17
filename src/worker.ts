@@ -6,40 +6,58 @@ import { ActionGateway } from "./gateway.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
+export interface WorkerTiming {
+  leaseMs: number;
+  renewMs: number;
+  // Shutdown grace for in-flight actions before they are aborted (keep below stop timeout).
+  drainMs: number;
+}
 export class Worker {
   private running = new Map<string, AbortController>();
   private gateway: ActionGateway;
+  private timing: WorkerTiming;
   constructor(
     private tasks: TaskService,
     private registry: ProviderRegistry,
     redact: (text: string) => string = (text) => text,
+    timing: Partial<WorkerTiming> = {},
   ) {
     this.gateway = new ActionGateway(tasks, redact);
+    this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, ...timing };
   }
   cancel(id: string): void {
     this.running.get(id)?.abort();
   }
   async once(): Promise<boolean> {
-    const leaseMs = 30_000;
+    const { leaseMs, renewMs } = this.timing;
     const owner = `worker:${randomUUID()}`;
     const task = await this.tasks.claim(owner, leaseMs);
     if (!task) return false;
     const controller = new AbortController();
     this.running.set(task.id, controller);
     let heartbeat: ReturnType<typeof setTimeout> | undefined;
+    let leaseUntil = Date.now() + leaseMs;
     const renew = async () => {
+      const started = Date.now();
       try {
         await this.tasks.heartbeat(task.id, owner, task.fence, leaseMs);
-        if (!controller.signal.aborted) heartbeat = setTimeout(() => void renew(), 10_000);
-      } catch {
-        controller.abort();
+        leaseUntil = started + leaseMs;
+      } catch (error) {
+        // A fenced lease is final. Transient errors are retried while the lease still holds,
+        // because aborting a side-effecting action turns it into an uncertain outcome.
+        if (
+          (error instanceof CoreError && error.code === "LEASE_LOST") ||
+          Date.now() + renewMs >= leaseUntil
+        ) {
+          controller.abort();
+          return;
+        }
       }
+      if (!controller.signal.aborted) heartbeat = setTimeout(() => void renew(), renewMs);
     };
-    heartbeat = setTimeout(() => void renew(), 10_000);
+    heartbeat = setTimeout(() => void renew(), renewMs);
     try {
-      const attempted = (await this.tasks.actions(task.id))
-        .filter((a) => a.status !== "AWAITING_APPROVAL")
-        .map((a) => a.target);
+      const attempted = await this.tasks.attemptedTargets(task.id);
       const context =
         task.spec.capability === "text.generate"
           ? await new ContextStore(this.tasks).pack(task.id)
@@ -75,13 +93,12 @@ export class Worker {
                 task.id,
               ])
             ).rows.length > 0;
-          await this.tasks.move(
-            tx,
-            current,
-            executing ? "RECOVERY_REQUIRED" : "BLOCKED",
-            error instanceof CoreError ? error.code : "WORKER_FAILED",
-          );
-          await this.tasks.release(tx, task.id);
+          const reason = error instanceof CoreError ? error.code : "WORKER_FAILED";
+          if (executing) await this.tasks.quarantine(tx, current, reason);
+          else {
+            await this.tasks.move(tx, current, "BLOCKED", reason);
+            await this.tasks.release(tx, task.id);
+          }
         }
       });
     } finally {
@@ -92,10 +109,14 @@ export class Worker {
     return true;
   }
   async run(signal: AbortSignal): Promise<void> {
+    let drain: ReturnType<typeof setTimeout> | undefined;
     signal.addEventListener(
       "abort",
       () => {
-        for (const controller of this.running.values()) controller.abort();
+        // Stop claiming now; let in-flight actions finish within the drain window.
+        drain = setTimeout(() => {
+          for (const controller of this.running.values()) controller.abort();
+        }, this.timing.drainMs);
       },
       { once: true },
     );
@@ -112,5 +133,6 @@ export class Worker {
         break;
       }
     }
+    clearTimeout(drain);
   }
 }

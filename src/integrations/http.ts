@@ -60,7 +60,12 @@ export async function jsonRequest(
           : response.status >= 500
             ? "provider-unavailable"
             : "permanent";
-    throw new ProviderFailure(kind, response.status === 429 || response.status >= 500);
+    // Authentication is checked before a request is processed: a 401/403 was not executed.
+    throw new ProviderFailure(
+      kind,
+      response.status === 429 || response.status >= 500,
+      kind !== "authentication-required",
+    );
   }
   if (!response.body) throw new ProviderFailure("invalid-response", false);
   const reader = response.body.getReader();

@@ -7,6 +7,7 @@ import {
   invariant,
   ResultSchema,
   type Risk,
+  RiskSchema,
   type Task,
   type TaskState,
   taskDeadline,
@@ -27,13 +28,15 @@ export class ActionGateway {
       403,
     );
     invariant(!(claim.spec.privacy === "local-only" && executor.external), "PRIVACY_DENIED", 403);
-    const risk: Risk =
-      claim.spec.risk === "CRITICAL"
-        ? "CRITICAL"
-        : executor.capability === "workflow.invoke" ||
-            (executor.external && claim.spec.privacy === "private")
-          ? "HIGH"
-          : claim.spec.risk;
+    // Deterministic floor: the highest of declared risk, executor floor and policy floor.
+    const policyFloor: Risk =
+      executor.capability === "workflow.invoke" ||
+      (executor.external && claim.spec.privacy === "private")
+        ? "HIGH"
+        : "LOW";
+    const risk = [claim.spec.risk, executor.riskFloor ?? "LOW", policyFloor].reduce((a, b) =>
+      RiskSchema.options.indexOf(b) > RiskSchema.options.indexOf(a) ? b : a,
+    );
     const parameters = {
       capability: claim.spec.capability,
       target: executor.id,
@@ -59,6 +62,11 @@ export class ActionGateway {
         ])
       ).rows[0];
       if (!current) {
+        // Parameters changed (e.g. context expiry, configuration): older proposals are void.
+        await tx.query(
+          "UPDATE actions SET status='SUPERSEDED' WHERE task_id=$1 AND status='AWAITING_APPROVAL'",
+          [task.id],
+        );
         const id = randomUUID();
         await tx.query(
           "INSERT INTO actions(id,task_id,hash,target,risk,parameters,status) VALUES($1,$2,$3,$4,$5,$6,'AWAITING_APPROVAL')",
@@ -143,9 +151,12 @@ export class ActionGateway {
               "executor returned; response is untrusted",
             );
             const verified = result.text.includes(task.spec.verification.value);
+            // An unverified result from a side-effecting executor proves the action ran, not
+            // that it failed: never let FAILED invite a blind resubmission.
+            const outcome = verified ? "COMPLETED" : executor.retrySafe ? "FAILED" : null;
             await tx.query("UPDATE actions SET status=$2,result=$3 WHERE id=$1", [
               action.id,
-              verified ? "SUCCEEDED" : "FAILED",
+              verified ? "SUCCEEDED" : outcome ? "FAILED" : "EXECUTING",
               JSON.stringify(result),
             ]);
             await tx.query("UPDATE tasks SET result=$2 WHERE id=$1", [
@@ -164,13 +175,10 @@ export class ActionGateway {
                 traceId: span.spanContext().traceId,
               },
             );
-            await this.tasks.move(
-              tx,
-              task,
-              verified ? "COMPLETED" : "FAILED",
-              "deterministic output contract checked",
-            );
-            await this.tasks.release(tx, task.id);
+            if (outcome) {
+              await this.tasks.move(tx, task, outcome, "deterministic output contract checked");
+              await this.tasks.release(tx, task.id);
+            } else await this.tasks.quarantine(tx, task, "side effect executed; output unverified");
             return task.status;
           });
         } catch (error) {
@@ -187,12 +195,7 @@ export class ActionGateway {
             const safe =
               (error instanceof ProviderFailure && !error.dispatched) ||
               (executor.retrySafe && !signal.aborted);
-            const targets = (
-              await tx.query<{ target: string }>(
-                "SELECT target FROM actions WHERE task_id=$1 AND status<>'AWAITING_APPROVAL'",
-                [task.id],
-              )
-            ).rows.map((a) => a.target);
+            const targets = await this.tasks.attemptedTargets(task.id, tx);
             const fallback =
               safe &&
               !combined.aborted &&
@@ -200,11 +203,7 @@ export class ActionGateway {
               error.retryable &&
               task.calls < task.spec.budget.maxCalls &&
               task.spec.providers.some((p) => !targets.includes(p));
-            const state = fallback ? "READY" : safe ? "FAILED" : "RECOVERY_REQUIRED";
-            await tx.query("UPDATE actions SET status=$2 WHERE id=$1", [
-              action.id,
-              safe ? "FAILED" : "UNCERTAIN",
-            ]);
+            if (safe) await tx.query("UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
             if (fallback)
               await tx.query("UPDATE tasks SET not_before=$2 WHERE id=$1", [
                 task.id,
@@ -217,17 +216,18 @@ export class ActionGateway {
               kind: error instanceof ProviderFailure ? error.kind : "internal-or-transport",
               retryEligible: fallback,
             });
-            await this.tasks.move(
-              tx,
-              task,
-              state,
-              fallback
-                ? "bounded fallback; same capability and task policy"
-                : safe
-                  ? "retry-safe executor failed"
-                  : "external outcome uncertain",
-            );
-            await this.tasks.release(tx, task.id);
+            if (!safe) await this.tasks.quarantine(tx, task, "external outcome uncertain");
+            else {
+              await this.tasks.move(
+                tx,
+                task,
+                fallback ? "READY" : "FAILED",
+                fallback
+                  ? "bounded fallback; same capability and task policy"
+                  : "definite failure; no side effect possible",
+              );
+              await this.tasks.release(tx, task.id);
+            }
             return task.status;
           });
         } finally {

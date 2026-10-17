@@ -46,16 +46,16 @@ export function buildServer(
     invariant(item.count <= 120, "RATE_LIMITED", 429);
   }
   app.setErrorHandler((error, _request, reply) => {
+    // Fastify's own client errors (malformed JSON, media type, size) keep their 4xx status.
+    const framework =
+      typeof error === "object" && error && "statusCode" in error ? Number(error.statusCode) : 0;
     const status =
       error instanceof CoreError
         ? error.httpStatus
         : error instanceof z.ZodError
           ? 400
-          : typeof error === "object" &&
-              error &&
-              "statusCode" in error &&
-              Number(error.statusCode) === 413
-            ? 413
+          : framework >= 400 && framework < 500
+            ? framework
             : 500;
     reply.code(status).send({
       error:
@@ -65,31 +65,40 @@ export function buildServer(
             ? "INVALID_REQUEST"
             : status === 413
               ? "BODY_TOO_LARGE"
-              : "INTERNAL_ERROR",
+              : status < 500
+                ? "INVALID_REQUEST"
+                : "INTERNAL_ERROR",
     });
   });
   app.get("/healthz", async () => ({ status: "alive" }));
   app.get("/v1/metrics", async (request) => {
     authenticate(request, "operator");
-    const [taskStates, providers, usage, durations, retries] = await Promise.all([
-      tasks.db.query("SELECT status,count(*) AS count FROM tasks GROUP BY status ORDER BY status"),
-      tasks.db.query(
-        "SELECT target,status,count(*) AS count FROM actions GROUP BY target,status ORDER BY target,status",
-      ),
-      tasks.db.query("SELECT COALESCE(sum(calls),0) AS reserved_calls FROM tasks"),
-      // Admission-to-completion wall time, from the authoritative event timestamps.
-      tasks.db.query<{ count: number; p50: number | null; p95: number | null }>(
-        `SELECT count(*)::int AS count,
+    // Sequential on purpose: metrics must never hold the whole pool and starve heartbeats.
+    const taskStates = await tasks.db.query(
+      "SELECT status,count(*) AS count FROM tasks GROUP BY status ORDER BY status",
+    );
+    const providers = await tasks.db.query(
+      "SELECT target,status,count(*) AS count FROM actions GROUP BY target,status ORDER BY target,status",
+    );
+    const usage = await tasks.db.query(
+      "SELECT COALESCE(sum(calls),0) AS reserved_calls FROM tasks",
+    );
+    // Admission-to-completion wall time, from the authoritative event timestamps.
+    const durations = await tasks.db.query<{
+      count: number;
+      p50: number | null;
+      p95: number | null;
+    }>(
+      `SELECT count(*)::int AS count,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY d) AS p50,
            percentile_cont(0.95) WITHIN GROUP (ORDER BY d) AS p95
          FROM (SELECT (max(extract(epoch FROM (e.envelope->>'timestamp')::timestamptz))*1000 - t.created_at)::float8 AS d
                FROM tasks t JOIN events e ON e.task_id=t.id
                WHERE t.status='COMPLETED' GROUP BY t.id,t.created_at) completed`,
-      ),
-      tasks.db.query<{ retries: number }>(
-        "SELECT count(*)::int AS retries FROM events WHERE envelope->>'type'='execution.failed' AND envelope->'payload'->>'retryEligible'='true'",
-      ),
-    ]);
+    );
+    const retries = await tasks.db.query<{ retries: number }>(
+      "SELECT count(*)::int AS retries FROM events WHERE envelope->>'type'='execution.failed' AND envelope->'payload'->>'retryEligible'='true'",
+    );
     return {
       taskStates: taskStates.rows,
       providerActions: providers.rows,
@@ -186,7 +195,8 @@ export function buildServer(
     const body = z
       .strictObject({
         eventId: z.string().regex(/^[\w-]{1,100}$/),
-        sentAt: z.iso.datetime(),
+        // n8n (Luxon) emits local offsets such as +03:00; Date.parse normalizes them.
+        sentAt: z.iso.datetime({ offset: true }),
         objective: z.string().min(1).max(16_000),
         verificationText: z.string().min(1).max(4096),
       })

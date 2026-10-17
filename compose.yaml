@@ -6,13 +6,15 @@ services:
       POSTGRES_DB: jarvis
       POSTGRES_USER: jarvis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/bootstrap.ps1 first}
-    ports: ["127.0.0.1:5432:5432"]
+    # Host port defaults away from 5432: native Windows PostgreSQL installs commonly hold it.
+    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"]
     volumes: ["postgres-data:/var/lib/postgresql"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis"]
       interval: 5s
       timeout: 3s
       retries: 12
+    networks: [data]
     mem_limit: 768m
     cpus: 1
     restart: unless-stopped
@@ -23,7 +25,10 @@ services:
       DATABASE_URL: postgresql://jarvis:${POSTGRES_PASSWORD}@postgres:5432/jarvis
       JARVIS_CONTAINER: "true"
       PORT: "2160"
+      BROWSER_WORKER_URL: http://browser-worker:8765
     ports: ["127.0.0.1:2160:2160"]
+    # Core is the only service on every segment; peers cannot reach each other.
+    networks: [data, automation, browser]
     depends_on:
       postgres: { condition: service_healthy }
     read_only: true
@@ -47,6 +52,7 @@ services:
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
       GENERIC_TIMEZONE: Europe/Istanbul
     volumes: ["n8n-data:/home/node/.n8n"]
+    networks: [automation]
     mem_limit: 1g
     cpus: 1
     restart: unless-stopped
@@ -58,6 +64,8 @@ services:
       BROWSER_EGRESS_VERIFIED: ${BROWSER_EGRESS_VERIFIED:-false}
       BROWSER_ALLOWED_URLS: ${BROWSER_ALLOWED_URLS:-[]}
       ANONYMIZED_TELEMETRY: "false"
+    # Untrusted pages run here: own segment, no route to postgres or n8n by service name.
+    networks: [browser]
     # No host port, no shared cookies, credentials, home directory or Docker socket.
     # Profile remains disabled until external egress controls are verified.
     cap_drop: [ALL]
@@ -68,6 +76,10 @@ services:
     mem_limit: 1g
     cpus: 1
     restart: "no"
+networks:
+  data:
+  automation:
+  browser:
 volumes:
   postgres-data:
   n8n-data:

@@ -61,6 +61,17 @@ async function listen(server: Server): Promise<number> {
   return address.port;
 }
 
+// OpenClaw has a HIGH risk floor: grant the exact pending action, then dispatch.
+async function runApproved(executor: OpenClawExecutor, taskId: string) {
+  const gateway = new ActionGateway(tasks);
+  expect(
+    await gateway.run((await tasks.claim("w", 10_000))!, executor, new AbortController().signal),
+  ).toBe("WAITING_FOR_APPROVAL");
+  const [pending] = await tasks.actions(taskId);
+  await tasks.approve(pending!.id, "operator", Date.now() + 30_000);
+  return gateway.run((await tasks.claim("w", 10_000))!, executor, new AbortController().signal);
+}
+
 it("hashes keys by code unit, independent of the process locale", () => {
   const value = { b: 1, B: 2, a: 3, _: 4 };
   const expected = createHash("sha256").update('{"B":2,"_":4,"a":3,"b":1}').digest("hex");
@@ -70,12 +81,7 @@ it("hashes keys by code unit, independent of the process locale", () => {
 it("treats a refused connection as a definite failure, not an uncertain side effect", async () => {
   const task = await tasks.create(spec(), "refused", "operator");
   const executor = new OpenClawExecutor(`http://127.0.0.1:${await closedPort()}`, "token", "agent");
-  const status = await new ActionGateway(tasks).run(
-    (await tasks.claim("w", 10_000))!,
-    executor,
-    new AbortController().signal,
-  );
-  expect(status).toBe("FAILED");
+  expect(await runApproved(executor, task.id)).toBe("FAILED");
   expect((await tasks.actions(task.id))[0]?.status).toBe("FAILED");
 });
 
@@ -85,12 +91,7 @@ it("keeps a dropped response from a non-retry-safe service uncertain", async () 
   try {
     const task = await tasks.create(spec(), "dropped", "operator");
     const executor = new OpenClawExecutor(`http://127.0.0.1:${port}`, "token", "agent");
-    await new ActionGateway(tasks).run(
-      (await tasks.claim("w", 10_000))!,
-      executor,
-      new AbortController().signal,
-    );
-    expect((await tasks.get(task.id)).status).toBe("RECOVERY_REQUIRED");
+    expect(await runApproved(executor, task.id)).toBe("RECOVERY_REQUIRED");
     expect((await tasks.actions(task.id))[0]?.status).toBe("UNCERTAIN");
   } finally {
     server.closeAllConnections();

@@ -94,6 +94,21 @@ describe("local control boundary", () => {
     });
     expect(changed.statusCode).toBe(409);
   });
+  it("accepts n8n Luxon timestamps with a UTC offset (found by live n8n 2.43.7 run)", async () => {
+    const local = new Date(Date.now() + 3 * 3_600_000).toISOString().replace("Z", "+03:00");
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/hooks/n8n",
+      headers: { authorization: `Bearer ${webhookToken}` },
+      payload: {
+        eventId: "offset-event",
+        sentAt: local,
+        objective: "Return verified",
+        verificationText: "verified",
+      },
+    });
+    expect(response.statusCode).toBe(202);
+  });
   it("lists tasks with bounded pagination and status filter for a future control surface", async () => {
     const auth = { authorization: `Bearer ${operatorToken}` };
     expect((await app.inject({ url: "/v1/tasks" })).statusCode).toBe(401);

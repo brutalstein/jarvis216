@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from worker import Request, WorkerError, authorize
+from worker import Request, WorkerError, authorize, encode
 
 # Shared with tests/browser-contract.test.ts: both sides must accept the same wire shapes.
 CONTRACT = json.loads(
@@ -53,6 +53,11 @@ class BoundaryTests(unittest.TestCase):
     def test_response_keys_match_core_result_contract(self) -> None:
         # extract() returns exactly these keys; Core's strict ResultSchema rejects extras.
         self.assertEqual(set(CONTRACT["response"]), {"text", "source", "externalId"})
+
+    def test_non_ascii_pages_stay_within_core_response_cap(self) -> None:
+        body = encode({"text": "ğ" * 30000, "source": "s", "externalId": "e"})
+        self.assertIn("ğ".encode(), body)
+        self.assertLess(len(body), 128_000)
 
 
 if __name__ == "__main__":

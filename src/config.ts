@@ -28,6 +28,7 @@ export async function configuredProviders(
       capability: executor.capability,
       external: executor.external,
       retrySafe: executor.retrySafe,
+      ...(executor.riskFloor ? { riskFloor: executor.riskFloor } : {}),
       authenticated: true,
       enabled: true,
       priority,

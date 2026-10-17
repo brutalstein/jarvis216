@@ -89,7 +89,7 @@ async def extract(request: Request) -> dict[str, str]:
             # This is application-owned fixed code. Never execute scripts from a task/model.
             raw = await page.evaluate(
                 "() => JSON.stringify({url:location.href,"
-                "text:(document.body?.innerText || '').slice(0,60000)})"
+                "text:(document.body?.innerText || '').slice(0,30000)})"
             )
             data: dict[str, Any] = json.loads(raw)
             if data.get("url") != request.url or request.expected_text not in data.get("text", ""):
@@ -101,6 +101,11 @@ async def extract(request: Request) -> dict[str, str]:
             }
     finally:
         await asyncio.wait_for(browser.kill(), timeout=10)
+
+
+def encode(payload: dict[str, str]) -> bytes:
+    # Raw UTF-8: ASCII escaping would inflate non-ASCII pages up to 6x past Core's 128 KB cap.
+    return json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
 
 def main() -> None:
@@ -125,9 +130,9 @@ def main() -> None:
             pass  # URLs, headers and browser exceptions never enter ordinary logs.
 
         def respond(self, status: int, payload: dict[str, str]) -> None:
-            body = json.dumps(payload).encode()
+            body = encode(payload)
             self.send_response(status)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Connection", "close")
             self.end_headers()

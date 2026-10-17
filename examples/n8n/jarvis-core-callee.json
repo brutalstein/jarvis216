@@ -1,0 +1,52 @@
+{
+  "name": "JARVIS: Core-invoked workflow with taskId deduplication",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jarvis-echo",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Core invocation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "6f0b7e2a-4f43-4a4e-9a51-3c2d1e0f9b11"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "logic": "removeItemsWithAlreadySeenKeyValues",
+        "dedupeValue": "={{ $json.body.taskId }}",
+        "options": { "scope": "workflow" }
+      },
+      "name": "Drop replayed taskId",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ text: 'JARVIS_WORKFLOW_OK task ' + $json.body.taskId + ' version ' + $json.body.workflowVersion, source: 'n8n:authoritative-readback', externalId: String($execution.id) }) }}",
+        "options": {}
+      },
+      "name": "Return result contract",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Core invocation": {
+      "main": [[{ "node": "Drop replayed taskId", "type": "main", "index": 0 }]]
+    },
+    "Drop replayed taskId": {
+      "main": [[{ "node": "Return result contract", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { insertContext } from "./context.js";
 import {
   type Action,
+  attemptedStatuses,
   type Capability,
   canTransition,
   EnvelopeSchema,
@@ -96,11 +97,17 @@ export class TaskService {
       }
       invariant(Date.parse(spec.deadline) > Date.now(), "DEADLINE_EXPIRED", 400);
       const queued = (
-        await tx.query<{ count: string }>(
-          "SELECT count(*) FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
+        await tx.query<{ total: string; mine: string }>(
+          "SELECT count(*) AS total, count(*) FILTER (WHERE principal=$1) AS mine FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
+          [principal],
         )
       ).rows[0];
-      invariant(Number(queued?.count) < 1000, "QUEUE_FULL", 429);
+      // Automation ingress gets its own quota so it cannot crowd out the operator.
+      invariant(
+        Number(queued?.total) < 1000 && (principal === "operator" || Number(queued?.mine) < 100),
+        "QUEUE_FULL",
+        429,
+      );
       for (const dependency of spec.dependencies) await this.get(dependency, tx);
       if (spec.parentId) {
         let parent: Task | undefined = await this.get(spec.parentId, tx);
@@ -174,31 +181,39 @@ export class TaskService {
           [Date.now()],
         )
       ).rows;
+      // Two set queries instead of two per candidate: the scheduler lock is held here.
+      const dependencyStates = new Map<string, TaskState[]>();
+      for (const row of (
+        await tx.query<{ task_id: string; status: TaskState }>(
+          "SELECT d.task_id,t.status FROM dependencies d JOIN tasks t ON t.id=d.dependency_id WHERE d.task_id = ANY($1::uuid[])",
+          [candidates.map((task) => task.id)],
+        )
+      ).rows)
+        dependencyStates.set(row.task_id, [
+          ...(dependencyStates.get(row.task_id) ?? []),
+          row.status,
+        ]);
+      const activeByCapability = new Map(
+        (
+          await tx.query<{ capability: Capability; count: string }>(
+            "SELECT spec->>'capability' AS capability,count(*) FROM tasks WHERE status IN ('RUNNING','VERIFYING') GROUP BY 1",
+          )
+        ).rows.map((row) => [row.capability, Number(row.count)]),
+      );
       for (const task of candidates) {
         if (taskDeadline(task) <= Date.now()) {
           await this.move(tx, task, "FAILED", "deadline expired");
           continue;
         }
-        const deps = (
-          await tx.query<{ status: TaskState }>(
-            "SELECT t.status FROM dependencies d JOIN tasks t ON t.id=d.dependency_id WHERE d.task_id=$1",
-            [task.id],
-          )
-        ).rows;
-        if (deps.some((d) => ["FAILED", "CANCELLED"].includes(d.status))) {
+        const deps = dependencyStates.get(task.id) ?? [];
+        if (deps.some((status) => ["FAILED", "CANCELLED"].includes(status))) {
           await this.move(tx, task, "BLOCKED", "dependency unavailable");
           continue;
         }
-        if (deps.some((d) => d.status !== "COMPLETED")) continue;
+        if (deps.some((status) => status !== "COMPLETED")) continue;
         const defaults = { "text.generate": 2, "browser.extract": 1, "workflow.invoke": 1 };
         const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
-        const activeCapability = (
-          await tx.query<{ count: string }>(
-            "SELECT count(*) FROM tasks WHERE status IN ('RUNNING','VERIFYING') AND spec->>'capability'=$1",
-            [task.spec.capability],
-          )
-        ).rows[0];
-        if (Number(activeCapability?.count) >= limit) continue;
+        if ((activeByCapability.get(task.spec.capability) ?? 0) >= limit) continue;
         if (task.status === "WAITING_FOR_DEPENDENCY")
           await this.move(tx, task, "READY", "dependencies completed");
         await this.move(tx, task, "RUNNING", "lease acquired");
@@ -229,26 +244,38 @@ export class TaskService {
   async release(tx: Sql, id: string): Promise<void> {
     await tx.query("UPDATE tasks SET owner=NULL,lease_until=NULL WHERE id=$1", [id]);
   }
+  // The only way into RECOVERY_REQUIRED: in-flight actions become reconcilable UNCERTAIN.
+  async quarantine(tx: Sql, task: Task, reason: string): Promise<void> {
+    await this.move(tx, task, "RECOVERY_REQUIRED", reason);
+    await tx.query(
+      "UPDATE actions SET status='UNCERTAIN' WHERE task_id=$1 AND status='EXECUTING'",
+      [task.id],
+    );
+    await this.release(tx, task.id);
+  }
+  async attemptedTargets(id: string, tx: Sql = this.db): Promise<string[]> {
+    return (
+      await tx.query<{ target: string }>(
+        "SELECT target FROM actions WHERE task_id=$1 AND status = ANY($2::text[])",
+        [id, [...attemptedStatuses]],
+      )
+    ).rows.map((a) => a.target);
+  }
   async cancel(id: string): Promise<Task> {
     return this.locked(async (tx) => {
       const task = await this.get(id, tx);
-      if (terminal.has(task.status) || task.status === "RECOVERY_REQUIRED") return task;
+      if (terminal.has(task.status)) return task;
+      invariant(task.status !== "RECOVERY_REQUIRED", "RECONCILIATION_REQUIRED");
       await this.event(tx, task, "cancellation.requested", { principal: "operator" });
       const pending =
         (await tx.query("SELECT id FROM actions WHERE task_id=$1 AND status='EXECUTING'", [id]))
           .rows.length > 0;
-      await this.move(
-        tx,
-        task,
-        pending ? "RECOVERY_REQUIRED" : "CANCELLED",
-        "operator cancellation",
-      );
-      await tx.query(
-        "UPDATE actions SET status='UNCERTAIN' WHERE task_id=$1 AND status='EXECUTING'",
-        [id],
-      );
       await tx.query("UPDATE tasks SET fence=fence+1 WHERE id=$1", [id]);
-      await this.release(tx, id);
+      if (pending) await this.quarantine(tx, task, "operator cancellation during external action");
+      else {
+        await this.move(tx, task, "CANCELLED", "operator cancellation");
+        await this.release(tx, id);
+      }
       return task;
     });
   }
@@ -267,17 +294,12 @@ export class TaskService {
             task.id,
           ])
         ).rows;
-        await this.move(
-          tx,
-          task,
-          intents.length || task.status === "VERIFYING" ? "RECOVERY_REQUIRED" : "READY",
-          "expired worker lease",
-        );
-        await tx.query(
-          "UPDATE actions SET status='UNCERTAIN' WHERE task_id=$1 AND status='EXECUTING'",
-          [task.id],
-        );
-        await this.release(tx, task.id);
+        if (intents.length || task.status === "VERIFYING")
+          await this.quarantine(tx, task, "expired worker lease");
+        else {
+          await this.move(tx, task, "READY", "expired worker lease");
+          await this.release(tx, task.id);
+        }
       }
       const expired = (
         await tx.query<Task>(
