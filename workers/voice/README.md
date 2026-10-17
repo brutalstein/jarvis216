@@ -7,8 +7,8 @@ turn to Core's `POST /v1/conversation/turns` and speaks the reply.
 ## Setup
 
 ```powershell
-uv sync --project workers/voice
-uv run --project workers/voice python -m jarvis_voice.smoke
+uv sync --directory workers/voice
+uv run --directory workers/voice python -m jarvis_voice.smoke
 ```
 
 The smoke test prints one JSON line per check (CUDA, TTS, STT, speaker embedding, VRAM) and writes
