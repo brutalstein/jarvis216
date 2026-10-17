@@ -4,32 +4,35 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
+type Vector = NDArray[np.float64]
 MODELS = Path(__file__).resolve().parents[3] / "data" / "voice" / "models"
 
 
-def _unit(vector: np.ndarray) -> np.ndarray:
-    return vector / (np.linalg.norm(vector) or 1.0)
+def _unit(vector: Vector) -> Vector:
+    unit: Vector = vector / (np.linalg.norm(vector) or 1.0)
+    return unit
 
 
 class SpeakerGate:
     def __init__(self, store: Path, threshold: float) -> None:
         self.path = store / "operator.npy"
         self.threshold = threshold
-        self.print: np.ndarray | None = np.load(self.path) if self.path.exists() else None
+        self.print: Vector | None = np.load(self.path) if self.path.exists() else None
 
     def enrolled(self) -> bool:
         return self.print is not None
 
-    def enroll(self, embeddings: list[np.ndarray]) -> None:
+    def enroll(self, embeddings: list[Vector]) -> None:
         self.print = _unit(np.mean([_unit(e) for e in embeddings], axis=0))
         self.path.parent.mkdir(parents=True, exist_ok=True)
         np.save(self.path, self.print)
 
-    def similarity(self, embedding: np.ndarray) -> float:
+    def similarity(self, embedding: Vector) -> float:
         return -1.0 if self.print is None else float(np.dot(self.print, _unit(embedding)))
 
-    def accepts(self, embedding: np.ndarray) -> bool:
+    def accepts(self, embedding: Vector) -> bool:
         return self.print is not None and self.similarity(embedding) >= self.threshold
 
     def delete(self) -> None:
@@ -40,7 +43,7 @@ class SpeakerGate:
 _encoder: Any = None
 
 
-def embed(audio: bytes, sample_rate: int) -> np.ndarray:
+def embed(audio: bytes, sample_rate: int) -> Vector:
     """ECAPA embedding of 16-bit mono PCM."""
     global _encoder
     import torch
@@ -59,4 +62,4 @@ def embed(audio: bytes, sample_rate: int) -> np.ndarray:
     samples = torchaudio.functional.resample(samples.unsqueeze(0), sample_rate, 16_000)
     with torch.no_grad():
         vector = _encoder.encode_batch(samples.to(_encoder.device)).squeeze()
-    return vector.cpu().numpy()
+    return np.asarray(vector.cpu().numpy(), dtype=np.float64)

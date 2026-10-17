@@ -32,9 +32,9 @@ def report(check: str, ok: bool, **detail: Any) -> None:
     print(json.dumps({"check": check, "ok": ok, **detail}, ensure_ascii=False), flush=True)
 
 
-def timed(fn: Callable[[], Any]) -> tuple[Any, int]:
+def timed(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> tuple[Any, int]:
     started = time.perf_counter()
-    value = fn()
+    value = fn(*args, **kwargs)
     return value, round((time.perf_counter() - started) * 1000)
 
 
@@ -71,9 +71,9 @@ def main() -> None:
         for name in voices:
             if not (models / f"{name}.onnx").exists():
                 download_voice(name, models)
-            voice, load_ms = timed(lambda name=name: PiperVoice.load(models / f"{name}.onnx"))
+            voice, load_ms = timed(PiperVoice.load, models / f"{name}.onnx")
             list(voice.synthesize(LINES[lang]))  # warm-up
-            chunks, ms = timed(lambda voice=voice, lang=lang: list(voice.synthesize(LINES[lang])))
+            chunks, ms = timed(list, voice.synthesize(LINES[lang]))
             pcm = np.frombuffer(b"".join(c.audio_int16_bytes for c in chunks), dtype=np.int16)
             rate = voice.config.sample_rate
             path = SAMPLES / f"{lang}.wav" if name == voices[0] else SAMPLES / f"{name}.wav"
@@ -92,10 +92,10 @@ def main() -> None:
 
     stt, load_ms = timed(lambda: WhisperModel("large-v3", device="cuda", compute_type="float16"))
     for lang, text in LINES.items():
-        path = str(SAMPLES / f"{lang}.wav")
-        list(stt.transcribe(path)[0])  # warm-up
-        (segments, info), _ = timed(lambda path=path: stt.transcribe(path, beam_size=1))
-        transcript, ms = timed(lambda segments=segments: " ".join(s.text.strip() for s in segments))
+        sample = str(SAMPLES / f"{lang}.wav")
+        list(stt.transcribe(sample)[0])  # warm-up
+        (segments, info), _ = timed(stt.transcribe, sample, beam_size=1)
+        transcript, ms = timed(" ".join, (s.text.strip() for s in segments))
         first = text.split()[0].strip(",").lower()
         report(
             "stt",
