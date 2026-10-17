@@ -1,0 +1,90 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { afterAll, expect, it } from "vitest";
+import { configuredProviders } from "../src/config.js";
+import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { codexOptions } from "../src/integrations/models.js";
+import { EnvSecrets } from "../src/security.js";
+
+const paths: string[] = [];
+afterAll(async () => {
+  for (const dir of paths) await rm(dir, { recursive: true, force: true });
+});
+async function codexEnv(login: boolean): Promise<NodeJS.ProcessEnv> {
+  await mkdir("data/workspaces", { recursive: true });
+  await mkdir("data/codex-homes", { recursive: true });
+  const workspace = await mkdtemp(path.resolve("data/workspaces/subscription-test-"));
+  const home = await mkdtemp(path.resolve("data/codex-homes/subscription-test-"));
+  paths.push(workspace, home);
+  // Presence is sufficient; invalid JSON proves Core never parses the credential file.
+  if (login) await writeFile(path.join(home, "auth.json"), "not JSON; vendor-owned credentials");
+  return {
+    ENABLE_CODEX: "true",
+    CODEX_AUTH: "chatgpt",
+    CODEX_MODEL: "test-model",
+    CODEX_ISOLATION_VERIFIED: "true",
+    CODEX_WORKSPACE: workspace,
+    CODEX_ISOLATED_HOME: home,
+  };
+}
+const secrets = new EnvSecrets({});
+it("codex chatgpt options carry no API key", () => {
+  const options = codexOptions({ kind: "chatgpt" }, "isolated-home");
+  expect(options).not.toHaveProperty("apiKey");
+  expect(options.env).not.toHaveProperty("OPENAI_API_KEY");
+  expect(options.env?.CODEX_HOME).toBe("isolated-home");
+});
+it("codex api-key options keep current behavior", () => {
+  const options = codexOptions({ kind: "api-key", key: "fixture-api-key" }, "isolated-home");
+  expect(options.apiKey).toBe("fixture-api-key");
+  expect(options.env?.OPENAI_API_KEY).toBe("fixture-api-key");
+});
+it("codex chatgpt mode registers without OPENAI_API_KEY when auth.json exists", async () => {
+  const registry = await configuredProviders(await codexEnv(true), secrets);
+  expect(registry.list()).toEqual([expect.objectContaining({ id: "codex", riskFloor: "HIGH" })]);
+});
+it("codex chatgpt mode refuses startup without auth.json", async () => {
+  await expect(configuredProviders(await codexEnv(false), secrets)).rejects.toThrow();
+});
+it("codex refuses unsupported auth modes", async () => {
+  const env = { ...(await codexEnv(true)), CODEX_AUTH: "unknown" };
+  await expect(configuredProviders(env, secrets)).rejects.toThrow();
+});
+it("codex defaults to api-key and still requires its secret", async () => {
+  const env = await codexEnv(true);
+  delete env.CODEX_AUTH;
+  await expect(configuredProviders(env, secrets)).rejects.toThrow("SECRET_UNAVAILABLE");
+});
+const claude = {
+  ENABLE_CLAUDE_CODE: "true",
+  CLAUDE_CODE_PATH: process.execPath,
+  CLAUDE_CODE_MODEL: "test-model",
+};
+it("claude code registers with an existing absolute path", async () => {
+  const registry = await configuredProviders(claude, secrets);
+  const spec = TaskSpecSchema.parse({
+    objective: "test",
+    capability: "text.generate",
+    providers: ["claude-code"],
+    deadline: new Date(Date.now() + 60_000).toISOString(),
+    verification: { kind: "contains", value: "ok" },
+  });
+  const provider = registry.select({ spec } as Task, []);
+  expect(provider.configuration).toBe("claude-code:test-model:tools-none");
+  expect(provider.external).toBe(true);
+  expect(provider.retrySafe).toBe(true);
+  expect(provider.priority).toBe(15);
+});
+it.each(["claude.exe", path.resolve("data/nonexistent-claude.exe"), undefined])(
+  "claude code refuses a missing or relative path: %s",
+  async (value) => {
+    await expect(
+      configuredProviders({ ...claude, CLAUDE_CODE_PATH: value }, secrets),
+    ).rejects.toThrow();
+  },
+);
+it.each(["", "   ", undefined])("claude code requires a model: %s", async (value) => {
+  await expect(
+    configuredProviders({ ...claude, CLAUDE_CODE_MODEL: value }, secrets),
+  ).rejects.toThrow();
+});

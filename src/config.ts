@@ -1,5 +1,8 @@
+import { access, mkdir } from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 import type { Executor } from "./contracts.js";
+import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
 import { ClaudeExecutor, CodexExecutor, GeminiExecutor } from "./integrations/models.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrations/services.js";
 import { type Provider, ProviderRegistry } from "./routing.js";
@@ -60,6 +63,21 @@ export async function configuredProviders(
       20,
     );
   }
+  if (env.ENABLE_CLAUDE_CODE === "true") {
+    const binary = z
+      .string()
+      .refine(path.isAbsolute, "CLAUDE_CODE_PATH must be absolute")
+      .parse(env.CLAUDE_CODE_PATH);
+    await access(binary);
+    const model = z.string().trim().min(1).parse(env.CLAUDE_CODE_MODEL);
+    const workdir = path.resolve("data/claude-code");
+    await mkdir(workdir, { recursive: true });
+    register(
+      new ClaudeCodeExecutor({ command: [binary], model, workdir }),
+      `claude-code:${model}:tools-none`,
+      15,
+    );
+  }
   if (env.ENABLE_OPENCLAW === "true") {
     z.literal("true").parse(env.OPENCLAW_POLICY_VERIFIED);
     const base = z.url().parse(env.OPENCLAW_URL);
@@ -86,9 +104,18 @@ export async function configuredProviders(
     const model = z.string().min(1).parse(env.CODEX_MODEL);
     const workspace = await containedPath("data/workspaces", z.string().parse(env.CODEX_WORKSPACE));
     const home = await containedPath("data/codex-homes", z.string().parse(env.CODEX_ISOLATED_HOME));
+    const auth = z.enum(["api-key", "chatgpt"]).default("api-key").parse(env.CODEX_AUTH);
+    if (auth === "chatgpt") await access(path.join(home, "auth.json"));
     register(
-      new CodexExecutor(secrets.resolve("OPENAI_API_KEY"), model, workspace, home),
-      `codex-sdk:${model}:${workspace}:${home}:isolated`,
+      new CodexExecutor(
+        auth === "chatgpt"
+          ? { kind: auth }
+          : { kind: auth, key: secrets.resolve("OPENAI_API_KEY") },
+        model,
+        workspace,
+        home,
+      ),
+      `codex-sdk:${model}:${workspace}:${home}:isolated:${auth}`,
       40,
     );
   }

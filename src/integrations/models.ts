@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI } from "@google/genai";
-import { Codex } from "@openai/codex-sdk";
+import { Codex, type CodexOptions } from "@openai/codex-sdk";
 import type { ExecutionResult, Executor, Task } from "../contracts.js";
 import { ProviderFailure } from "../routing.js";
 import { networkCode, neverDispatched } from "./http.js";
@@ -97,8 +97,21 @@ export class GeminiExecutor implements Executor {
   }
 }
 
-// Opt-in only inside an operator-provisioned container/VM. Read-only sandbox alone is
-// insufficient to prevent host data reads. Never point this at the operator's CODEX_HOME.
+export type CodexAuth = { kind: "api-key"; key: string } | { kind: "chatgpt" };
+export function codexOptions(auth: CodexAuth, codexHome: string): CodexOptions {
+  return {
+    ...(auth.kind === "api-key" ? { apiKey: auth.key } : {}),
+    env: {
+      PATH: process.env.PATH ?? "",
+      SystemRoot: process.env.SystemRoot ?? "",
+      CODEX_HOME: codexHome,
+      ...(auth.kind === "api-key" ? { OPENAI_API_KEY: auth.key } : {}),
+    },
+  };
+}
+
+// Read-only sandbox is not a host-read boundary on native Windows. Use an isolated
+// CODEX_HOME, explicit operator attestation and per-run HIGH approval.
 export class CodexExecutor implements Executor {
   readonly id = "codex";
   readonly capability = "text.generate";
@@ -107,20 +120,12 @@ export class CodexExecutor implements Executor {
   readonly riskFloor = "HIGH" as const;
   private client: Codex;
   constructor(
-    key: string,
+    auth: CodexAuth,
     private model: string,
     private workspace: string,
     codexHome: string,
   ) {
-    this.client = new Codex({
-      apiKey: key,
-      env: {
-        PATH: process.env.PATH ?? "",
-        SystemRoot: process.env.SystemRoot ?? "",
-        CODEX_HOME: codexHome,
-        OPENAI_API_KEY: key,
-      },
-    });
+    this.client = new Codex(codexOptions(auth, codexHome));
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const thread = this.client.startThread({
