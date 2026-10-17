@@ -9,6 +9,8 @@ export interface ServerOptions {
   operatorToken: string;
   webhookToken: string;
   onCancel(id: string): void;
+  // Called after a task is admitted so idle workers can claim it without waiting.
+  onAdmit?(): void;
 }
 const TaskId = z.strictObject({ id: z.uuid() });
 export function buildServer(
@@ -118,9 +120,9 @@ export function buildServer(
   app.post("/v1/tasks", async (request, reply) => {
     authenticate(request, "operator");
     const key = z.string().min(1).max(200).parse(request.headers["idempotency-key"]);
-    return reply
-      .code(201)
-      .send(await tasks.create(TaskSpecSchema.parse(request.body), key, "operator"));
+    const task = await tasks.create(TaskSpecSchema.parse(request.body), key, "operator");
+    options.onAdmit?.();
+    return reply.code(201).send(task);
   });
   app.get("/v1/tasks", async (request) => {
     authenticate(request, "operator");
@@ -216,6 +218,7 @@ export function buildServer(
       `n8n:${body.eventId}`,
       "n8n",
     );
+    options.onAdmit?.();
     return reply.code(202).send({ id: task.id, status: task.status });
   });
   app.get("/v1/hooks/n8n/tasks/:id", async (request) => {

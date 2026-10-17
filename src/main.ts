@@ -40,6 +40,9 @@ async function main() {
       onCancel: (id) => {
         for (const worker of workers) worker.cancel(id);
       },
+      onAdmit: () => {
+        for (const worker of workers) worker.wake();
+      },
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
