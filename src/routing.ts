@@ -82,7 +82,9 @@ export class ProviderRegistry {
         task.spec.objective.length + JSON.stringify(task.spec.input).length <= p.maxInputChars &&
         !(task.spec.privacy === "local-only" && p.external),
     );
-    candidates.sort((a, b) => a.priority - b.priority || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const rank = (p: Provider) =>
+      task.spec.providerOrder === "listed" ? task.spec.providers.indexOf(p.id) : p.priority;
+    candidates.sort((a, b) => rank(a) - rank(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     const selected = candidates[0];
     if (!selected) throw new CoreError("NO_COMPATIBLE_PROVIDER");
     return { ...selected, execute: (t, signal) => this.observe(selected, t, signal) };

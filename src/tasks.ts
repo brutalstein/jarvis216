@@ -14,6 +14,7 @@ import {
   type TaskState,
   taskDeadline,
   terminal,
+  verified,
 } from "./contracts.js";
 import type { Database, Sql } from "./database.js";
 
@@ -397,10 +398,7 @@ export class TaskService {
       invariant(action?.status === "UNCERTAIN", "ACTION_NOT_UNCERTAIN");
       const task = await this.get(action.task_id, tx);
       invariant(task.status === "RECOVERY_REQUIRED", "TASK_NOT_UNCERTAIN");
-      invariant(
-        outcome !== "COMPLETED" || evidence.includes(task.spec.verification.value),
-        "VERIFICATION_FAILED",
-      );
+      invariant(outcome !== "COMPLETED" || verified(task.spec, evidence), "VERIFICATION_FAILED");
       const redacted = (this.options.redact ?? ((text) => text))(evidence);
       const result = JSON.stringify({ text: redacted, source: `operator:${principal}` });
       await tx.query("UPDATE actions SET status=$2,result=$3 WHERE id=$1", [

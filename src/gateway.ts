@@ -5,6 +5,7 @@ import {
   type Executor,
   fingerprint,
   invariant,
+  verified as meetsVerification,
   ResultSchema,
   type Risk,
   RiskSchema,
@@ -150,7 +151,7 @@ export class ActionGateway {
               "VERIFYING",
               "executor returned; response is untrusted",
             );
-            const verified = result.text.includes(task.spec.verification.value);
+            const verified = meetsVerification(task.spec, result.text);
             // An unverified result from a side-effecting executor proves the action ran, not
             // that it failed: never let FAILED invite a blind resubmission.
             const outcome = verified ? "COMPLETED" : executor.retrySafe ? "FAILED" : null;

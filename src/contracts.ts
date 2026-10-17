@@ -83,7 +83,11 @@ export const TaskSpecSchema = z
       .min(1)
       .max(8),
     risk: RiskSchema.default("LOW"),
-    privacy: z.enum(["public", "private", "local-only"]).default("public"),
+    // personal: the operator's own conversation; private adds an approval floor for untrusted
+    // external providers.
+    privacy: z.enum(["public", "personal", "private", "local-only"]).default("public"),
+    // listed: try providers in the order given instead of registry priority.
+    providerOrder: z.enum(["priority", "listed"]).default("priority"),
     budget: z
       .strictObject({
         maxCalls: z.number().int().min(1).max(5).default(2),
@@ -95,10 +99,10 @@ export const TaskSpecSchema = z
     parentId: z.uuid().optional(),
     dependencies: z.array(z.uuid()).max(32).default([]),
     context: z.array(ContextEntrySchema).max(8).default([]),
-    verification: z.strictObject({
-      kind: z.literal("contains"),
-      value: z.string().min(1).max(4096),
-    }),
+    verification: z.discriminatedUnion("kind", [
+      z.strictObject({ kind: z.literal("contains"), value: z.string().min(1).max(4096) }),
+      z.strictObject({ kind: z.literal("non-empty") }),
+    ]),
   })
   .superRefine((task, ctx) => {
     const schema =
@@ -115,6 +119,11 @@ export const TaskSpecSchema = z
       });
   });
 export type TaskSpec = z.infer<typeof TaskSpecSchema>;
+export function verified(spec: TaskSpec, text: string): boolean {
+  return spec.verification.kind === "contains"
+    ? text.includes(spec.verification.value)
+    : text.trim().length > 0;
+}
 export const ResultSchema = z.strictObject({
   text: z.string().min(1).max(64_000),
   source: z.string().min(1).max(512),
