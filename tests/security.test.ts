@@ -72,3 +72,16 @@ it("refuses to start with copied example placeholders instead of generated secre
   ])
     expect(ConfigSchema.safeParse({ ...valid, ...change }).success).toBe(false);
 });
+
+it("refuses a database outside this host, such as a DATABASE_URL inherited from the shell", async () => {
+  const { ConfigSchema } = await import("../src/config.js");
+  const base = { JARVIS_TOKEN: "a".repeat(64), N8N_INGRESS_TOKEN: "b".repeat(64) };
+  for (const host of ["127.0.0.1:55432", "localhost", "[::1]", "postgres:5432"])
+    expect(
+      ConfigSchema.safeParse({ ...base, DATABASE_URL: `postgresql://j:p@${host}/jarvis` }).success,
+    ).toBe(true);
+  for (const host of ["aws-0-ap-southeast-1.pooler.supabase.com:6543", "10.0.0.5", "db.example"])
+    expect(
+      ConfigSchema.safeParse({ ...base, DATABASE_URL: `postgresql://j:p@${host}/jarvis` }).success,
+    ).toBe(false);
+});

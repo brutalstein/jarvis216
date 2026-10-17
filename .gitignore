@@ -15,3 +15,4 @@ coverage/
 *.bundle
 graphify-out/.graphify_python
 .tools/
+graphify-out/cache/

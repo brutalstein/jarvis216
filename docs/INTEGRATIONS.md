@@ -23,8 +23,10 @@ browser control, account credentials or cross-agent delegation. Verify denial wi
 prompts and OS/network restrictions before setting `OPENCLAW_POLICY_VERIFIED=true`.
 The flag is an operator attestation, not a sandbox installer or proof.
 
-Set URL, agent ID and token, then `ENABLE_OPENCLAW=true`. In Compose a separately
-provisioned service may use `http://openclaw:18789`; native Core uses loopback. Never assume
+Set URL, agent ID and token, then `ENABLE_OPENCLAW=true`. Native Core uses the loopback
+default from `.env.example`. Core in Compose cannot reach host loopback: attach the separately
+provisioned service to a network Core joins and set `OPENCLAW_URL` to its service URL, for
+example `http://openclaw:18789`. Never assume
 that client `tools: []` disables all Gateway-native tools. Gateway sessions belong to
 OpenClaw. Native Codex app-server and ACP harness execution require a later tested integration;
 do not launch a second Core SDK manager against those same sessions.
@@ -80,8 +82,11 @@ The example manually triggers a Core task, waits in bounded five-second interval
 status and consumes the verified response. The task's privacy is private, so Core first
 requires operator approval: inspect `/v1/tasks/:id/actions`, then grant the exact action.
 The workflow stops on terminal failure/uncertainty or after at most 21 status iterations.
-No external message is sent. Import and execution on a running n8n instance remain pending;
-the JSON is a version-targeted example, not live workflow proof.
+No external message is sent. Live run on n8n 2.43.7: ingress returned 202, the status loop
+polled, and with OpenClaw not provisioned the task became BLOCKED and the workflow stopped at
+its operator-review branch. n8n emits Luxon timestamps with a UTC offset (`+03:00`); Core
+accepts offsets. A retried n8n execution re-evaluates `$now`, so Core sees a changed payload
+for the same event ID and returns a conflict: this fails closed and needs operator review.
 
 For Core-to-n8n execution, register published workflow webhook URLs in `N8N_WORKFLOWS_JSON`:
 
@@ -89,9 +94,32 @@ For Core-to-n8n execution, register published workflow webhook URLs in `N8N_WORK
 {"example":{"url":"http://n8n:5678/webhook/reviewed-workflow","tokenRef":"N8N_WORKFLOW_EXAMPLE_TOKEN","version":"reviewed-v1"}}
 ```
 
-Supply the referenced secret through the environment and enable n8n. Each workflow must
+Supply the referenced secret through the environment and enable n8n. Inside Compose use
+the service URL (`http://n8n:5678/...`); Core and n8n share only the `automation` network.
+Each workflow must
 deduplicate task IDs durably before external writes and return `{ "text": "...", "source":
 "n8n:authoritative-readback", "externalId": "execution-id" }` only after its own declared
 verification. Core cannot prove external truth from arbitrary webhook JSON. Admin discovery
 and status reads use `N8nClient` with an independently scoped `X-N8N-API-KEY`. Workflow
 discovery is currently a bounded first page. Public execution stopping is explicitly rejected.
+
+`examples/n8n/jarvis-core-callee.json` is a reference callee: a header-authenticated webhook,
+a Remove Duplicates node keyed on `taskId` across executions, and a response in Core's result
+contract. Verified live: Core invoked it after exact HIGH approval and recorded COMPLETED with
+the n8n execution ID; replaying the same `taskId` returned an empty body without running the
+workflow again; a wrong token returned 403. Its response text is produced by the workflow
+itself, so it proves invocation and deduplication, not an external business outcome.
+
+Live setup without the n8n UI (PowerShell; container name from `docker compose ps`):
+
+```powershell
+docker cp examples/n8n/jarvis-core-callee.json jarvis-core-n8n-1:/tmp/callee.json
+docker exec jarvis-core-n8n-1 n8n import:workflow --input=/tmp/callee.json
+docker exec jarvis-core-n8n-1 n8n publish:workflow --id=<workflow id>
+docker compose --profile automations restart n8n   # webhooks register on start
+```
+
+Create the Header Auth credential in the UI or with `n8n import:credentials`. `n8n execute`
+inside the running container needs `-e N8N_RUNNERS_BROKER_PORT=5690` because the server
+already holds the default broker port. From Git Bash, prefix `docker exec` commands that
+pass container paths with `MSYS_NO_PATHCONV=1`.

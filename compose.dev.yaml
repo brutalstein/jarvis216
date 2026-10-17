@@ -1,0 +1,8 @@
+# Opt-in host access to PostgreSQL for native Core, the live PostgreSQL suite and benchmarks:
+#   docker compose -f compose.yaml -f compose.dev.yaml up -d postgres
+# While published, other Compose networks can reach the port by IP (password still required),
+# so do not run the n8n or browser profiles in this mode with valued data.
+services:
+  postgres:
+    # Defaults away from 5432: native Windows PostgreSQL installs commonly hold it.
+    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"]

@@ -41,3 +41,8 @@ The cloned repository is empty; use engineering/core-foundation and checkpoint c
 - Research: upstream releases queried 2026-10-17. Docker daemon unavailable.
 - Graphify initial update attempted: no code in empty repository; regenerate after code.
 - Codex Max skill located in local backup and read; no extensions re-enabled.
+- Gates 1–3 complete: persistence, policy, integrations, worker, control surface.
+- Gate 4 complete: pinned Compose with segmented networks, Docker run on Windows, Python
+  lock/type/lint, CI workflow, threat model, benchmark, acceptance matrix.
+- Gate 5: independent review findings fixed with regression tests; live n8n and PostgreSQL
+  runs; documentation and engineering report written. Push requires operator confirmation.

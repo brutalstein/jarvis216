@@ -10,13 +10,14 @@ is discovery evidence, not proof that a complete deployment works.
 | TypeScript | 7.0.2 | 7.0.2 | Strict type checking + build |
 | OpenClaw | v2026.10.4 | Operator must provision this version | Local HTTP contract only; live pending |
 | Browser Use | GitHub 0.13.13; PyPI 0.13.11 | 0.13.11, Python 3.12.10 | Real ephemeral browser DOM readback passed |
-| n8n | n8n@2.43.7 | 2.43.7 image manifest exists | API contract only; engine not running |
+| n8n | n8n@2.43.7 | 2.43.7 image | Live: ingress roundtrip and Core-invoked webhook with dedup; API key client not exercised |
 | Claude Code | v2.1.302 | Research reference; CLI not launched | Claude API path below; Code harness pending |
 | Claude API SDK | npm 0.135.0 | @anthropic-ai/sdk 0.135.0 | Compiled adapter; live credentials not exercised |
 | Codex | rust-v0.163.0 | @openai/codex-sdk 0.163.0 | Typed SDK path; isolated execution pending |
 | Gemini CLI | v0.64.0 | Research reference; CLI not launched | Gemini API path below; CLI harness pending |
 | Gemini API SDK | npm 2.30.0 | @google/genai 2.30.0 | Compiled adapter; live credentials not exercised |
-| PostgreSQL | Selected existing 18.3 image | 18.3-bookworm, amd64 digest pinned | Manifest verified; server test pending |
+| PostgreSQL | Selected existing 18.3 image | 18.3-bookworm, amd64 digest pinned | Live: concurrent migrate, competing claims, reconnect after backend kill, benchmark |
+| Docker Desktop | Compose v2, WSL2 backend | Core image built locally | Live: health, CLI lifecycle, restart persistence, SIGTERM drain, segmented networks |
 | PGlite | 0.5.10 | Dev/test only | Real SQL, transactions and disk reopen tested |
 | Fastify / Zod / pg | 5.12.7 / 4.6.7 / 8.23.1 | Same exact versions | HTTP and SQL tests |
 | OpenTelemetry | API 1.9.1; tracing SDK 2.12.0 | Same exact versions | Correlated JSON span export tested |
@@ -73,7 +74,8 @@ published webhooks rather than inventing a public “execute workflow” method.
 events use a separate bearer credential, stable event identity, timestamp window and durable
 deduplication. The included roundtrip uses bounded waits and status reads; n8n owns the
 trigger schedule. Public execution stop is explicitly unsupported by this client. Workflow
-versions and idempotency behavior must be validated in the deployed workflow. Queue mode
+versions and idempotency behavior must be validated in the deployed workflow; the included
+callee example was validated live on 2.43.7. Queue mode
 requires Redis and the n8n database topology; it is intentionally not enabled for the first
 single-instance deployment. API permissions/availability depend on the deployed edition.
 
@@ -127,7 +129,9 @@ failures within the original allowlist, privacy scope, call count and total wall
 
 - Local HTTP servers emulate documented provider responses; they do not establish live connectivity.
 - Browser Use import and real public DOM extraction are live evidence for that limited path.
-- Docker daemon was unavailable; Compose parsing and remote manifest inspection were possible.
+- Docker became available later in the session: the Core image, PostgreSQL 18.3 and n8n 2.43.7
+  ran on Docker Desktop for Windows. The browser-worker container was not started because
+  egress controls are not attested.
 - Real PostgreSQL suite requires explicit opt-in and a local disposable database. An inherited
   unrelated database setting caused an initial connection failure; it is never used implicitly now.
 - No provider credentials, paid requests, accounts, external messages or deployments were created.

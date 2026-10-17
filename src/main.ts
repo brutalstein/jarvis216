@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
 import { migrate, postgres } from "./database.js";
 import { EnvSecrets } from "./security.js";
@@ -69,9 +70,19 @@ async function main() {
     await shutdownTracing();
   }
 }
-main().catch(() => {
+main().catch((error: unknown) => {
+  // Zod issue paths and messages never contain the rejected values.
+  const config =
+    error instanceof z.ZodError
+      ? error.issues.map((i) => `${i.path.join(".")}: ${i.message}`)
+      : undefined;
   process.stderr.write(
-    '{"level":"fatal","code":"STARTUP_OR_RUNTIME_FAILED","detail":"Check local configuration and service readiness; sensitive details suppressed"}\n',
+    `${JSON.stringify({
+      level: "fatal",
+      code: "STARTUP_OR_RUNTIME_FAILED",
+      detail: "Check local configuration and service readiness; sensitive details suppressed",
+      ...(config ? { config } : {}),
+    })}\n`,
   );
   process.exitCode = 1;
 });

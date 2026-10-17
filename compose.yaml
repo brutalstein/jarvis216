@@ -6,8 +6,8 @@ services:
       POSTGRES_DB: jarvis
       POSTGRES_USER: jarvis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/bootstrap.ps1 first}
-    # Host port defaults away from 5432: native Windows PostgreSQL installs commonly hold it.
-    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"]
+    # Not published: Docker accepts a published port from every bridge network, which would
+    # let n8n or the browser worker reach the database by IP. Host access: compose.dev.yaml.
     volumes: ["postgres-data:/var/lib/postgresql"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis"]
@@ -27,7 +27,7 @@ services:
       PORT: "2160"
       BROWSER_WORKER_URL: http://browser-worker:8765
     ports: ["127.0.0.1:2160:2160"]
-    # Core is the only service on every segment; peers cannot reach each other.
+    # Core is the only service on every segment; peers reach each other only via published ports.
     networks: [data, automation, browser]
     depends_on:
       postgres: { condition: service_healthy }
