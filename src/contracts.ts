@@ -140,6 +140,8 @@ export interface Executor {
   // Omitted means unknown; false explicitly exposes an unsupported task budget.
   outputTokenLimitEnforced?: boolean;
   configuration?: string;
+  // Operator-listed provider that may receive private data without per-action approval.
+  trustedForPrivate?: boolean;
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult>;
 }
 export interface Task {

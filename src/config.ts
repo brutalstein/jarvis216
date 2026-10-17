@@ -33,7 +33,15 @@ export async function configuredProviders(
   secrets: EnvSecrets,
 ): Promise<ProviderRegistry> {
   const providers: Provider[] = [];
-  const register = (executor: Executor, configuration: string, priority: number) =>
+  const trusted = z
+    .string()
+    .default("")
+    .parse(env.JARVIS_PRIVATE_PROVIDERS)
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  const register = (executor: Executor, configuration: string, priority: number) => {
+    const trustedForPrivate = trusted.includes(executor.id);
     providers.push({
       id: executor.id,
       capability: executor.capability,
@@ -47,9 +55,12 @@ export async function configuredProviders(
       enabled: true,
       priority,
       maxInputChars: 20_000,
-      configuration,
+      trustedForPrivate,
+      // Trust is part of the approved configuration, so granting it invalidates old approvals.
+      configuration: trustedForPrivate ? `${configuration}:trusted-private` : configuration,
       execute: executor.execute.bind(executor),
     });
+  };
   if (env.ENABLE_CLAUDE === "true") {
     const model = z.string().min(1).parse(env.CLAUDE_MODEL);
     register(

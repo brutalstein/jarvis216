@@ -32,7 +32,7 @@ export class ActionGateway {
     // Deterministic floor: the highest of declared risk, executor floor and policy floor.
     const policyFloor: Risk =
       executor.capability === "workflow.invoke" ||
-      (executor.external && claim.spec.privacy === "private")
+      (executor.external && claim.spec.privacy === "private" && !executor.trustedForPrivate)
         ? "HIGH"
         : "LOW";
     const risk = [claim.spec.risk, executor.riskFloor ?? "LOW", policyFloor].reduce((a, b) =>
