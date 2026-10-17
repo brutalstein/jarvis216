@@ -39,6 +39,9 @@ export async function configuredProviders(
       capability: executor.capability,
       external: executor.external,
       retrySafe: executor.retrySafe,
+      ...(executor.outputTokenLimitEnforced !== undefined
+        ? { outputTokenLimitEnforced: executor.outputTokenLimitEnforced }
+        : {}),
       ...(executor.riskFloor ? { riskFloor: executor.riskFloor } : {}),
       authenticated: true,
       enabled: true,

@@ -41,7 +41,9 @@ it("codex api-key options keep current behavior", () => {
 });
 it("codex chatgpt mode registers without OPENAI_API_KEY when auth.json exists", async () => {
   const registry = await configuredProviders(await codexEnv(true), secrets);
-  expect(registry.list()).toEqual([expect.objectContaining({ id: "codex", riskFloor: "HIGH" })]);
+  expect(registry.list()).toEqual([
+    expect.objectContaining({ id: "codex", riskFloor: "HIGH", outputTokenLimitEnforced: false }),
+  ]);
 });
 it("codex chatgpt mode refuses startup without auth.json", async () => {
   await expect(configuredProviders(await codexEnv(false), secrets)).rejects.toThrow();
@@ -62,6 +64,9 @@ const claude = {
 };
 it("claude code registers with an existing absolute path", async () => {
   const registry = await configuredProviders(claude, secrets);
+  expect(registry.list()).toEqual([
+    expect.objectContaining({ id: "claude-code", outputTokenLimitEnforced: false }),
+  ]);
   const spec = TaskSpecSchema.parse({
     objective: "test",
     capability: "text.generate",

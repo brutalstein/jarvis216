@@ -113,6 +113,7 @@ export function codexOptions(auth: CodexAuth, codexHome: string): CodexOptions {
 // Read-only sandbox is not a host-read boundary on native Windows. Use an isolated
 // CODEX_HOME, explicit operator attestation and per-run HIGH approval.
 export class CodexExecutor implements Executor {
+  readonly outputTokenLimitEnforced = false;
   readonly id = "codex";
   readonly capability = "text.generate";
   readonly external = true;

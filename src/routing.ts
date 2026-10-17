@@ -54,6 +54,7 @@ export class ProviderRegistry {
         priority,
         external,
         riskFloor,
+        outputTokenLimitEnforced,
       }) => ({
         id,
         capability,
@@ -63,6 +64,7 @@ export class ProviderRegistry {
         priority,
         external,
         riskFloor: riskFloor ?? "LOW",
+        ...(outputTokenLimitEnforced !== undefined ? { outputTokenLimitEnforced } : {}),
         circuitOpen: this.open(id),
         registryVersion: this.version,
       }),

@@ -25,6 +25,8 @@ const Output = z.object({
 });
 
 function failure(text: string): ProviderFailure {
+  if (/organization has disabled Claude subscription access/i.test(text))
+    return new ProviderFailure("policy-denied", false, false);
   if (/\/login|not logged in|authenticat|oauth/i.test(text))
     return new ProviderFailure("authentication-required", false, false);
   if (/usage limit|rate.?limit|\b429\b/i.test(text))
@@ -40,6 +42,7 @@ export class ClaudeCodeExecutor implements Executor {
   readonly capability = "text.generate";
   readonly external = true;
   readonly retrySafe = true;
+  readonly outputTokenLimitEnforced = false;
   constructor(
     private options: { command: readonly [string, ...string[]]; model: string; workdir: string },
   ) {}
@@ -66,6 +69,7 @@ export class ClaudeCodeExecutor implements Executor {
           "",
           "--disable-slash-commands",
           "--no-session-persistence",
+          "--safe-mode",
         ],
         { cwd: workdir, env, shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
       );

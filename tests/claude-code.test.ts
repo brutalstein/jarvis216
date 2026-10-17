@@ -1,13 +1,14 @@
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { type Task, TaskSpecSchema } from "../src/contracts.js";
 import { ClaudeCodeExecutor, claudeCodeEnvKeys } from "../src/integrations/claude-code.js";
 import { ProviderFailure } from "../src/routing.js";
 
 const fixture = path.resolve("tests/fixtures/fake-claude.mjs");
 const dir = mkdtempSync(path.join(tmpdir(), "jarvis-claude-code-"));
+afterAll(() => rmSync(dir, { recursive: true, force: true }));
 const flags = [
   "-p",
   "--output-format",
@@ -21,6 +22,7 @@ const flags = [
   "",
   "--disable-slash-commands",
   "--no-session-persistence",
+  "--safe-mode",
 ];
 
 function task(objective = "Return verified"): Task {
@@ -46,10 +48,16 @@ function task(objective = "Return verified"): Task {
   };
 }
 let n = 0;
-function run(mode: string, objective?: string, script = fixture, signal?: AbortSignal) {
+function run(
+  mode: string,
+  objective?: string,
+  script = fixture,
+  signal?: AbortSignal,
+  binary = process.execPath,
+) {
   const record = path.join(dir, `record-${n++}.json`);
   const executor = new ClaudeCodeExecutor({
-    command: [process.execPath, script, mode, record],
+    command: [binary, script, mode, record],
     model: "test-model",
     workdir: dir,
   });
@@ -143,6 +151,12 @@ describe("Claude Code subscription executor", () => {
     expect((await failure(run("noise").result)).kind).toBe("invalid-response");
   });
 
+  it("organization subscription denial is policy-denied", async () => {
+    const error = await failure(run("organization-denied").result);
+    expect(error.kind).toBe("policy-denied");
+    expect(error.retryable).toBe(false);
+  });
+
   it("oversized stdout is invalid-response", async () => {
     expect((await failure(run("huge").result)).kind).toBe("invalid-response");
   });
@@ -186,6 +200,10 @@ describe("Claude Code subscription executor", () => {
     mkdirSync(spaced, { recursive: true });
     const script = path.join(spaced, "fake claude.mjs");
     copyFileSync(fixture, script);
-    expect((await run("success", undefined, script).result).text).toBe("verified");
+    const binary = path.join(spaced, path.basename(process.execPath));
+    copyFileSync(process.execPath, binary);
+    expect((await run("success", undefined, script, undefined, binary).result).text).toBe(
+      "verified",
+    );
   });
 });

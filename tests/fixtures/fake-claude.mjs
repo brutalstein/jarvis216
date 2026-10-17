@@ -23,7 +23,12 @@ process.stdin.on("end", () => {
     process.exitCode = 1;
   } else if (mode === "limit")
     process.stdout.write(`${result(true, "Claude AI usage limit reached|1760000000")}\n`);
-  else if (mode === "noise")
+  else if (mode === "organization-denied") {
+    process.stdout.write(
+      result(true, "Your organization has disabled Claude subscription access for Claude Code"),
+    );
+    process.exitCode = 1;
+  } else if (mode === "noise")
     process.stdout.write(`update available\n${result(false, "verified")}\n`);
   else if (mode === "huge") process.stdout.write("x".repeat(2 * 1024 * 1024));
   else if (mode === "multibyte") process.stdout.write(result(false, "界".repeat(400_000)));

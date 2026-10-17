@@ -1,3 +1,9 @@
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({ test: { setupFiles: ["./tests/network-guard.ts"], testTimeout: 15_000 } });
+export default defineConfig({
+  test: {
+    include: ["tests/**/*.test.ts"],
+    setupFiles: ["./tests/network-guard.ts"],
+    testTimeout: 15_000,
+  },
+});

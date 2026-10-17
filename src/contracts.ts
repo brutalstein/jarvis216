@@ -128,6 +128,8 @@ export interface Executor {
   retrySafe: boolean;
   // Minimum action risk regardless of the task's declared risk (e.g. agent runtimes).
   riskFloor?: Risk;
+  // Omitted means unknown; false explicitly exposes an unsupported task budget.
+  outputTokenLimitEnforced?: boolean;
   configuration?: string;
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult>;
 }
