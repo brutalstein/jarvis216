@@ -1,4 +1,12 @@
-export type UiElement = { name: string; role: string; window: string; x: number; y: number };
+export type UiElement = {
+  name: string;
+  role: string;
+  window: string;
+  x: number;
+  y: number;
+  focused?: boolean;
+  value?: string;
+};
 
 // Turkish-aware matching form: "GÖNDER", "Gönder" and "gonder" are the same; İ/I/ı/i converge.
 export function normalize(text: string): string {

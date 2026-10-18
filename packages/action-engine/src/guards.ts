@@ -59,8 +59,10 @@ const shellProcesses = new Set([
 const escapeTitles: [RegExp, string][] = [
   [/powershell|pwsh/, "SHELL"],
   [/komut istemi|command prompt|\bcmd\b/, "SHELL"],
-  [/windows terminal|git bash|\bwsl\b/, "SHELL"],
+  [/\bterminal\b|git bash|\bwsl\b/, "SHELL"],
   [/^(run|calistir)$/, "RUN_DIALOG"],
+  // Typing into Start or Search launches whatever it finds.
+  [/^(baslat|start|ara|arama|search)$/, "START_MENU"],
   [/kayit defteri|registry editor|regedit/, "REGISTRY"],
   [/gorev yoneticisi|task manager/, "TASK_MANAGER"],
   [/user account control|kullanici hesabi denetimi/, "UAC"],
@@ -74,8 +76,11 @@ export function escapeTarget(windowTitle: string, processName?: string): string 
   return escapeTitles.find(([pattern]) => pattern.test(title))?.[1] ?? null;
 }
 
+// Windows-MCP itself maps "windows" and "command" to Win and "option" to Alt.
 const keyAliases = new Map([
   ["windows", "win"],
+  ["command", "win"],
+  ["option", "alt"],
   ["meta", "win"],
   ["super", "win"],
   ["cmd", "win"],
@@ -87,18 +92,19 @@ const keyAliases = new Map([
 ]);
 
 export function blockedShortcut(keys: string): boolean {
-  const pressed = new Set(
-    keys
-      .toLowerCase()
-      .split(/[+\s]+/)
-      .filter(Boolean)
-      .map((key) => keyAliases.get(key) ?? key),
-  );
+  const tokens = keys
+    .toLowerCase()
+    .split(/[+\s]+/)
+    .filter(Boolean)
+    .map((key) => keyAliases.get(key) ?? key);
+  const pressed = new Set(tokens);
   const all = (...names: string[]) => names.every((name) => pressed.has(name));
-  // Any Windows-key combination reaches Run, the power menu or a search that launches programs.
+  // Any Windows-key combination reaches Run, the power menu or a search that launches programs;
+  // ctrl+esc opens Start, launch_* keys start apps, and braces would smuggle SendKeys syntax.
   return (
+    tokens.some((key) => key.startsWith("launch_") || !/^([a-z0-9_]+|[^a-z0-9_{}()])$/.test(key)) ||
     pressed.has("win") ||
-    all("ctrl", "shift", "esc") ||
+    all("ctrl", "esc") ||
     all("ctrl", "alt", "delete") ||
     all("alt", "f4")
   );

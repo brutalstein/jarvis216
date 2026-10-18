@@ -1,0 +1,37 @@
+
+    Cursor Position: (1262, 792)
+Visible Displays: 0:\\.\DISPLAY1 (0,0,2560,1600) primary
+
+    Active Desktop:
+    Name
+---------
+Desktop 1
+
+    All Desktops:
+    Name
+---------
+Desktop 1
+
+    Focused Window:
+    Name                     Depth  Status      Width    Height     Handle
+---------------------  -------  --------  -------  --------  ---------
+Adsız, Not Defteri           4  Normal       1920      1118  188286642
+
+    Opened Windows:
+    Name                                        Depth  Status       Width    Height    Handle
+----------------------------------------  -------  ---------  -------  --------  --------
+Spotify Premium                                 0  Maximized     2582      1550    394762
+
+
+    UI Tree:
+    desktop
+    ├── window "Adsız, Not Defteri"
+    │   ├── (1104,792) düğme "Kaydet"  [action: click]  [focused]
+    │   ├── (1262,792) düğme "Kaydetme"  [action: click]
+    │   ├── (1420,792) düğme "İptal"  [action: click]
+    │   ├── (578,166) sekme öğesi "Adsız. Değiştirildi."  [action: click]
+    │   └── (2194,151) düğme "Kapat"  [action: click]
+    ├── window "Görev Çubuğu"
+    │   └── bölme "Görev Çubuğu"
+    │       └── (1713,1564) düğme "Not Defteri - 1 çalışan pencere"  [action: click]
+    └── window "windows-mcp-flash"

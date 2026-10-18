@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { appAlias } from "../src/apps.js";
+import { appNames } from "../src/apps.js";
 import { ground, normalize, type UiElement } from "../src/ground.js";
 
 const element = (name: string, role = "Button", window = "Outlook", x = 10): UiElement => ({
@@ -56,21 +56,23 @@ describe("ground", () => {
   });
 });
 
-describe("appAlias", () => {
+// The Start menu is localized: Turkish Windows knows "Not Defteri", English Windows "Notepad".
+describe("appNames", () => {
   it.each([
-    ["not defteri", "Notepad"],
-    ["Not Defteri'ni", "Notepad"],
-    ["hesap makinesi", "Calculator"],
-    ["dosya gezgini", "File Explorer"],
-    ["ayarlar", "Settings"],
-    ["spotifay", "Spotify"],
-    ["Spotify", "Spotify"],
-    ["krom", "Google Chrome"],
-  ])("maps %s to %s", (spoken, name) => {
-    expect(appAlias(spoken)).toBe(name);
+    ["not defteri", ["Not Defteri", "Notepad"]],
+    ["Not Defteri'ni", ["Not Defteri", "Notepad"]],
+    ["notepad", ["Notepad", "Not Defteri"]],
+    ["hesap makinesi", ["Hesap Makinesi", "Calculator"]],
+    ["dosya gezgini", ["Dosya Gezgini", "File Explorer"]],
+    ["ayarlar", ["Ayarlar", "Settings"]],
+    ["spotifay", ["Spotify"]],
+    ["Spotify", ["Spotify"]],
+    ["krom", ["Google Chrome"]],
+  ])("maps %s to %j", (spoken, names) => {
+    expect(appNames(spoken)).toEqual(names);
   });
 
   it("keeps unknown names, without a Turkish suffix", () => {
-    expect(appAlias("Obsidian'ı")).toBe("Obsidian");
+    expect(appNames("Obsidian'ı")).toEqual(["Obsidian"]);
   });
 });

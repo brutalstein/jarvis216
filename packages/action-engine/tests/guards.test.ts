@@ -74,6 +74,9 @@ describe("escapeTarget", () => {
     "Windows Terminal",
     "User Account Control",
     "Kullanıcı Hesabı Denetimi",
+    "Terminal",
+    "Başlat",
+    "Search",
   ])("refuses %s", (title) => {
     expect(escapeTarget(title)).not.toBeNull();
   });
@@ -85,6 +88,7 @@ describe("escapeTarget", () => {
   it.each([
     "Untitled - Notepad",
     "Adsız - Not Defteri",
+    "Adsız, Not Defteri",
     "Spotify Premium",
     "Running Club - Chrome",
   ])("allows %s", (title) => {
@@ -93,12 +97,23 @@ describe("escapeTarget", () => {
 });
 
 describe("blockedShortcut", () => {
-  it.each(["win+r", "Win+X", "windows+e", "ctrl+shift+esc", "Ctrl+Alt+Delete", "alt+f4", "win"])(
-    "blocks %s",
-    (keys) => {
-      expect(blockedShortcut(keys)).toBe(true);
-    },
-  );
+  // Windows-MCP aliases "command" to Win; ctrl+esc opens Start; launch_* keys start apps;
+  // braces would smuggle SendKeys syntax into one key.
+  it.each([
+    "win+r",
+    "Win+X",
+    "windows+e",
+    "command+r",
+    "ctrl+shift+esc",
+    "ctrl+esc",
+    "Ctrl+Alt+Delete",
+    "alt+f4",
+    "win",
+    "launch_app1",
+    "ctrl+{win}r",
+  ])("blocks %s", (keys) => {
+    expect(blockedShortcut(keys)).toBe(true);
+  });
 
   it.each(["ctrl+s", "ctrl+c", "ctrl+shift+t", "f5"])("allows %s", (keys) => {
     expect(blockedShortcut(keys)).toBe(false);

@@ -1,16 +1,22 @@
 import { normalize } from "./ground.js";
 
-// Spoken (often STT-mangled) Turkish names to the names Windows search knows.
-const aliases = new Map([
-  ["not defteri", "Notepad"],
-  ["notepad", "Notepad"],
-  ["hesap makinesi", "Calculator"],
-  ["dosya gezgini", "File Explorer"],
-  ["gezgin", "File Explorer"],
-  ["explorer", "File Explorer"],
-  ["ayarlar", "Settings"],
-  ["spotify", "Spotify"],
+// Equivalent Start-menu names. The Start menu is localized (Turkish Windows knows "Not Defteri",
+// English Windows "Notepad"), so every name of the group is tried in order.
+const groups = [
+  ["Not Defteri", "Notepad"],
+  ["Hesap Makinesi", "Calculator"],
+  ["Dosya Gezgini", "File Explorer"],
+  ["Ayarlar", "Settings"],
+  ["Kamera", "Camera"],
+  ["Takvim", "Calendar"],
+  ["Saat", "Clock"],
+  ["Fotoğraflar", "Photos"],
+];
+
+// Spoken (often STT-mangled) forms of names Windows search knows.
+const spoken = new Map([
   ["spotifay", "Spotify"],
+  ["spotify", "Spotify"],
   ["krom", "Google Chrome"],
   ["chrome", "Google Chrome"],
   ["google chrome", "Google Chrome"],
@@ -20,15 +26,18 @@ const aliases = new Map([
   ["teams", "Microsoft Teams"],
   ["whatsapp", "WhatsApp"],
   ["vatsap", "WhatsApp"],
-  ["discord", "Discord"],
-  ["kamera", "Camera"],
-  ["takvim", "Calendar"],
-  ["saat", "Clock"],
-  ["fotograflar", "Photos"],
+  ["gezgin", "Dosya Gezgini"],
+  ["explorer", "File Explorer"],
 ]);
 
-export function appAlias(name: string): string {
+export function appNames(name: string): string[] {
   // "Spotify'ı", "Not Defteri'ni": the apostrophe starts a Turkish case suffix.
   const bare = name.replace(/['’]\p{L}*$/u, "").trim();
-  return aliases.get(normalize(bare)) ?? bare;
+  const known = spoken.get(normalize(bare)) ?? bare;
+  const group = groups.find((names) =>
+    names.some((other) => normalize(other) === normalize(known)),
+  );
+  if (!group) return [known];
+  const first = group.find((other) => normalize(other) === normalize(known)) ?? known;
+  return [first, ...group.filter((other) => other !== first)];
 }

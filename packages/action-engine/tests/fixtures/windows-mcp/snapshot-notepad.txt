@@ -1,0 +1,55 @@
+
+    Cursor Position: (889, 1177)
+Visible Displays: 0:\\.\DISPLAY1 (0,0,2560,1600) primary
+
+    Active Desktop:
+    Name
+---------
+Desktop 1
+
+    All Desktops:
+    Name
+---------
+Desktop 1
+
+    Focused Window:
+    Name                     Depth  Status      Width    Height     Handle
+---------------------  -------  --------  -------  --------  ---------
+Adsız, Not Defteri           4  Normal       1920      1118  188286642
+
+    Opened Windows:
+    Name                                        Depth  Status       Width    Height    Handle
+----------------------------------------  -------  ---------  -------  --------  --------
+Spotify Premium                                 0  Maximized     2582      1550    394762
+Raporlar - Dosya Gezgini                        2  Normal        1600      1000    263838
+
+
+    UI Tree:
+    desktop
+    ├── window "Adsız, Not Defteri"
+    │   ├── (1278,714) belge "Metin düzenleyici"  [action: click]  [focused]  [value:"Toplantı "notları" yarın"]
+    │   ├── (578,166) sekme öğesi "Adsız. Değiştirildi."  [action: click]
+    │   ├── (937,166) sekme öğesi "Adsız. Değiştirilmedi."  [action: click]
+    │   ├── (1444,166) düğme "Sekmeyi Kapat"  [action: click]
+    │   ├── (1870,169) düğme "Yeni Sekme Ekle"  [action: click]
+    │   ├── (376,214) menü öğesi "Dosya"  [action: click]
+    │   ├── (484,214) menü öğesi "Düzenle"  [action: click]
+    │   ├── (609,214) menü öğesi "Görünüm"  [action: click]
+    │   ├── (1224,214) düğme "Kalın (Ctrl+B)"  [action: click]  [toggle:off]
+    │   ├── (2194,214) düğme "Ayarlar"  [action: click]
+    │   ├── menü çubuğu "Sistem"
+    │   │   └── (345,155) menü öğesi "Sistem"  [action: click]
+    │   ├── (2053,151) düğme "Simge Durumuna Küçült"  [action: click]
+    │   ├── (2124,151) düğme "Ekranı Kapla"  [action: click]
+    │   └── (2194,151) düğme "Kapat"  [action: click]
+    ├── window ""
+    ├── window "Görev Çubuğu"
+    │   └── bölme "Görev Çubuğu"
+    │       ├── (848,1564) düğme "Başlat"  [action: click]  [toggle:off]
+    │       ├── (1449,1564) düğme "Terminal sabitlenmiş"  [action: click]
+    │       ├── (1581,1564) düğme "Spotify - 1 çalışan pencere sabitlenmiş"  [action: click]
+    │       ├── (1713,1564) düğme "Not Defteri - 1 çalışan pencere"  [action: click]
+    │       ├── (2487,1564) düğme "Saat 13:19
+‎18.‎10.‎2026"  [action: click]
+    │       └── (2551,1564) düğme "Masaüstünü Göster"  [action: click]
+    └── window "windows-mcp-flash"
