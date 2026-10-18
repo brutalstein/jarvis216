@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src tests scripts",
+    "lint": "biome check src tests scripts apps/desktop/src apps/desktop/tests",
     "format": "biome check --write src tests scripts",
     "test": "vitest run",
     "test:postgres": "vitest run tests/postgres.live.test.ts",

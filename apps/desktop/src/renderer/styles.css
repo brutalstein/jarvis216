@@ -1,0 +1,408 @@
+/* JARVIS M1: ink #080d12, silver #dbe6e9, muted #91a5b0, cyan #acd5d8.
+   Segoe UI Variable + Cascadia Code. 8px spacing scale; 180ms motion, reduced-motion static.
+   Direction: quiet instrument, line-drawn presence, generous space, no dashboard chrome. */
+:root {
+  color-scheme: dark;
+  --ink: #080d12;
+  --panel: #101a23;
+  --text: #dbe6e9;
+  --muted: #91a5b0;
+  --line: #283842;
+  --accent: #acd5d8;
+  font:
+    14px / 1.55 "Segoe UI Variable",
+    "Segoe UI",
+    sans-serif;
+  color: var(--text);
+  background: var(--ink);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+button,
+select {
+  font: inherit;
+  color: var(--text);
+  background: #15232d;
+  border: 1px solid #334951;
+  border-radius: 5px;
+  padding: 9px 15px;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+button:hover {
+  background: #20333d;
+  border-color: #78959d;
+}
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+button.quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+button.quiet:hover {
+  color: var(--text);
+}
+[hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: Native hidden semantics must override component display rules. */
+  display: none !important;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 44px;
+}
+header .wordmark {
+  font-size: 16px;
+  letter-spacing: 0.25em;
+  font-weight: 600;
+}
+header .wordmark > span:first-child {
+  color: var(--accent);
+}
+.edition {
+  font:
+    10px "Cascadia Code",
+    Consolas,
+    monospace;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding-left: 10px;
+}
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.local-mark,
+.coordinate,
+.connection-label {
+  font:
+    10px / 1.5 "Cascadia Code",
+    Consolas,
+    monospace;
+  letter-spacing: 0.13em;
+  color: var(--muted);
+}
+.local-mark {
+  font-size: 9px;
+}
+header button {
+  font-size: 12px;
+}
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 44px 40px;
+}
+.presence-area {
+  width: min(100%, 700px);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+  min-height: 340px;
+  justify-content: center;
+}
+.coordinate {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  opacity: 0.8;
+}
+canvas[data-presence] {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.status i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+body[data-state="thinking"] .status i {
+  background: #9cb4d7;
+}
+body[data-state="approval"] .status i {
+  background: #e6b875;
+}
+body[data-state="error"] .status i {
+  background: #ed9993;
+}
+body[data-state="idle"] canvas {
+  opacity: 0.48;
+}
+[data-caption] {
+  font-size: 18px;
+  line-height: 1.6;
+  text-align: center;
+  max-width: 640px;
+  color: var(--text);
+  background: var(--ink);
+  margin: 24px 0 0;
+  overflow-wrap: anywhere;
+}
+[data-stage] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  width: min(100%, 900px);
+  margin-top: 24px;
+}
+[data-stage]:empty {
+  display: none;
+}
+[data-card] {
+  padding: 18px 20px;
+  border-top: 1px solid #65828c;
+  background: var(--panel);
+  border-radius: 0 0 5px 5px;
+  min-width: 0;
+  animation: appear 0.2s ease-out;
+  position: relative;
+  max-height: 260px;
+  overflow: auto;
+}
+.card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-heading h2 {
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 0;
+}
+.card-heading button {
+  font-size: 10px;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  color: var(--muted);
+}
+[data-card] p,
+[data-card] ul,
+[data-card] pre {
+  margin: 14px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+[data-card] ul {
+  padding-left: 18px;
+}
+[data-card] pre {
+  font:
+    12px / 1.6 "Cascadia Code",
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+}
+[data-card][data-pinned="true"] {
+  border-top-color: var(--accent);
+}
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 44px;
+  border-top: 1px solid #17232c;
+  gap: 16px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: Footer controls share base button styles with the header. */
+footer button {
+  font-size: 12px;
+  background: transparent;
+  border-color: #283a43;
+}
+.shortcut {
+  font:
+    10px "Cascadia Code",
+    Consolas,
+    monospace;
+  color: var(--muted);
+  white-space: nowrap;
+}
+kbd {
+  font: inherit;
+}
+.error-notice {
+  margin: 0 44px 24px;
+  color: #edb6b0;
+  font-size: 13px;
+  text-align: center;
+}
+dialog {
+  width: min(480px, calc(100vw - 48px));
+  max-height: calc(100dvh - 70px);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid #3a4f59;
+  border-radius: 10px;
+  padding: 28px;
+  box-shadow: 0 24px 100px #0009;
+}
+dialog::backdrop {
+  background: #0009;
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dialog-heading h1 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+.dialog-heading button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 0 4px 12px;
+  font-size: 12px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: Dialog text inherits its own solid panel background. */
+dialog p {
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--panel);
+}
+dialog label {
+  display: block;
+  font-size: 12px;
+  margin: 24px 0 8px;
+}
+dialog select {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.setting-section {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.setting-section h2 {
+  font-size: 14px;
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+.setting-section button {
+  font-size: 12px;
+  padding: 8px 12px;
+  margin: 4px 4px 0 0;
+}
+progress {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--accent);
+}
+[data-settings-status] {
+  min-height: 20px;
+}
+.overlay {
+  background: transparent;
+  min-height: 0;
+  padding: 12px;
+  display: block;
+}
+:root:has(body.overlay) {
+  background: transparent;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: The separate overlay template uses the same presence canvas. */
+.overlay canvas {
+  height: 78px;
+  width: 170px;
+  margin-left: auto;
+  background: #080d12dd;
+  border-radius: 6px;
+}
+.overlay [data-stage] {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.overlay [data-caption] {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.overlay [data-card] {
+  max-height: 160px;
+  background: #101a23;
+  box-shadow: 0 8px 24px #0005;
+}
+.overlay [data-card] p {
+  font-size: 13px;
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root :is([data-card], button, select) {
+    animation: none;
+    transition: none;
+  }
+}
+@media (max-width: 760px) {
+  header {
+    padding: 24px;
+  }
+  .local-mark {
+    display: none;
+  }
+  main {
+    padding: 0 24px 24px;
+  }
+  footer {
+    padding: 20px 24px;
+  }
+  .connection-label {
+    display: none;
+  }
+  [data-stage] {
+    grid-template-columns: 1fr;
+  }
+  [data-caption] {
+    font-size: 16px;
+  }
+}
