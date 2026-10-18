@@ -114,4 +114,22 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=3")).rows.length)
+      return;
+    const ddl = `
+      CREATE TABLE plans (
+        id uuid PRIMARY KEY, turn_id uuid, goal text NOT NULL, lang text NOT NULL,
+        kind text NOT NULL, steps jsonb NOT NULL, hash text NOT NULL, status text NOT NULL,
+        task_ids jsonb NOT NULL, created_at bigint NOT NULL, expires_at bigint NOT NULL,
+        approved_at bigint, narrated boolean NOT NULL DEFAULT false,
+        continued boolean NOT NULL DEFAULT false, replanned boolean NOT NULL DEFAULT false,
+        outcome jsonb
+      );
+      CREATE INDEX plan_status ON plans(status,created_at);
+      INSERT INTO schema_migrations VALUES (3);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

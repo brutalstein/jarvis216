@@ -13,11 +13,14 @@ import {
   type TaskState,
   taskDeadline,
 } from "./contracts.js";
+import type { Sql } from "./database.js";
 import { ProviderFailure } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
 // Failures tied to one provider (revoked key, delisted model): another listed provider may work.
 const providerBound = new Set(["authentication-required", "permanent"]);
+// One plan tap approves its MEDIUM steps for this long.
+export const planApprovalMs = 120_000;
 
 export class ActionGateway {
   constructor(
@@ -88,28 +91,36 @@ export class ActionGateway {
         };
       }
       invariant(current.status === "AWAITING_APPROVAL", "ACTION_ALREADY_ATTEMPTED");
-      if (["HIGH", "CRITICAL"].includes(risk)) {
+      if (risk !== "LOW") {
         const approval = (
           await tx.query<{ hash: string; expires_at: string; consumed_at: string | null }>(
             "SELECT * FROM approvals WHERE action_id=$1",
             [current.id],
           )
         ).rows[0];
-        if (
-          !approval ||
-          approval.hash !== hash ||
-          Number(approval.expires_at) <= Date.now() ||
-          approval.consumed_at
-        ) {
+        const exact =
+          approval &&
+          approval.hash === hash &&
+          Number(approval.expires_at) > Date.now() &&
+          !approval.consumed_at;
+        const viaPlan = !exact && risk === "MEDIUM" && (await this.planApproves(tx, task, risk));
+        if (!exact && !viaPlan) {
           await this.tasks.move(tx, task, "WAITING_FOR_APPROVAL", "exact action approval required");
           await this.tasks.event(tx, task, "approval.requested", { actionId: current.id, hash });
           await this.tasks.release(tx, task.id);
           return null;
         }
-        await tx.query("UPDATE approvals SET consumed_at=$2 WHERE action_id=$1", [
-          current.id,
-          Date.now(),
-        ]);
+        if (exact)
+          await tx.query("UPDATE approvals SET consumed_at=$2 WHERE action_id=$1", [
+            current.id,
+            Date.now(),
+          ]);
+        else
+          await this.tasks.event(tx, task, "approval.granted", {
+            planId: task.spec.planId ?? null,
+            approver: "operator",
+            via: "plan",
+          });
       }
       invariant(!signal.aborted, "CANCELLED");
       await tx.query("UPDATE actions SET status='EXECUTING' WHERE id=$1", [current.id]);
@@ -156,8 +167,13 @@ export class ActionGateway {
             );
             const verified = meetsVerification(task.spec, result.text);
             // An unverified result from a side-effecting executor proves the action ran, not
-            // that it failed: never let FAILED invite a blind resubmission.
-            const outcome = verified ? "COMPLETED" : executor.retrySafe ? "FAILED" : null;
+            // that it failed: never let FAILED invite a blind resubmission. An executor that
+            // observed the outcome itself reports a definite failure.
+            const outcome = verified
+              ? "COMPLETED"
+              : executor.retrySafe || executor.outcomeObservable
+                ? "FAILED"
+                : null;
             await tx.query("UPDATE actions SET status=$2,result=$3 WHERE id=$1", [
               action.id,
               verified ? "SUCCEEDED" : outcome ? "FAILED" : "EXECUTING",
@@ -238,5 +254,30 @@ export class ActionGateway {
           span.end();
         }
       });
+  }
+
+  // A step of an approved, unexpired, running plan whose compiled step is exactly this action.
+  private async planApproves(tx: Sql, task: Task, risk: Risk): Promise<boolean> {
+    if (!task.spec.planId) return false;
+    const plan = (
+      await tx.query<{
+        steps: { action: string; args: unknown; risk: Risk }[];
+        task_ids: string[];
+        status: string;
+        approved_at: string | null;
+      }>("SELECT steps,task_ids,status,approved_at FROM plans WHERE id=$1", [task.spec.planId])
+    ).rows[0];
+    if (
+      plan?.status !== "RUNNING" ||
+      plan.approved_at === null ||
+      Date.now() > Number(plan.approved_at) + planApprovalMs
+    )
+      return false;
+    const step = plan.steps[plan.task_ids.indexOf(task.id)];
+    return (
+      step !== undefined &&
+      fingerprint({ action: step.action, args: step.args, risk: step.risk }) ===
+        fingerprint({ ...task.spec.input, risk })
+    );
   }
 }

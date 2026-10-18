@@ -79,7 +79,9 @@
         "enum": [
           "text.generate",
           "browser.extract",
-          "workflow.invoke"
+          "workflow.invoke",
+          "desktop.act",
+          "info.fetch"
         ]
       }
     },

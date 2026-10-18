@@ -56,7 +56,13 @@ export function invariant(condition: unknown, code: string, httpStatus = 409): a
   if (!condition) throw new CoreError(code, httpStatus);
 }
 
-export const CapabilitySchema = z.enum(["text.generate", "browser.extract", "workflow.invoke"]);
+export const CapabilitySchema = z.enum([
+  "text.generate",
+  "browser.extract",
+  "workflow.invoke",
+  "desktop.act",
+  "info.fetch",
+]);
 export type Capability = z.infer<typeof CapabilitySchema>;
 export const RiskSchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
 export type Risk = z.infer<typeof RiskSchema>;
@@ -72,6 +78,11 @@ export const BrowserInputSchema = z.strictObject({
 export const WorkflowInputSchema = z.strictObject({
   workflow: z.string().min(1).max(100),
   payload: z.record(z.string(), z.json()),
+});
+// One compiled catalog step; the engine validated `args` against the action's own schema.
+export const StepInputSchema = z.strictObject({
+  action: z.string().min(1).max(40),
+  args: z.record(z.string(), z.json()),
 });
 export const TaskSpecSchema = z
   .strictObject({
@@ -97,6 +108,8 @@ export const TaskSpecSchema = z
       .default({ maxCalls: 2, maxDurationMs: 60_000, maxOutputTokens: 1024 }),
     deadline: z.iso.datetime(),
     parentId: z.uuid().optional(),
+    // The approved plan this step belongs to; binds MEDIUM approval to the compiled step.
+    planId: z.uuid().optional(),
     dependencies: z.array(z.uuid()).max(32).default([]),
     context: z.array(ContextEntrySchema).max(8).default([]),
     verification: z.discriminatedUnion("kind", [
@@ -110,7 +123,9 @@ export const TaskSpecSchema = z
         ? z.strictObject({})
         : task.capability === "browser.extract"
           ? BrowserInputSchema
-          : WorkflowInputSchema;
+          : task.capability === "workflow.invoke"
+            ? WorkflowInputSchema
+            : StepInputSchema;
     if (!schema.safeParse(task.input).success)
       ctx.addIssue({
         code: "custom",
@@ -142,6 +157,8 @@ export interface Executor {
   configuration?: string;
   // Operator-listed provider that may receive private data without per-action approval.
   trustedForPrivate?: boolean;
+  // The executor observes the outcome itself, so an unmet result is a definite failure.
+  outcomeObservable?: boolean;
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult>;
 }
 export interface Task {

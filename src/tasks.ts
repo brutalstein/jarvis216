@@ -83,69 +83,71 @@ export class TaskService {
     task.status = state;
   }
   async create(raw: unknown, key: string, principal: string): Promise<Task> {
+    return this.locked((tx) => this.createIn(tx, raw, key, principal));
+  }
+  // For callers already holding the scheduler lock: the task commits or rolls back with them.
+  async createIn(tx: Sql, raw: unknown, key: string, principal: string): Promise<Task> {
     invariant(key.length >= 1 && key.length <= 200, "INVALID_IDEMPOTENCY_KEY", 400);
     const spec = TaskSpecSchema.parse(raw);
-    return this.locked(async (tx) => {
-      const prior = (
-        await tx.query<Task & { request_hash: string }>(
-          "SELECT * FROM tasks WHERE principal=$1 AND idempotency_key=$2",
-          [principal, key],
-        )
-      ).rows[0];
-      if (prior) {
-        invariant(prior.request_hash === fingerprint(spec), "IDEMPOTENCY_CONFLICT");
-        return prior;
+    const prior = (
+      await tx.query<Task & { request_hash: string }>(
+        "SELECT * FROM tasks WHERE principal=$1 AND idempotency_key=$2",
+        [principal, key],
+      )
+    ).rows[0];
+    if (prior) {
+      invariant(prior.request_hash === fingerprint(spec), "IDEMPOTENCY_CONFLICT");
+      return prior;
+    }
+    invariant(Date.parse(spec.deadline) > Date.now(), "DEADLINE_EXPIRED", 400);
+    const queued = (
+      await tx.query<{ total: string; mine: string }>(
+        "SELECT count(*) AS total, count(*) FILTER (WHERE principal=$1) AS mine FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
+        [principal],
+      )
+    ).rows[0];
+    // Automation ingress gets its own quota so it cannot crowd out the operator.
+    invariant(
+      Number(queued?.total) < 1000 && (principal === "operator" || Number(queued?.mine) < 100),
+      "QUEUE_FULL",
+      429,
+    );
+    for (const dependency of spec.dependencies) await this.get(dependency, tx);
+    if (spec.parentId) {
+      let parent: Task | undefined = await this.get(spec.parentId, tx);
+      let depth = 1;
+      while (parent?.spec.parentId) {
+        parent = await this.get(parent.spec.parentId, tx);
+        depth++;
+        invariant(depth < 4, "MAX_AGENT_DEPTH");
       }
-      invariant(Date.parse(spec.deadline) > Date.now(), "DEADLINE_EXPIRED", 400);
-      const queued = (
-        await tx.query<{ total: string; mine: string }>(
-          "SELECT count(*) AS total, count(*) FILTER (WHERE principal=$1) AS mine FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
-          [principal],
-        )
-      ).rows[0];
-      // Automation ingress gets its own quota so it cannot crowd out the operator.
-      invariant(
-        Number(queued?.total) < 1000 && (principal === "operator" || Number(queued?.mine) < 100),
-        "QUEUE_FULL",
-        429,
-      );
-      for (const dependency of spec.dependencies) await this.get(dependency, tx);
-      if (spec.parentId) {
-        let parent: Task | undefined = await this.get(spec.parentId, tx);
-        let depth = 1;
-        while (parent?.spec.parentId) {
-          parent = await this.get(parent.spec.parentId, tx);
-          depth++;
-          invariant(depth < 4, "MAX_AGENT_DEPTH");
-        }
-      }
-      const id = randomUUID();
+    }
+    const id = randomUUID();
+    await tx.query(
+      "INSERT INTO tasks(id,correlation_id,principal,idempotency_key,request_hash,spec,status,created_at) VALUES($1,$2,$3,$4,$5,$6,'CREATED',$7)",
+      [
+        id,
+        randomUUID(),
+        principal,
+        key,
+        fingerprint(spec),
+        JSON.stringify({ ...spec, context: [] }),
+        Date.now(),
+      ],
+    );
+    const task = await this.get(id, tx);
+    for (const entry of spec.context)
+      await insertContext(tx, task, entry, this.options.redact ?? ((text) => text));
+    for (const dependency of spec.dependencies)
       await tx.query(
-        "INSERT INTO tasks(id,correlation_id,principal,idempotency_key,request_hash,spec,status,created_at) VALUES($1,$2,$3,$4,$5,$6,'CREATED',$7)",
-        [
-          id,
-          randomUUID(),
-          principal,
-          key,
-          fingerprint(spec),
-          JSON.stringify({ ...spec, context: [] }),
-          Date.now(),
-        ],
+        "INSERT INTO dependencies(task_id,dependency_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
+        [id, dependency],
       );
-      const task = await this.get(id, tx);
-      for (const entry of spec.context)
-        await insertContext(tx, task, entry, this.options.redact ?? ((text) => text));
-      for (const dependency of spec.dependencies)
-        await tx.query(
-          "INSERT INTO dependencies(task_id,dependency_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
-          [id, dependency],
-        );
-      for (const state of ["VALIDATING", "PLANNING", "READY"] as const)
-        await this.move(tx, task, state, "operator-submitted typed plan");
-      if (spec.dependencies.length)
-        await this.move(tx, task, "WAITING_FOR_DEPENDENCY", "dependencies declared atomically");
-      return task;
-    });
+    for (const state of ["VALIDATING", "PLANNING", "READY"] as const)
+      await this.move(tx, task, state, "operator-submitted typed plan");
+    if (spec.dependencies.length)
+      await this.move(tx, task, "WAITING_FOR_DEPENDENCY", "dependencies declared atomically");
+    return task;
   }
   async addDependency(id: string, dependency: string): Promise<void> {
     await this.locked(async (tx) => {
@@ -212,7 +214,13 @@ export class TaskService {
           continue;
         }
         if (deps.some((status) => status !== "COMPLETED")) continue;
-        const defaults = { "text.generate": 2, "browser.extract": 1, "workflow.invoke": 1 };
+        const defaults = {
+          "text.generate": 2,
+          "browser.extract": 1,
+          "workflow.invoke": 1,
+          "desktop.act": 1,
+          "info.fetch": 2,
+        };
         const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
         if ((activeByCapability.get(task.spec.capability) ?? 0) >= limit) continue;
         if (task.status === "WAITING_FOR_DEPENDENCY")
