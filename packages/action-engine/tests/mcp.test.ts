@@ -1,0 +1,59 @@
+import { fileURLToPath } from "node:url";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { McpToolPort } from "../src/mcp.js";
+
+const server = fileURLToPath(new URL("./fixtures/echo-server.ts", import.meta.url));
+const options = (allow: string[]) => ({
+  command: process.execPath,
+  args: ["--import", "tsx", server],
+  env: { ECHO_MODE: "test" },
+  allow,
+});
+const signal = new AbortController().signal;
+
+let port: McpToolPort;
+beforeAll(async () => {
+  process.env.JARVIS_TEST_SECRET = "must-not-reach-the-child";
+  port = new McpToolPort(options(["echo", "fail", "crash", "env"]));
+  await port.start();
+}, 30_000);
+afterAll(async () => {
+  delete process.env.JARVIS_TEST_SECRET;
+  await port.close();
+});
+
+describe("McpToolPort", () => {
+  it("lists the server's tools", async () => {
+    expect(await port.list()).toEqual(expect.arrayContaining(["echo", "fail", "crash"]));
+  });
+
+  it("joins text content and maps isError to ok: false", async () => {
+    expect(await port.call("echo", { text: "merhaba" }, signal)).toEqual({
+      ok: true,
+      text: "merhaba",
+    });
+    expect(await port.call("fail", {}, signal)).toEqual({ ok: false, text: "failed on purpose" });
+  });
+
+  it("refuses tools outside the allowlist before reaching the server", async () => {
+    const narrow = new McpToolPort(options(["echo"]));
+    await expect(narrow.call("fail", {}, signal)).rejects.toMatchObject({
+      code: "TOOL_NOT_ALLOWED",
+    });
+    await narrow.close();
+  });
+
+  it("gives the child only the configured environment", async () => {
+    const env = JSON.parse((await port.call("env", {}, signal)).text) as Record<string, string>;
+    expect(env.ECHO_MODE).toBe("test");
+    expect(env).not.toHaveProperty("JARVIS_TEST_SECRET");
+  });
+
+  it("reports a lost channel and restarts on the next call", async () => {
+    await expect(port.call("crash", {}, signal)).rejects.toThrow("MCP_CHANNEL_LOST");
+    expect(await port.call("echo", { text: "tekrar" }, signal)).toEqual({
+      ok: true,
+      text: "tekrar",
+    });
+  }, 30_000);
+});
