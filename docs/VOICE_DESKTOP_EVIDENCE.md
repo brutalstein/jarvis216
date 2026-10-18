@@ -20,10 +20,18 @@ enrollment flag and deletes the print. No operator enrollment is overwritten.
 | Initial successful WebRTC turn | 719 ms | 1984 ms | 281 ms | 3247 ms |
 | Turn with enrollment exercise | 625 ms | 3594 ms | 297 ms | 4747 ms |
 | Turn through the redesigned renderer | 672 ms | 1656 ms | 1859 ms | 4450 ms |
+| After the final review fixes (Gemini answered) | 844 ms | 1375 ms | 359 ms | 2825 ms |
 
 These are individual measurements, not a latency distribution. The 2500 ms target is **not met**.
 The third run's Piper time is six times the earlier runs; its cause (reply length, a cold voice or
 CPU contention) was not isolated.
+
+Two end-to-end runs after the final review fixes then failed at a later step. Gemini's free tier
+returned `rate-limited` and `provider-unavailable`; the OpenRouter fallback answered, but more
+slowly than the looping test audio repeats (about every 6 s), so each new repetition superseded
+the pending reply before it was spoken. In the second run the first turn passed (row above) and
+the post-enrollment turn failed this way. Core's task events show the provider failures; no code
+fault was found. A live run with an available Gemini quota is still needed after these fixes.
 `firstAudioMs` and `totalMs` currently identify first server-generated audio; they exclude output
 device latency and do not claim microphone-to-physical-speaker measurement.
 
@@ -31,7 +39,7 @@ device latency and do not claim microphone-to-physical-speaker measurement.
 
 - Core: typecheck, Biome lint and build pass; Vitest, run in two parts so the inherited flaky
   Claude child-process file runs alone: 121 tests pass, one opt-in PostgreSQL test skipped.
-- Voice: unittest suite — 20 tests pass, including the enrollment-cancel test; Ruff
+- Voice: unittest suite — 21 tests pass, including the enrollment-cancel test; Ruff
   (lint and format) and strict mypy pass.
 - Desktop: Twelve ordinary Electron tests. Two cover isolation, the bounded preload bridge,
   CSP, blocked navigation and missing configuration. Ten cover the redesigned renderer: a distinct
@@ -68,7 +76,8 @@ incompatibility, and an uninstalled FastAPI dependency in Pipecat's optional HTT
 | Overlay pointer forwarding on real Windows desktop interactions | Implemented; visual/native interaction check remains |
 | Memory, computer actions, Windows Hello approval, self-improvement | M2–M4, outside M1 |
 
-The inherited development Core and PostgreSQL were reused and left available. Test-owned voice
+The inherited development Core (`2161`) and its disposable PostgreSQL (`55433`) were reused,
+then stopped and removed at the end. Test-owned voice
 process trees are terminated when each Electron app closes. The original services on 2160, 18789,
 55432 and the operator's PostgreSQL on 5432 were not stopped or reconfigured.
 
