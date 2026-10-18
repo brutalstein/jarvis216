@@ -38,7 +38,8 @@ device latency and do not claim microphone-to-physical-speaker measurement.
 ## Automated verification
 
 - Core: typecheck, Biome lint and build pass; Vitest, run in two parts so the inherited flaky
-  Claude child-process file runs alone: 121 tests pass, one opt-in PostgreSQL test skipped.
+  Claude child-process file runs alone. On `main` after the merge: 129 tests pass, one opt-in
+  PostgreSQL test skipped.
 - Voice: unittest suite — 21 tests pass, including the enrollment-cancel test; Ruff
   (lint and format) and strict mypy pass.
 - Desktop: Twelve ordinary Electron tests. Two cover isolation, the bounded preload bridge,
