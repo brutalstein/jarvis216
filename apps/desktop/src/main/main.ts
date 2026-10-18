@@ -59,7 +59,9 @@ function allowed(sender: Electron.WebContents) {
 }
 async function coreCall(method: string) {
   if (!env) throw new Error("CORE_UNAVAILABLE");
-  const response = await fetch(`${env.coreUrl}/v1/conversation/turns`, {
+  // shortcut: export stops at Core's 500-turn cap; paginate if 30 days ever hold more.
+  const query = method === "GET" ? "?limit=500" : "";
+  const response = await fetch(`${env.coreUrl}/v1/conversation/turns${query}`, {
     method,
     headers: { authorization: `Bearer ${env.coreToken}` },
     signal: AbortSignal.timeout(10000),

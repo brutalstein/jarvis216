@@ -193,7 +193,7 @@ async def run_session(connection: Any, enrollment: Enrollment) -> None:
             VADProcessor(vad_analyzer=SileroVADAnalyzer()),
             turns,
             GatedSTT(enrollment),
-            Brain(core, rtvi.send_server_message),
+            Brain(core, rtvi.send_server_message, enrollment.gate.enrolled),
             BilingualTTS(),
             transport.output(),
         ]

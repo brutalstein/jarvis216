@@ -38,7 +38,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         async def send(message: dict) -> None:
             messages.append(message)
 
-        brain = Brain(core, send)
+        brain = Brain(core, send, lambda: True)
         frames = []
         for text in texts:
             frames.extend([transcript(text), UserStoppedSpeakingFrame(), SleepFrame(0.02)])
@@ -66,7 +66,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_follow_up_false_address_stays_silent(self) -> None:
         core = FakeCore(addressed=False)
-        brain = Brain(core, self.discard)
+        brain = Brain(core, self.discard, lambda: True)
         brain.window.open()
         down, _ = await run_test(
             brain,
@@ -74,6 +74,16 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(core.calls, [("akşam yemeği hazır", True)])
         self.assertFalse(any(isinstance(f, TTSSpeakFrame) for f in down))
+
+    async def test_follow_up_needs_a_voice_print(self) -> None:
+        core = FakeCore()
+        brain = Brain(core, self.discard, lambda: False)
+        brain.window.open()
+        await run_test(
+            brain,
+            frames_to_send=[transcript("akşam yemeği hazır"), UserStoppedSpeakingFrame()],
+        )
+        self.assertEqual(core.calls, [])
 
     async def discard(self, message: dict) -> None:
         pass
@@ -83,7 +93,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([f.text for f in speech], [FALLBACK["tr"]])
 
     async def test_english_core_failure_uses_an_english_apology(self) -> None:
-        brain = Brain(FakeCore(fail=True), self.discard)
+        brain = Brain(FakeCore(fail=True), self.discard, lambda: True)
         frame = TranscriptionFrame("Jarvis, are you there?", "operator", "now", language="en")
         down, _ = await run_test(brain, frames_to_send=[frame, SleepFrame(0.03)])
         self.assertEqual([f.text for f in down if isinstance(f, TTSSpeakFrame)], [FALLBACK["en"]])

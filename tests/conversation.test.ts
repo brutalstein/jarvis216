@@ -36,6 +36,9 @@ describe("reply parsing", () => {
       display: [],
     });
   });
+  it("keeps prose whose braces are not a reply object", () => {
+    expect(parseReply("Kullanım: f() {} efendim").say).toBe("Kullanım: f() {} efendim");
+  });
   it("keeps silence when not addressed", () => {
     expect(parseReply('{"addressed":false}')).toMatchObject({ addressed: false, say: "" });
   });
@@ -245,5 +248,39 @@ describe("conversation turns", () => {
     expect((await tasks.get(recent.taskId)).spec.objective).toContain("Jarvis, yeni");
     const [action] = await tasks.actions(old.taskId);
     expect(JSON.stringify(action)).not.toContain("Jarvis, eski");
+  });
+
+  it("speech not meant for JARVIS leaves no prompt behind", async () => {
+    const service = start([
+      provider("gemini-live", async () => ({
+        text: '{"addressed":false,"say":""}',
+        source: "fixture",
+      })),
+    ]);
+    const result = await service.turn({ utterance: "televizyon sesi", followUp: true });
+    expect(result.addressed).toBe(false);
+    expect((await tasks.get(result.taskId)).spec.objective).toBe("[deleted]");
+    expect(JSON.stringify(await tasks.actions(result.taskId))).not.toContain("televizyon");
+  });
+
+  it("an empty spoken reply fails the turn unless cards carry it", async () => {
+    let text = '{"say":""}';
+    const service = start([provider("gemini-live", async () => ({ text, source: "fixture" }))]);
+    await expect(service.turn({ utterance: "Jarvis?", followUp: false })).rejects.toThrow(
+      "TURN_FAILED",
+    );
+    text = JSON.stringify({ say: "", lang: "tr", display: [{ type: "text", body: "Liste" }] });
+    expect(await service.turn({ utterance: "Jarvis, göster", followUp: false })).toMatchObject({
+      say: "Ekranda, efendim.",
+      display: [{ type: "text", body: "Liste" }],
+    });
+  });
+
+  it("delete-all also scrubs turns stuck outside the finished states", async () => {
+    const service = start([provider("gemini-live", answer("Tamam."))]);
+    const turn = await service.turn({ utterance: "Jarvis, takıldı", followUp: false });
+    await db.query("UPDATE tasks SET status='RECOVERY_REQUIRED' WHERE id=$1", [turn.taskId]);
+    await service.deleteAll();
+    expect((await tasks.get(turn.taskId)).spec.objective).toBe("[deleted]");
   });
 });

@@ -14,6 +14,8 @@ class IsNamedTest(unittest.TestCase):
             "jarvisciğim",
             "çarvis",
             "jarvıs",
+            "JARVİS, merhaba",
+            "CARVİS?",
         ]:
             with self.subTest(text=text):
                 self.assertTrue(is_named(text))

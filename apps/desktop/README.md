@@ -30,7 +30,8 @@ service for calibration with the operator's microphone.
 ## Use
 
 - Say “Jarvis” (Turkish spelling variations are accepted), then speak normally. Without a voice
-  print, the assistant requires its name. After a reply, an eight-second follow-up window opens.
+  print, the assistant requires its name. With a print, an eight-second
+  follow-up window opens after each reply.
 - Settings (gear, top right) → **Sesimi tanıt**: read the rotating sentences aloud while the line
   fills; **Tamamla** unlocks after 25 of 30 seconds. **Vazgeç**, or closing the sheet, cancels and
   returns the service to listening. Only an embedding is saved, never a recording. **Ses izini

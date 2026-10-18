@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 import { CoreError, type TaskState, terminal } from "./contracts.js";
+import type { Sql } from "./database.js";
 import { conversationPrompt } from "./persona.js";
 import type { TaskService } from "./tasks.js";
 
@@ -52,6 +53,9 @@ export function parseReply(text: string): Reply {
   } catch {
     value = undefined;
   }
+  // Braces inside prose ("f() {}") are not a reply object.
+  if (!value || typeof value !== "object" || !("say" in value || "addressed" in value))
+    value = undefined;
   const parsed = z
     .object({
       addressed: z.boolean().catch(true),
@@ -104,8 +108,8 @@ const settled = new Set<TaskState>([
   "RECOVERY_REQUIRED",
   "WAITING_FOR_APPROVAL",
 ]);
-const conversationTasks =
-  "principal='operator' AND idempotency_key LIKE 'conversation:%' AND status IN ('COMPLETED','FAILED','CANCELLED') AND created_at < $1";
+const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
+const onScreen = { tr: "Ekranda, efendim.", en: "It's on the screen, sir." };
 
 export class ConversationService {
   constructor(
@@ -156,15 +160,21 @@ export class ConversationService {
       throw new CoreError(late ? "TURN_TIMEOUT" : "TURN_FAILED", late ? 504 : 502);
     }
     const reply = parseReply(current.result.text);
+    // An empty spoken reply would leave the voice service "speaking" with no audio.
+    if (reply.addressed && !reply.say) {
+      if (!reply.display.length) throw new CoreError("TURN_FAILED", 502);
+      reply.say = onScreen[reply.lang];
+    }
     const provider =
       (await this.tasks.actions(task.id)).find((action) => action.status === "SUCCEEDED")?.target ??
       null;
-    // Speech that was not meant for JARVIS is not kept.
+    // Speech that was not meant for JARVIS is not kept, not even in the task record.
     if (reply.addressed)
       await this.tasks.db.query(
         "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
         [id, started, input.utterance, input.followUp, task.id, JSON.stringify(reply), provider],
       );
+    else await this.tasks.db.transaction((tx) => this.forget(tx, "id = $1", task.id));
     return { id, taskId: task.id, ...reply, provider, latencyMs: Date.now() - started };
   }
   async list(limit: number): Promise<TurnRecord[]> {
@@ -188,22 +198,32 @@ export class ConversationService {
     }));
   }
   async deleteAll(): Promise<void> {
+    // Stop in-flight turns first so none finishes after the scrub with its prompt intact.
+    const active = await this.tasks.db.query<{ id: string }>(
+      `SELECT id FROM tasks WHERE ${conversationTasks} AND status NOT IN ('COMPLETED','FAILED','CANCELLED','RECOVERY_REQUIRED')`,
+    );
+    // A task that settled meanwhile is scrubbed below all the same.
+    for (const { id } of active.rows) await this.tasks.cancel(id).catch(() => {});
     await this.scrub(Number.MAX_SAFE_INTEGER);
   }
   purge(olderThanMs: number): Promise<number> {
     return this.scrub(Date.now() - olderThanMs);
   }
-  // Deletes turns before the cutoff and scrubs the prompts and replies Core kept for them.
+  // Scrubs the prompts and replies Core kept for the selected conversation tasks, in any state.
+  private async forget(tx: Sql, where: string, value: unknown) {
+    await tx.query(
+      `UPDATE actions SET parameters = jsonb_set(parameters, '{objective}', '"[deleted]"'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${conversationTasks} AND ${where})`,
+      [value],
+    );
+    await tx.query(
+      `UPDATE tasks SET spec = jsonb_set(spec, '{objective}', '"[deleted]"'), result = NULL WHERE ${conversationTasks} AND ${where}`,
+      [value],
+    );
+  }
+  // Deletes turns before the cutoff and scrubs their tasks.
   private scrub(cutoff: number): Promise<number> {
     return this.tasks.db.transaction(async (tx) => {
-      await tx.query(
-        `UPDATE actions SET parameters = jsonb_set(parameters, '{objective}', '"[deleted]"'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${conversationTasks})`,
-        [cutoff],
-      );
-      await tx.query(
-        `UPDATE tasks SET spec = jsonb_set(spec, '{objective}', '"[deleted]"'), result = NULL WHERE ${conversationTasks}`,
-        [cutoff],
-      );
+      await this.forget(tx, "created_at < $1", cutoff);
       return (
         await tx.query("DELETE FROM conversation_turns WHERE created_at < $1 RETURNING id", [
           cutoff,
