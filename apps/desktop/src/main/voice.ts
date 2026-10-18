@@ -24,6 +24,7 @@ export async function startVoiceService(options: {
     "TMP",
     "HF_HOME",
     "UV_CACHE_DIR",
+    "VOICE_SPEAKER_THRESHOLD",
   ]) {
     if (process.env[name]) env[name] = process.env[name];
   }
