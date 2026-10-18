@@ -94,6 +94,7 @@ export class ClaudeExecutor implements Executor {
       text,
       source: `claude:${result.model}:model-output`,
       externalId: result.id,
+      usage: { inputTokens: result.usage.input_tokens, outputTokens: result.usage.output_tokens },
     };
   }
 }
@@ -139,7 +140,18 @@ export class GeminiExecutor implements Executor {
     // A truncated or blocked reply says nothing about other providers: allow fallback.
     if (result.candidates?.[0]?.finishReason !== "STOP" || !result.text?.trim())
       throw new ProviderFailure("invalid-response", true);
-    return { text: result.text ?? "", source: `gemini:${this.model}:model-output` };
+    const usage = result.usageMetadata;
+    return {
+      text: result.text ?? "",
+      source: `gemini:${this.model}:model-output`,
+      ...(usage?.promptTokenCount !== undefined && {
+        usage: {
+          inputTokens: usage.promptTokenCount,
+          // Thinking tokens are billed output too.
+          outputTokens: (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0),
+        },
+      }),
+    };
   }
 }
 

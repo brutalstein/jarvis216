@@ -102,6 +102,14 @@ export function buildServer(
                FROM tasks t JOIN events e ON e.task_id=t.id
                WHERE t.status='COMPLETED' GROUP BY t.id,t.created_at) completed`,
     );
+    // Measured outcomes behind adaptive routing and usage budgets, last 24 hours.
+    const observations = await tasks.db.query(
+      `SELECT provider,outcome,count(*)::int AS count,round(avg(duration_ms))::int AS avg_ms,
+           COALESCE(sum(COALESCE(input_tokens,0)+COALESCE(output_tokens,0)),0)::float8 AS tokens
+         FROM provider_observations WHERE observed_at>$1
+         GROUP BY provider,outcome ORDER BY provider,outcome`,
+      [Date.now() - 86_400_000],
+    );
     const retries = await tasks.db.query<{ retries: number }>(
       "SELECT count(*)::int AS retries FROM events WHERE envelope->>'type'='execution.failed' AND envelope->'payload'->>'retryEligible'='true'",
     );
@@ -111,6 +119,7 @@ export function buildServer(
       usage: usage.rows[0],
       completedDurationMs: durations.rows[0],
       retries: retries.rows[0]?.retries ?? 0,
+      providerObservations24h: observations.rows,
       rssBytes: process.memoryUsage().rss,
       cpuMicros: process.cpuUsage(),
       observedAt: new Date().toISOString(),

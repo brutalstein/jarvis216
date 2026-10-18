@@ -13,6 +13,10 @@ export function providerId(prefix: "or" | "nv", model: string): string {
 const CompletionSchema = z.object({
   id: z.string().max(256).optional(),
   choices: z.array(z.object({ message: z.object({ content: z.string().nullish() }) })).min(1),
+  usage: z
+    .object({ prompt_tokens: z.number().int().min(0), completion_tokens: z.number().int().min(0) })
+    .nullish()
+    .catch(undefined),
 });
 
 // OpenRouter and NVIDIA API catalog speak the OpenAI chat completions protocol.
@@ -75,6 +79,12 @@ export class OpenAICompatibleExecutor implements Executor {
       text,
       source: `${this.id}:${this.options.model}:model-output`,
       ...(parsed.data?.id ? { externalId: parsed.data.id } : {}),
+      ...(parsed.data?.usage && {
+        usage: {
+          inputTokens: parsed.data.usage.prompt_tokens,
+          outputTokens: parsed.data.usage.completion_tokens,
+        },
+      }),
     };
   }
 }

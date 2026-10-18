@@ -158,6 +158,13 @@ export const ResultSchema = z.strictObject({
   text: z.string().min(1).max(64_000),
   source: z.string().min(1).max(512),
   externalId: z.string().max(256).optional(),
+  // Provider-reported token counts, for usage budgets; never trusted for anything else.
+  usage: z
+    .strictObject({
+      inputTokens: z.number().int().min(0).max(100_000_000),
+      outputTokens: z.number().int().min(0).max(100_000_000),
+    })
+    .optional(),
 });
 export type ExecutionResult = z.infer<typeof ResultSchema>;
 export interface Executor {

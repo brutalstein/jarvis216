@@ -24,7 +24,7 @@ export class Worker {
     redact: (text: string) => string = (text) => text,
     timing: Partial<WorkerTiming> = {},
   ) {
-    this.gateway = new ActionGateway(tasks, redact);
+    this.gateway = new ActionGateway(tasks, redact, (observation) => registry.record(observation));
     this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, ...timing };
   }
   cancel(id: string): void {
@@ -78,14 +78,10 @@ export class Worker {
             },
           }
         : task;
-      const selected = this.registry.select(executionTask, attempted);
+      const { provider: selected, reason } = this.registry.choose(executionTask, attempted);
       await this.tasks.locked(async (tx) => {
         this.tasks.assertLease(await this.tasks.get(task.id, tx), task.owner, task.fence);
-        await this.tasks.event(tx, task, "provider.selected", {
-          provider: selected.id,
-          registryVersion: this.registry.version,
-          reason: "capability, auth, privacy, context, allowlist and priority matched",
-        });
+        await this.tasks.event(tx, task, "provider.selected", reason);
       });
       await this.gateway.run(executionTask, selected, controller.signal);
     } catch (error) {

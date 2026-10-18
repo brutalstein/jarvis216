@@ -132,4 +132,23 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=4")).rows.length)
+      return;
+    // Measured provider outcomes for adaptive routing, durable circuits and usage budgets.
+    const ddl = `
+      CREATE TABLE provider_observations (
+        id bigserial PRIMARY KEY, provider text NOT NULL, capability text NOT NULL,
+        outcome text NOT NULL CHECK(outcome IN ('success','failure','neutral')),
+        kind text NOT NULL, duration_ms integer NOT NULL CHECK(duration_ms>=0),
+        input_tokens integer CHECK(input_tokens>=0), output_tokens integer CHECK(output_tokens>=0),
+        observed_at bigint NOT NULL
+      );
+      CREATE INDEX provider_recency ON provider_observations(provider,observed_at);
+      CREATE INDEX observation_retention ON provider_observations(observed_at);
+      INSERT INTO schema_migrations VALUES (4);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

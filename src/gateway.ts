@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
+import { ZodError } from "zod";
 import {
   type Action,
+  CoreError,
   type Executor,
   fingerprint,
   invariant,
@@ -14,6 +16,7 @@ import {
   taskDeadline,
 } from "./contracts.js";
 import type { Sql } from "./database.js";
+import { type Observation, recordObservation } from "./reliability.js";
 import { ProviderFailure } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
@@ -22,10 +25,34 @@ const providerBound = new Set(["authentication-required", "permanent"]);
 // One plan tap approves its MEDIUM steps for this long.
 export const planApprovalMs = 120_000;
 
+// Which failures say something about the provider. Operator cancels, lease loss and policy
+// refusals are neutral: they count toward usage, never against reliability.
+function failureObservation(
+  error: unknown,
+  signal: AbortSignal,
+  combined: AbortSignal,
+  responded: boolean,
+): Pick<Observation, "outcome" | "kind"> {
+  if (signal.aborted) return { outcome: "neutral", kind: "aborted" };
+  if (combined.aborted || (error instanceof CoreError && error.code === "DEADLINE_EXPIRED"))
+    return { outcome: "failure", kind: "timeout" };
+  // The provider answered in time; what failed was Core's own bookkeeping.
+  if (responded) return { outcome: "neutral", kind: "core-commit" };
+  if (error instanceof ProviderFailure)
+    return error.kind === "policy-denied"
+      ? { outcome: "neutral", kind: error.kind }
+      : { outcome: "failure", kind: error.kind };
+  if (error instanceof CoreError) return { outcome: "neutral", kind: error.code };
+  if (error instanceof ZodError) return { outcome: "failure", kind: "invalid-response" };
+  return { outcome: "failure", kind: "internal-or-transport" };
+}
+
 export class ActionGateway {
   constructor(
     private tasks: TaskService,
     private redact: (text: string) => string = (text) => text,
+    // Told about each committed observation (adaptive routing, budgets).
+    private onObservation?: (observation: Observation) => void,
   ) {}
 
   async run(claim: Task, executor: Executor, signal: AbortSignal): Promise<TaskState> {
@@ -148,8 +175,10 @@ export class ActionGateway {
           "action.id": action.id,
           "provider.id": executor.id,
         });
+        let responded = false;
         try {
           const received = ResultSchema.parse(await executor.execute(claim, combined));
+          responded = true;
           const result = ResultSchema.parse({
             ...received,
             text: this.redact(received.text),
@@ -157,7 +186,8 @@ export class ActionGateway {
             ...(received.externalId ? { externalId: this.redact(received.externalId) } : {}),
           });
           combined.throwIfAborted();
-          return await this.tasks.locked(async (tx) => {
+          let observed: Observation | undefined;
+          const settled = await this.tasks.locked(async (tx) => {
             const task = await this.tasks.get(claim.id, tx);
             this.tasks.assertLease(task, claim.owner, claim.fence);
             invariant(taskDeadline(task) > Date.now(), "DEADLINE_EXPIRED");
@@ -168,6 +198,21 @@ export class ActionGateway {
               "executor returned; response is untrusted",
             );
             const verified = meetsVerification(task.spec, result.text);
+            // An unmet postcondition the executor observed is the environment's state, not a
+            // provider fault; unverified model output is.
+            observed = {
+              provider: executor.id,
+              capability: executor.capability,
+              outcome: verified ? "success" : executor.outcomeObservable ? "neutral" : "failure",
+              kind: verified ? "verified" : executor.outcomeObservable ? "observed" : "unverified",
+              durationMs: Date.now() - executionStarted,
+              ...(result.usage && {
+                inputTokens: result.usage.inputTokens,
+                outputTokens: result.usage.outputTokens,
+              }),
+              observedAt: Date.now(),
+            };
+            await recordObservation(tx, observed);
             // An unverified result from a side-effecting executor proves the action ran, not
             // that it failed: never let FAILED invite a blind resubmission. An executor that
             // observed the outcome itself reports a definite failure.
@@ -203,12 +248,22 @@ export class ActionGateway {
             } else await this.tasks.quarantine(tx, task, "side effect executed; output unverified");
             return task.status;
           });
+          if (observed) this.onObservation?.(observed);
+          return settled;
         } catch (error) {
           span.setStatus({
             code: SpanStatusCode.ERROR,
             message: "execution failed; sensitive detail suppressed",
           });
-          return await this.tasks.locked(async (tx) => {
+          const observed: Observation = {
+            provider: executor.id,
+            capability: executor.capability,
+            ...failureObservation(error, signal, combined, responded),
+            durationMs: Date.now() - executionStarted,
+            observedAt: Date.now(),
+          };
+          const settled = await this.tasks.locked(async (tx) => {
+            await recordObservation(tx, observed);
             const task = await this.tasks.get(claim.id, tx);
             if (task.fence !== claim.fence || !["RUNNING", "VERIFYING"].includes(task.status))
               return task.status;
@@ -252,6 +307,8 @@ export class ActionGateway {
             }
             return task.status;
           });
+          this.onObservation?.(observed);
+          return settled;
         } finally {
           span.end();
         }

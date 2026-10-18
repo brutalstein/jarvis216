@@ -297,5 +297,22 @@ export async function configuredProviders(
     browserUrls,
     workflows: workflowNames,
   });
-  return { registry: new ProviderRegistry(providers), ...(tools && { tools }), integrations };
+  // Daily call or token ceilings per provider (e.g. a free tier's request quota). A spent budget
+  // skips the provider until its rolling 24-hour usage drops; it never raises another's.
+  const budgets = z
+    .record(
+      z.string().regex(/^[a-z0-9-]{1,40}$/),
+      z
+        .strictObject({
+          callsPerDay: z.number().int().min(1).optional(),
+          tokensPerDay: z.number().int().min(1).optional(),
+        })
+        .refine((budget) => budget.callsPerDay || budget.tokensPerDay, "empty budget"),
+    )
+    .parse(JSON.parse(env.PROVIDER_BUDGETS_JSON?.trim() || "{}"));
+  return {
+    registry: new ProviderRegistry(providers, Date.now, { budgets }),
+    ...(tools && { tools }),
+    integrations,
+  };
 }

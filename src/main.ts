@@ -4,6 +4,7 @@ import { ConfigSchema, configuredProviders } from "./config.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
 import { PlanService } from "./plans.js";
+import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
 import { TaskService } from "./tasks.js";
@@ -23,6 +24,9 @@ async function main() {
   const db = postgres(config.DATABASE_URL);
   try {
     await migrate(db);
+    // Health, usage budgets and open circuits survive a restart: replay the last day.
+    await purgeObservations(db, Date.now() - 30 * 86_400_000);
+    registry.hydrate(await loadObservations(db, Date.now() - 86_400_000));
     const tasks = new TaskService(db, {
       concurrency: config.WORKER_CONCURRENCY,
       limits: {

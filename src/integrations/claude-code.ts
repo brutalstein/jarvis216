@@ -22,6 +22,10 @@ const Output = z.object({
   is_error: z.boolean(),
   result: z.string().optional(),
   session_id: z.string().optional(),
+  usage: z
+    .object({ input_tokens: z.number().int().min(0), output_tokens: z.number().int().min(0) })
+    .optional()
+    .catch(undefined),
 });
 
 function failure(text: string): ProviderFailure {
@@ -117,6 +121,12 @@ export class ClaudeCodeExecutor implements Executor {
           text: parsed.result ?? "",
           source: `claude-code:${model}:subscription`,
           ...(parsed.session_id ? { externalId: parsed.session_id } : {}),
+          ...(parsed.usage && {
+            usage: {
+              inputTokens: parsed.usage.input_tokens,
+              outputTokens: parsed.usage.output_tokens,
+            },
+          }),
         });
       });
       child.stdin.on("error", () => {});
