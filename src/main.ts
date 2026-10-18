@@ -1,13 +1,14 @@
 import { parseSnapshot, screenSummary } from "@jarvis/action-engine";
 import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
+import { terminal } from "./contracts.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
 import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
-import { TaskService } from "./tasks.js";
+import { type TaskChange, TaskService } from "./tasks.js";
 import { initTracing } from "./telemetry.js";
 import { Worker } from "./worker.js";
 
@@ -49,6 +50,11 @@ async function main() {
     const onCancel = (id: string) => {
       for (const worker of workers) worker.cancel(id);
     };
+    // A task that became claimable (admitted, approved, resumed) or settled (unblocking its
+    // dependents) wakes idle workers at once.
+    tasks.changes.on("change", ({ status }: TaskChange) => {
+      if (status === "READY" || terminal.has(status)) wake();
+    });
     const providers = conversationProviders(registry.list().map((p) => (p as { id: string }).id));
     const plans = new PlanService({
       tasks,

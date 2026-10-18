@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { EventEmitter } from "node:events";
 import { insertContext } from "./context.js";
 import {
   type Action,
@@ -18,7 +19,14 @@ import {
 } from "./contracts.js";
 import type { Database, Sql } from "./database.js";
 
+export type TaskChange = { id: string; status: TaskState };
+
 export class TaskService {
+  // "change" fires after a transaction that moved tasks has committed, once per task with its
+  // final state, so waiters react at once instead of polling. In-process only: pollers remain
+  // the safety net.
+  readonly changes = new EventEmitter().setMaxListeners(100);
+  #moved = new WeakMap<Sql, Map<string, TaskState>>();
   constructor(
     public readonly db: Database,
     private options: {
@@ -31,10 +39,14 @@ export class TaskService {
   ) {}
 
   async locked<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
-    return this.db.transaction(async (tx) => {
+    const moved = new Map<string, TaskState>();
+    const value = await this.db.transaction(async (tx) => {
+      this.#moved.set(tx, moved);
       await tx.query("SELECT id FROM scheduler_lock WHERE id=1 FOR UPDATE");
       return fn(tx);
     });
+    for (const [id, status] of moved) this.changes.emit("change", { id, status } as TaskChange);
+    return value;
   }
   async get(id: string, tx: Sql = this.db): Promise<Task> {
     const task = (await tx.query<Task>("SELECT * FROM tasks WHERE id=$1", [id])).rows[0];
@@ -81,6 +93,7 @@ export class TaskService {
     await tx.query("UPDATE tasks SET status=$2 WHERE id=$1", [task.id, state]);
     await this.event(tx, task, "task.transition", { from: task.status, to: state, reason });
     task.status = state;
+    this.#moved.get(tx)?.set(task.id, state);
   }
   async create(raw: unknown, key: string, principal: string): Promise<Task> {
     return this.locked((tx) => this.createIn(tx, raw, key, principal));

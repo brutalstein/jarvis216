@@ -12,7 +12,7 @@ FALLBACK = {"tr": "Şu an yanıt veremiyorum, efendim.", "en": "I can't answer r
 class Turn:
     # Field names mirror Core's TurnResult JSON.
     id: str
-    taskId: str
+    taskId: str | None
     addressed: bool
     say: str
     lang: str

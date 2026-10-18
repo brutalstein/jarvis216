@@ -112,6 +112,7 @@ export class PlanService extends EventEmitter {
   #seen = new Map<string, string>();
   #finishing = new Set<string>();
   #refreshing: Promise<void> | undefined;
+  #again = false;
   #creating = Promise.resolve();
   constructor(
     private options: {
@@ -216,19 +217,64 @@ export class PlanService extends EventEmitter {
     );
   }
 
+  // The newest plan, if it just stopped on several on-screen matches the operator may pick
+  // from by voice ("ikincisi"). Older plans or other outcomes are not a pending choice.
+  async pendingChoice(): Promise<{ id: string; count: number; lang: Lang } | null> {
+    const plan = (
+      await this.options.tasks.db.query<PlanRow>(
+        "SELECT * FROM plans ORDER BY created_at DESC LIMIT 1",
+      )
+    ).rows[0];
+    const items = plan?.outcome?.candidates?.items;
+    if (
+      !plan ||
+      !items?.length ||
+      plan.status !== "FAILED" ||
+      plan.continued ||
+      Date.now() - Number(plan.created_at) > planWindowMs
+    )
+      return null;
+    return { id: plan.id, count: items.length, lang: plan.lang };
+  }
+
   async get(id: string): Promise<PlanView> {
     const plan = await this.#row(id);
     return this.#view(plan, await this.#stepTasks(plan));
   }
 
-  // Waits until the plan ends or needs the operator, or until `ms` passes.
+  // Waits until the plan ends or needs the operator, or until `ms` passes. Task transitions
+  // and plan updates wake it; the short poll is only a safety net.
   async waitSettled(id: string, ms: number): Promise<PlanView> {
     const end = Date.now() + ms;
-    for (;;) {
-      await this.refresh();
-      const view = await this.get(id);
-      if (view.status !== "RUNNING" || Date.now() >= end) return view;
-      await delay(50);
+    let dirty = false;
+    let resume = () => {};
+    const poke = () => {
+      dirty = true;
+      resume();
+    };
+    const onPlan = (view: PlanView) => {
+      if (view.id === id) poke();
+    };
+    this.options.tasks.changes.on("change", poke);
+    this.on("plan", onPlan);
+    try {
+      for (;;) {
+        dirty = false;
+        await this.refresh();
+        const view = await this.get(id);
+        if (view.status !== "RUNNING" || Date.now() >= end) return view;
+        if (!dirty)
+          await new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, Math.min(200, Math.max(1, end - Date.now())));
+            resume = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+          });
+      }
+    } finally {
+      this.options.tasks.changes.off("change", poke);
+      this.off("plan", onPlan);
     }
   }
 
@@ -244,20 +290,37 @@ export class PlanService extends EventEmitter {
     );
   }
 
+  // Single flight; a request arriving mid-refresh runs one more pass so no change is missed.
   refresh(): Promise<void> {
-    this.#refreshing ??= this.#refresh().finally(() => {
+    if (this.#refreshing) {
+      this.#again = true;
+      return this.#refreshing;
+    }
+    this.#refreshing = (async () => {
+      do {
+        this.#again = false;
+        await this.#refresh();
+      } while (this.#again);
+    })().finally(() => {
       this.#refreshing = undefined;
     });
     return this.#refreshing;
   }
 
   start(signal: AbortSignal): void {
+    const failed = () => {
+      process.stderr.write('{"level":"error","code":"PLAN_REFRESH_FAILED"}\n');
+    };
+    // Step transitions refresh plans at once; the poll covers expiries and announcements.
+    const onChange = () => void this.refresh().catch(failed);
+    this.options.tasks.changes.on("change", onChange);
+    signal.addEventListener("abort", () => this.options.tasks.changes.off("change", onChange), {
+      once: true,
+    });
     void (async () => {
       while (!signal.aborted) {
-        await this.refresh().catch(() => {
-          process.stderr.write('{"level":"error","code":"PLAN_REFRESH_FAILED"}\n');
-        });
-        await delay(300, undefined, { signal }).catch(() => {});
+        await this.refresh().catch(failed);
+        await delay(500, undefined, { signal }).catch(() => {});
       }
     })();
   }

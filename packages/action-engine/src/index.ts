@@ -9,3 +9,4 @@ export * from "./news.js";
 export * from "./run.js";
 export * from "./snapshot.js";
 export * from "./types.js";
+export * from "./voice.js";

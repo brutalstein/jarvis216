@@ -149,7 +149,7 @@ describe("conversation turns", () => {
     const result = await service.turn({ utterance: "Jarvis, merhaba", followUp: false });
     expect(result).toMatchObject({ provider: "or-b", say: "Merhaba efendim", addressed: true });
     expect((await service.list(10)).map((t) => t.reply.say)).toEqual(["Merhaba efendim"]);
-    const { spec } = await tasks.get(result.taskId);
+    const { spec } = await tasks.get(result.taskId!);
     expect(spec).toMatchObject({
       privacy: "personal",
       providerOrder: "listed",
@@ -242,9 +242,9 @@ describe("conversation turns", () => {
     await db.query("UPDATE tasks SET created_at=$2 WHERE id=$1", [old.taskId, aged]);
     expect(await service.purge(30 * 86_400_000)).toBe(1);
     expect((await service.list(10)).map((t) => t.id)).toEqual([recent.id]);
-    expect((await tasks.get(old.taskId)).spec.objective).toBe("[deleted]");
-    expect((await tasks.get(recent.taskId)).spec.objective).toContain("Jarvis, yeni");
-    const [action] = await tasks.actions(old.taskId);
+    expect((await tasks.get(old.taskId!)).spec.objective).toBe("[deleted]");
+    expect((await tasks.get(recent.taskId!)).spec.objective).toContain("Jarvis, yeni");
+    const [action] = await tasks.actions(old.taskId!);
     expect(JSON.stringify(action)).not.toContain("Jarvis, eski");
   });
 
@@ -257,8 +257,8 @@ describe("conversation turns", () => {
     ]);
     const result = await service.turn({ utterance: "televizyon sesi", followUp: true });
     expect(result.addressed).toBe(false);
-    expect((await tasks.get(result.taskId)).spec.objective).toBe("[deleted]");
-    expect(JSON.stringify(await tasks.actions(result.taskId))).not.toContain("televizyon");
+    expect((await tasks.get(result.taskId!)).spec.objective).toBe("[deleted]");
+    expect(JSON.stringify(await tasks.actions(result.taskId!))).not.toContain("televizyon");
   });
 
   it("an empty spoken reply fails the turn unless cards carry it", async () => {
@@ -279,6 +279,6 @@ describe("conversation turns", () => {
     const turn = await service.turn({ utterance: "Jarvis, takıldı", followUp: false });
     await db.query("UPDATE tasks SET status='RECOVERY_REQUIRED' WHERE id=$1", [turn.taskId]);
     await service.deleteAll();
-    expect((await tasks.get(turn.taskId)).spec.objective).toBe("[deleted]");
+    expect((await tasks.get(turn.taskId!)).spec.objective).toBe("[deleted]");
   });
 });

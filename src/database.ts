@@ -151,4 +151,12 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=5")).rows.length)
+      return;
+    // Spoken stop and candidate choices are answered without a model task.
+    await tx.query("ALTER TABLE conversation_turns ALTER COLUMN task_id DROP NOT NULL");
+    await tx.query("INSERT INTO schema_migrations VALUES (5)");
+  });
 }

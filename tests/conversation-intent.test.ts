@@ -16,6 +16,7 @@ let running: Promise<void>;
 let worker: Worker;
 let plans: PlanService;
 let responses: unknown[];
+let desktopResults: string[];
 const plan = (action = "app.open") => ({
   kind: "plan",
   goal: "Not Defteri",
@@ -26,6 +27,7 @@ beforeEach(async () => {
   tasks = new TaskService(db);
   stop = new AbortController();
   responses = [];
+  desktopResults = [];
   const provider = (
     id: string,
     capability: Executor["capability"],
@@ -55,7 +57,8 @@ beforeEach(async () => {
         source: "fake",
       })),
       provider("windows-mcp", "desktop.act", async () => ({
-        text: '{"ok":true,"evidence":"postcondition","observation":"opened"}',
+        text:
+          desktopResults.shift() ?? '{"ok":true,"evidence":"postcondition","observation":"opened"}',
         source: "fake",
       })),
     ]),
@@ -74,12 +77,53 @@ afterEach(async () => {
   await running;
   await db.close();
 });
-const turn = () =>
+const turn = (utterance = "Jarvis Not Defteri aç") =>
   new ConversationService(tasks, {
     providers: ["gemini-live"],
     wake: () => worker.wake(),
     plans,
-  }).turn({ utterance: "Jarvis Not Defteri aç", followUp: false });
+  }).turn({ utterance, followUp: false });
+const modelTasks = async () =>
+  Number(
+    (
+      await db.query<{ count: string }>(
+        "SELECT count(*) FROM tasks WHERE idempotency_key LIKE 'conversation:%'",
+      )
+    ).rows[0]?.count,
+  );
+async function pendingApproval() {
+  const compiled = compile([{ action: "app.close", args: { name: "Notepad" } }]);
+  if (!compiled.ok) throw new Error("fixture");
+  return plans.propose({
+    turnId: crypto.randomUUID(),
+    goal: "close",
+    lang: "tr",
+    steps: compiled.steps,
+  });
+}
+// An approved click that stopped on two matching elements.
+async function choosing() {
+  const compiled = compile([{ action: "ui.click", args: { target: "Kaydet" } }]);
+  if (!compiled.ok) throw new Error("fixture");
+  desktopResults.push(
+    JSON.stringify({
+      ok: false,
+      evidence: "observed-failure",
+      observation: "two matches",
+      candidates: ["Kaydet", "Kaydetme"],
+    }),
+  );
+  const proposed = await plans.propose({
+    turnId: crypto.randomUUID(),
+    goal: "Kaydet",
+    lang: "tr",
+    steps: compiled.steps,
+  });
+  await plans.approve(proposed.id, proposed.hash);
+  const failed = await plans.waitSettled(proposed.id, 5000);
+  expect(failed.status).toBe("FAILED");
+  return failed;
+}
 it("LOW plan returns the observed outcome and a plan id, discarding model claims", async () => {
   responses.push(plan());
   const result = await turn();
@@ -118,6 +162,45 @@ it("voice cancel cancels the active desktop plan", async () => {
   const result = await turn();
   expect(result.say).toContain("İptal");
   expect((await plans.get(pending.id)).status).toBe("CANCELLED");
+});
+it("a spoken stop cancels the active plan at once, without a model call", async () => {
+  const pending = await pendingApproval();
+  const result = await turn("Jarvis, dur!");
+  expect(result).toMatchObject({ taskId: null, provider: null, planId: pending.id, lang: "tr" });
+  expect(result.say).toContain("İptal");
+  expect((await plans.get(pending.id)).status).toBe("CANCELLED");
+  expect(await modelTasks()).toBe(0);
+  const [kept] = await new ConversationService(tasks, {
+    providers: ["gemini-live"],
+    wake: () => worker.wake(),
+    plans,
+  }).list(5);
+  expect(kept?.utterance).toBe("Jarvis, dur!");
+});
+it("a spoken stop with nothing to stop goes to the model", async () => {
+  responses.push({ kind: "cancel" });
+  const result = await turn("stop");
+  expect(result.taskId).toBeTruthy();
+  expect(await modelTasks()).toBe(1);
+});
+it("a spoken ordinal picks one of the on-screen candidates", async () => {
+  const failed = await choosing();
+  const result = await turn("Jarvis, ikincisi");
+  expect(result).toMatchObject({ taskId: null, provider: null, lang: "tr" });
+  expect(result.planId).toBeTruthy();
+  expect(result.planId).not.toBe(failed.id);
+  const chosen = await plans.waitSettled(result.planId!, 5000);
+  expect(chosen.steps[0]?.args.target).toBe("Kaydetme");
+  expect(chosen.status).toBe("COMPLETED");
+  expect(await modelTasks()).toBe(0);
+  // The choice is spent: saying it again is ordinary speech for the model.
+  responses.push(undefined);
+  expect((await turn("ikincisi")).taskId).toBeTruthy();
+});
+it("an out-of-range ordinal goes to the model", async () => {
+  await choosing();
+  responses.push(undefined);
+  expect((await turn("beşincisi")).taskId).toBeTruthy();
 });
 it("purge scrubs old plan records and step tasks without touching recent plans", async () => {
   responses.push({
@@ -163,7 +246,7 @@ it("screen descriptions stay out of the next model prompt", async () => {
   ]);
   responses.push({ kind: "reply" });
   const next = await turn();
-  expect((await tasks.get(next.taskId)).spec.objective).not.toContain("PRIVATE_SCREEN_CONTENT");
+  expect((await tasks.get(next.taskId!)).spec.objective).not.toContain("PRIVATE_SCREEN_CONTENT");
 });
 it("delete-all cancels and scrubs a pending plan", async () => {
   responses.push(plan("app.close"));

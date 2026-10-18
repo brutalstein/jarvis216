@@ -1,6 +1,5 @@
-import { setTimeout as delay } from "node:timers/promises";
 import { CoreError, type TaskState, terminal } from "./contracts.js";
-import type { TaskService } from "./tasks.js";
+import type { TaskChange, TaskService } from "./tasks.js";
 
 export type TextSpec = {
   prompt: string;
@@ -47,12 +46,33 @@ export async function runText(
     key,
     "operator",
   );
-  wake();
-  // The task deadline aborts the provider call itself; the grace covers Core's bookkeeping.
+  // Woken by the task's committed transitions; the short poll is only a safety net.
+  let dirty = false;
+  let resume = () => {};
+  const onChange = (change: TaskChange) => {
+    if (change.id !== task.id) return;
+    dirty = true;
+    resume();
+  };
+  tasks.changes.on("change", onChange);
   let current = task;
-  while (!settled.has(current.status) && Date.now() < started + spec.deadlineMs + 2000) {
-    await delay(50);
-    current = await tasks.get(task.id);
+  try {
+    wake();
+    // The task deadline aborts the provider call itself; the grace covers Core's bookkeeping.
+    while (!settled.has(current.status) && Date.now() < started + spec.deadlineMs + 2000) {
+      if (!dirty)
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 250);
+          resume = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+        });
+      dirty = false;
+      current = await tasks.get(task.id);
+    }
+  } finally {
+    tasks.changes.off("change", onChange);
   }
   if (current.status !== "COMPLETED" || !current.result) {
     const late = Date.now() >= started + spec.deadlineMs;

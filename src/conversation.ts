@@ -1,10 +1,16 @@
 import { randomUUID } from "node:crypto";
-import { narrate, readIntent, repairInstructions } from "@jarvis/action-engine";
+import {
+  type Lang,
+  narrate,
+  readIntent,
+  readVoiceCommand,
+  repairInstructions,
+} from "@jarvis/action-engine";
 import { z } from "zod";
 import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
 import { conversationPrompt } from "./persona.js";
-import type { PlanService } from "./plans.js";
+import type { PlanService, PlanView } from "./plans.js";
 import type { TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
 
@@ -35,7 +41,8 @@ export type Reply = {
 };
 export type TurnResult = Reply & {
   id: string;
-  taskId: string;
+  // null when Core answered without a model (spoken stop or candidate choice).
+  taskId: string | null;
   provider: string | null;
   latencyMs: number;
   planId?: string;
@@ -132,10 +139,22 @@ export class ConversationService {
     return this.options.deadlineMs ?? 20_000;
   }
   async turn(input: { utterance: string; followUp: boolean }): Promise<TurnResult> {
-    const { providers } = this.options;
-    if (!providers.length) throw new CoreError("NO_PROVIDER", 503);
     const started = Date.now();
     const id = randomUUID();
+    const quick = await this.#command(input.utterance);
+    if (quick) {
+      await this.#remember(id, started, input, null, quick.reply, null);
+      return {
+        id,
+        taskId: null,
+        ...quick.reply,
+        provider: null,
+        latencyMs: Date.now() - started,
+        ...(quick.planId && { planId: quick.planId }),
+      };
+    }
+    const { providers } = this.options;
+    if (!providers.length) throw new CoreError("NO_PROVIDER", 503);
     const history = (
       await this.tasks.db.query<{ utterance: string; say: string }>(
         "SELECT utterance, reply->>'say' AS say FROM conversation_turns c WHERE created_at > $1 AND NOT EXISTS (SELECT 1 FROM plans p WHERE p.turn_id=c.id AND p.steps @> '[{\"action\":\"screen.describe\"}]'::jsonb) ORDER BY created_at DESC LIMIT 6",
@@ -192,23 +211,15 @@ export class ConversationService {
         reply.display = [];
       } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "plan") {
         const decision = parsed.decision;
-        let view = await this.options.plans.propose({
+        const view = await this.options.plans.propose({
           turnId: id,
           goal: decision.goal,
           lang: reply.lang,
           steps: decision.steps,
         });
         planId = view.id;
-        if (!view.needsApproval) view = await this.options.plans.waitSettled(view.id, 5000);
         reply.display = [];
-        reply.say = narrate(
-          { type: "proposed", goal: view.goal, needsApproval: view.needsApproval },
-          reply.lang,
-        );
-        if (view.status !== "RUNNING" && view.status !== "AWAITING_APPROVAL") {
-          if (await this.options.plans.claimNarration(view.id))
-            reply.say = view.say ?? narrate({ type: "plan-uncertain" }, reply.lang);
-        }
+        reply.say = await this.#planSay(view, reply.lang);
       }
     }
     // An empty spoken reply would leave the voice service "speaking" with no audio.
@@ -217,11 +228,7 @@ export class ConversationService {
       reply.say = onScreen[reply.lang];
     }
     // Speech that was not meant for JARVIS is not kept, not even in the task record.
-    if (reply.addressed)
-      await this.tasks.db.query(
-        "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
-        [id, started, input.utterance, input.followUp, taskId, JSON.stringify(reply), provider],
-      );
+    if (reply.addressed) await this.#remember(id, started, input, taskId, reply, provider);
     else
       await this.tasks.db.transaction((tx) =>
         this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
@@ -235,6 +242,65 @@ export class ConversationService {
       ...(planId && { planId }),
     };
   }
+  // Spoken stop or a candidate pick: answered at once, no model call. Nothing to stop or choose
+  // means the utterance goes to the model like any other.
+  async #command(utterance: string): Promise<{ reply: Reply; planId?: string } | null> {
+    const plans = this.options.plans;
+    const command = plans ? readVoiceCommand(utterance) : null;
+    if (!plans || !command) return null;
+    if (command.kind === "cancel") {
+      const cancelled = await plans.cancelActive();
+      if (!cancelled) return null;
+      return {
+        reply: {
+          addressed: true,
+          say: cancelled.say ?? narrate({ type: "cancelled" }, command.lang),
+          lang: command.lang,
+          display: [],
+        },
+        planId: cancelled.id,
+      };
+    }
+    const pending = await plans.pendingChoice();
+    const index = command.index === "last" ? pending?.count : command.index;
+    if (!pending || index === undefined || index < 1 || index > pending.count) return null;
+    const lang = command.lang ?? pending.lang;
+    const view = await plans.choose(pending.id, index);
+    return {
+      reply: { addressed: true, say: await this.#planSay(view, lang), lang, display: [] },
+      planId: view.id,
+    };
+  }
+
+  // Template speech for a proposed plan: a quick LOW-only outcome is narrated in the reply itself.
+  async #planSay(proposed: PlanView, lang: Lang): Promise<string> {
+    const plans = this.options.plans;
+    if (!plans) return narrate({ type: "plan-uncertain" }, lang);
+    const view = proposed.needsApproval ? proposed : await plans.waitSettled(proposed.id, 5000);
+    const say = narrate(
+      { type: "proposed", goal: view.goal, needsApproval: view.needsApproval },
+      lang,
+    );
+    if (view.status === "RUNNING" || view.status === "AWAITING_APPROVAL") return say;
+    return (await plans.claimNarration(view.id))
+      ? (view.say ?? narrate({ type: "plan-uncertain" }, lang))
+      : say;
+  }
+
+  async #remember(
+    id: string,
+    started: number,
+    input: { utterance: string; followUp: boolean },
+    taskId: string | null,
+    reply: Reply,
+    provider: string | null,
+  ): Promise<void> {
+    await this.tasks.db.query(
+      "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
+      [id, started, input.utterance, input.followUp, taskId, JSON.stringify(reply), provider],
+    );
+  }
+
   async list(limit: number): Promise<TurnRecord[]> {
     const rows = (
       await this.tasks.db.query<{
