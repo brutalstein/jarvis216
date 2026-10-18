@@ -16,7 +16,8 @@ export type NarrationEvent =
         | "cancelled"
         | "not-understood"
         | "news-fallback"
-        | "candidates";
+        | "candidates"
+        | "denied";
       count?: number;
     };
 
@@ -73,6 +74,11 @@ export function narrate(event: NarrationEvent, lang: Lang): string {
       return pick([
         `${event.count ?? 0} başlık ekranda, efendim.`,
         `${event.count ?? 0} headlines are on screen, sir.`,
+      ]);
+    case "denied":
+      return pick([
+        "Bu işlem ayarlarda kapalı, efendim.",
+        "That action is turned off in Settings, sir.",
       ]);
     case "candidates":
       return pick([

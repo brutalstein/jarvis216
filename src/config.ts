@@ -288,8 +288,8 @@ export async function configuredProviders(
     tools = new McpToolPort(options);
     register(new DesktopExecutor(tools, roots), JSON.stringify({ ...options, roots }), 10);
   }
-  if (env.ENABLE_MEMORY === "true" && local.memory)
-    register(new MemoryExecutor(local.memory), "memory:v1:local", 10);
+  // Local and governed per action by the operator's permissions (default: ask).
+  if (local.memory) register(new MemoryExecutor(local.memory), "memory:v1:local", 10);
   if (env.ENABLE_NEWS === "true") {
     const feeds = z
       .array(z.url().refine((url) => new URL(url).protocol === "https:"))

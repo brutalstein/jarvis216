@@ -224,11 +224,16 @@ function signature(args: z.ZodObject): string {
     .join(", ");
 }
 
-/** Desktop/info always listed; integration and memory actions only when `enabled` has their id. */
-export function catalogLines(enabled?: ReadonlySet<string>): string {
+/**
+ * Desktop/info always listed; integration and memory actions only when `enabled` has their id.
+ * `hidden` (actions the operator turned off) are never listed.
+ */
+export function catalogLines(enabled?: ReadonlySet<string>, hidden?: ReadonlySet<string>): string {
   return definitions
     .filter(
-      (d) => (d.kind !== "integration" && d.kind !== "memory") || !enabled || enabled.has(d.id),
+      (d) =>
+        !hidden?.has(d.id) &&
+        ((d.kind !== "integration" && d.kind !== "memory") || !enabled || enabled.has(d.id)),
     )
     .map((d) => `${d.id}(${signature(d.args)}) — ${d.description.tr} / ${d.description.en}`)
     .join("\n");

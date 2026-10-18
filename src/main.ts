@@ -1,4 +1,4 @@
-import { parseSnapshot, screenSummary } from "@jarvis/action-engine";
+import { catalog, parseSnapshot, screenSummary } from "@jarvis/action-engine";
 import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
 import { terminal } from "./contracts.js";
@@ -6,6 +6,7 @@ import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
 import { MemoryStore } from "./memory.js";
 import { Outbox } from "./outbox.js";
+import { PermissionService } from "./permissions.js";
 import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
@@ -24,12 +25,30 @@ async function main() {
   );
   const secrets = new EnvSecrets(secretValues);
   const db = postgres(config.DATABASE_URL);
-  const memory = process.env.ENABLE_MEMORY === "true" ? new MemoryStore(db) : undefined;
+  const memory = new MemoryStore(db);
   const { registry, tools, integrations } = await configuredProviders(process.env, secrets, {
-    ...(memory && { memory }),
+    memory,
   });
   try {
     await migrate(db);
+    // Which catalog actions this configuration can run at all, for the Settings view.
+    const providerIds = new Set(registry.list().map((p) => (p as { id: string }).id));
+    const permissions = new PermissionService(db, {
+      available: () =>
+        new Set(
+          Object.values(catalog)
+            .filter((definition) =>
+              definition.kind === "desktop"
+                ? providerIds.has("windows-mcp")
+                : definition.kind === "info"
+                  ? providerIds.has("news")
+                  : definition.kind === "memory" ||
+                    integrations.available().includes(definition.id),
+            )
+            .map((definition) => definition.id),
+        ),
+    });
+    await permissions.load();
     const outbox =
       config.N8N_CALLBACK_URL && config.N8N_CALLBACK_TOKEN
         ? new Outbox(db, { url: config.N8N_CALLBACK_URL, token: config.N8N_CALLBACK_TOKEN })
@@ -53,7 +72,7 @@ async function main() {
     await tasks.recover();
     const workers = Array.from(
       { length: config.WORKER_CONCURRENCY },
-      () => new Worker(tasks, registry, (text) => secrets.redact(text)),
+      () => new Worker(tasks, registry, (text) => secrets.redact(text), {}, permissions),
     );
     const wake = () => {
       for (const worker of workers) worker.wake();
@@ -74,7 +93,8 @@ async function main() {
       conversationProviders: providers,
       privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
       integrations,
-      memory: memory !== undefined,
+      memory: true,
+      permissions,
       // A replan sees window and element names from a fresh Snapshot, never field values.
       ...(tools && {
         screen: async () =>
@@ -95,7 +115,7 @@ async function main() {
       providers,
       wake,
       plans,
-      ...(memory && { memory }),
+      memory,
     });
     await conversation.purge(30 * 86_400_000);
     const server = buildServer(tasks, registry, {
@@ -105,7 +125,8 @@ async function main() {
       onAdmit: wake,
       conversation,
       plans,
-      ...(memory && { memory }),
+      memory,
+      permissions,
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";

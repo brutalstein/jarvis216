@@ -36,6 +36,8 @@ export function conversationPrompt(input: {
   browserUrls?: readonly string[];
   // Operator-approved long-term memory, newest first.
   memories?: string[];
+  // Actions the operator turned off in Settings.
+  denied?: string[];
 }): string {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const time = input.now.toLocaleString("tr-TR", { timeZone: zone });
@@ -54,7 +56,7 @@ export function conversationPrompt(input: {
     ...(history ? [`Recent conversation, oldest first:\n${history}`] : []),
     `The operator now says (speech transcript, may contain recognition errors):\n${input.utterance}`,
     FORMAT,
-    intentInstructions(input.optionalActions ?? input.enabledIntegrations),
+    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
     `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
     ...(input.browserUrls?.length
       ? [

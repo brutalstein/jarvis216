@@ -47,12 +47,21 @@ function failureObservation(
   return { outcome: "failure", kind: "internal-or-transport" };
 }
 
+// The operator's standing decisions per catalog action (desktop Settings, PermissionService).
+export interface StandingGrants {
+  allows(action: string): boolean;
+  denies(action: string): boolean;
+  readonly version: number;
+}
+type PlanStep = { action: string; args: unknown; risk: Risk };
+
 export class ActionGateway {
   constructor(
     private tasks: TaskService,
     private redact: (text: string) => string = (text) => text,
     // Told about each committed observation (adaptive routing, budgets).
     private onObservation?: (observation: Observation) => void,
+    private grants?: StandingGrants,
   ) {}
 
   async run(claim: Task, executor: Executor, signal: AbortSignal): Promise<TaskState> {
@@ -120,6 +129,10 @@ export class ActionGateway {
         };
       }
       invariant(current.status === "AWAITING_APPROVAL", "ACTION_ALREADY_ATTEMPTED");
+      // A plan step's catalog action, bound to this task by the plan's own task list.
+      const step = task.spec.planId ? await this.planStep(tx, task) : undefined;
+      // Turned off in Settings after the plan was made: nothing runs.
+      invariant(!(step && this.grants?.denies(step.action)), "ACTION_DENIED", 403);
       if (risk !== "LOW") {
         const approval = (
           await tx.query<{ hash: string; expires_at: string; consumed_at: string | null }>(
@@ -133,7 +146,15 @@ export class ActionGateway {
           Number(approval.expires_at) > Date.now() &&
           !approval.consumed_at;
         const viaPlan = !exact && risk === "MEDIUM" && (await this.planApproves(tx, task, risk));
-        if (!exact && !viaPlan) {
+        // The operator allowed this catalog action in Settings: that standing decision is the
+        // approval. Never for CRITICAL, never outside a running plan.
+        const viaGrant =
+          !exact &&
+          !viaPlan &&
+          risk !== "CRITICAL" &&
+          step !== undefined &&
+          this.grants?.allows(step.action) === true;
+        if (!exact && !viaPlan && !viaGrant) {
           await this.tasks.move(tx, task, "WAITING_FOR_APPROVAL", "exact action approval required");
           await this.tasks.event(tx, task, "approval.requested", { actionId: current.id, hash });
           await this.tasks.release(tx, task.id);
@@ -144,11 +165,19 @@ export class ActionGateway {
             current.id,
             Date.now(),
           ]);
-        else
+        else if (viaPlan)
           await this.tasks.event(tx, task, "approval.granted", {
             planId: task.spec.planId ?? null,
             approver: "operator",
             via: "plan",
+          });
+        else
+          await this.tasks.event(tx, task, "approval.granted", {
+            planId: task.spec.planId ?? null,
+            approver: "operator",
+            via: "standing-grant",
+            action: step?.action ?? null,
+            grantVersion: this.grants?.version ?? 0,
           });
       }
       invariant(!signal.aborted, "CANCELLED");
@@ -316,6 +345,27 @@ export class ActionGateway {
   }
 
   // A step of an approved, unexpired, running plan whose compiled step is exactly this action.
+  // The compiled step of a running plan that admitted this task. Desktop, info and memory tasks
+  // carry the step itself as input and must match it exactly; integration tasks carry the hub's
+  // compiled input and are bound by their position in the plan's task list.
+  private async planStep(tx: Sql, task: Task): Promise<PlanStep | undefined> {
+    const plan = (
+      await tx.query<{ steps: PlanStep[]; task_ids: string[]; status: string }>(
+        "SELECT steps,task_ids,status FROM plans WHERE id=$1",
+        [task.spec.planId],
+      )
+    ).rows[0];
+    if (plan?.status !== "RUNNING") return undefined;
+    const step = plan.steps[plan.task_ids.indexOf(task.id)];
+    if (!step) return undefined;
+    if ("action" in task.spec.input)
+      return fingerprint({ action: step.action, args: step.args }) ===
+        fingerprint({ action: task.spec.input.action, args: task.spec.input.args })
+        ? step
+        : undefined;
+    return step;
+  }
+
   private async planApproves(tx: Sql, task: Task, risk: Risk): Promise<boolean> {
     if (!task.spec.planId) return false;
     const plan = (

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
 import type { ConversationService } from "./conversation.js";
 import type { MemoryStore } from "./memory.js";
+import type { PermissionService } from "./permissions.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
@@ -17,6 +18,7 @@ export interface ServerOptions {
   conversation?: ConversationService;
   plans?: PlanService;
   memory?: MemoryStore;
+  permissions?: PermissionService;
 }
 const TaskId = z.strictObject({ id: z.uuid() });
 export function buildServer(
@@ -320,6 +322,32 @@ export function buildServer(
         "SELECT id FROM plans ORDER BY created_at DESC LIMIT 8",
       );
       for (const { id } of recent.rows) if (!closed) onPlan(await plans.get(id));
+    });
+  }
+  const { permissions } = options;
+  if (permissions) {
+    // The desktop Settings manage these; every change is audited.
+    app.get("/v1/permissions", async (request) => {
+      authenticate(request, "operator");
+      return permissions.view();
+    });
+    app.put("/v1/permissions", async (request) => {
+      authenticate(request, "operator");
+      return permissions.update(request.body, "operator");
+    });
+    app.post("/v1/permissions/preset", async (request) => {
+      authenticate(request, "operator");
+      const { preset } = z
+        .strictObject({ preset: z.enum(["guarded", "trusted", "autonomous"]) })
+        .parse(request.body);
+      return permissions.preset(preset, "operator");
+    });
+    app.get("/v1/permissions/audit", async (request) => {
+      authenticate(request, "operator");
+      const { limit } = z
+        .object({ limit: z.coerce.number().int().min(1).max(200).default(50) })
+        .parse(request.query);
+      return { entries: await permissions.audit(limit) };
     });
   }
   const { memory } = options;

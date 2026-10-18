@@ -23,6 +23,7 @@ import {
 } from "./contracts.js";
 import type { Sql } from "./database.js";
 import { planApprovalMs } from "./gateway.js";
+import type { PermissionMode, PermissionService } from "./permissions.js";
 import type { TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
 
@@ -124,6 +125,8 @@ export class PlanService extends EventEmitter {
       integrations?: IntegrationHub;
       // Operator-approved long-term memory actions are enabled.
       memory?: boolean;
+      // The operator's per-action decisions from Settings; absent means catalog risk decides.
+      permissions?: Pick<PermissionService, "mode" | "denied">;
       // Text summary of the current screen for a replan (window and element names).
       screen?: () => Promise<string>;
     },
@@ -137,12 +140,21 @@ export class PlanService extends EventEmitter {
   browserUrls(): readonly string[] {
     return this.options.integrations?.browserUrls ?? [];
   }
-  // Catalog actions offered beyond desktop and info: enabled integrations and memory.
+  // Catalog actions offered beyond desktop and info: enabled integrations and memory, minus
+  // anything the operator turned off.
   optionalActions(): string[] {
+    const denied = this.deniedActions();
     return [
       ...this.integrationCapabilities(),
       ...(this.options.memory ? ["memory.save", "memory.forget"] : []),
-    ];
+    ].filter((action) => !denied.includes(action));
+  }
+  deniedActions(): string[] {
+    return [...(this.options.permissions?.denied() ?? [])].sort();
+  }
+  // ask: the plan waits for a tap; allow: it runs; deny: it is refused.
+  modeOf(step: Pick<CompiledStep, "action" | "risk">): PermissionMode {
+    return this.options.permissions?.mode(step.action) ?? (step.risk === "LOW" ? "allow" : "ask");
   }
 
   propose(input: {
@@ -361,6 +373,7 @@ export class PlanService extends EventEmitter {
         ? "integration"
         : "info";
     for (const step of input.steps) {
+      invariant(this.modeOf(step) !== "deny", "ACTION_DENIED", 403);
       invariant(step.kind !== "memory" || this.options.memory, "MEMORY_DISABLED", 400);
       if (step.kind !== "integration") continue;
       invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
@@ -381,7 +394,9 @@ export class PlanService extends EventEmitter {
         )
       ).rows)
         await this.#cancel(plan, true);
-    const needsApproval = !flags.approved && input.steps.some((step) => step.risk !== "LOW");
+    // Steps the operator allowed in Settings need no tap; one "ask" step makes the plan wait.
+    const needsApproval =
+      !flags.approved && input.steps.some((step) => this.modeOf(step) === "ask");
     const id = randomUUID();
     const now = Date.now();
     await this.options.tasks.locked(async (tx) => {
@@ -725,6 +740,7 @@ export class PlanService extends EventEmitter {
         ...(screen ? { screen } : {}),
         enabledIntegrations: this.optionalActions(),
         browserUrls: this.browserUrls(),
+        denied: this.deniedActions(),
       }),
       "private",
       true,

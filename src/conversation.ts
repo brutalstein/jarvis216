@@ -171,6 +171,7 @@ export class ConversationService {
       optionalActions: this.options.plans?.optionalActions(),
       browserUrls: this.options.plans?.browserUrls(),
       memories: await this.options.memory?.promptNotes(),
+      denied: this.options.plans?.deniedActions(),
     });
     const { text, provider, taskId } = await runText(
       this.tasks,
@@ -212,6 +213,15 @@ export class ConversationService {
       } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "cancel") {
         const cancelled = await this.options.plans.cancelActive();
         reply.say = cancelled?.say ?? narrate({ type: "cancelled" }, reply.lang);
+        reply.display = [];
+      } else if (
+        reply.addressed &&
+        "decision" in parsed &&
+        parsed.decision.kind === "plan" &&
+        parsed.decision.steps.some((step) => this.options.plans?.modeOf(step) === "deny")
+      ) {
+        // The model proposed something the operator turned off: say so, propose nothing.
+        reply.say = narrate({ type: "denied" }, reply.lang);
         reply.display = [];
       } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "plan") {
         const decision = parsed.decision;

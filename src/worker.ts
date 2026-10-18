@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { ContextStore } from "./context.js";
 import { CoreError } from "./contracts.js";
-import { ActionGateway } from "./gateway.js";
+import { ActionGateway, type StandingGrants } from "./gateway.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
@@ -25,8 +25,14 @@ export class Worker {
     private registry: ProviderRegistry,
     redact: (text: string) => string = (text) => text,
     timing: Partial<WorkerTiming> = {},
+    grants?: StandingGrants,
   ) {
-    this.gateway = new ActionGateway(tasks, redact, (observation) => registry.record(observation));
+    this.gateway = new ActionGateway(
+      tasks,
+      redact,
+      (observation) => registry.record(observation),
+      grants,
+    );
     this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, idleMs: 500, ...timing };
   }
   cancel(id: string): void {

@@ -190,4 +190,22 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=8")).rows.length)
+      return;
+    // Operator permissions per catalog action, operator settings, and their audit trail.
+    const ddl = `
+      CREATE TABLE permissions (
+        action text PRIMARY KEY, mode text NOT NULL CHECK(mode IN ('ask','allow','deny')),
+        expires_at bigint, updated_at bigint NOT NULL
+      );
+      CREATE TABLE settings (key text PRIMARY KEY, value jsonb NOT NULL, updated_at bigint NOT NULL);
+      CREATE TABLE permission_audit (
+        id bigserial PRIMARY KEY, at bigint NOT NULL, actor text NOT NULL, change jsonb NOT NULL
+      );
+      INSERT INTO schema_migrations VALUES (8);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }
