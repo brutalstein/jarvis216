@@ -2,6 +2,7 @@ import type { Lang } from "./types.js";
 
 export type NarrationEvent =
   | { type: "proposed"; goal: string; needsApproval: boolean }
+  | { type: "confirm" | "status-running" | "status-waiting"; goal: string }
   | {
       type: "step-done" | "step-failed";
       action: string;
@@ -17,7 +18,8 @@ export type NarrationEvent =
         | "not-understood"
         | "news-fallback"
         | "candidates"
-        | "denied";
+        | "denied"
+        | "status-idle";
       count?: number;
     };
 
@@ -74,6 +76,26 @@ export function narrate(event: NarrationEvent, lang: Lang): string {
       return pick([
         `${event.count ?? 0} başlık ekranda, efendim.`,
         `${event.count ?? 0} headlines are on screen, sir.`,
+      ]);
+    case "confirm":
+      return pick([
+        `${event.goal}: bunu mu istiyorsunuz, efendim?`,
+        `${event.goal}: is that what you want, sir?`,
+      ]);
+    case "status-running":
+      return pick([
+        `${event.goal}: üzerinde çalışıyorum, efendim.`,
+        `${event.goal}: I'm working on it, sir.`,
+      ]);
+    case "status-waiting":
+      return pick([
+        `${event.goal}: onayınızı bekliyorum, efendim.`,
+        `${event.goal}: waiting for your approval, sir.`,
+      ]);
+    case "status-idle":
+      return pick([
+        "Şu an üzerinde çalıştığım bir iş yok, efendim.",
+        "I'm not working on anything right now, sir.",
       ]);
     case "denied":
       return pick([

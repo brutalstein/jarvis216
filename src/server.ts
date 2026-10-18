@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import type { Brain } from "@jarvis/brain";
 import Fastify, { type FastifyRequest } from "fastify";
 import { z } from "zod";
 import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
@@ -19,6 +20,7 @@ export interface ServerOptions {
   plans?: PlanService;
   memory?: MemoryStore;
   permissions?: PermissionService;
+  brain?: Brain;
 }
 const TaskId = z.strictObject({ id: z.uuid() });
 export function buildServer(
@@ -348,6 +350,41 @@ export function buildServer(
         .object({ limit: z.coerce.number().int().min(1).max(200).default(50) })
         .parse(request.query);
       return { entries: await permissions.audit(limit) };
+    });
+  }
+  const { brain } = options;
+  if (brain) {
+    // What JARVIS has learned: statistics and skills, a manual "sleep", and forgetting.
+    app.get("/v1/brain", async (request) => {
+      authenticate(request, "operator");
+      return {
+        stats: brain.stats(),
+        skills: brain.skills().map((skill) => ({
+          id: skill.id,
+          goal: skill.goal,
+          phrases: skill.phrases,
+          steps: skill.steps.map((step) => step.action),
+          strength: Math.round(skill.effective * 1000) / 1000,
+          successes: skill.successes,
+          failures: skill.failures,
+          uses: skill.uses,
+          lastUsedAt: skill.lastUsedAt,
+        })),
+      };
+    });
+    app.post("/v1/brain/consolidate", async (request) => {
+      authenticate(request, "operator");
+      return brain.consolidate();
+    });
+    app.delete("/v1/brain/skills/:id", async (request, reply) => {
+      authenticate(request, "operator");
+      invariant(await brain.forgetSkill(TaskId.parse(request.params).id), "SKILL_NOT_FOUND", 404);
+      return reply.code(204).send();
+    });
+    app.delete("/v1/brain", async (request, reply) => {
+      authenticate(request, "operator");
+      await brain.forgetAll();
+      return reply.code(204).send();
     });
   }
   const { memory } = options;

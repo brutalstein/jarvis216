@@ -1,15 +1,19 @@
 import { randomUUID } from "node:crypto";
 import {
+  compile,
+  isCorrection,
   type Lang,
   narrate,
   readIntent,
   readVoiceCommand,
   repairInstructions,
 } from "@jarvis/action-engine";
+import type { Brain, IntentRecord } from "@jarvis/brain";
 import { z } from "zod";
 import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
 import type { MemoryStore } from "./memory.js";
+import type { BrainSettings } from "./permissions.js";
 import { conversationPrompt } from "./persona.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { TaskService } from "./tasks.js";
@@ -135,43 +139,64 @@ export class ConversationService {
       deadlineMs?: number;
       plans?: PlanService;
       memory?: MemoryStore;
+      // The learning brain and the operator's learning switches from Settings.
+      brain?: Brain;
+      settings?: () => BrainSettings;
     },
-  ) {}
+  ) {
+    const { brain, plans } = options;
+    // A plan's real outcome is the reinforcement signal for the request that produced it.
+    if (brain && plans)
+      plans.on("plan", (view: PlanView) => {
+        void this.#planEnded(brain, view).catch(() => {
+          process.stderr.write('{"level":"error","code":"BRAIN_OUTCOME_FAILED"}\n');
+        });
+      });
+  }
   get deadlineMs(): number {
     return this.options.deadlineMs ?? 20_000;
   }
+  // One spoken request, through layers from fastest to most deliberate:
+  // 1. reflexes Core answers itself (stop, status, picking a candidate);
+  // 2. a correction marks what JARVIS just did as wrong, then the request continues;
+  // 3. procedural memory: a practised, context-free request runs its learned plan;
+  // 4. deliberation: one JSON-mode model call with working memory, long-term notes and learned
+  //    examples, one repair, then policy (turned-off actions, low confidence) and the plan;
+  // 5. learning: the request and, later, its plan's outcome become experience.
   async turn(input: { utterance: string; followUp: boolean }): Promise<TurnResult> {
     const started = Date.now();
     const id = randomUUID();
+    const settings = this.options.settings?.() ?? { learning: true, reflexes: true };
+    const learning = settings.learning ? this.options.brain : undefined;
     const quick = await this.#command(input.utterance);
-    if (quick) {
-      await this.#remember(id, started, input, null, quick.reply, null);
-      return {
-        id,
-        taskId: null,
-        ...quick.reply,
-        provider: null,
-        latencyMs: Date.now() - started,
-        ...(quick.planId && { planId: quick.planId }),
-      };
-    }
-    const { providers } = this.options;
+    if (quick) return this.#answer(id, started, input, quick);
+    if (learning && isCorrection(input.utterance)) await this.#corrected(learning);
+    const reflex = settings.reflexes ? await this.#reflex(id, input.utterance, learning) : null;
+    if (reflex) return this.#answer(id, started, input, reflex);
+    const { providers, plans, brain } = this.options;
     if (!providers.length) throw new CoreError("NO_PROVIDER", 503);
-    const history = (
-      await this.tasks.db.query<{ utterance: string; say: string }>(
+    const [history, working, examples, memories] = await Promise.all([
+      this.tasks.db.query<{ utterance: string; say: string }>(
         "SELECT utterance, reply->>'say' AS say FROM conversation_turns c WHERE created_at > $1 AND NOT EXISTS (SELECT 1 FROM plans p WHERE p.turn_id=c.id AND p.steps @> '[{\"action\":\"screen.describe\"}]'::jsonb) ORDER BY created_at DESC LIMIT 6",
         [started - 30 * 60_000],
-      )
-    ).rows.reverse();
+      ),
+      plans?.workingMemory(),
+      brain && plans
+        ? brain.recall(input.utterance, { k: 4, allowed: (action) => plans.offers(action) })
+        : Promise.resolve([]),
+      this.options.memory?.promptNotes(),
+    ]);
     const prompt = conversationPrompt({
       ...input,
-      history,
+      history: history.rows.reverse(),
       now: new Date(started),
-      enabledIntegrations: this.options.plans?.integrationCapabilities(),
-      optionalActions: this.options.plans?.optionalActions(),
-      browserUrls: this.options.plans?.browserUrls(),
-      memories: await this.options.memory?.promptNotes(),
-      denied: this.options.plans?.deniedActions(),
+      enabledIntegrations: plans?.integrationCapabilities(),
+      optionalActions: plans?.optionalActions(),
+      browserUrls: plans?.browserUrls(),
+      memories,
+      denied: plans?.deniedActions(),
+      ...(working && { working }),
+      examples,
     });
     const { text, provider, taskId } = await runText(
       this.tasks,
@@ -188,7 +213,8 @@ export class ConversationService {
     );
     let reply = parseReply(text);
     let planId: string | undefined;
-    if (reply.addressed && this.options.plans) {
+    let understood: IntentRecord | undefined;
+    if (reply.addressed && plans) {
       let parsed = readIntent(reply.intent);
       if ("errors" in parsed) {
         const repaired = await runText(
@@ -207,34 +233,51 @@ export class ConversationService {
         reply = parseReply(repaired.text);
         parsed = readIntent(reply.intent);
       }
-      if (reply.addressed && "errors" in parsed) {
+      const decision = "decision" in parsed ? parsed.decision : undefined;
+      if (reply.addressed && !decision) {
         reply.say = narrate({ type: "not-understood" }, reply.lang);
         reply.display = [];
-      } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "cancel") {
-        const cancelled = await this.options.plans.cancelActive();
+      } else if (reply.addressed && decision?.kind === "cancel") {
+        const cancelled = await plans.cancelActive();
         reply.say = cancelled?.say ?? narrate({ type: "cancelled" }, reply.lang);
         reply.display = [];
+        understood = { kind: "cancel" };
       } else if (
         reply.addressed &&
-        "decision" in parsed &&
-        parsed.decision.kind === "plan" &&
-        parsed.decision.steps.some((step) => this.options.plans?.modeOf(step) === "deny")
+        decision?.kind === "plan" &&
+        decision.steps.some((step) => plans.modeOf(step) === "deny")
       ) {
         // The model proposed something the operator turned off: say so, propose nothing.
         reply.say = narrate({ type: "denied" }, reply.lang);
         reply.display = [];
-      } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "plan") {
-        const decision = parsed.decision;
-        const view = await this.options.plans.propose({
+      } else if (
+        reply.addressed &&
+        decision?.kind === "plan" &&
+        decision.confidence !== undefined &&
+        decision.confidence < 0.5
+      ) {
+        // Unsure what was meant: ask before acting. The answer comes back as a clarification.
+        reply.say = narrate({ type: "confirm", goal: decision.goal }, reply.lang);
+        reply.display = [];
+        reply.intent = { kind: "clarify", goal: decision.goal };
+        understood = { kind: "clarify", goal: decision.goal };
+      } else if (reply.addressed && decision?.kind === "plan") {
+        const view = await plans.propose({
           turnId: id,
           goal: decision.goal,
           lang: reply.lang,
           steps: decision.steps,
         });
         planId = view.id;
+        // Learn before narrating: a quick plan may finish while the reply waits for it.
+        await this.#learnPlan(learning, input.utterance, reply.lang, view.id, "model", {
+          kind: "plan",
+          goal: decision.goal,
+          steps: decision.steps.map(({ action, args }) => ({ action, args })),
+        });
         reply.display = [];
         reply.say = await this.#planSay(view, reply.lang);
-      }
+      } else if (reply.addressed && decision) understood = { kind: decision.kind };
     }
     // An empty spoken reply would leave the voice service "speaking" with no audio.
     if (reply.addressed && !reply.say) {
@@ -247,6 +290,13 @@ export class ConversationService {
       await this.tasks.db.transaction((tx) =>
         this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
       );
+    if (learning && reply.addressed && understood)
+      await learning.experience({
+        utterance: input.utterance,
+        lang: reply.lang,
+        intent: understood,
+        source: "model",
+      });
     return {
       id,
       taskId,
@@ -256,12 +306,39 @@ export class ConversationService {
       ...(planId && { planId }),
     };
   }
-  // Spoken stop or a candidate pick: answered at once, no model call. Nothing to stop or choose
-  // means the utterance goes to the model like any other.
+
+  async #answer(
+    id: string,
+    started: number,
+    input: { utterance: string; followUp: boolean },
+    quick: { reply: Reply; planId?: string },
+  ): Promise<TurnResult> {
+    await this.#remember(id, started, input, null, quick.reply, null);
+    return {
+      id,
+      taskId: null,
+      ...quick.reply,
+      provider: null,
+      latencyMs: Date.now() - started,
+      ...(quick.planId && { planId: quick.planId }),
+    };
+  }
+
+  // Spoken stop, a status question or a candidate pick: answered at once, no model call.
+  // Nothing to stop or choose means the utterance goes on like any other.
   async #command(utterance: string): Promise<{ reply: Reply; planId?: string } | null> {
     const plans = this.options.plans;
     const command = plans ? readVoiceCommand(utterance) : null;
     if (!plans || !command) return null;
+    if (command.kind === "status")
+      return {
+        reply: {
+          addressed: true,
+          say: await plans.statusSay(command.lang),
+          lang: command.lang,
+          display: [],
+        },
+      };
     if (command.kind === "cancel") {
       const cancelled = await plans.cancelActive();
       if (!cancelled) return null;
@@ -284,6 +361,86 @@ export class ConversationService {
       reply: { addressed: true, say: await this.#planSay(view, lang), lang, display: [] },
       planId: view.id,
     };
+  }
+
+  // A practised request answered from procedural memory: the learned plan is compiled,
+  // authorized and approved like any model proposal; only the model call is skipped.
+  async #reflex(
+    id: string,
+    utterance: string,
+    learning: Brain | undefined,
+  ): Promise<{ reply: Reply; planId?: string } | null> {
+    const { brain, plans } = this.options;
+    if (!brain || !plans) return null;
+    const reflex = brain.reflex(utterance, (action) => plans.offers(action));
+    const compiled = reflex ? compile(reflex.steps) : undefined;
+    if (!reflex || !compiled?.ok) return null;
+    let view: PlanView;
+    try {
+      view = await plans.propose({
+        turnId: id,
+        goal: reflex.goal,
+        lang: reflex.lang,
+        steps: compiled.steps,
+      });
+    } catch {
+      return null;
+    }
+    const intent: IntentRecord = { kind: "plan", goal: reflex.goal, steps: reflex.steps };
+    await this.#learnPlan(learning, utterance, reflex.lang, view.id, "reflex", intent);
+    return {
+      reply: {
+        addressed: true,
+        say: await this.#planSay(view, reflex.lang),
+        lang: reflex.lang,
+        display: [],
+        intent,
+      },
+      planId: view.id,
+    };
+  }
+
+  // Records the request behind a plan, then reconciles with a plan that already ended.
+  async #learnPlan(
+    learning: Brain | undefined,
+    utterance: string,
+    lang: Lang,
+    planId: string,
+    source: "model" | "reflex",
+    intent: IntentRecord,
+  ): Promise<void> {
+    if (!learning || !this.options.plans) return;
+    await learning.experience({ utterance, lang, intent, source, planId });
+    await this.#planEnded(learning, await this.options.plans.get(planId));
+  }
+
+  // "Hayır, onu demedim": the latest request was misunderstood. A learned pick it relied on is
+  // dropped too.
+  async #corrected(brain: Brain): Promise<void> {
+    const latest = brain.latest(90_000);
+    if (!latest || latest.outcome === "corrected") return;
+    await brain.outcome(latest.id, "corrected");
+    if (!latest.planId || !this.options.plans) return;
+    const view = await this.options.plans.get(latest.planId).catch(() => undefined);
+    for (const step of view?.steps ?? [])
+      if (step.evidence?.choice)
+        await brain.unlearnChoice(step.evidence.choice.target, step.evidence.choice.candidates);
+  }
+
+  async #planEnded(brain: Brain, view: PlanView): Promise<void> {
+    if (view.status === "RUNNING" || view.status === "AWAITING_APPROVAL") return;
+    const experience = brain.experienceForPlan(view.id);
+    if (experience?.outcome !== "pending") return;
+    // Stopping on several matches is ambiguity on screen, not a misunderstanding.
+    if (view.panels.some((panel) => panel.type === "candidates")) return;
+    await brain.outcome(
+      experience.id,
+      view.status === "COMPLETED"
+        ? "success"
+        : view.status === "CANCELLED"
+          ? "cancelled"
+          : "failure",
+    );
   }
 
   // Template speech for a proposed plan: a quick LOW-only outcome is narrated in the reply itself.
@@ -343,6 +500,8 @@ export class ConversationService {
     // A task that settled meanwhile is scrubbed below all the same.
     for (const { id } of active.rows) await this.tasks.cancel(id).catch(() => {});
     await this.scrub(Number.MAX_SAFE_INTEGER);
+    // What was learned from those conversations goes with them.
+    await this.options.brain?.forgetAll();
   }
   purge(olderThanMs: number): Promise<number> {
     return this.scrub(Date.now() - olderThanMs);

@@ -10,10 +10,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @jarvis/integration-hub && npm run build -w @jarvis/action-engine && tsc -p tsconfig.build.json",
+    "build": "npm run build -w @jarvis/integration-hub && npm run build -w @jarvis/action-engine && npm run build -w @jarvis/brain && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src tests scripts packages/action-engine/src packages/action-engine/tests apps/desktop/src apps/desktop/tests packages/integration-hub/src packages/integration-hub/tests",
-    "format": "biome check --write src tests scripts packages/action-engine/src packages/action-engine/tests",
+    "lint": "biome check src tests scripts packages/action-engine/src packages/action-engine/tests apps/desktop/src apps/desktop/tests packages/integration-hub/src packages/integration-hub/tests packages/brain/src packages/brain/tests",
+    "format": "biome check --write src tests scripts packages/action-engine/src packages/action-engine/tests packages/brain/src packages/brain/tests packages/integration-hub/src packages/integration-hub/tests",
     "test": "vitest run",
     "test:postgres": "vitest run tests/postgres.live.test.ts",
     "start": "node --env-file=.env dist/main.js",
@@ -27,6 +27,7 @@
     "@anthropic-ai/sdk": "0.135.0",
     "@google/genai": "2.30.0",
     "@jarvis/action-engine": "0.1.0",
+    "@jarvis/brain": "0.1.0",
     "@jarvis/integration-hub": "0.1.0",
     "@openai/codex-sdk": "0.163.0",
     "@opentelemetry/api": "1.9.1",

@@ -8,6 +8,7 @@ export default defineConfig({
       "@jarvis/action-engine": fileURLToPath(
         new URL("./packages/action-engine/src/index.ts", import.meta.url),
       ),
+      "@jarvis/brain": fileURLToPath(new URL("./packages/brain/src/index.ts", import.meta.url)),
       "@jarvis/integration-hub": fileURLToPath(
         new URL("./packages/integration-hub/src/index.ts", import.meta.url),
       ),

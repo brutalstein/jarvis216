@@ -17,6 +17,8 @@ export type Evidence = {
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";
   observation: string;
   candidates?: string[];
+  // Set when a learned preference resolved several matches, so a correction can unlearn it.
+  choice?: { target: string; candidates: string[]; picked: string };
   panel?: Panel;
 };
 export type RunContext = {
@@ -24,6 +26,8 @@ export type RunContext = {
   roots: string[];
   signal: AbortSignal;
   timeoutMs?: number;
+  // The operator's earlier pick among exactly these candidates for this target, if any.
+  prefer?: (target: string, candidates: string[]) => string | undefined;
 };
 
 const seen = (observation: string, panel?: Panel): Evidence => ({
@@ -86,6 +90,16 @@ function unsafe(element: UiElement): string | null {
     (launcher === "START_MENU" || launcher === "RUN_DIALOG" ? null : launcher) ??
     (secretField.test(normalize(element.name)) ? "PASSWORD" : null)
   );
+}
+
+// Several matches: the operator's learned pick in this exact situation, if it is still there.
+function preferred(ctx: RunContext, target: string, candidates: UiElement[]) {
+  const names = candidates.map((element) => element.name);
+  const pick = ctx.prefer?.(target, names);
+  const found = pick ? candidates.filter((element) => element.name === pick) : [];
+  return found.length === 1 && found[0] && pick
+    ? { element: found[0], choice: { target, candidates: names, picked: pick } }
+    : undefined;
 }
 
 async function openWindow(ctx: RunContext, names: string[]) {
@@ -235,14 +249,17 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
     const before = await look(ctx);
     const found = ground(target, before.elements, text(args, "window") || undefined);
     if (found.kind === "none") return failed(`I can't see "${target}"`);
-    if (found.kind === "many")
+    const learned = found.kind === "many" ? preferred(ctx, target, found.candidates) : undefined;
+    if (found.kind === "many" && !learned)
       return failed(
         `"${target}" matches ${found.candidates.length} elements`,
         found.candidates.map((element) => element.name),
       );
-    const reason = unsafe(found.element);
-    if (reason) return refused(`${found.element.name}: ${reason}`);
-    const { x, y } = found.element;
+    const element = learned?.element ?? (found.kind === "one" ? found.element : undefined);
+    if (!element) return failed(`I can't see "${target}"`);
+    const reason = unsafe(element);
+    if (reason) return refused(`${element.name}: ${reason}`);
+    const { x, y } = element;
     const result = await ctx.tools.call(
       "Click",
       { loc: [x, y], button: "left", clicks: 1 },
@@ -250,7 +267,11 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
     );
     if (bad(result)) return failed(result.text);
     const after = await look(ctx);
-    return done(after.text === before.text ? "clicked; the screen did not change" : "clicked");
+    const observation =
+      after.text === before.text ? "clicked; the screen did not change" : "clicked";
+    return learned
+      ? { ...done(`${observation} (learned choice)`), choice: learned.choice }
+      : done(observation);
   },
 
   async "ui.type"(args, ctx) {
@@ -261,15 +282,17 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
     const frontReason = escapeTarget(front);
     if (frontReason) return refused(`${front}: ${frontReason}`);
     let field = before.elements.find((element) => element.focused);
+    let learned: ReturnType<typeof preferred>;
     if (target) {
       const found = ground(target, before.elements, front || undefined);
-      if (found.kind === "many")
+      learned = found.kind === "many" ? preferred(ctx, target, found.candidates) : undefined;
+      if (found.kind === "many" && !learned)
         return failed(
           `"${target}" matches ${found.candidates.length} elements`,
           found.candidates.map((element) => element.name),
         );
       if (found.kind === "none") return failed(`I can't see "${target}"`);
-      field = found.element;
+      field = learned?.element ?? (found.kind === "one" ? found.element : undefined);
     }
     if (!field) return failed("no text field is focused");
     const reason = unsafe(field);
@@ -281,13 +304,17 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
       ctx.signal,
     );
     if (bad(result)) return failed(result.text);
-    if (submit) return done("typed and submitted");
+    const withChoice = (evidence: Evidence): Evidence =>
+      learned ? { ...evidence, choice: learned.choice } : evidence;
+    if (submit) return withChoice(done("typed and submitted"));
     const { x, y, name } = field;
     const value = (await look(ctx)).elements.find(
       (element) => element.x === x && element.y === y && element.name === name,
     )?.value;
-    if (value === undefined) return done("typed");
-    return value.includes(typed) ? seen("typed") : failed("the field does not show the typed text");
+    if (value === undefined) return withChoice(done("typed"));
+    return value.includes(typed)
+      ? withChoice(seen("typed"))
+      : failed("the field does not show the typed text");
   },
 
   async "key.shortcut"(args, ctx) {

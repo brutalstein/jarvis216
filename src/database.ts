@@ -208,4 +208,20 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=9")).rows.length)
+      return;
+    // The learning brain: episodic experiences, procedural skills and learned choices.
+    const ddl = `
+      CREATE TABLE brain_experiences (
+        id uuid PRIMARY KEY, at bigint NOT NULL, data jsonb NOT NULL
+      );
+      CREATE INDEX brain_experience_recency ON brain_experiences(at);
+      CREATE TABLE brain_skills (id uuid PRIMARY KEY, data jsonb NOT NULL, updated_at bigint NOT NULL);
+      CREATE TABLE brain_preferences (key text PRIMARY KEY, data jsonb NOT NULL);
+      INSERT INTO schema_migrations VALUES (9);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

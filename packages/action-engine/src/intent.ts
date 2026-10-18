@@ -6,13 +6,15 @@ export type Decision =
   | { kind: "reply" }
   | { kind: "clarify" }
   | { kind: "cancel" }
-  | { kind: "plan"; goal: string; steps: CompiledStep[] };
+  | { kind: "plan"; goal: string; steps: CompiledStep[]; confidence?: number };
 
 export const maxSteps = 8;
 const IntentSchema = z.object({
   kind: z.enum(["reply", "clarify", "plan", "cancel"]),
   goal: z.string().trim().min(1).max(200).optional(),
   steps: z.array(z.unknown()).optional(),
+  // The model's own estimate that it understood; used only to ask before acting, never as proof.
+  confidence: z.number().min(0).max(1).optional().catch(undefined),
 });
 
 // The model's intent is an untrusted proposal: one invalid step rejects the whole plan.
@@ -21,7 +23,7 @@ export function readIntent(value: unknown): { decision: Decision } | { errors: s
   const parsed = IntentSchema.safeParse(value);
   if (!parsed.success)
     return { errors: parsed.error.issues.map((i) => `intent.${i.path.join(".")} ${i.message}`) };
-  const { kind, goal, steps = [] } = parsed.data;
+  const { kind, goal, steps = [], confidence } = parsed.data;
   if (kind !== "plan") return { decision: { kind } };
   const errors: string[] = [];
   if (!goal) errors.push("intent.goal is required for a plan");
@@ -30,7 +32,14 @@ export function readIntent(value: unknown): { decision: Decision } | { errors: s
   const compiled = compile(steps);
   if (!compiled.ok) errors.push(...compiled.errors);
   if (errors.length || !compiled.ok || !goal) return { errors };
-  return { decision: { kind, goal, steps: compiled.steps } };
+  return {
+    decision: {
+      kind,
+      goal,
+      steps: compiled.steps,
+      ...(confidence !== undefined && { confidence }),
+    },
+  };
 }
 
 export function intentInstructions(
@@ -44,12 +53,17 @@ off in Settings): ${denied.join(", ")}.`
     : "";
   return `Add an "intent" field to the JSON object:
 {"kind": "reply" | "clarify" | "plan" | "cancel", "goal": "<short goal, plan only>",
- "steps": [{"action": "<catalog id>", "args": {...}}]}
+ "steps": [{"action": "<catalog id>", "args": {...}}], "confidence": <0..1, plan only>}
 - "reply": conversation or a question you can answer yourself.
 - "clarify": an argument is missing or ambiguous; "say" asks one short question.
 - "plan": the operator wants something done on this computer or wants news; 1 to ${maxSteps} steps,
   only actions from the catalog below, arguments exactly as typed there.
 - "cancel": the operator says stop, cancel, dur, iptal, vazgeç.
+Understanding: resolve references ("onu", "bunu", "aynısını", "tekrar", "it", "again", "the same
+for X") from the working memory and recent conversation; split a compound request into ordered
+steps; when a request continues the previous one, plan only what is new. If the operator answers
+a question you asked, combine the answer with what they asked for before. "confidence" is how
+sure you are that the plan is what the operator meant; below 0.5 the system asks them first.
 Rules: never invent actions. Anything outside the catalog (deleting files, running commands,
 installing, paying, passwords, messages) is "reply" and "say" explains you cannot do it yet.
 Use memory.save only when the operator explicitly asks you to remember something (hatırla, aklında

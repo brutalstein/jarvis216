@@ -6,6 +6,7 @@ import type { Lang } from "./types.js";
 // goes to the model as usual, so "ikinci sayfayı aç" is never mistaken for a choice.
 export type VoiceCommand =
   | { kind: "cancel"; lang: Lang }
+  | { kind: "status"; lang: Lang }
   | { kind: "choose"; index: number | "last"; lang: Lang | null };
 
 const wake = /\b[jc][ae]rvis\w*\b/g;
@@ -30,6 +31,39 @@ const cancelPhrases = new Map<string, Lang>([
   ["never mind", "en"],
   ["nevermind", "en"],
 ]);
+// "What are you doing?": answered from Core's plan records, never from a model.
+const statusPhrases = new Map<string, Lang>([
+  ["durum", "tr"],
+  ["durum ne", "tr"],
+  ["durum nedir", "tr"],
+  ["ne durumdasin", "tr"],
+  ["ne yapiyorsun", "tr"],
+  ["bitti mi", "tr"],
+  ["nerede kaldik", "tr"],
+  ["is bitti mi", "tr"],
+  ["status", "en"],
+  ["whats the status", "en"],
+  ["what is the status", "en"],
+  ["what are you doing", "en"],
+  ["are you done", "en"],
+  ["is it done", "en"],
+  ["how is it going", "en"],
+]);
+// Openings that reject what JARVIS just did ("hayır, Not Defteri'ni aç").
+const corrections = [
+  "hayir",
+  "yanlis",
+  "olmadi",
+  "onu demedim",
+  "onu kastetmedim",
+  "oyle degil",
+  "no",
+  "wrong",
+  "not that",
+  "thats wrong",
+  "thats not",
+];
+
 const ordinals: [string, number | "last", Lang][] = [
   ["birinci", 1, "tr"],
   ["ilk", 1, "tr"],
@@ -102,6 +136,8 @@ export function readVoiceCommand(utterance: string): VoiceCommand | null {
   if (!said.length || said.length > 5) return null;
   const cancel = cancelPhrases.get(said.join(" "));
   if (cancel) return { kind: "cancel", lang: cancel };
+  const status = statusPhrases.get(said.join(" "));
+  if (status) return { kind: "status", lang: status };
   const core = said.filter((word) => !fillers.has(word));
   // "one" / "number one": only fillers were said, and "one" is the choice.
   if (!core.length)
@@ -112,4 +148,15 @@ export function readVoiceCommand(utterance: string): VoiceCommand | null {
   // Exactly one choice word and nothing else that could change the meaning.
   if (found.length !== 1 || !found[0]) return null;
   return { kind: "choose", ...found[0] };
+}
+
+// True when the utterance opens by rejecting the previous result; the rest still goes to the model.
+export function isCorrection(utterance: string): boolean {
+  const said = normalize(utterance)
+    .replace(wake, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(" ");
+  return corrections.some((phrase) => said === phrase || said.startsWith(`${phrase} `));
 }

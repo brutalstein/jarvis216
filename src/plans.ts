@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import {
   briefPrompt,
   type CompiledStep,
+  catalog,
   describePrompt,
   type Evidence,
   type Lang,
@@ -12,6 +13,7 @@ import {
   readBrief,
   readIntent,
   replanPrompt,
+  resultBriefPrompt,
 } from "@jarvis/action-engine";
 import { IntegrationError, type IntegrationHub } from "@jarvis/integration-hub";
 import {
@@ -35,6 +37,12 @@ export type PlanStatus =
   | "CANCELLED"
   | "RECOVERY_REQUIRED";
 export type PlanPanel = Panel | { type: "candidates"; planId: string; items: string[] };
+export type WorkingMemory = {
+  active: { goal: string; status: PlanStatus; actions: string[] }[];
+  last?: { goal: string; status: PlanStatus; say: string | null; agoMs: number };
+  entities: string[];
+  asked?: string;
+};
 export type PlanView = {
   id: string;
   goal: string;
@@ -127,6 +135,10 @@ export class PlanService extends EventEmitter {
       memory?: boolean;
       // The operator's per-action decisions from Settings; absent means catalog risk decides.
       permissions?: Pick<PermissionService, "mode" | "denied">;
+      // Catalog actions this configuration can run at all (desktop, news, integrations...).
+      available?: () => ReadonlySet<string>;
+      // The operator picked one of several on-screen candidates (learning signal).
+      onChoice?: (target: string, candidates: string[], chosen: string) => void;
       // Text summary of the current screen for a replan (window and element names).
       screen?: () => Promise<string>;
     },
@@ -152,6 +164,83 @@ export class PlanService extends EventEmitter {
   deniedActions(): string[] {
     return [...(this.options.permissions?.denied() ?? [])].sort();
   }
+  // Could a plan with this action run here and now: known, configured and not turned off.
+  offers(action: string): boolean {
+    if (!Object.hasOwn(catalog, action) || this.modeOf({ action, risk: "LOW" }) === "deny")
+      return false;
+    const kind = catalog[action]?.kind;
+    if (kind === "integration") return this.integrationCapabilities().includes(action);
+    if (kind === "memory") return this.options.memory === true;
+    return this.options.available ? this.options.available().has(action) : true;
+  }
+
+  // What Core knows right now, for the model's working memory: active plans, the last outcome,
+  // things recently referred to, and a question JARVIS just asked.
+  async workingMemory(): Promise<WorkingMemory> {
+    const now = Date.now();
+    const { db } = this.options.tasks;
+    const recent = (
+      await db.query<PlanRow>(
+        "SELECT * FROM plans WHERE created_at>$1 ORDER BY created_at DESC LIMIT 6",
+        [now - 15 * 60_000],
+      )
+    ).rows;
+    const active = recent
+      .filter((plan) => !ended.has(plan.status))
+      .map((plan) => ({
+        goal: plan.goal,
+        status: plan.status,
+        actions: plan.steps.map((step) => step.action),
+      }));
+    const last = recent.find((plan) => ended.has(plan.status) && plan.goal !== "[deleted]");
+    const entities = [
+      ...new Set(
+        recent.flatMap((plan) =>
+          plan.steps.flatMap((step) =>
+            ["name", "target", "folder", "path", "source", "destination", "url", "topic"]
+              .map((key) => step.args[key])
+              .filter((value): value is string => typeof value === "string" && value.length <= 200),
+          ),
+        ),
+      ),
+    ].slice(0, 8);
+    const asked = (
+      await db.query<{ say: string; kind: string | null }>(
+        "SELECT reply->>'say' AS say, reply->'intent'->>'kind' AS kind FROM conversation_turns WHERE created_at>$1 ORDER BY created_at DESC LIMIT 1",
+        [now - 120_000],
+      )
+    ).rows[0];
+    return {
+      active,
+      ...(last && {
+        last: {
+          goal: last.goal,
+          status: last.status,
+          say: last.outcome?.say ?? null,
+          agoMs: now - Number(last.created_at),
+        },
+      }),
+      entities,
+      ...(asked?.kind === "clarify" && asked.say ? { asked: asked.say } : {}),
+    };
+  }
+
+  // "Ne yapıyorsun?" answered from plan records.
+  async statusSay(lang: Lang): Promise<string> {
+    const memory = await this.workingMemory();
+    const [current] = memory.active;
+    if (current)
+      return narrate(
+        {
+          type: current.status === "AWAITING_APPROVAL" ? "status-waiting" : "status-running",
+          goal: current.goal,
+        },
+        lang,
+      );
+    if (memory.last?.say && memory.last.agoMs < 5 * 60_000) return memory.last.say;
+    return narrate({ type: "status-idle" }, lang);
+  }
+
   // ask: the plan waits for a tap; allow: it runs; deny: it is refused.
   modeOf(step: Pick<CompiledStep, "action" | "risk">): PermissionMode {
     return this.options.permissions?.mode(step.action) ?? (step.risk === "LOW" ? "allow" : "ask");
@@ -225,6 +314,9 @@ export class PlanService extends EventEmitter {
     });
     const { index: at, items } = plan.outcome?.candidates ?? { index: 0, items: [] };
     const failed = plan.steps[at] as CompiledStep;
+    const chosen = items[index - 1];
+    if (typeof failed.args.target === "string" && chosen)
+      this.options.onChoice?.(failed.args.target, items, chosen);
     const steps = [
       { ...failed, args: { ...failed.args, target: items[index - 1] } },
       ...plan.steps.slice(at + 1),
@@ -691,6 +783,30 @@ export class PlanService extends EventEmitter {
       await this.#settle(plan, say === null ? "FAILED" : "COMPLETED", {
         say: say ?? narrate({ type: "plan-failed" }, lang),
       });
+      return;
+    }
+    // An agent or page read came back with text: say what it found, not just "done".
+    const results = tasks.flatMap((task, index) =>
+      plan.steps[index]?.kind === "integration" && task?.result?.text?.trim()
+        ? [task.result.text.trim()]
+        : [],
+    );
+    if (results.length) {
+      const confidential = steps.some(
+        (step) =>
+          step.kind === "integration" &&
+          step.action !== "browser.read" &&
+          step.action !== "browser.read_many",
+      );
+      const brief = await this.#text(
+        plan,
+        "result",
+        resultBriefPrompt(plan.goal, results, lang),
+        confidential ? "private" : "personal",
+      );
+      const say =
+        (brief === null ? null : readBrief(brief)) ?? narrate({ type: "plan-done" }, lang);
+      await this.#settle(plan, "COMPLETED", { say });
       return;
     }
     const [only] = steps;

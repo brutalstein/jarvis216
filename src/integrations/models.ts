@@ -155,6 +155,32 @@ export class GeminiExecutor implements Executor {
   }
 }
 
+// Optional semantic recall for the brain (BRAIN_EMBEDDINGS=gemini). Utterances already reach
+// Gemini under personal consent; this sends the same text for an embedding.
+export function geminiEmbedder(
+  key: string,
+  model: string,
+  client?: GoogleGenAI,
+): (texts: string[], signal: AbortSignal) => Promise<number[][]> {
+  const ai =
+    client ??
+    new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        baseUrl: "https://generativelanguage.googleapis.com",
+        retryOptions: { attempts: 1 },
+      },
+    });
+  return async (texts, signal) => {
+    const response = await ai.models.embedContent({
+      model,
+      contents: texts,
+      config: { abortSignal: signal, taskType: "SEMANTIC_SIMILARITY", outputDimensionality: 256 },
+    });
+    return (response.embeddings ?? []).map((embedding) => embedding.values ?? []);
+  };
+}
+
 export type CodexAuth = { kind: "api-key"; key: string } | { kind: "chatgpt" };
 export function codexOptions(auth: CodexAuth, codexHome: string): CodexOptions {
   return {

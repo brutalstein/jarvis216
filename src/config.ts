@@ -53,7 +53,10 @@ export const ConfigSchema = z
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
-  local: { memory?: MemoryStore } = {},
+  local: {
+    memory?: MemoryStore;
+    prefer?: (target: string, candidates: string[]) => string | undefined;
+  } = {},
 ): Promise<{
   registry: ProviderRegistry;
   tools?: McpToolPort;
@@ -286,7 +289,11 @@ export async function configuredProviders(
       allow,
     };
     tools = new McpToolPort(options);
-    register(new DesktopExecutor(tools, roots), JSON.stringify({ ...options, roots }), 10);
+    register(
+      new DesktopExecutor(tools, roots, local.prefer),
+      JSON.stringify({ ...options, roots }),
+      10,
+    );
   }
   // Local and governed per action by the operator's permissions (default: ask).
   if (local.memory) register(new MemoryExecutor(local.memory), "memory:v1:local", 10);

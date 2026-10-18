@@ -224,6 +224,35 @@ describe("ui.click and key.shortcut", () => {
     expect(names()).not.toContain("Click");
   });
 
+  it("resolves an ambiguous name with the operator's learned pick and says so", async () => {
+    const { port, calls } = fake(({ name }) =>
+      name === "Click" ? "Single left clicked." : notepad,
+    );
+    const seen: { target: string; candidates: string[] }[] = [];
+    const result = await runStep(step("ui.click", { target: "adsız" }), {
+      ...ctx(port),
+      prefer: (target, candidates) => {
+        seen.push({ target, candidates });
+        return "Adsız. Değiştirilmedi.";
+      },
+    });
+    expect(seen).toEqual([
+      { target: "adsız", candidates: ["Adsız. Değiştirildi.", "Adsız. Değiştirilmedi."] },
+    ]);
+    expect(result).toMatchObject({
+      ok: true,
+      observation: expect.stringContaining("learned choice"),
+      choice: { target: "adsız", picked: "Adsız. Değiştirilmedi." },
+    });
+    expect(calls.filter((call) => call.name === "Click")).toHaveLength(1);
+    // A pick that is no longer among the matches is ignored: the operator chooses again.
+    const stale = await runStep(step("ui.click", { target: "adsız" }), {
+      ...ctx(fake(() => notepad).port),
+      prefer: () => "Başka",
+    });
+    expect(stale.candidates).toHaveLength(2);
+  });
+
   it("clicks the one matching element", async () => {
     const { port, calls } = fake(({ name }) =>
       name === "Click" ? "Single left clicked." : notepad,

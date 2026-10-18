@@ -1,12 +1,15 @@
 import { catalog, parseSnapshot, screenSummary } from "@jarvis/action-engine";
+import { Brain } from "@jarvis/brain";
 import { z } from "zod";
+import { PostgresBrainStore } from "./brain-store.js";
 import { ConfigSchema, configuredProviders } from "./config.js";
 import { terminal } from "./contracts.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
+import { geminiEmbedder } from "./integrations/models.js";
 import { MemoryStore } from "./memory.js";
 import { Outbox } from "./outbox.js";
-import { PermissionService } from "./permissions.js";
+import { type BrainSettings, PermissionService } from "./permissions.js";
 import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
@@ -26,8 +29,24 @@ async function main() {
   const secrets = new EnvSecrets(secretValues);
   const db = postgres(config.DATABASE_URL);
   const memory = new MemoryStore(db);
+  const embeddings =
+    process.env.BRAIN_EMBEDDINGS === "gemini" && process.env.ENABLE_GEMINI === "true"
+      ? geminiEmbedder(
+          secrets.resolve("GEMINI_API_KEY"),
+          process.env.BRAIN_EMBEDDING_MODEL?.trim() || "gemini-embedding-001",
+        )
+      : undefined;
+  // Learning stays local; transcripts' 30-day retention bounds the experiences it keeps.
+  const brain = new Brain(new PostgresBrainStore(db), {
+    retentionDays: 30,
+    ...(embeddings && { embed: embeddings }),
+  });
+  let brainSettings: () => BrainSettings = () => ({ learning: true, reflexes: true });
   const { registry, tools, integrations } = await configuredProviders(process.env, secrets, {
     memory,
+    // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
+    prefer: (target, candidates) =>
+      brainSettings().reflexes ? brain.preferredChoice(target, candidates) : undefined,
   });
   try {
     await migrate(db);
@@ -49,6 +68,9 @@ async function main() {
         ),
     });
     await permissions.load();
+    brainSettings = () => permissions.settings();
+    await brain.load();
+    await brain.consolidate();
     const outbox =
       config.N8N_CALLBACK_URL && config.N8N_CALLBACK_TOKEN
         ? new Outbox(db, { url: config.N8N_CALLBACK_URL, token: config.N8N_CALLBACK_TOKEN })
@@ -95,6 +117,17 @@ async function main() {
       integrations,
       memory: true,
       permissions,
+      available: () =>
+        permissions
+          .view()
+          .actions.reduce(
+            (set, action) => (action.available ? set.add(action.id) : set),
+            new Set<string>(),
+          ),
+      onChoice: (target, candidates, chosen) => {
+        if (permissions.settings().learning)
+          void brain.learnChoice(target, candidates, chosen).catch(() => {});
+      },
       // A replan sees window and element names from a fresh Snapshot, never field values.
       ...(tools && {
         screen: async () =>
@@ -116,6 +149,8 @@ async function main() {
       wake,
       plans,
       memory,
+      brain,
+      settings: () => permissions.settings(),
     });
     await conversation.purge(30 * 86_400_000);
     const server = buildServer(tasks, registry, {
@@ -127,6 +162,7 @@ async function main() {
       plans,
       memory,
       permissions,
+      brain,
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
@@ -150,6 +186,14 @@ async function main() {
       })}\n`,
     );
     outbox?.start(stop.signal, tasks.changes);
+    // "Sleep" every half hour: consolidate experiences into skills and let unused ones fade.
+    const sleep = setInterval(() => {
+      void brain.consolidate().catch(() => {
+        process.stderr.write('{"level":"error","code":"BRAIN_CONSOLIDATION_FAILED"}\n');
+      });
+    }, 30 * 60_000);
+    sleep.unref();
+    stop.signal.addEventListener("abort", () => clearInterval(sleep), { once: true });
     try {
       await Promise.all([
         ...workers.map((worker) => worker.run(stop.signal)),

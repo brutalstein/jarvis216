@@ -32,11 +32,18 @@ export class DesktopExecutor implements Executor {
   constructor(
     private tools: ToolPort,
     private roots: string[],
+    // The brain's learned pick among on-screen candidates (exact situation only).
+    private prefer?: (target: string, candidates: string[]) => string | undefined,
   ) {}
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const action = step(task, "desktop");
     try {
-      const evidence = await runStep(action, { tools: this.tools, roots: this.roots, signal });
+      const evidence = await runStep(action, {
+        tools: this.tools,
+        roots: this.roots,
+        signal,
+        ...(this.prefer && { prefer: this.prefer }),
+      });
       return { text: JSON.stringify(evidence), source: `windows-mcp:${evidence.evidence}` };
     } catch (error) {
       if (error instanceof Error && error.message === "MCP_CHANNEL_LOST")

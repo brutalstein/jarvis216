@@ -1,0 +1,20 @@
+{
+  "name": "@jarvis/brain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "JARVIS learning brain: episodic experiences, consolidated skills, reinforcement, decay and recall",
+  "exports": {
+    ".": {
+      "jarvis-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "minisearch": "7.2.0"
+  }
+}
