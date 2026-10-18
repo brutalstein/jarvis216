@@ -55,9 +55,22 @@ export class ClaudeExecutor implements Executor {
       });
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
+    const { objective, cachePrefix } = task.spec;
+    // The prompt's stable leading part is a cache breakpoint; only the turn part is new.
+    const content: string | Anthropic.TextBlockParam[] =
+      cachePrefix && cachePrefix < objective.length
+        ? [
+            {
+              type: "text",
+              text: objective.slice(0, cachePrefix),
+              cache_control: { type: "ephemeral" },
+            },
+            { type: "text", text: objective.slice(cachePrefix) },
+          ]
+        : objective;
     const params = {
       model: this.model,
-      messages: [{ role: "user" as const, content: task.spec.objective }],
+      messages: [{ role: "user" as const, content }],
       max_tokens: task.spec.budget.maxOutputTokens,
       ...(this.options.effort ? { output_config: { effort: this.options.effort } } : {}),
     };
@@ -94,7 +107,14 @@ export class ClaudeExecutor implements Executor {
       text,
       source: `claude:${result.model}:model-output`,
       externalId: result.id,
-      usage: { inputTokens: result.usage.input_tokens, outputTokens: result.usage.output_tokens },
+      usage: {
+        // Cached and cache-writing input still counts toward the operator's token budget.
+        inputTokens:
+          result.usage.input_tokens +
+          (result.usage.cache_creation_input_tokens ?? 0) +
+          (result.usage.cache_read_input_tokens ?? 0),
+        outputTokens: result.usage.output_tokens,
+      },
     };
   }
 }

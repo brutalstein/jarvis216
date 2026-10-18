@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Executor } from "../src/contracts.js";
 import { ConversationService, conversationProviders, parseReply } from "../src/conversation.js";
 import type { Database } from "../src/database.js";
-import { conversationPrompt } from "../src/persona.js";
+import { conversationPrompt, conversationPromptParts } from "../src/persona.js";
 import { ProviderFailure, ProviderRegistry } from "../src/routing.js";
 import { buildServer } from "../src/server.js";
 import { TaskService } from "../src/tasks.js";
@@ -83,6 +83,31 @@ describe("conversation prompt and providers", () => {
     expect(prompt).toMatch(/never claim/i);
     expect(prompt).not.toMatch(/follow-up window/i);
     expect(conversationPrompt({ ...input, followUp: true })).toMatch(/follow-up window/i);
+  });
+  it("keeps the leading part identical across turns so providers can cache it", () => {
+    const first = conversationPromptParts({
+      utterance: "Jarvis, saat kaç?",
+      followUp: false,
+      history: [],
+      now: new Date("2026-10-17T19:00:00Z"),
+      working: { active: [], entities: [] },
+    });
+    const second = conversationPromptParts({
+      utterance: "Spotify'ı aç",
+      followUp: true,
+      history: [{ utterance: "Merhaba", say: "Merhaba efendim." }],
+      now: new Date("2026-10-17T19:05:31Z"),
+      memories: ["Kahvemi sade içerim"],
+      working: {
+        active: [{ goal: "Araştır", status: "RUNNING", actions: ["browser.read_many"] }],
+        entities: ["Spotify"],
+      },
+    });
+    expect(second.stable).toBe(first.stable);
+    expect(first.stable).toContain("app.open");
+    expect(first.stable).not.toMatch(/Local time|Saat|Jarvis, saat/);
+    expect(second.turn).toContain("Kahvemi sade içerim");
+    expect(second.turn.trimEnd().endsWith("Reply now with the one JSON object.")).toBe(true);
   });
   it("conversationProviders orders the realtime providers", () => {
     expect(

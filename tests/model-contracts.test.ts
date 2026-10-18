@@ -214,6 +214,43 @@ describe("Claude adapter", () => {
     expect(fixture.seen[0]?.body).not.toHaveProperty("output_config");
   });
 
+  it("marks the prompt's stable prefix as a cache breakpoint and counts cached input", async () => {
+    const fixture = await claudeFixture({
+      usage: {
+        input_tokens: 40,
+        output_tokens: 5,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 900,
+      },
+    });
+    const cached = task("claude-live");
+    cached.spec = { ...cached.spec, objective: "STABLE PART\n\nturn part", cachePrefix: 13 };
+    try {
+      const result = await new ClaudeExecutor("k", "claude-opus-5-5", fixture.client).execute(
+        cached,
+        new AbortController().signal,
+      );
+      expect(result.usage).toEqual({ inputTokens: 940, outputTokens: 5 });
+      // Without a prefix the prompt stays one plain string.
+      await new ClaudeExecutor("k", "claude-opus-5-5", fixture.client).execute(
+        task("claude"),
+        new AbortController().signal,
+      );
+    } finally {
+      await fixture.close();
+    }
+    expect(fixture.seen[0]?.body.messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "STABLE PART\n\n", cache_control: { type: "ephemeral" } },
+          { type: "text", text: "turn part" },
+        ],
+      },
+    ]);
+    expect(fixture.seen[1]?.body.messages).toEqual([{ role: "user", content: "Return verified" }]);
+  });
+
   it("maps stop reasons: truncation may fall back, a refusal is final", async () => {
     expect(await claudeFailure("max_tokens")).toEqual({
       kind: "invalid-response",

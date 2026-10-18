@@ -14,7 +14,7 @@ import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
 import type { MemoryStore } from "./memory.js";
 import type { BrainSettings } from "./permissions.js";
-import { conversationPrompt } from "./persona.js";
+import { conversationPromptParts } from "./persona.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
@@ -186,7 +186,7 @@ export class ConversationService {
         : Promise.resolve([]),
       this.options.memory?.promptNotes(),
     ]);
-    const prompt = conversationPrompt({
+    const { stable, turn } = conversationPromptParts({
       ...input,
       history: history.rows.reverse(),
       now: new Date(started),
@@ -198,6 +198,7 @@ export class ConversationService {
       ...(working && { working }),
       examples,
     });
+    const prompt = stable + turn;
     const { text, provider, taskId } = await runText(
       this.tasks,
       () => this.options.wake(),
@@ -209,6 +210,7 @@ export class ConversationService {
         maxOutputTokens: 600,
         json: true,
         lane: "interactive",
+        cachePrefix: stable.length,
       },
       `conversation:${id}`,
     );
@@ -229,6 +231,7 @@ export class ConversationService {
             maxOutputTokens: 1000,
             json: true,
             lane: "interactive",
+            cachePrefix: stable.length,
           },
           `conversation:${id}:repair`,
         );

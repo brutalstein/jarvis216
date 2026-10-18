@@ -10,7 +10,10 @@ sentences, written to be spoken aloud: no Markdown, lists or emoji in "say".
 Address the operator as "efendim" in Turkish or "sir" in English.
 Honesty: never invent facts. You can propose only the catalog actions below; Core validates,
 approves and executes them. Never claim an action has completed or started in "say".
-For unsupported actions, say plainly that you cannot do it yet. Voice can cancel, never approve.`;
+For unsupported actions, say plainly that you cannot do it yet. Voice can cancel, never approve.
+While Core works on something in the background (see working memory), keep the conversation
+going: answer, chat and take new requests as usual. You may say what is running and how far it
+got from working memory, never what it found before Core reports it.`;
 
 const FORMAT = `Reply with exactly one JSON object and nothing else:
 {"addressed": true, "say": "<spoken reply>", "lang": "tr" | "en", "display": []}
@@ -27,7 +30,7 @@ set "addressed": false and "say": "".`;
 // History items are capped so the prompt stays within provider input limits.
 const clip = (text: string) => (text.length > 500 ? `${text.slice(0, 500)}…` : text);
 
-export function conversationPrompt(input: {
+export type ConversationInput = {
   utterance: string;
   followUp: boolean;
   history: { utterance: string; say: string }[];
@@ -44,14 +47,31 @@ export function conversationPrompt(input: {
   working?: WorkingMemory;
   // Similar requests this operator made before that worked (the brain's recall).
   examples?: Example[];
-}): string {
+};
+
+// Stable first, per-turn last: the leading part repeats byte for byte across turns, so
+// providers with prompt caching (Gemini implicitly, Claude at the marked prefix) reuse it.
+export function conversationPromptParts(input: ConversationInput): {
+  stable: string;
+  turn: string;
+} {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const time = input.now.toLocaleString("tr-TR", { timeZone: zone });
   const history = input.history
     .map((turn) => `Operator: ${clip(turn.utterance)}\nJARVIS: ${clip(turn.say)}`)
     .join("\n");
-  return [
+  const stable = [
     PERSONA,
+    FORMAT,
+    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
+    `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
+    ...(input.browserUrls?.length
+      ? [
+          `Exact browser.read URLs allowed: ${input.browserUrls.join(", ")}. Supply expectedText as a short phrase likely present on that exact page.`,
+        ]
+      : []),
+  ].join("\n\n");
+  const turn = [
     `Local time: ${time} (${zone}).`,
     ...(input.followUp ? [FOLLOW_UP] : []),
     ...(input.memories?.length
@@ -72,15 +92,14 @@ export function conversationPrompt(input: {
       : []),
     ...(history ? [`Recent conversation, oldest first:\n${history}`] : []),
     `The operator now says (speech transcript, may contain recognition errors):\n${input.utterance}`,
-    FORMAT,
-    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
-    `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
-    ...(input.browserUrls?.length
-      ? [
-          `Exact browser.read URLs allowed: ${input.browserUrls.join(", ")}. Supply expectedText as a short phrase likely present on that exact page.`,
-        ]
-      : []),
+    "Reply now with the one JSON object.",
   ].join("\n\n");
+  return { stable: `${stable}\n\n`, turn };
+}
+
+export function conversationPrompt(input: ConversationInput): string {
+  const { stable, turn } = conversationPromptParts(input);
+  return stable + turn;
 }
 
 const minutes = (ms: number) => Math.max(1, Math.round(ms / 60_000));
