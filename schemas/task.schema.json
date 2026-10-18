@@ -72,6 +72,18 @@
         "json"
       ]
     },
+    "lane": {
+      "type": "string",
+      "enum": [
+        "interactive",
+        "background"
+      ]
+    },
+    "cachePrefix": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16000
+    },
     "budget": {
       "default": {
         "maxCalls": 2,

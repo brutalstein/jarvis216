@@ -208,6 +208,7 @@ export class ConversationService {
         deadlineMs: this.deadlineMs,
         maxOutputTokens: 600,
         json: true,
+        lane: "interactive",
       },
       `conversation:${id}`,
     );
@@ -227,6 +228,7 @@ export class ConversationService {
             deadlineMs: this.deadlineMs,
             maxOutputTokens: 1000,
             json: true,
+            lane: "interactive",
           },
           `conversation:${id}:repair`,
         );

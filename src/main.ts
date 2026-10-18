@@ -14,7 +14,7 @@ import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
-import { type TaskChange, TaskService } from "./tasks.js";
+import { type Lane, type TaskChange, TaskService } from "./tasks.js";
 import { initTracing } from "./telemetry.js";
 import { Worker } from "./worker.js";
 
@@ -80,6 +80,7 @@ async function main() {
     registry.hydrate(await loadObservations(db, Date.now() - 86_400_000));
     const tasks = new TaskService(db, {
       concurrency: config.WORKER_CONCURRENCY,
+      interactive: config.INTERACTIVE_CONCURRENCY,
       limits: {
         "text.generate": config.MODEL_CONCURRENCY,
         "browser.extract": config.BROWSER_CONCURRENCY,
@@ -92,10 +93,13 @@ async function main() {
       ...(outbox && { outbox: { principals: ["n8n"] } }),
     });
     await tasks.recover();
-    const workers = Array.from(
-      { length: config.WORKER_CONCURRENCY },
-      () => new Worker(tasks, registry, (text) => secrets.redact(text), {}, permissions),
-    );
+    const worker = (serve?: readonly Lane[]) =>
+      new Worker(tasks, registry, (text) => secrets.redact(text), {}, permissions, serve);
+    // General workers take either lane; the interactive ones stay free for spoken turns.
+    const workers = [
+      ...Array.from({ length: config.WORKER_CONCURRENCY }, () => worker()),
+      ...Array.from({ length: config.INTERACTIVE_CONCURRENCY }, () => worker(["interactive"])),
+    ];
     const wake = () => {
       for (const worker of workers) worker.wake();
     };

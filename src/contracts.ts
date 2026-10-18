@@ -109,6 +109,12 @@ export const TaskSpecSchema = z
     // json: providers with a native JSON mode constrain the reply to one JSON value. It shapes
     // the output only; verification still checks the text. Absent means plain text.
     responseFormat: z.enum(["text", "json"]).optional(),
+    // interactive: someone is waiting to hear the answer (a spoken turn). Core claims these
+    // first, on capacity background work cannot take. Honoured for the operator only.
+    lane: z.enum(["interactive", "background"]).optional(),
+    // Length of the objective's leading part that is the same for every request of its kind,
+    // so providers with prompt caching can reuse it.
+    cachePrefix: z.number().int().min(1).max(16_000).optional(),
     budget: z
       .strictObject({
         maxCalls: z.number().int().min(1).max(5).default(2),

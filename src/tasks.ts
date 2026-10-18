@@ -20,6 +20,8 @@ import {
 import type { Database, Sql } from "./database.js";
 
 export type TaskChange = { id: string; status: TaskState };
+export type Lane = "interactive" | "background";
+export const lanes: readonly Lane[] = ["interactive", "background"];
 // States an external submitter needs to hear about: settled, or waiting on the operator.
 const notified = new Set<TaskState>([
   "COMPLETED",
@@ -39,7 +41,11 @@ export class TaskService {
   constructor(
     public readonly db: Database,
     private options: {
+      // Background capacity: plan steps, finishers, agents, API and n8n tasks.
       concurrency: number;
+      // Capacity reserved for interactive tasks (spoken turns) on top of `concurrency`; 0 or
+      // absent puts them in the background lane like any other task.
+      interactive?: number;
       redact?: (text: string) => string;
       limits?: Partial<Record<Capability, number>>;
       // Principals whose tasks' notable transitions are queued for push delivery (n8n).
@@ -207,17 +213,45 @@ export class TaskService {
         await this.move(tx, task, "WAITING_FOR_DEPENDENCY", "dependency added");
     });
   }
-  async claim(owner: string, leaseMs: number): Promise<Task | null> {
+  laneOf(task: Pick<Task, "principal" | "spec">): Lane {
+    return (this.options.interactive ?? 0) > 0 &&
+      task.spec.lane === "interactive" &&
+      task.principal === "operator"
+      ? "interactive"
+      : "background";
+  }
+  // Interactive tasks first, on their own capacity; background tasks within `concurrency` and
+  // the per-capability limits, which count background work only. A worker may serve one lane.
+  async claim(
+    owner: string,
+    leaseMs: number,
+    serve: readonly Lane[] = lanes,
+  ): Promise<Task | null> {
     return this.locked(async (tx) => {
-      const active = (
-        await tx.query<{ count: string }>(
-          "SELECT count(*) FROM tasks WHERE status IN ('RUNNING','VERIFYING')",
+      const running = (
+        await tx.query<Pick<Task, "principal" | "spec">>(
+          "SELECT principal, jsonb_build_object('capability', spec->'capability', 'lane', spec->'lane') AS spec FROM tasks WHERE status IN ('RUNNING','VERIFYING')",
         )
-      ).rows[0];
-      if (Number(active?.count) >= this.options.concurrency) return null;
+      ).rows;
+      const activeByCapability = new Map<Capability, number>();
+      let interactive = 0;
+      let background = 0;
+      for (const task of running) {
+        if (this.laneOf(task) === "interactive") interactive++;
+        else {
+          background++;
+          const capability = task.spec.capability;
+          activeByCapability.set(capability, (activeByCapability.get(capability) ?? 0) + 1);
+        }
+      }
+      const open = {
+        interactive: serve.includes("interactive") && interactive < (this.options.interactive ?? 0),
+        background: serve.includes("background") && background < this.options.concurrency,
+      };
+      if (!open.interactive && !open.background) return null;
       const candidates = (
         await tx.query<Task>(
-          "SELECT * FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY') AND not_before<=$1 ORDER BY created_at,id LIMIT 1000",
+          "SELECT * FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY') AND not_before<=$1 ORDER BY CASE WHEN principal='operator' AND spec->>'lane'='interactive' THEN 0 ELSE 1 END, created_at, id LIMIT 1000",
           [Date.now()],
         )
       ).rows;
@@ -233,13 +267,6 @@ export class TaskService {
           ...(dependencyStates.get(row.task_id) ?? []),
           row.status,
         ]);
-      const activeByCapability = new Map(
-        (
-          await tx.query<{ capability: Capability; count: string }>(
-            "SELECT spec->>'capability' AS capability,count(*) FROM tasks WHERE status IN ('RUNNING','VERIFYING') GROUP BY 1",
-          )
-        ).rows.map((row) => [row.capability, Number(row.count)]),
-      );
       for (const task of candidates) {
         if (taskDeadline(task) <= Date.now()) {
           await this.move(tx, task, "FAILED", "deadline expired");
@@ -251,6 +278,8 @@ export class TaskService {
           continue;
         }
         if (deps.some((status) => status !== "COMPLETED")) continue;
+        const lane = this.laneOf(task);
+        if (!open[lane]) continue;
         const defaults = {
           "text.generate": 2,
           "browser.extract": 1,
@@ -260,7 +289,8 @@ export class TaskService {
           "memory.write": 1,
         };
         const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
-        if ((activeByCapability.get(task.spec.capability) ?? 0) >= limit) continue;
+        if (lane === "background" && (activeByCapability.get(task.spec.capability) ?? 0) >= limit)
+          continue;
         if (task.status === "WAITING_FOR_DEPENDENCY")
           await this.move(tx, task, "READY", "dependencies completed");
         await this.move(tx, task, "RUNNING", "lease acquired");
@@ -325,6 +355,19 @@ export class TaskService {
       }
       return task;
     });
+  }
+  #recovered = 0;
+  #recovering: Promise<void> | undefined;
+  // Workers call this before each claim: at most one recovery pass per interval for all of
+  // them, instead of one scheduler-locked scan per claim attempt.
+  recoverDue(intervalMs = 1000): Promise<void> {
+    if (this.#recovering) return this.#recovering;
+    if (Date.now() - this.#recovered < intervalMs) return Promise.resolve();
+    this.#recovered = Date.now();
+    this.#recovering = this.recover().finally(() => {
+      this.#recovering = undefined;
+    });
+    return this.#recovering;
   }
   async recover(): Promise<void> {
     await this.locked(async (tx) => {

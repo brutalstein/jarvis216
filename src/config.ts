@@ -35,7 +35,9 @@ export const ConfigSchema = z
     JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
-    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
+    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
+    // Extra workers that only take spoken turns, so conversation never queues behind work.
+    INTERACTIVE_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
     MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
     BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
     WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),

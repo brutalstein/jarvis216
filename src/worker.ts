@@ -4,7 +4,7 @@ import { ContextStore } from "./context.js";
 import { CoreError } from "./contracts.js";
 import { ActionGateway, type StandingGrants } from "./gateway.js";
 import type { ProviderRegistry } from "./routing.js";
-import type { TaskService } from "./tasks.js";
+import { type Lane, lanes, type TaskService } from "./tasks.js";
 
 export interface WorkerTiming {
   leaseMs: number;
@@ -26,6 +26,8 @@ export class Worker {
     redact: (text: string) => string = (text) => text,
     timing: Partial<WorkerTiming> = {},
     grants?: StandingGrants,
+    // Lanes this worker claims from; an interactive-only worker is never busy with background work.
+    private serve: readonly Lane[] = lanes,
   ) {
     this.gateway = new ActionGateway(
       tasks,
@@ -44,7 +46,7 @@ export class Worker {
   async once(): Promise<boolean> {
     const { leaseMs, renewMs } = this.timing;
     const owner = `worker:${randomUUID()}`;
-    const task = await this.tasks.claim(owner, leaseMs);
+    const task = await this.tasks.claim(owner, leaseMs, this.serve);
     if (!task) return false;
     const controller = new AbortController();
     this.running.set(task.id, controller);
@@ -132,7 +134,7 @@ export class Worker {
     while (!signal.aborted) {
       let worked = false;
       try {
-        await this.tasks.recover();
+        await this.tasks.recoverDue();
         worked = await this.once();
       } catch {
         process.stderr.write('{"level":"error","code":"WORKER_CYCLE_FAILED"}\n');

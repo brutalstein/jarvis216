@@ -1,5 +1,5 @@
 import { CoreError, type TaskState, terminal } from "./contracts.js";
-import type { TaskChange, TaskService } from "./tasks.js";
+import type { Lane, TaskChange, TaskService } from "./tasks.js";
 
 export type TextSpec = {
   prompt: string;
@@ -11,6 +11,10 @@ export type TextSpec = {
   json?: boolean;
   // Safety-net poll while waiting for the task's change event.
   pollMs?: number;
+  // interactive: the operator is waiting to hear it (claimed ahead of background work).
+  lane?: Lane;
+  // Characters at the start of the prompt that repeat across requests (prompt caching).
+  cachePrefix?: number;
 };
 
 // States where waiting longer cannot produce a reply.
@@ -36,6 +40,8 @@ export async function runText(
       providers: spec.providers,
       providerOrder: "listed",
       ...(spec.json && { responseFormat: "json" as const }),
+      ...(spec.lane && { lane: spec.lane }),
+      ...(spec.cachePrefix && { cachePrefix: spec.cachePrefix }),
       privacy: spec.privacy,
       budget: {
         maxCalls: spec.providers.length,
