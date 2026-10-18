@@ -5,6 +5,7 @@ import { terminal } from "./contracts.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
 import { MemoryStore } from "./memory.js";
+import { Outbox } from "./outbox.js";
 import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
@@ -29,6 +30,10 @@ async function main() {
   });
   try {
     await migrate(db);
+    const outbox =
+      config.N8N_CALLBACK_URL && config.N8N_CALLBACK_TOKEN
+        ? new Outbox(db, { url: config.N8N_CALLBACK_URL, token: config.N8N_CALLBACK_TOKEN })
+        : undefined;
     // Health, usage budgets and open circuits survive a restart: replay the last day.
     await purgeObservations(db, Date.now() - 30 * 86_400_000);
     registry.hydrate(await loadObservations(db, Date.now() - 86_400_000));
@@ -43,6 +48,7 @@ async function main() {
         "memory.write": 1,
       },
       redact: (text) => secrets.redact(text),
+      ...(outbox && { outbox: { principals: ["n8n"] } }),
     });
     await tasks.recover();
     const workers = Array.from(
@@ -122,6 +128,7 @@ async function main() {
         liveConnectivity: "unverified",
       })}\n`,
     );
+    outbox?.start(stop.signal, tasks.changes);
     try {
       await Promise.all([
         ...workers.map((worker) => worker.run(stop.signal)),

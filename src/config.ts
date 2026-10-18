@@ -25,20 +25,31 @@ const generated = (value: string) => !value.includes("REPLACE_");
 // for another project would otherwise be migrated silently.
 const localDatabase = (value: string) =>
   ["127.0.0.1", "localhost", "[::1]", "postgres"].includes(new URL(value).hostname);
-export const ConfigSchema = z.object({
-  DATABASE_URL: z
-    .string()
-    .url()
-    .refine(generated, "Run scripts/bootstrap.ps1")
-    .refine(localDatabase, "DATABASE_URL must be this host or the Compose postgres service"),
-  JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
-  N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
-  PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
-  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
-  MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
-  BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
-  WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
-});
+export const ConfigSchema = z
+  .object({
+    DATABASE_URL: z
+      .string()
+      .url()
+      .refine(generated, "Run scripts/bootstrap.ps1")
+      .refine(localDatabase, "DATABASE_URL must be this host or the Compose postgres service"),
+    JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
+    N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
+    PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
+    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
+    MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
+    BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
+    WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
+    // Optional push of n8n-submitted task outcomes to a registered n8n webhook.
+    N8N_CALLBACK_URL: z.preprocess((v) => v || undefined, z.url().optional()),
+    N8N_CALLBACK_TOKEN: z.preprocess(
+      (v) => v || undefined,
+      z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1").optional(),
+    ),
+  })
+  .refine((config) => Boolean(config.N8N_CALLBACK_URL) === Boolean(config.N8N_CALLBACK_TOKEN), {
+    message: "Set N8N_CALLBACK_URL and N8N_CALLBACK_TOKEN together",
+    path: ["N8N_CALLBACK_URL"],
+  });
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,

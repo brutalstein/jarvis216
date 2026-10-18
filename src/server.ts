@@ -112,6 +112,10 @@ export function buildServer(
          GROUP BY provider,outcome ORDER BY provider,outcome`,
       [Date.now() - 86_400_000],
     );
+    const deliveries = await tasks.db.query(
+      `SELECT CASE WHEN delivered_at IS NOT NULL THEN 'delivered' WHEN failed_at IS NOT NULL THEN 'failed' ELSE 'pending' END AS state,
+           count(*)::int AS count FROM deliveries GROUP BY 1 ORDER BY 1`,
+    );
     const retries = await tasks.db.query<{ retries: number }>(
       "SELECT count(*)::int AS retries FROM events WHERE envelope->>'type'='execution.failed' AND envelope->'payload'->>'retryEligible'='true'",
     );
@@ -122,6 +126,7 @@ export function buildServer(
       completedDurationMs: durations.rows[0],
       retries: retries.rows[0]?.retries ?? 0,
       providerObservations24h: observations.rows,
+      outboxDeliveries: deliveries.rows,
       rssBytes: process.memoryUsage().rss,
       cpuMicros: process.cpuUsage(),
       observedAt: new Date().toISOString(),

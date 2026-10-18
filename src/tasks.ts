@@ -20,6 +20,15 @@ import {
 import type { Database, Sql } from "./database.js";
 
 export type TaskChange = { id: string; status: TaskState };
+// States an external submitter needs to hear about: settled, or waiting on the operator.
+const notified = new Set<TaskState>([
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "RECOVERY_REQUIRED",
+  "WAITING_FOR_APPROVAL",
+  "BLOCKED",
+]);
 
 export class TaskService {
   // "change" fires after a transaction that moved tasks has committed, once per task with its
@@ -33,6 +42,8 @@ export class TaskService {
       concurrency: number;
       redact?: (text: string) => string;
       limits?: Partial<Record<Capability, number>>;
+      // Principals whose tasks' notable transitions are queued for push delivery (n8n).
+      outbox?: { principals: readonly string[] };
     } = {
       concurrency: 2,
     },
@@ -94,6 +105,11 @@ export class TaskService {
     await this.event(tx, task, "task.transition", { from: task.status, to: state, reason });
     task.status = state;
     this.#moved.get(tx)?.set(task.id, state);
+    if (this.options.outbox?.principals.includes(task.principal) && notified.has(state))
+      await tx.query(
+        "INSERT INTO deliveries(id,task_id,status,created_at,next_attempt_at) VALUES($1,$2,$3,$4,$4)",
+        [randomUUID(), task.id, state, Date.now()],
+      );
   }
   async create(raw: unknown, key: string, principal: string): Promise<Task> {
     return this.locked((tx) => this.createIn(tx, raw, key, principal));

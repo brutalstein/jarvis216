@@ -1,0 +1,27 @@
+{
+  "name": "JARVIS: receive pushed task outcomes",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    {
+      "id": "events", "name": "Core task events", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [0, 0],
+      "parameters": { "httpMethod": "POST", "path": "jarvis-task-events", "authentication": "headerAuth", "responseMode": "onReceived", "options": {} },
+      "webhookId": "jarvis-task-events"
+    },
+    {
+      "id": "dedupe", "name": "Drop redelivered events", "type": "n8n-nodes-base.removeDuplicates", "typeVersion": 2, "position": [240, 0],
+      "parameters": { "operation": "removeItemsRepeatedInPreviousExecutions", "dedupeValue": "={{ $json.body.eventId }}" }
+    },
+    {
+      "id": "completed", "name": "Verified completion", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [480, 0],
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "is-completed", "leftValue": "={{ $json.body.status }}", "rightValue": "COMPLETED", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+    },
+    { "id": "consume", "name": "Consume verified result", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [720, -100], "parameters": {} },
+    { "id": "review", "name": "Waiting, blocked or uncertain: operator review", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [720, 100], "parameters": {} }
+  ],
+  "connections": {
+    "Core task events": { "main": [[{ "node": "Drop redelivered events", "type": "main", "index": 0 }]] },
+    "Drop redelivered events": { "main": [[{ "node": "Verified completion", "type": "main", "index": 0 }]] },
+    "Verified completion": { "main": [[{ "node": "Consume verified result", "type": "main", "index": 0 }], [{ "node": "Waiting, blocked or uncertain: operator review", "type": "main", "index": 0 }]] }
+  }
+}

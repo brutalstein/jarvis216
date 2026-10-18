@@ -174,4 +174,20 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=7")).rows.length)
+      return;
+    // Transactional outbox: a status change and its notification commit together.
+    const ddl = `
+      CREATE TABLE deliveries (
+        id uuid PRIMARY KEY, task_id uuid NOT NULL REFERENCES tasks(id), status text NOT NULL,
+        created_at bigint NOT NULL, attempts integer NOT NULL DEFAULT 0 CHECK(attempts>=0),
+        next_attempt_at bigint NOT NULL, delivered_at bigint, failed_at bigint
+      );
+      CREATE INDEX delivery_due ON deliveries(next_attempt_at) WHERE delivered_at IS NULL AND failed_at IS NULL;
+      INSERT INTO schema_migrations VALUES (7);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }
