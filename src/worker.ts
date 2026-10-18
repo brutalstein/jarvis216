@@ -14,6 +14,8 @@ export interface WorkerTiming {
 }
 export class Worker {
   private running = new Map<string, AbortController>();
+  // Aborted to end the current idle wait early; replaced after each wake.
+  private idle = new AbortController();
   private gateway: ActionGateway;
   private timing: WorkerTiming;
   constructor(
@@ -27,6 +29,9 @@ export class Worker {
   }
   cancel(id: string): void {
     this.running.get(id)?.abort();
+  }
+  wake(): void {
+    this.idle.abort();
   }
   async once(): Promise<boolean> {
     const { leaseMs, renewMs } = this.timing;
@@ -128,9 +133,10 @@ export class Worker {
         process.stderr.write('{"level":"error","code":"WORKER_CYCLE_FAILED"}\n');
       }
       try {
-        await delay(500, undefined, { signal });
+        await delay(500, undefined, { signal: AbortSignal.any([signal, this.idle.signal]) });
       } catch {
-        break;
+        if (signal.aborted) break;
+        this.idle = new AbortController();
       }
     }
     clearTimeout(drain);

@@ -5,6 +5,7 @@ import {
   type Executor,
   fingerprint,
   invariant,
+  verified as meetsVerification,
   ResultSchema,
   type Risk,
   RiskSchema,
@@ -31,7 +32,7 @@ export class ActionGateway {
     // Deterministic floor: the highest of declared risk, executor floor and policy floor.
     const policyFloor: Risk =
       executor.capability === "workflow.invoke" ||
-      (executor.external && claim.spec.privacy === "private")
+      (executor.external && claim.spec.privacy === "private" && !executor.trustedForPrivate)
         ? "HIGH"
         : "LOW";
     const risk = [claim.spec.risk, executor.riskFloor ?? "LOW", policyFloor].reduce((a, b) =>
@@ -150,7 +151,7 @@ export class ActionGateway {
               "VERIFYING",
               "executor returned; response is untrusted",
             );
-            const verified = result.text.includes(task.spec.verification.value);
+            const verified = meetsVerification(task.spec, result.text);
             // An unverified result from a side-effecting executor proves the action ran, not
             // that it failed: never let FAILED invite a blind resubmission.
             const outcome = verified ? "COMPLETED" : executor.retrySafe ? "FAILED" : null;

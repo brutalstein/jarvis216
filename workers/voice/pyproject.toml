@@ -1,0 +1,43 @@
+[project]
+name = "jarvis-voice"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "pipecat-ai[webrtc,silero,whisper,local-smart-turn,piper]==1.12.0",
+  "speechbrain==1.1.2",
+  "aiohttp==3.14.5",
+  "httpx==0.28.1",
+  "numpy==1.26.4",
+  "soundfile==0.13.1",
+  # CUDA 12.8 wheels: required for the RTX 50-series (sm_120).
+  "torch>=2.7",
+  "torchaudio>=2.7",
+]
+
+[dependency-groups]
+dev = ["mypy==2.4.0", "ruff==0.17.1"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

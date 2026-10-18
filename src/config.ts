@@ -1,9 +1,11 @@
 import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 import type { Executor } from "./contracts.js";
 import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
 import { ClaudeExecutor, CodexExecutor, GeminiExecutor } from "./integrations/models.js";
+import { OpenAICompatibleExecutor, providerId } from "./integrations/openai-compatible.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrations/services.js";
 import { type Provider, ProviderRegistry } from "./routing.js";
 import { containedPath, type EnvSecrets } from "./security.js";
@@ -33,7 +35,15 @@ export async function configuredProviders(
   secrets: EnvSecrets,
 ): Promise<ProviderRegistry> {
   const providers: Provider[] = [];
-  const register = (executor: Executor, configuration: string, priority: number) =>
+  const trusted = z
+    .string()
+    .default("")
+    .parse(env.JARVIS_PRIVATE_PROVIDERS)
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  const register = (executor: Executor, configuration: string, priority: number) => {
+    const trustedForPrivate = trusted.includes(executor.id);
     providers.push({
       id: executor.id,
       capability: executor.capability,
@@ -47,9 +57,12 @@ export async function configuredProviders(
       enabled: true,
       priority,
       maxInputChars: 20_000,
-      configuration,
+      trustedForPrivate,
+      // Trust is part of the approved configuration, so granting it invalidates old approvals.
+      configuration: trustedForPrivate ? `${configuration}:trusted-private` : configuration,
       execute: executor.execute.bind(executor),
     });
+  };
   if (env.ENABLE_CLAUDE === "true") {
     const model = z.string().min(1).parse(env.CLAUDE_MODEL);
     register(
@@ -60,11 +73,58 @@ export async function configuredProviders(
   }
   if (env.ENABLE_GEMINI === "true") {
     const model = z.string().min(1).parse(env.GEMINI_MODEL);
+    const key = secrets.resolve("GEMINI_API_KEY");
+    register(new GeminiExecutor(key, model), `gemini-api:${model}:tools-none`, 20);
     register(
-      new GeminiExecutor(secrets.resolve("GEMINI_API_KEY"), model),
-      `gemini-api:${model}:tools-none`,
+      new GeminiExecutor(key, model, undefined, {
+        id: "gemini-live",
+        thinkingLevel: ThinkingLevel.MINIMAL,
+      }),
+      `gemini-api:${model}:tools-none:thinking-minimal`,
       20,
     );
+  }
+  const freeModels = [
+    {
+      flag: "ENABLE_OPENROUTER",
+      prefix: "or",
+      base: "https://openrouter.ai/api/v1",
+      key: "OPENROUTER_API_KEY",
+      models: "OPENROUTER_MODELS",
+      priority: 50,
+      // Hide reasoning so the token budget goes to the reply.
+      extraBody: { reasoning: { effort: "low", exclude: true } },
+    },
+    {
+      flag: "ENABLE_NVIDIA",
+      prefix: "nv",
+      base: "https://integrate.api.nvidia.com/v1",
+      key: "NVIDIA_API_KEY",
+      models: "NVIDIA_MODELS",
+      priority: 60,
+    },
+  ] as const;
+  for (const free of freeModels) {
+    if (env[free.flag] !== "true") continue;
+    const key = secrets.resolve(free.key);
+    const models = z
+      .string()
+      .parse(env[free.models])
+      .split(",")
+      .map((model) => model.trim())
+      .filter(Boolean);
+    for (const model of models)
+      register(
+        new OpenAICompatibleExecutor({
+          id: providerId(free.prefix, model),
+          base: free.base,
+          key,
+          model,
+          ...("extraBody" in free ? { extraBody: free.extraBody } : {}),
+        }),
+        `${free.base}:${model}:tools-none`,
+        free.priority,
+      );
   }
   if (env.ENABLE_CLAUDE_CODE === "true") {
     const binary = z
