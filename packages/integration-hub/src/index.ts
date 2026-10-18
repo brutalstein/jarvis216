@@ -18,6 +18,7 @@ export class IntegrationError extends Error {
 }
 export class IntegrationHub {
   private recipes = new Map<string, (args: Record<string, unknown>) => HubTask>();
+  constructor(readonly browserUrls: readonly string[] = []) {}
   register(action: string, recipe: (args: Record<string, unknown>) => HubTask): void {
     if (!/^[a-z][a-z0-9_-]+\.[a-z][a-z0-9_-]+$/.test(action) || this.recipes.has(action))
       throw new Error("INVALID_RECIPE");
@@ -80,7 +81,8 @@ export function createIntegrationHub(settings: {
   browserUrls?: readonly string[];
   workflows?: readonly string[];
 }): IntegrationHub {
-  const hub = new IntegrationHub();
+  const urls = new Set((settings.browserUrls ?? []).map(exactUrl));
+  const hub = new IntegrationHub([...urls]);
   if (settings.openclaw)
     hub.register("agent.delegate", (args) => {
       const { instruction } = read(agent, args);
@@ -95,7 +97,6 @@ export function createIntegrationHub(settings: {
         verification: { kind: "non-empty" },
       };
     });
-  const urls = new Set((settings.browserUrls ?? []).map(exactUrl));
   if (urls.size) {
     hub.register("browser.read", (args) => {
       const { url, expectedText } = read(browser, args);

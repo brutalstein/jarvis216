@@ -101,3 +101,28 @@ it("stream delivers plans and heartbeat and detaches listeners when disconnected
   await new Promise((resolve) => setTimeout(resolve, 20));
   expect(plans.listenerCount("plan")).toBe(0);
 });
+it("stream keeps one frame larger than the backlog cap and stays open", async () => {
+  await app.listen({ host: "127.0.0.1", port: 0 });
+  const address = app.server.address() as AddressInfo;
+  const stop = new AbortController();
+  const response = await fetch(`http://127.0.0.1:${address.port}/v1/stream`, {
+    headers,
+    signal: stop.signal,
+  });
+  const reader = response.body!.getReader();
+  try {
+    // A news view with eight 200 KB thumbnails is about 2 MB of base64.
+    plans.emit("announce", { text: "x".repeat(1_500_000), lang: "en" });
+    plans.emit("announce", { text: "after", lang: "en" });
+    let text = "";
+    while (!text.includes('"after"')) {
+      const part = await reader.read();
+      if (part.done) break;
+      text += new TextDecoder().decode(part.value);
+    }
+    expect(text).toContain('"after"');
+  } finally {
+    await reader.cancel();
+    stop.abort();
+  }
+});

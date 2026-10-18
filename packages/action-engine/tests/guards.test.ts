@@ -1,9 +1,21 @@
-import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import fc from "fast-check";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { blockedShortcut, containedPath, escapeTarget, GuardError } from "../src/guards.js";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  blockedApp,
+  blockedShortcut,
+  containedPath,
+  escapeTarget,
+  GuardError,
+} from "../src/guards.js";
+
+// realpath on a UNC path makes Windows contact (and authenticate to) that host.
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, realpath: vi.fn(actual.realpath) };
+});
 
 let base: string;
 let root: string;
@@ -21,6 +33,18 @@ const rejects = (input: string) =>
   expect(containedPath(input, [root])).rejects.toMatchObject({ code: "PATH_OUTSIDE_ROOTS" });
 
 describe("containedPath", () => {
+  it("rejects network, device and outside paths before touching the filesystem", async () => {
+    vi.mocked(realpath).mockClear();
+    for (const input of [
+      String.raw`\\evil.example\s`,
+      "//evil.example/s",
+      String.raw`\\?\C:\x`,
+      String.raw`\\.\pipe\x`,
+      join(base, "outside", "x"),
+    ])
+      await rejects(input);
+    expect(realpath).not.toHaveBeenCalled();
+  });
   it("accepts existing and new paths under a root", async () => {
     expect(await containedPath(join(root, "Raporlar"), [root])).toBe(join(root, "Raporlar"));
     expect(await containedPath(join(root, "Raporlar", "yeni.txt"), [root])).toBe(
@@ -81,6 +105,23 @@ describe("escapeTarget", () => {
     expect(escapeTarget(title)).not.toBeNull();
   });
 
+  // Windows-MCP Snapshot gives titles only, so consoles are recognised by their usual titles.
+  it.each([
+    "MINGW64:/c/Users/cenke",
+    "MSYS:/home/cenke",
+    "cenke@laptop: ~/jarvis216",
+    "Ubuntu",
+    "Ubuntu-22.04",
+    "kali-linux",
+    "Python 3.12 (64-bit)",
+    String.raw`C:\Windows\py.exe`,
+    "Node.js",
+    String.raw`C:\Program Files\nodejs\node.exe`,
+    "✳ Claude Code",
+  ])("refuses console title %s", (title) => {
+    expect(escapeTarget(title)).not.toBeNull();
+  });
+
   it("refuses shell processes whatever the title", () => {
     expect(escapeTarget("Untitled", "pwsh.exe")).not.toBeNull();
   });
@@ -93,6 +134,42 @@ describe("escapeTarget", () => {
     "Running Club - Chrome",
   ])("allows %s", (title) => {
     expect(escapeTarget(title)).toBeNull();
+  });
+});
+
+describe("blockedApp", () => {
+  // Windows-MCP fuzzy-matches Start menu names, so a near miss still launches the shell.
+  it.each([
+    "PowerShell",
+    "poweshell",
+    "power shell",
+    "Komut İstemi",
+    "komut istemci",
+    "cmd",
+    "Windows Terminal",
+    "git-bash",
+    "wsl",
+    "regedt",
+    "Görev Yöneticisi",
+    "python",
+  ])("refuses %s", (name) => {
+    expect(blockedApp(name)).not.toBeNull();
+  });
+  it.each([
+    "Spotify",
+    "Not Defteri",
+    "Notepad",
+    "Hesap Makinesi",
+    "Calculator",
+    "Chrome",
+    "WhatsApp",
+    "Word",
+    "Paint",
+    "Steam",
+    "Teams",
+    "Discord",
+  ])("allows %s", (name) => {
+    expect(blockedApp(name)).toBeNull();
   });
 });
 

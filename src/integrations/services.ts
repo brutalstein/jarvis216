@@ -138,21 +138,21 @@ export class BrowserExecutor implements Executor {
             taskId: task.id,
             timeoutMs: Math.min(task.spec.budget.maxDurationMs, 60_000),
           };
-    return ResultSchema.parse(
-      await jsonRequest(
-        `${this.base}/v1/extract`,
-        {
-          method: "POST",
-          headers: {
-            authorization: `Bearer ${this.token}`,
-            "content-type": "application/json",
-            "x-correlation-id": task.correlation_id,
-          },
-          body: JSON.stringify(body),
+    const response = await jsonRequest(
+      `${this.base}/v1/extract`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.token}`,
+          "content-type": "application/json",
+          "x-correlation-id": task.correlation_id,
         },
-        signal,
-      ),
+        body: JSON.stringify(body),
+      },
+      signal,
     );
+    const output = z.object({ text: z.string() }).passthrough().parse(response);
+    return ResultSchema.parse({ ...output, text: output.text.slice(0, 64_000) });
   }
 }
 

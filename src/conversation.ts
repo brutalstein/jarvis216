@@ -135,7 +135,7 @@ export class ConversationService {
     const id = randomUUID();
     const history = (
       await this.tasks.db.query<{ utterance: string; say: string }>(
-        "SELECT utterance, reply->>'say' AS say FROM conversation_turns WHERE created_at > $1 ORDER BY created_at DESC LIMIT 6",
+        "SELECT utterance, reply->>'say' AS say FROM conversation_turns c WHERE created_at > $1 AND NOT EXISTS (SELECT 1 FROM plans p WHERE p.turn_id=c.id AND p.steps @> '[{\"action\":\"screen.describe\"}]'::jsonb) ORDER BY created_at DESC LIMIT 6",
         [started - 30 * 60_000],
       )
     ).rows.reverse();
@@ -144,6 +144,7 @@ export class ConversationService {
       history,
       now: new Date(started),
       enabledIntegrations: this.options.plans?.integrationCapabilities(),
+      browserUrls: this.options.plans?.browserUrls(),
     });
     const { text, provider, taskId } = await runText(
       this.tasks,
@@ -272,9 +273,43 @@ export class ConversationService {
       [value],
     );
   }
-  // Deletes turns before the cutoff and scrubs their tasks.
-  private scrub(cutoff: number): Promise<number> {
+  // Deletes turns before the cutoff and scrubs their tasks and plans.
+  private async scrub(cutoff: number): Promise<number> {
+    const activePlans = this.options.plans
+      ? (
+          await this.tasks.db.query<{ id: string }>(
+            "SELECT p.id FROM plans p LEFT JOIN conversation_turns c ON c.id=p.turn_id WHERE (c.created_at<$1 OR p.created_at<$1) AND p.status IN ('RUNNING','AWAITING_APPROVAL')",
+            [cutoff],
+          )
+        ).rows
+      : [];
+    for (const { id } of activePlans) {
+      try {
+        await this.options.plans?.cancel(id);
+      } catch (error) {
+        if (
+          ["RUNNING", "AWAITING_APPROVAL"].includes(
+            (await this.options.plans?.get(id))?.status ?? "",
+          )
+        )
+          throw error;
+      }
+    }
     return this.tasks.db.transaction(async (tx) => {
+      const planTasks =
+        "principal='operator' AND EXISTS (SELECT 1 FROM plans p LEFT JOIN conversation_turns c ON c.id=p.turn_id WHERE (c.created_at<$1 OR p.created_at<$1) AND idempotency_key LIKE 'plan:' || p.id::text || ':%')";
+      await tx.query(
+        `UPDATE actions SET parameters = jsonb_set(jsonb_set(parameters, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${planTasks})`,
+        [cutoff],
+      );
+      await tx.query(
+        `UPDATE tasks SET spec = jsonb_set(jsonb_set(spec, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE ${planTasks}`,
+        [cutoff],
+      );
+      await tx.query(
+        "UPDATE plans SET goal='[deleted]', steps='[]', outcome=NULL WHERE created_at<$1 OR turn_id IN (SELECT id FROM conversation_turns WHERE created_at<$1)",
+        [cutoff],
+      );
       await this.forget(tx, "created_at < $1", cutoff);
       return (
         await tx.query("DELETE FROM conversation_turns WHERE created_at < $1 RETURNING id", [

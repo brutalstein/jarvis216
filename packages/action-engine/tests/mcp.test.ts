@@ -42,6 +42,13 @@ describe("McpToolPort", () => {
     });
     await narrow.close();
   });
+  it("does not wait for the child after the step is cancelled", async () => {
+    const cancelled = new AbortController();
+    cancelled.abort(new Error("step deadline"));
+    const fresh = new McpToolPort(options(["echo"]));
+    await expect(fresh.call("echo", {}, cancelled.signal)).rejects.toThrow("step deadline");
+    await fresh.close();
+  });
 
   it("gives the child only the configured environment", async () => {
     const env = JSON.parse((await port.call("env", {}, signal)).text) as Record<string, string>;
@@ -55,5 +62,7 @@ describe("McpToolPort", () => {
       ok: true,
       text: "tekrar",
     });
+    await expect(port.call("crash", {}, signal)).rejects.toThrow("MCP_CHANNEL_LOST");
+    await expect(port.call("echo", {}, signal)).rejects.toThrow("MCP_RESTART_LIMIT");
   }, 30_000);
 });

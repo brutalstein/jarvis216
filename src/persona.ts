@@ -31,6 +31,7 @@ export function conversationPrompt(input: {
   history: { utterance: string; say: string }[];
   now: Date;
   enabledIntegrations?: string[];
+  browserUrls?: readonly string[];
 }): string {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const time = input.now.toLocaleString("tr-TR", { timeZone: zone });
@@ -46,5 +47,10 @@ export function conversationPrompt(input: {
     FORMAT,
     intentInstructions(input.enabledIntegrations),
     `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
+    ...(input.browserUrls?.length
+      ? [
+          `Exact browser.read URLs allowed: ${input.browserUrls.join(", ")}. Supply expectedText as a short phrase likely present on that exact page.`,
+        ]
+      : []),
   ].join("\n\n");
 }

@@ -3,14 +3,15 @@ import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { appNames } from "./apps.js";
 import { ground, normalize, type UiElement } from "./ground.js";
-import { blockedShortcut, containedPath, escapeTarget, GuardError } from "./guards.js";
+import { blockedApp, blockedShortcut, containedPath, escapeTarget, GuardError } from "./guards.js";
 import type { NewsItem } from "./news.js";
 import { parseSnapshot, redactSecrets, type Snapshot, snapshotText } from "./snapshot.js";
 import type { CompiledStep, ToolPort, ToolResult } from "./types.js";
 
 export type Panel =
   | { type: "windows"; items: string[] }
-  | { type: "news"; title: string; items: NewsItem[] };
+  | { type: "news"; title: string; items: NewsItem[] }
+  | { type: "text"; title: string; body: string };
 export type Evidence = {
   ok: boolean;
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";
@@ -168,7 +169,7 @@ const text = (args: Args, key: string) => (typeof args[key] === "string" ? args[
 const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence>> = {
   async "app.open"(args, ctx) {
     const names = appNames(text(args, "name"));
-    if (names.some((name) => escapeTarget(name)))
+    if (names.some((name) => blockedApp(name)))
       return refused(`${names[0]} opens a shell or a system tool`);
     for (const name of names) {
       const result = await ctx.tools.call("App", { mode: "launch", name }, ctx.signal);
@@ -302,11 +303,10 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
   async "clipboard.read"(_args, ctx) {
     const result = await ctx.tools.call("Clipboard", { mode: "get" }, ctx.signal);
     if (!result.ok) return failed(result.text);
-    return seen(
-      result.text.startsWith(clipboardPrefix)
-        ? result.text.slice(clipboardPrefix.length)
-        : "the clipboard has no text",
-    );
+    const content = result.text.startsWith(clipboardPrefix)
+      ? result.text.slice(clipboardPrefix.length)
+      : "the clipboard has no text";
+    return seen(content, { type: "text", title: "Clipboard", body: content.slice(0, 4000) });
   },
 
   async "clipboard.write"(args, ctx) {
@@ -324,7 +324,9 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
     const folder = await inside(ctx, text(args, "folder"));
     if (!folder) return refused(outsideRoots);
     const result = await ctx.tools.call("FileSystem", { mode: "list", path: folder }, ctx.signal);
-    return bad(result) ? failed(result.text) : seen(result.text);
+    return bad(result)
+      ? failed(result.text)
+      : seen(result.text, { type: "text", title: "Files", body: result.text.slice(0, 4000) });
   },
 
   "file.move": (args, ctx) =>

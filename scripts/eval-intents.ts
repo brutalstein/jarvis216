@@ -6,7 +6,7 @@ import { parseArgs } from "node:util";
 import { catalog, readIntent } from "@jarvis/action-engine";
 import { EvalCommandSchema, scoreIntent } from "../packages/action-engine/src/eval-score.js";
 import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { CoreError, type Task, TaskSpecSchema } from "../src/contracts.js";
 import { conversationProviders, parseReply } from "../src/conversation.js";
 import { conversationPrompt } from "../src/persona.js";
 import { ProviderFailure } from "../src/routing.js";
@@ -70,8 +70,12 @@ async function evaluate(id: string): Promise<string> {
       const parsed = readIntent(reply.intent);
       ok = "decision" in parsed && scoreIntent(row, parsed.decision);
     } catch (error) {
-      if (!(error instanceof ProviderFailure)) throw error;
-      failures.set(error.kind, (failures.get(error.kind) ?? 0) + 1);
+      // Three outage-class failures open the provider's circuit for 60 s; wait it out.
+      const open = error instanceof CoreError && error.code === "NO_COMPATIBLE_PROVIDER";
+      if (!(error instanceof ProviderFailure) && !open) throw error;
+      const kind = open ? "circuit-open" : (error as ProviderFailure).kind;
+      failures.set(kind, (failures.get(kind) ?? 0) + 1);
+      if (open) await new Promise((resolve) => setTimeout(resolve, 60_000));
     }
     if (ok) correct++;
     const [hit, total] = byKind.get(row.kind) ?? [0, 0];

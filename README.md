@@ -27,6 +27,8 @@ open gates. No frontend is included by design.
 | `src/database.ts` | PostgreSQL pool, transactions, append-only migrations |
 | `src/integrations/` | Claude, Gemini, Codex, OpenClaw, Browser Use and n8n adapters |
 | `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
+| `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, eval set |
+| `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan |
 | `src/security.ts`, `src/telemetry.ts` | Secret references/redaction, path containment, tracing |
 | `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only) |
 | `schemas/` | Published JSON Schemas generated from the runtime contracts |
@@ -117,6 +119,9 @@ endpoints require the separate `N8N_INGRESS_TOKEN` and cannot reach operator rou
 | `POST /v1/tasks/:id/cancel`, `/resume`, `/dependencies` | Cancel, resume a BLOCKED task, add a DAG edge |
 | `POST /v1/actions/:id/approve`, `/reject`, `/reconcile` | Exact approval, denial, operator reconciliation |
 | `POST /v1/hooks/n8n`, `GET /v1/hooks/n8n/tasks/:id` | Scoped n8n ingress and result read |
+| `GET /v1/plans/:id` | Model-proposed plan, its steps and state |
+| `POST /v1/plans/:id/approve {hash}`, `/reject`, `/cancel`, `/choose` | Hash-bound plan approval, rejection, cancellation, candidate choice |
+| `GET /v1/stream` | Server-sent plan states, panels and announcements |
 
 Task, result and event envelope contracts are published in `schemas/`.
 
@@ -136,6 +141,8 @@ Task, result and event envelope contracts are published in `schemas/`.
 | `ENABLE_BROWSER`, `BROWSER_WORKER_URL`, `BROWSER_WORKER_TOKEN`, `BROWSER_EGRESS_VERIFIED`, `BROWSER_ALLOWED_URLS` | Browser Use worker |
 | `ENABLE_N8N`, `N8N_WORKFLOWS_JSON` (+ referenced token variables), `N8N_ENCRYPTION_KEY` | Core-invoked n8n workflows |
 | `ENABLE_CODEX`, `OPENAI_API_KEY`, `CODEX_MODEL`, `CODEX_ISOLATION_VERIFIED`, `CODEX_WORKSPACE`, `CODEX_ISOLATED_HOME` | Codex SDK adapter (isolated host only) |
+| `ENABLE_DESKTOP`, `WINDOWS_MCP_COMMAND`, `WINDOWS_MCP_ARGS`, `JARVIS_FILE_ROOTS` | Windows-MCP desktop actions and the folders file actions may touch |
+| `ENABLE_NEWS`, `NEWS_FEEDS` | RSS news briefs and panels |
 
 ## Documentation
 
@@ -143,4 +150,5 @@ Task, result and event envelope contracts are published in `schemas/`.
 - [Integrations](docs/INTEGRATIONS.md) and [research and compatibility](docs/RESEARCH_AND_COMPATIBILITY.md)
 - [Threat model](docs/THREAT_MODEL.md) and [recovery runbook](docs/RECOVERY_RUNBOOK.md)
 - [Engineering report](docs/ENGINEERING_REPORT.md): evidence, limitations, next milestones
+- [Action engine evidence](docs/ACTION_ENGINE_EVIDENCE.md): intent eval results and live checks
 - [Master directive](docs/MASTER_DIRECTIVE.md): the requirements this project implements

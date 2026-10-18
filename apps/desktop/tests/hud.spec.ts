@@ -88,6 +88,38 @@ test("approval keyboard actions bind the exact hash and ignore settings inputs",
     await run.close();
   }
 });
+test("HIGH integration exposes its separate action approval", async () => {
+  stream = undefined;
+  const run = await launch();
+  calls.length = 0;
+  try {
+    await expect.poll(() => Boolean(stream)).toBe(true);
+    (stream as ServerResponse | undefined)?.write(
+      `event: plan\ndata: ${JSON.stringify({
+        ...plan,
+        status: "RUNNING",
+        kind: "integration",
+        needsApproval: false,
+        steps: [
+          {
+            action: "agent.delegate",
+            args: { instruction: "work" },
+            risk: "HIGH",
+            status: "WAITING_FOR_APPROVAL",
+            approval: { id: "11111111-1111-4111-8111-111111111111", target: "openclaw" },
+          },
+        ],
+      })}\n\n`,
+    );
+    await run.page.getByRole("button", { name: "openclaw işlemini onayla" }).click();
+    await expect
+      .poll(() => calls.find((call) => call.url.includes("/v1/actions/")))
+      .toMatchObject({ url: "/v1/actions/11111111-1111-4111-8111-111111111111/approve" });
+    expect(run.page.locator("[data-risk]")).toHaveText("Ayrı onay gerekir");
+  } finally {
+    await run.close();
+  }
+});
 
 test("news, candidates and windows use text-only panels with a running control indicator", async () => {
   const run = await launch();

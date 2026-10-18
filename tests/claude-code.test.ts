@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { type Task, TaskSpecSchema } from "../src/contracts.js";
 import { ClaudeCodeExecutor, claudeCodeEnvKeys } from "../src/integrations/claude-code.js";
 import { ProviderFailure } from "../src/routing.js";
@@ -196,11 +196,12 @@ describe("Claude Code subscription executor", () => {
   it("abort kills the child", async () => {
     const controller = new AbortController();
     const { result, recorded } = run("hang", undefined, fixture, controller.signal);
-    setTimeout(() => controller.abort(), 200);
+    await vi.waitFor(() => expect(recorded().pid).toBeGreaterThan(0), { timeout: 5000 });
+    const pid = recorded().pid;
     const started = Date.now();
+    controller.abort();
     await expect(result).rejects.toBeTruthy();
     expect(Date.now() - started).toBeLessThan(2000);
-    const pid = recorded().pid;
     expect(() => process.kill(pid, 0)).toThrow();
   });
 

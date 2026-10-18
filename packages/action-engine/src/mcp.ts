@@ -17,6 +17,7 @@ export class McpToolPort implements ToolPort {
   #options: McpOptions;
   #client: Client | null = null;
   #starting: Promise<Client> | null = null;
+  #crashes = 0;
 
   constructor(options: McpOptions) {
     this.#options = options;
@@ -37,7 +38,18 @@ export class McpToolPort implements ToolPort {
     signal: AbortSignal,
   ): Promise<ToolResult> {
     if (!this.#options.allow.includes(name)) throw new GuardError("TOOL_NOT_ALLOWED");
-    const client = await this.#ready();
+    signal.throwIfAborted();
+    let onAbort = () => {};
+    const aborted = new Promise<never>((_, reject) => {
+      onAbort = () => reject(signal.reason);
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+    let client: Client;
+    try {
+      client = await Promise.race([this.#ready(), aborted]);
+    } finally {
+      signal.removeEventListener("abort", onAbort);
+    }
     try {
       const result = await client.callTool({ name, arguments: args }, { signal });
       const text = (result.content ?? [])
@@ -59,6 +71,7 @@ export class McpToolPort implements ToolPort {
 
   #ready(): Promise<Client> {
     if (this.#client) return Promise.resolve(this.#client);
+    if (this.#crashes > 1) return Promise.reject(new Error("MCP_RESTART_LIMIT"));
     this.#starting ??= this.#spawn().finally(() => {
       this.#starting = null;
     });
@@ -79,7 +92,10 @@ export class McpToolPort implements ToolPort {
     });
     const client = new Client({ name: "jarvis-action-engine", version: "0.1.0" });
     client.onclose = () => {
-      if (this.#client === client) this.#client = null;
+      if (this.#client === client) {
+        this.#client = null;
+        this.#crashes++;
+      }
     };
     await client.connect(transport);
     this.#client = client;

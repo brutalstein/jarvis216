@@ -13,8 +13,14 @@ import {
   readIntent,
   replanPrompt,
 } from "@jarvis/action-engine";
-import type { IntegrationHub } from "@jarvis/integration-hub";
-import { type ExecutionResult, fingerprint, invariant, type TaskState } from "./contracts.js";
+import { IntegrationError, type IntegrationHub } from "@jarvis/integration-hub";
+import {
+  CoreError,
+  type ExecutionResult,
+  fingerprint,
+  invariant,
+  type TaskState,
+} from "./contracts.js";
 import type { Sql } from "./database.js";
 import { planApprovalMs } from "./gateway.js";
 import type { TaskService } from "./tasks.js";
@@ -43,6 +49,7 @@ export type PlanView = {
     risk: CompiledStep["risk"];
     status: TaskState;
     evidence?: Evidence;
+    approval?: { id: string; target: string };
   }[];
   panels: PlanPanel[];
   say?: string;
@@ -66,11 +73,17 @@ type PlanRow = {
   replanned: boolean;
   outcome: Outcome | null;
 };
-type StepTask = { id: string; status: TaskState; result: ExecutionResult | null };
+type StepTask = {
+  id: string;
+  status: TaskState;
+  result: ExecutionResult | null;
+  approval: { id: string; target: string } | null;
+};
 
 // A spoken turn may narrate a quick outcome itself; announcements wait this long for it.
 export const replyWaitMs = 5000;
-const stepWindowMs = 240_000;
+const stepWindowMs = 15_000;
+const planWindowMs = 120_000;
 const active = "status IN ('AWAITING_APPROVAL','RUNNING')";
 const ended = new Set<PlanStatus>(["COMPLETED", "FAILED", "CANCELLED", "RECOVERY_REQUIRED"]);
 
@@ -117,6 +130,9 @@ export class PlanService extends EventEmitter {
 
   integrationCapabilities(): string[] {
     return this.options.integrations?.available() ?? [];
+  }
+  browserUrls(): readonly string[] {
+    return this.options.integrations?.browserUrls ?? [];
   }
 
   propose(input: {
@@ -248,9 +264,14 @@ export class PlanService extends EventEmitter {
 
   #create(
     input: { turnId: string; goal: string; lang: Lang; steps: CompiledStep[] },
-    flags: { approved: boolean; replanned: boolean },
+    flags: { approved: boolean; replanned: boolean; originCreatedAt?: number },
   ): Promise<PlanView> {
-    const next = this.#creating.then(() => this.#createNow(input, flags));
+    const next = this.#creating
+      .then(() => this.#createNow(input, flags))
+      .catch((error: unknown) => {
+        if (error instanceof IntegrationError) throw new CoreError(error.code, 400);
+        throw error;
+      });
     this.#creating = next.then(
       () => {},
       () => {},
@@ -260,14 +281,26 @@ export class PlanService extends EventEmitter {
 
   async #createNow(
     input: { turnId: string; goal: string; lang: Lang; steps: CompiledStep[] },
-    flags: { approved: boolean; replanned: boolean },
+    flags: { approved: boolean; replanned: boolean; originCreatedAt?: number },
   ): Promise<PlanView> {
     const kind = input.steps.some((step) => step.kind === "desktop")
       ? "desktop"
       : input.steps.some((step) => step.kind === "integration")
         ? "integration"
         : "info";
+    for (const step of input.steps) {
+      if (step.kind !== "integration") continue;
+      invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
+      this.options.integrations.compile(step.action, step.args);
+    }
     // Admission is serialized within this Core; multiple Core hosts need a shared plan lock.
+    if (kind === "desktop" && flags.originCreatedAt !== undefined) {
+      const newer = await this.options.tasks.db.query(
+        `SELECT id FROM plans WHERE kind='desktop' AND ${active} AND created_at >= $1 LIMIT 1`,
+        [flags.originCreatedAt],
+      );
+      if (newer.rows.length) throw new CoreError("STALE_REPLAN");
+    }
     if (kind === "desktop")
       for (const plan of (
         await this.options.tasks.db.query<PlanRow>(
@@ -275,11 +308,6 @@ export class PlanService extends EventEmitter {
         )
       ).rows)
         await this.#cancel(plan, true);
-    for (const step of input.steps) {
-      if (step.kind !== "integration") continue;
-      invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
-      this.options.integrations.compile(step.action, step.args);
-    }
     const needsApproval = !flags.approved && input.steps.some((step) => step.risk !== "LOW");
     const id = randomUUID();
     const now = Date.now();
@@ -312,6 +340,8 @@ export class PlanService extends EventEmitter {
   async #admit(tx: Sql, id: string): Promise<void> {
     const plan = await this.#row(id, tx);
     const ids: string[] = [];
+    const started = Date.now();
+    let elapsed = 0;
     for (const [index, step] of plan.steps.entries()) {
       const desktop = step.kind === "desktop";
       const external =
@@ -319,6 +349,8 @@ export class PlanService extends EventEmitter {
           ? this.options.integrations?.compile(step.action, step.args)
           : undefined;
       invariant(step.kind !== "integration" || external, "INTEGRATION_DISABLED", 400);
+      const duration = external?.budget.maxDurationMs ?? (desktop ? stepWindowMs : planWindowMs);
+      elapsed += duration;
       const task = await this.options.tasks.createIn(
         tx,
         {
@@ -328,8 +360,8 @@ export class PlanService extends EventEmitter {
           providers: external?.providers ?? [desktop ? "windows-mcp" : "news"],
           risk: external?.risk ?? step.risk,
           privacy: external?.privacy ?? "personal",
-          budget: external?.budget ?? { maxCalls: 1, maxDurationMs: stepWindowMs },
-          deadline: new Date(Date.now() + stepWindowMs).toISOString(),
+          budget: external?.budget ?? { maxCalls: 1, maxDurationMs: duration },
+          deadline: new Date(started + Math.min(elapsed, planWindowMs)).toISOString(),
           dependencies: ids.slice(-1),
           verification: external?.verification ?? { kind: "contains", value: '"ok":true' },
           planId: id,
@@ -351,7 +383,7 @@ export class PlanService extends EventEmitter {
   async #stepTasks(plan: PlanRow): Promise<(StepTask | undefined)[]> {
     const rows = (
       await this.options.tasks.db.query<StepTask>(
-        "SELECT id,status,result FROM tasks WHERE id = ANY($1::uuid[])",
+        "SELECT t.id,t.status,t.result,(SELECT jsonb_build_object('id',a.id,'target',a.target) FROM actions a WHERE a.task_id=t.id AND a.status='AWAITING_APPROVAL' LIMIT 1) AS approval FROM tasks t WHERE t.id = ANY($1::uuid[])",
         [plan.task_ids],
       )
     ).rows;
@@ -371,11 +403,24 @@ export class PlanService extends EventEmitter {
         risk: step.risk,
         status,
         ...(evidence && { evidence }),
+        ...(task?.status === "WAITING_FOR_APPROVAL" && task.approval
+          ? { approval: task.approval }
+          : {}),
       };
     });
     const panels: PlanPanel[] = steps.flatMap((step) =>
       step.evidence?.panel ? [step.evidence.panel] : [],
     );
+    if (plan.kind === "integration")
+      tasks.forEach((task, index) => {
+        const body = task?.result?.text?.trim();
+        if (body)
+          panels.push({
+            type: "text",
+            title: steps[index]?.action ?? "Result",
+            body: body.slice(0, 4000),
+          });
+      });
     const candidates = plan.outcome?.candidates;
     if (candidates) panels.push({ type: "candidates", planId: plan.id, items: candidates.items });
     return {
@@ -553,22 +598,7 @@ export class PlanService extends EventEmitter {
       });
       return;
     }
-    // Single external integration: speak a capped slice of the verified provider text.
     const [only] = steps;
-    if (
-      steps.length === 1 &&
-      only?.kind === "integration" &&
-      ["agent.delegate", "automation.invoke", "browser.read", "browser.read_many"].includes(
-        only.action,
-      )
-    ) {
-      const text = tasks[0]?.result?.text?.trim() ?? "";
-      const clipped = text.length > 400 ? `${text.slice(0, 400)}…` : text;
-      const say =
-        clipped || narrate({ type: "step-done", action: only.action, args: only.args }, lang);
-      await this.#settle(plan, "COMPLETED", { say });
-      return;
-    }
     const say =
       steps.length === 1 && only
         ? narrate({ type: "step-done", action: only.action, args: only.args }, lang)
@@ -613,25 +643,31 @@ export class PlanService extends EventEmitter {
         step: { action: step.action, args: step.args },
         observation: evidence.observation,
         ...(screen ? { screen } : {}),
+        enabledIntegrations: this.integrationCapabilities(),
+        browserUrls: this.browserUrls(),
       }),
       "private",
     );
     const read = text === null ? undefined : readIntent(jsonObject(text)?.intent);
     if (read && "decision" in read && read.decision.kind === "plan") {
-      const next = await this.#create(
-        {
-          turnId: plan.turn_id,
-          goal: read.decision.goal,
-          lang: plan.lang,
-          steps: read.decision.steps,
-        },
-        { approved: false, replanned: true },
-      );
-      if (next.needsApproval)
-        this.emit("announce", {
-          text: narrate({ type: "proposed", goal: next.goal, needsApproval: true }, plan.lang),
-          lang: plan.lang,
-        });
+      try {
+        const next = await this.#create(
+          {
+            turnId: plan.turn_id,
+            goal: read.decision.goal,
+            lang: plan.lang,
+            steps: read.decision.steps,
+          },
+          { approved: false, replanned: true, originCreatedAt: Number(plan.created_at) },
+        );
+        if (next.needsApproval)
+          this.emit("announce", {
+            text: narrate({ type: "proposed", goal: next.goal, needsApproval: true }, plan.lang),
+            lang: plan.lang,
+          });
+      } catch {
+        this.emit("announce", { text: failedSay, lang: plan.lang });
+      }
     } else this.emit("announce", { text: failedSay, lang: plan.lang });
   }
 

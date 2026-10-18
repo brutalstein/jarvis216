@@ -125,6 +125,37 @@ n8n Compose profile together. The opt-in Compose browser profile remains availab
 Configure Core with its worker URL and enable Browser. The container and Chromium sandbox
 combination is not live-tested here; never “fix” it by disabling Chromium security.
 
+## Windows-MCP (desktop actions)
+
+Spoken desktop plans run through [Windows-MCP](https://github.com/CursorTouch/Windows-MCP)
+0.8.8 as a stdio child of Core; Core is its only MCP client. `uvx` provisions its Python 3.14.
+
+```dotenv
+ENABLE_DESKTOP=true
+WINDOWS_MCP_COMMAND=uvx
+WINDOWS_MCP_ARGS=["windows-mcp@0.8.8","serve"]
+JARVIS_FILE_ROOTS=
+```
+
+Core passes `ANONYMIZED_TELEMETRY=false` and allowlists only App, Click, Type, Scroll, Shortcut,
+Snapshot, Screenshot, FileSystem, Clipboard, Wait, WaitFor and ControlStatus. PowerShell and
+Registry are never enabled. File actions stay inside Desktop (OneDrive when present), Documents
+and Downloads unless `JARVIS_FILE_ROOTS` lists other folders under the user profile. The child
+inherits only system variables, never Core's secrets. If it crashes Core restarts it once; the
+running step is then uncertain and is not replayed.
+
+## News (RSS)
+
+```dotenv
+ENABLE_NEWS=true
+NEWS_FEEDS=["https://news.google.com/rss?hl=tr&gl=TR&ceid=TR:tr"]
+```
+
+Core fetches the listed HTTPS feeds with a timeout and byte limit, skips a failing feed and
+builds panels from the fetched headlines only. Thumbnails come only from the feed's own image
+URL, private addresses are refused, and only JPEG/PNG/WebP up to 200 KB are sent to the
+renderer as data URIs. The spoken brief is a `personal` text task over those headlines.
+
 ## Codex SDK
 
 Provision a dedicated container/VM with no personal files, host home, `.env`, Docker socket

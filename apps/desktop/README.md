@@ -1,8 +1,10 @@
-# JARVIS desktop (M1)
+# JARVIS desktop (M1, M3 plan cards)
 
 Electron shell for the approved talking-JARVIS milestone. Turkish and English microphone input
 stays local until an addressed transcript is sent to Core. Core owns model routing and records.
-Computer actions and long-term memory belong to later milestones.
+Since M3 the desktop also shows plan cards, candidate choices, progress and news panels streamed
+from Core (`GET /v1/stream`); Core executes the actions. Long-term memory belongs to a later
+milestone.
 
 ## Run on this Windows checkout
 
@@ -42,6 +44,22 @@ service for calibration with the operator's microphone.
 - Cards expire after 20 seconds; pin a card to keep it. Up to three show beside the presence.
   Captions stay 7–14 seconds depending on length. Settings exports conversation records as JSON
   and confirms before deleting them.
+
+- Spoken commands become plans when Core enables the action engine (`ENABLE_DESKTOP`,
+  `ENABLE_NEWS`). LOW-only plans run at once. A plan with a MEDIUM step shows a card with its
+  steps and risk badges: **Enter** or a tap approves it within two minutes, **Esc** rejects it.
+  Saying "dur", "iptal" or "stop" cancels a running plan; voice never approves one.
+- When several on-screen elements match, a numbered candidate panel appears; tap one or say its
+  number. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the
+  article in the default browser.
+
+- Spoken commands become plans when Core enables the action engine (`ENABLE_DESKTOP`,
+  `ENABLE_NEWS`). LOW-only plans run at once. A plan with a MEDIUM step shows a card with its
+  steps and risk badges: **Enter** or a tap approves it within two minutes, **Esc** rejects it.
+  Saying "dur", "iptal" or "stop" cancels a running plan; voice never approves one.
+- When several on-screen elements match, a numbered candidate panel appears; tap one to choose
+  it. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the article
+  in the default browser.
 
 The visual system is recorded in [DESIGN.md](DESIGN.md).
 

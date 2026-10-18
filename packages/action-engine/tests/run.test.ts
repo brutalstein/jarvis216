@@ -104,7 +104,7 @@ describe("app.open", () => {
     expect(names()).toEqual(["App"]);
   });
 
-  it.each(["PowerShell", "Terminal", "Komut İstemi", "Kayıt Defteri Düzenleyicisi"])(
+  it.each(["PowerShell", "poweshell", "Terminal", "Komut İstemi", "Kayıt Defteri Düzenleyicisi"])(
     "refuses to open %s",
     async (name) => {
       const { port, calls } = fake(() => notepad);
@@ -298,6 +298,21 @@ describe("media, windows, screen and clipboard", () => {
     });
     const result = await runStep(step("clipboard.write", { text: "merhaba" }), ctx(port));
     expect(result).toMatchObject({ ok: true, evidence: "postcondition" });
+  });
+  it("shows clipboard and directory contents in text panels", async () => {
+    const { port } = fake(({ name }) =>
+      name === "Clipboard" ? "Clipboard content:\nprivate note" : "report.txt",
+    );
+    expect((await runStep(step("clipboard.read"), ctx(port))).panel).toEqual({
+      type: "text",
+      title: "Clipboard",
+      body: "private note",
+    });
+    expect((await runStep(step("file.list", { folder: root }), ctx(port))).panel).toEqual({
+      type: "text",
+      title: "Files",
+      body: "report.txt",
+    });
   });
 });
 

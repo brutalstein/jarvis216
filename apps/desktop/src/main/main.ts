@@ -238,6 +238,31 @@ app.whenReady().then(async () => {
       if (action === "choose") return response.json();
     });
   }
+  ipcMain.handle("plans:approve-action", async (event, id: unknown) => {
+    if (
+      !allowed(event.sender) ||
+      typeof id !== "string" ||
+      ![...plans.values()].some(
+        (plan) =>
+          plan.status === "RUNNING" &&
+          plan.steps.some(
+            (step) =>
+              step.risk === "HIGH" &&
+              step.status === "WAITING_FOR_APPROVAL" &&
+              step.approval?.id === id,
+          ),
+      )
+    )
+      throw new Error("FORBIDDEN");
+    if (!env) throw new Error("CORE_UNAVAILABLE");
+    const response = await fetch(`${env.coreUrl}/v1/actions/${id}/approve`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.coreToken}`, "content-type": "application/json" },
+      body: JSON.stringify({ expiresAt: new Date(Date.now() + 120_000).toISOString() }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error("ACTION_APPROVAL_FAILED");
+  });
   ipcMain.handle("plans:open", async (event, url: unknown) => {
     if (!allowed(event.sender) || typeof url !== "string" || !url.startsWith("https:"))
       throw new Error("FORBIDDEN");

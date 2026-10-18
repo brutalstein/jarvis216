@@ -44,6 +44,19 @@ Voice desktop M1 additions (see [ADR 0009](ADR/0009-voice-desktop-operator-exper
 | Unwanted personal data retention | No audio recordings; local deletable voice print; addressed transcript export/delete and 30-day purge in Core | Everyday transcripts reach configured external providers under `personal` consent; provider retention is outside local deletion |
 | Silent self-modification or unconfirmed actions | M1 exposes neither computer actions nor a modification mechanism; later milestones must use Core and operator review | M2–M4 need their own implementation and verification gates |
 
+Intent and action engine M3 additions (see [ADR 0010](ADR/0010-model-proposed-typed-plans.md)):
+
+| Threat | Controls | Residual |
+| --- | --- | --- |
+| Prompt injection adding or widening actions | Catalog-only actions, strict Zod arguments, risk from the catalog, plan approval bound to the step hash, one repair call then "not understood" | An injected utterance can still propose a valid catalog plan; the approval card is the operator's check |
+| Typing into shells, the Run dialog or password fields | Escape guard on the target window (terminals, PowerShell, cmd, Run, Regedit, UAC, Task Manager, password fields) and on shortcuts such as Win+R, Win+X, Ctrl+Shift+Esc; PowerShell and Registry tools never enabled | Guard relies on Windows-MCP accessible names and window titles; an application that hides them is not recognised |
+| File damage outside the operator's folders | Real-path containment in Desktop, Documents and Downloads (or `JARVIS_FILE_ROOTS`), junctions and symlinks resolved; no delete action | Move and rename inside the roots are not undoable by JARVIS |
+| Screen content reaching training providers | Screen text only to trusted-private providers (Claude Code) for `screen.describe` and the single replan; screen-description replies are excluded from later model history; plan and task records are scrubbed by conversation deletion and 30-day purge | Snapshot text remains in local plan records until deletion or retention purge |
+| False action claims | Model `say` discarded for plans; narration from templates and Core records | Weak evidence actions (`media.key`, `ui.click`) report tool success, not an observed state |
+| Remote content in the renderer | Core fetches RSS and thumbnails (HTTPS, private addresses refused, JPEG/PNG/WebP magic bytes, ≤ 200 KB) and sends data URIs; CSP adds only `img-src data:` | DNS rebinding between the address check and the fetch is not pinned |
+| Untrusted page, workflow or agent text | OpenClaw and n8n actions need separate exact approval; Browser Use reads exact allowlisted URLs only; provider text is displayed as text, not spoken in JARVIS's voice | Displayed text can still mislead the operator; it carries no action authority |
+| Voice spoofing | Voice can cancel a plan, never approve one | Speaker gate is not authentication (see M1) |
+
 Production gates: Docker/WSL isolation, non-bypassable OpenClaw tool policy, browser egress
 controls, image scans, backup restoration, credential rotation, provider entitlement checks,
 least-privilege DB roles and signed release/upgrade procedure. No production-readiness claim.

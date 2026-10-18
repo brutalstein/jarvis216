@@ -13,6 +13,7 @@ const bridge: Bridge = {
   },
   plans: {
     approve: (id, hash) => ipcRenderer.invoke("plans:approve", id, hash),
+    approveAction: (id) => ipcRenderer.invoke("plans:approve-action", id),
     reject: (id) => ipcRenderer.invoke("plans:reject", id),
     cancel: (id) => ipcRenderer.invoke("plans:cancel", id),
     choose: (id, index) => ipcRenderer.invoke("plans:choose", id, index),

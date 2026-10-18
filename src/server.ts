@@ -283,9 +283,10 @@ export function buildServer(
         raw.end();
       };
       const send = (frame: string) => {
-        // A stalled renderer reconnects; never retain an unbounded stream queue.
+        // A stalled renderer reconnects; never retain an unbounded stream queue. The cap bounds
+        // the backlog only: one news view with thumbnails may itself exceed 2 MB.
         if (closed) return;
-        if (raw.writableLength + Buffer.byteLength(frame) > 1_000_000) close();
+        if (raw.writableLength > 4_000_000) close();
         else raw.write(frame);
       };
       const onPlan = (view: PlanView) => send(`event: plan\ndata: ${JSON.stringify(view)}\n\n`);

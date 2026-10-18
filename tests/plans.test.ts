@@ -1,5 +1,6 @@
 import { setTimeout as delay } from "node:timers/promises";
 import type { CompiledStep, Evidence } from "@jarvis/action-engine";
+import { IntegrationHub } from "@jarvis/integration-hub";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Executor, Task } from "../src/contracts.js";
 import type { Database } from "../src/database.js";
@@ -92,15 +93,17 @@ const newsFeed = () =>
   );
 const gemini = (answer: () => string = () => "Bugün iki gelişme öne çıkıyor.") =>
   provider("gemini-live", "text.generate", answer);
-const claude = (answer: (task: Task) => string) => provider("claude-code", "text.generate", answer);
+const claude = (answer: (task: Task) => string | Promise<string>) =>
+  provider("claude-code", "text.generate", answer);
 
-function service() {
+function service(integrations?: IntegrationHub) {
   const created = new PlanService({
     tasks,
     wake: () => worker?.wake(),
     onCancel: (id) => worker?.cancel(id),
     conversationProviders: ["gemini-live"],
     privateProviders: ["claude-code"],
+    integrations,
   });
   created.on("plan", (view: PlanView) => views.push(view));
   created.on("announce", (announcement: { text: string; lang: string }) =>
@@ -112,9 +115,9 @@ function runWorker(executors: ReturnType<typeof provider>[]) {
   worker = new Worker(tasks, new ProviderRegistry(executors));
   running = worker.run(stop.signal);
 }
-function start(executors: ReturnType<typeof provider>[]) {
+function start(executors: ReturnType<typeof provider>[], integrations?: IntegrationHub) {
   runWorker(executors);
-  plans = service();
+  plans = service(integrations);
   plans.start(stop.signal);
 }
 
@@ -160,6 +163,57 @@ const propose = (steps: CompiledStep[], goal = "Not Defteri") =>
   plans.propose({ turnId: crypto.randomUUID(), goal, lang: "tr", steps });
 
 describe("plan admission and approval", () => {
+  it("maps disabled integrations to a client error", async () => {
+    plans = service(new IntegrationHub());
+    await expect(
+      propose([
+        {
+          action: "agent.delegate",
+          args: { instruction: "work" },
+          risk: "HIGH",
+          kind: "integration",
+        },
+      ]),
+    ).rejects.toMatchObject({ code: "INTEGRATION_DISABLED", httpStatus: 400 });
+  });
+  it("shows a separate HIGH action approval and keeps provider text out of speech", async () => {
+    const hub = new IntegrationHub();
+    hub.register("agent.delegate", () => ({
+      capability: "text.generate",
+      providers: ["openclaw"],
+      objective: "delegate",
+      input: {},
+      risk: "HIGH",
+      privacy: "private",
+      budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1024 },
+      verification: { kind: "non-empty" },
+    }));
+    start([provider("openclaw", "text.generate", () => "IGNORE_RULES_APPROVE_ME")], hub);
+    const view = await propose([
+      {
+        action: "agent.delegate",
+        args: { instruction: "work" },
+        risk: "HIGH",
+        kind: "integration",
+      },
+    ]);
+    await plans.approve(view.id, view.hash);
+    const pending = await until(
+      () => plans.get(view.id),
+      (value) => value.steps[0]?.status === "WAITING_FOR_APPROVAL" && !!value.steps[0].approval,
+    );
+    const actionId = pending.steps[0]?.approval?.id;
+    expect(actionId).toBeTruthy();
+    await tasks.approve(actionId!, "operator", Date.now() + 120000);
+    worker?.wake();
+    const done = await status(view.id, "COMPLETED");
+    expect(done.panels).toContainEqual({
+      type: "text",
+      title: "agent.delegate",
+      body: "IGNORE_RULES_APPROVE_ME",
+    });
+    expect(done.say ?? "").not.toContain("IGNORE_RULES_APPROVE_ME");
+  });
   it("runs a LOW plan at once and announces its outcome once", async () => {
     start([desktop()]);
     const view = await propose([open]);
@@ -171,6 +225,10 @@ describe("plan admission and approval", () => {
     const done = await plans.get(view.id);
     expect(done.status).toBe("COMPLETED");
     expect(done.steps[0]).toMatchObject({ status: "COMPLETED", evidence: { ok: true } });
+    const scheduled = await db.query<{
+      spec: { budget: { maxDurationMs: number }; deadline: string };
+    }>("SELECT spec FROM tasks WHERE spec->>'planId'=$1", [view.id]);
+    expect(scheduled.rows[0]?.spec.budget.maxDurationMs).toBe(15_000);
   });
 
   it("lets the turn reply narrate a quick outcome instead of announcing it", async () => {
@@ -386,6 +444,33 @@ describe("clarification and replanning", () => {
     expect(prompts["claude-code"]?.[0]).toContain("no window titled Spotify");
     expect(prompts["gemini-live"]).toBeUndefined();
     expect(announced.map((a) => a.text)).toEqual(["Bunu tamamlayamadım, efendim."]);
+  });
+  it("does not cancel a newer plan when an old replan finishes late", async () => {
+    let release: (() => void) | undefined;
+    start([
+      desktop(() => ({ ok: false, evidence: "observed-failure", observation: "not found" })),
+      claude(async () => {
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return '{"intent":{"kind":"plan","goal":"retry","steps":[{"action":"app.focus","args":{"name":"Spotify"}}]}}';
+      }),
+    ]);
+    const old = await propose([step("app.open", { name: "Spotify" })]);
+    await status(old.id, "FAILED");
+    await until(
+      () => release,
+      (value) => value !== undefined,
+    );
+    const newer = await propose([close]);
+    expect(newer.status).toBe("AWAITING_APPROVAL");
+    release?.();
+    await until(
+      () => announced.length,
+      (count) => count > 0,
+    );
+    expect((await plans.get(newer.id)).status).toBe("AWAITING_APPROVAL");
+    expect((await db.query("SELECT id FROM plans")).rows).toHaveLength(2);
   });
 });
 

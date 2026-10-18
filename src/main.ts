@@ -22,7 +22,6 @@ async function main() {
   const db = postgres(config.DATABASE_URL);
   try {
     await migrate(db);
-    await tools?.start();
     const tasks = new TaskService(db, {
       concurrency: config.WORKER_CONCURRENCY,
       limits: {

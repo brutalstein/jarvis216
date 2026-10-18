@@ -18,6 +18,10 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | Conversation service | Core-owned persona, bounded provider fallbacks, addressed turns, transcript export/deletion and retention |
 | Local voice service | Loopback WebRTC, semantic end-of-turn, local speaker gate/STT/TTS; no action or approval authority |
 | Electron desktop | Sandboxed presence, captions, cards, tray/overlay and settings; Core token stays in main |
+| Action engine (`packages/action-engine`) | Intent parsing, typed action catalog, compiler, guards, grounding, Windows-MCP bindings, news fetch, narration; imports nothing from Core |
+| Integration hub (`packages/integration-hub`) | Typed recipes that turn HIGH integration actions into Core tasks for Browser Use, n8n and OpenClaw |
+| Plan service | Model-proposed plans: compile, hash, approval card, one task per step, finishers, replan, voice cancel |
+| Windows-MCP | Desktop tools over MCP stdio, child of Core, allowlisted tools only, telemetry off |
 
 Core is a modular monolith with a separate Python browser boundary. A single PostgreSQL
 queue avoids two independent global schedulers; Redis is unnecessary at this scale.
@@ -29,8 +33,29 @@ never occurs inside a database transaction.
 Each task declares one objective, capability and provider allowlist. Each provider attempt
 records one action; a fallback attempt is a new action for a different provider, bounded by
 `budget.maxCalls` (1–5, default 2) and the total deadline. DAG dependencies compose larger
-jobs. Models do not generate executable plans in this release; operators submit typed plans.
-This is a deliberate authority boundary, not an autonomous planning implementation.
+jobs. Operators can submit typed plans. Since M3 a model may also propose a plan, but only as
+catalog actions: the engine compiles and validates every step, the risk comes from the catalog,
+and the operator approves the plan hash before any MEDIUM step runs
+([ADR 0010](ADR/0010-model-proposed-typed-plans.md)). There is no free agent loop.
+
+## Model-proposed plans (M3)
+
+```
+voice turn ─► ConversationService ─► one model call ─► intent: reply | clarify | plan | cancel
+plan ─► engine.compile (catalog Zod schemas) ─► plans row (hash) ─► one task per step (chain)
+  ├─ desktop.act   ─► DesktopExecutor ─► guards ─► grounding ─► Windows-MCP ─► postcondition
+  ├─ info.fetch    ─► NewsExecutor    ─► RSS over HTTPS ─► news panel
+  └─ integration   ─► IntegrationHub  ─► browser.extract / workflow.invoke / agent.delegate
+GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; announcements ─► voice TTS
+```
+
+- LOW-only plans run at once. A plan with a MEDIUM step waits for one tap bound to its hash,
+  valid for two minutes (`POST /v1/plans/:id/approve`). HIGH integration steps also need their
+  own exact approval. Voice can cancel a plan, never approve one.
+- One desktop or integration plan runs at a time; a new one cancels the previous one.
+- The model's spoken text is discarded for plans; JARVIS speaks templates and Core outcomes.
+- Screen text reaches only trusted-private providers (Claude Code), for `screen.describe` and
+  for one replan after an observed failure. A replanned plan is compiled and approved again.
 
 ## Risk and approval
 
@@ -42,6 +67,9 @@ class records standing consent for non-sensitive personal context; it adds no ri
 HIGH requires an exact approval: single use, bound to the action's
 parameter and configuration hash, and expiring; CRITICAL is treated the same way. A new action
 supersedes any earlier action still awaiting approval, so an old approval cannot be reused.
+MEDIUM needs either its own exact approval or membership in an approved, running plan whose
+compiled step matches the action's input and risk, within two minutes of the plan approval.
+Such a step emits `approval.granted` with `via: "plan"` and consumes no approval row.
 
 ## Execution and failure classification
 
@@ -53,7 +81,9 @@ allowed provider with bounded backoff and jitter. Every other failure, and any u
 output from a side-effecting executor, quarantines the task in RECOVERY_REQUIRED with the
 action UNCERTAIN. Recovery never replays it. A lease fence prevents late workers from
 committing. Completion requires deterministic declared evidence checks; model text matching
-is only evidence of an output contract, never external truth.
+is only evidence of an output contract, never external truth. An executor that observes its
+own outcome (`outcomeObservable`, e.g. the desktop executor's postconditions) moves an unmet
+result to FAILED instead of RECOVERY_REQUIRED, because the state was seen.
 
 Each provider has an in-process circuit breaker: three outage-class failures (transient,
 rate limited, unavailable) open it for 60 seconds; a success closes it; after the cooldown
@@ -77,7 +107,7 @@ families map to the closed `EventTypeSchema` as follows.
 | --- | --- |
 | Task requested / accepted | `task.transition` from CREATED (admission is idempotent per key) |
 | Task rejected | Synchronous HTTP error; no task is created |
-| Plan proposed | Not implemented: operators submit typed plans |
+| Plan proposed | `plans` row and SSE plan state; each step's tasks emit the families below |
 | Action proposed | `provider.selected` |
 | Action authorized / execution started | `action.intended` (recorded before dispatch) |
 | Action denied, approval rejected | `approval.rejected`; policy denials block the task via `task.transition` |

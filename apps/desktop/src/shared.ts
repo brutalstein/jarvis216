@@ -19,6 +19,7 @@ export interface Bridge {
   turns: { export(): Promise<unknown>; deleteAll(): Promise<void> };
   plans: {
     approve(id: string, hash: string): Promise<void>;
+    approveAction(id: string): Promise<void>;
     reject(id: string): Promise<void>;
     cancel(id: string): Promise<void>;
     choose(id: string, index: number): Promise<PlanView>;

@@ -13,13 +13,20 @@ const contract = JSON.parse(
 it("sends the exact request shape the Python worker accepts and parses its response", async () => {
   let received: Record<string, unknown> = {};
   let headers: Record<string, unknown> = {};
+  let large = false;
   const server = createServer(async (req, res) => {
     const chunks: Buffer[] = [];
     for await (const chunk of req) chunks.push(Buffer.from(chunk));
     received = JSON.parse(Buffer.concat(chunks).toString());
     headers = req.headers;
     res.setHeader("content-type", "application/json");
-    res.end(JSON.stringify(contract.response));
+    res.end(
+      JSON.stringify(
+        large
+          ? { ...contract.response, text: `${contract.request.expectedText}${"x".repeat(120_000)}` }
+          : contract.response,
+      ),
+    );
   });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -56,6 +63,13 @@ it("sends the exact request shape the Python worker accepts and parses its respo
     expect(received).toEqual(contract.request);
     expect(headers.authorization).toBe("Bearer worker-token-with-at-least-32-chars");
     expect(result).toEqual(contract.response);
+    large = true;
+    const bounded = await new BrowserExecutor(
+      `http://127.0.0.1:${address.port}`,
+      "worker-token-with-at-least-32-chars",
+    ).execute(task, new AbortController().signal);
+    expect(bounded.text).toHaveLength(64_000);
+    expect(bounded.text).toContain(expectedText);
   } finally {
     server.close();
     await once(server, "close");

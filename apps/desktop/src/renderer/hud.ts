@@ -75,11 +75,29 @@ export function hud(root: HTMLElement, compact = false) {
       const row = node("li");
       row.dataset.step = step.status;
       row.append(node("span", step.action, "step-action"));
-      const risk = node("span", step.risk === "MEDIUM" ? "Onay gerekir" : "Otomatik", "risk");
+      const risk = node(
+        "span",
+        step.risk === "HIGH"
+          ? "Ayrı onay gerekir"
+          : step.risk === "MEDIUM"
+            ? "Onay gerekir"
+            : "Otomatik",
+        "risk",
+      );
       risk.dataset.risk = step.risk;
       const status = node("span", states[step.status] ?? step.status, "step-status");
       status.dataset.stepStatus = "";
       row.append(risk, status);
+      const approval = step.approval;
+      if (plan.status === "RUNNING" && step.risk === "HIGH" && approval)
+        row.append(
+          button(
+            `${approval.target} işlemini onayla`,
+            () => window.jarvis.plans.approveAction(approval.id),
+            card,
+            plan.id,
+          ),
+        );
       if (Object.keys(step.args).length)
         row.append(node("pre", JSON.stringify(step.args, null, 2), "step-args"));
       steps.append(row);
@@ -151,6 +169,8 @@ export function hud(root: HTMLElement, compact = false) {
           list.append(news);
         }
         card.append(list);
+      } else if (panel.type === "text") {
+        card.append(node("h3", panel.title), node("pre", panel.body, "text-panel"));
       }
     }
     return card;
