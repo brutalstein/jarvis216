@@ -4,10 +4,13 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { appNames } from "./apps.js";
 import { ground, normalize, type UiElement } from "./ground.js";
 import { blockedShortcut, containedPath, escapeTarget, GuardError } from "./guards.js";
+import type { NewsItem } from "./news.js";
 import { parseSnapshot, redactSecrets, type Snapshot, snapshotText } from "./snapshot.js";
 import type { CompiledStep, ToolPort, ToolResult } from "./types.js";
 
-export type Panel = { type: "windows"; items: string[] };
+export type Panel =
+  | { type: "windows"; items: string[] }
+  | { type: "news"; title: string; items: NewsItem[] };
 export type Evidence = {
   ok: boolean;
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";

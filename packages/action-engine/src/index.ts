@@ -5,6 +5,7 @@ export * from "./guards.js";
 export * from "./intent.js";
 export * from "./mcp.js";
 export * from "./narrate.js";
+export * from "./news.js";
 export * from "./run.js";
 export * from "./snapshot.js";
 export * from "./types.js";
