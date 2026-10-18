@@ -146,6 +146,8 @@ export class PlanService extends EventEmitter {
     },
   ) {
     super();
+    // Up to 8 desktop streams, the conversation's learning hook and each waiting turn listen.
+    this.setMaxListeners(50);
   }
 
   integrationCapabilities(): string[] {
