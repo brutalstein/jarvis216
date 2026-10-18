@@ -1,0 +1,120 @@
+{"utterance":"Jarvis Spotify uygulamasını açar mısın 1","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
+{"utterance":"Jarvis Notepad uygulamasını açar mısın 2","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Notepad"}}}
+{"utterance":"Jarvis Calculator uygulamasını açar mısın 3","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Calculator"}}}
+{"utterance":"Jarvis Chrome uygulamasını açar mısın 4","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
+{"utterance":"Jarvis Edge uygulamasını açar mısın 5","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Edge"}}}
+{"utterance":"Jarvis WhatsApp uygulamasını açar mısın 6","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"WhatsApp"}}}
+{"utterance":"Jarvis Teams uygulamasını açar mısın 7","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Teams"}}}
+{"utterance":"Jarvis Camera uygulamasını açar mısın 8","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Camera"}}}
+{"utterance":"Jarvis Clock uygulamasını açar mısın 9","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Clock"}}}
+{"utterance":"Jarvis Settings uygulamasını açar mısın 10","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Settings"}}}
+{"utterance":"Jarvis Notes10 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes10"}}}
+{"utterance":"Jarvis Notes11 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes11"}}}
+{"utterance":"Jarvis Notes12 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes12"}}}
+{"utterance":"Jarvis Notes13 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes13"}}}
+{"utterance":"Jarvis Notes14 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes14"}}}
+{"utterance":"Jarvis Notes15 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes15"}}}
+{"utterance":"Jarvis Notes16 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes16"}}}
+{"utterance":"Jarvis Notes17 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes17"}}}
+{"utterance":"Jarvis Notes18 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes18"}}}
+{"utterance":"Jarvis Notes19 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes19"}}}
+{"utterance":"Jarvis medya tuşu play_pause uygula 20","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
+{"utterance":"Jarvis medya tuşu next uygula 21","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
+{"utterance":"Jarvis medya tuşu previous uygula 22","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
+{"utterance":"Jarvis medya tuşu volume_up uygula 23","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
+{"utterance":"Jarvis medya tuşu volume_down uygula 24","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
+{"utterance":"Jarvis medya tuşu mute uygula 25","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
+{"utterance":"Jarvis son 1 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":1}}}
+{"utterance":"Jarvis son 2 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":2}}}
+{"utterance":"Jarvis son 3 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":3}}}
+{"utterance":"Jarvis son 4 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":4}}}
+{"utterance":"Jarvis bugün nasılsın sorusu 0","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 1","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 2","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 3","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 4","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 5","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 6","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 7","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 8","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis bugün nasılsın sorusu 9","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 0","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 1","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 2","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 3","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 4","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 5","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 6","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 7","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 8","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis belirsiz isteğim 9","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 0","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 1","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 2","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 3","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 4","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 5","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 6","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 7","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 8","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis iptal et 9","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis please open Spotify application 1","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
+{"utterance":"Jarvis please open Notepad application 2","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Notepad"}}}
+{"utterance":"Jarvis please open Calculator application 3","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Calculator"}}}
+{"utterance":"Jarvis please open Chrome application 4","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
+{"utterance":"Jarvis please open Edge application 5","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Edge"}}}
+{"utterance":"Jarvis please open WhatsApp application 6","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"WhatsApp"}}}
+{"utterance":"Jarvis please open Teams application 7","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Teams"}}}
+{"utterance":"Jarvis please open Camera application 8","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Camera"}}}
+{"utterance":"Jarvis please open Clock application 9","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Clock"}}}
+{"utterance":"Jarvis please open Settings application 10","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Settings"}}}
+{"utterance":"Jarvis create the Notes10 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes10"}}}
+{"utterance":"Jarvis create the Notes11 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes11"}}}
+{"utterance":"Jarvis create the Notes12 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes12"}}}
+{"utterance":"Jarvis create the Notes13 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes13"}}}
+{"utterance":"Jarvis create the Notes14 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes14"}}}
+{"utterance":"Jarvis create the Notes15 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes15"}}}
+{"utterance":"Jarvis create the Notes16 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes16"}}}
+{"utterance":"Jarvis create the Notes17 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes17"}}}
+{"utterance":"Jarvis create the Notes18 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes18"}}}
+{"utterance":"Jarvis create the Notes19 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes19"}}}
+{"utterance":"Jarvis press media play_pause now 20","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
+{"utterance":"Jarvis press media next now 21","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
+{"utterance":"Jarvis press media previous now 22","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
+{"utterance":"Jarvis press media volume_up now 23","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
+{"utterance":"Jarvis press media volume_down now 24","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
+{"utterance":"Jarvis press media mute now 25","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
+{"utterance":"Jarvis get the latest 1 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":1}}}
+{"utterance":"Jarvis get the latest 2 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":2}}}
+{"utterance":"Jarvis get the latest 3 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":3}}}
+{"utterance":"Jarvis get the latest 4 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":4}}}
+{"utterance":"Jarvis how are you question 0","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 1","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 2","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 3","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 4","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 5","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 6","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 7","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 8","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis how are you question 9","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 0","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 1","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 2","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 3","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 4","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 5","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 6","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 7","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 8","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis my ambiguous request 9","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 0","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 1","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 2","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 3","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 4","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 5","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 6","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 7","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 8","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis cancel it 9","lang":"en","kind":"cancel","actions":[],"args":{}}
