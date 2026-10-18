@@ -55,9 +55,12 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
             return web.json_response({"error": "MORE_SPEECH_NEEDED"}, status=409)
         return web.json_response({"enrolled": True})
 
+    async def cancel(request: web.Request) -> web.Response:
+        enrollment.cancel()
+        return web.json_response({"enrolled": enrollment.gate.enrolled()})
+
     async def remove(request: web.Request) -> web.Response:
-        enrollment.active = False
-        enrollment.embeddings.clear()
+        enrollment.cancel()
         enrollment.gate.delete()
         return web.Response(status=204)
 
@@ -134,6 +137,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
     app.router.add_get("/health", health)
     app.router.add_post("/enroll/start", start)
     app.router.add_post("/enroll/finish", finish)
+    app.router.add_post("/enroll/cancel", cancel)
     app.router.add_delete("/enroll", remove)
     app.router.add_post("/offer", offer)
     app.router.add_patch("/offer", offer)

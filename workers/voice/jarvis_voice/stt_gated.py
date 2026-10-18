@@ -33,6 +33,11 @@ class Enrollment:
         self.seconds = 0.0
         self.active = True
 
+    def cancel(self) -> None:
+        self.active = False
+        self.embeddings.clear()
+        self.seconds = 0.0
+
     def finish(self) -> bool:
         if self.seconds < 25 or len(self.embeddings) < 3:
             return False

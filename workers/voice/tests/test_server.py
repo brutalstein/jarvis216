@@ -26,6 +26,7 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
             ("POST", "/offer"),
             ("POST", "/enroll/start"),
             ("POST", "/enroll/finish"),
+            ("POST", "/enroll/cancel"),
             ("DELETE", "/enroll"),
         ]:
             response = await self.client.request(method, path)
@@ -50,6 +51,20 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue((await response.json())["enrolled"])
         await self.client.delete("/enroll", headers=headers)
         self.assertFalse(self.enrollment.gate.enrolled())
+
+    async def test_cancelled_enrollment_keeps_the_existing_print(self) -> None:
+        # An abandoned enrollment must not leave the service collecting instead of transcribing.
+        headers = {"authorization": "Bearer secret"}
+        self.enrollment.gate.enroll([np.array([1.0, 0.0])])
+        await self.client.post("/enroll/start", headers=headers)
+        self.enrollment.embeddings = [np.array([0.0, 1.0])]
+        self.enrollment.seconds = 12
+        response = await self.client.post("/enroll/cancel", headers=headers)
+        self.assertEqual(await response.json(), {"enrolled": True})
+        self.assertFalse(self.enrollment.active)
+        self.assertEqual(self.enrollment.embeddings, [])
+        self.assertEqual(self.enrollment.seconds, 0)
+        self.assertTrue(self.enrollment.gate.enrolled())
 
 
 if __name__ == "__main__":
