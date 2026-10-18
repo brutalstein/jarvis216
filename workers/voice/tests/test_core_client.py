@@ -51,6 +51,19 @@ class CoreClientTest(unittest.IsolatedAsyncioTestCase):
         client = CoreClient("http://127.0.0.1:2161", "secret", httpx.MockTransport(refuse))
         self.assertIsNone(await client.turn("Jarvis?", follow_up=False))
 
+    async def test_malformed_reply_is_none(self) -> None:
+        for response in (
+            httpx.Response(200, text="not json"),
+            httpx.Response(200, json={"say": "eksik alanlar"}),
+            httpx.Response(200, json=["liste"]),
+        ):
+            client = CoreClient(
+                "http://127.0.0.1:2161",
+                "secret",
+                httpx.MockTransport(lambda _, reply=response: reply),
+            )
+            self.assertIsNone(await client.turn("Jarvis?", follow_up=False))
+
 
 if __name__ == "__main__":
     unittest.main()

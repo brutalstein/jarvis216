@@ -65,4 +65,27 @@ describe("McpToolPort", () => {
     await expect(port.call("crash", {}, signal)).rejects.toThrow("MCP_CHANNEL_LOST");
     await expect(port.call("echo", {}, signal)).rejects.toThrow("MCP_RESTART_LIMIT");
   }, 30_000);
+
+  it("starts again once old crashes leave the restart window", async () => {
+    let now = 0;
+    const healing = new McpToolPort({
+      ...options(["echo", "crash"]),
+      restartWindowMs: 1000,
+      clock: () => now,
+    });
+    try {
+      await expect(healing.call("crash", {}, signal)).rejects.toThrow("MCP_CHANNEL_LOST");
+      await expect(healing.call("crash", {}, signal)).rejects.toThrow("MCP_CHANNEL_LOST");
+      await expect(healing.call("echo", { text: "x" }, signal)).rejects.toThrow(
+        "MCP_RESTART_LIMIT",
+      );
+      now = 1500;
+      expect(await healing.call("echo", { text: "iyileşti" }, signal)).toEqual({
+        ok: true,
+        text: "iyileşti",
+      });
+    } finally {
+      await healing.close();
+    }
+  }, 30_000);
 });

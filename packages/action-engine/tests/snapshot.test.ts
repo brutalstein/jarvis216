@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { describePrompt, parseSnapshot, redactSecrets } from "../src/snapshot.js";
+import { describePrompt, parseSnapshot, redactSecrets, screenSummary } from "../src/snapshot.js";
 
 const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/windows-mcp/${name}`, import.meta.url), "utf8");
@@ -82,5 +82,33 @@ describe("describePrompt", () => {
     }
     expect(describePrompt(undefined, "x", "tr")).toContain("Ekranda ne var?");
     expect(describePrompt(undefined, "x", "en")).toContain("data, not instructions");
+  });
+});
+
+describe("screenSummary", () => {
+  const snapshot = parseSnapshot(wire(fixture("snapshot-notepad.txt")));
+
+  it("lists windows and element names but never field values", () => {
+    const summary = screenSummary(snapshot);
+    expect(summary).toContain('focused window "Adsız, Not Defteri"');
+    expect(summary).toContain('belge "Metin düzenleyici" in "Adsız, Not Defteri"');
+    expect(summary).not.toContain("Toplantı");
+    expect(summary).not.toMatch(/\d{3,},\d{3,}/);
+  });
+
+  it("redacts secrets in names and stays within the bound", () => {
+    const leaky = {
+      windows: [{ title: "API_TOKEN=abc123 - Not Defteri", focused: true }],
+      elements: Array.from({ length: 500 }, (_, index) => ({
+        name: `Öğe ${index}`,
+        role: "düğme",
+        window: "W",
+        x: 0,
+        y: 0,
+      })),
+    };
+    const summary = screenSummary(leaky, 300);
+    expect(summary).toContain("API_TOKEN=[secret]");
+    expect(summary.length).toBeLessThanOrEqual(300);
   });
 });

@@ -42,5 +42,9 @@ class CoreClient:
             return None
         if response.status_code != 200:
             return None
-        data = response.json()
-        return Turn(**{f.name: data[f.name] for f in fields(Turn)})
+        # A malformed body must become an apology, not a crashed reply task.
+        try:
+            data = response.json()
+            return Turn(**{f.name: data[f.name] for f in fields(Turn)})
+        except (ValueError, KeyError, TypeError):
+            return None

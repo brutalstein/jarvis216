@@ -1,3 +1,4 @@
+import { parseSnapshot, screenSummary } from "@jarvis/action-engine";
 import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
@@ -52,6 +53,21 @@ async function main() {
       conversationProviders: providers,
       privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
       integrations,
+      // A replan sees window and element names from a fresh Snapshot, never field values.
+      ...(tools && {
+        screen: async () =>
+          screenSummary(
+            parseSnapshot(
+              (
+                await tools.call(
+                  "Snapshot",
+                  { use_vision: false, use_annotation: false },
+                  AbortSignal.timeout(10_000),
+                )
+              ).text,
+            ),
+          ),
+      }),
     });
     const conversation = new ConversationService(tasks, {
       providers,
@@ -70,6 +86,10 @@ async function main() {
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     await server.listen({ host, port: config.PORT });
+    // uvx may download Windows-MCP on first use; warm it now so the first step keeps its 15 s.
+    tools?.start().catch(() => {
+      process.stderr.write('{"level":"warn","code":"WINDOWS_MCP_PREWARM_FAILED"}\n');
+    });
     const stop = new AbortController();
     const abort = () => stop.abort();
     process.once("SIGINT", abort);

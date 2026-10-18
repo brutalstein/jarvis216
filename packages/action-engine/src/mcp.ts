@@ -8,6 +8,9 @@ export type McpOptions = {
   args: string[];
   env: Record<string, string>;
   allow: string[];
+  // Two crashes inside this window stop restarts until the older one ages out.
+  restartWindowMs?: number;
+  clock?: () => number;
 };
 
 // The child sees these plus the SDK's own system-only defaults; never Core's secrets.
@@ -17,7 +20,7 @@ export class McpToolPort implements ToolPort {
   #options: McpOptions;
   #client: Client | null = null;
   #starting: Promise<Client> | null = null;
-  #crashes = 0;
+  #crashes: number[] = [];
 
   constructor(options: McpOptions) {
     this.#options = options;
@@ -71,11 +74,19 @@ export class McpToolPort implements ToolPort {
 
   #ready(): Promise<Client> {
     if (this.#client) return Promise.resolve(this.#client);
-    if (this.#crashes > 1) return Promise.reject(new Error("MCP_RESTART_LIMIT"));
+    // A crash loop stops; a child that crashed long ago may start again (self-healing).
+    const now = this.#now();
+    const window = this.#options.restartWindowMs ?? 600_000;
+    this.#crashes = this.#crashes.filter((at) => now - at < window);
+    if (this.#crashes.length > 1) return Promise.reject(new Error("MCP_RESTART_LIMIT"));
     this.#starting ??= this.#spawn().finally(() => {
       this.#starting = null;
     });
     return this.#starting;
+  }
+
+  #now(): number {
+    return (this.#options.clock ?? Date.now)();
   }
 
   async #spawn(): Promise<Client> {
@@ -94,7 +105,7 @@ export class McpToolPort implements ToolPort {
     client.onclose = () => {
       if (this.#client === client) {
         this.#client = null;
-        this.#crashes++;
+        this.#crashes.push(this.#now());
       }
     };
     await client.connect(transport);

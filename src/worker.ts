@@ -126,12 +126,15 @@ export class Worker {
       { once: true },
     );
     while (!signal.aborted) {
+      let worked = false;
       try {
         await this.tasks.recover();
-        await this.once();
+        worked = await this.once();
       } catch {
         process.stderr.write('{"level":"error","code":"WORKER_CYCLE_FAILED"}\n');
       }
+      // A finished task may have unblocked the next step of a chain: claim again at once.
+      if (worked) continue;
       try {
         await delay(500, undefined, { signal: AbortSignal.any([signal, this.idle.signal]) });
       } catch {

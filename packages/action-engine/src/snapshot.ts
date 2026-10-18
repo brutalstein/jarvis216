@@ -101,3 +101,23 @@ export function describePrompt(question: string | undefined, screen: string, lan
 export function redactSecrets(text: string): string {
   return secrets.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), text);
 }
+
+// What a replan needs to pick new targets: window titles and element names with their roles.
+// Field values and coordinates stay out, so typed text never reaches a model this way.
+export function screenSummary(snapshot: Snapshot, maxChars = 4000): string {
+  const lines = new Set([
+    ...snapshot.windows.map(
+      (window) => `${window.focused ? "focused " : ""}window "${window.title}"`,
+    ),
+    ...snapshot.elements.map(
+      (element) => `${element.role} "${element.name}" in "${element.window}"`,
+    ),
+  ]);
+  let summary = "";
+  for (const line of lines) {
+    const next = `${redactSecrets(line.replace(/\s+/g, " "))}\n`;
+    if (summary.length + next.length > maxChars) break;
+    summary += next;
+  }
+  return summary.trimEnd();
+}
