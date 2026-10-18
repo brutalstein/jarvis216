@@ -8,6 +8,8 @@ export type TextSpec = {
   privacy: "personal" | "private";
   deadlineMs: number;
   maxOutputTokens: number;
+  // The reply must be one JSON object (conversation intents, replans).
+  json?: boolean;
 };
 
 // States where waiting longer cannot produce a reply.
@@ -32,6 +34,7 @@ export async function runText(
       capability: "text.generate",
       providers: spec.providers,
       providerOrder: "listed",
+      ...(spec.json && { responseFormat: "json" as const }),
       privacy: spec.privacy,
       budget: {
         maxCalls: spec.providers.length,

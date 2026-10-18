@@ -133,3 +133,32 @@ describe("OpenAI-compatible free-model executor", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("JSON response mode", () => {
+  const jsonTask = { spec: { ...task.spec, responseFormat: "json" } } as Task;
+  it("asks a json-capable endpoint for one JSON object only when the task wants JSON", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const server = await serve((req, res, body) => {
+      bodies.push(JSON.parse(body));
+      reply(200, completion('{"say":"tamam"}'))(req, res);
+    });
+    try {
+      const executor = (jsonMode: boolean) =>
+        new OpenAICompatibleExecutor({
+          id: "or-x",
+          base: server.base,
+          key: "k",
+          model: "m",
+          jsonMode,
+        });
+      await executor(true).execute(jsonTask, new AbortController().signal);
+      await executor(true).execute(task, new AbortController().signal);
+      await executor(false).execute(jsonTask, new AbortController().signal);
+    } finally {
+      server.close();
+    }
+    expect(bodies[0]?.response_format).toEqual({ type: "json_object" });
+    expect(bodies[1]).not.toHaveProperty("response_format");
+    expect(bodies[2]).not.toHaveProperty("response_format");
+  });
+});

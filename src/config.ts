@@ -7,7 +7,12 @@ import { z } from "zod";
 import type { Executor } from "./contracts.js";
 import { DesktopExecutor, NewsExecutor } from "./integrations/actions.js";
 import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
-import { ClaudeExecutor, CodexExecutor, GeminiExecutor } from "./integrations/models.js";
+import {
+  ClaudeExecutor,
+  CodexExecutor,
+  GeminiExecutor,
+  supportsRefusalFallback,
+} from "./integrations/models.js";
 import { OpenAICompatibleExecutor, providerId } from "./integrations/openai-compatible.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrations/services.js";
 import { type Provider, ProviderRegistry } from "./routing.js";
@@ -76,10 +81,32 @@ export async function configuredProviders(
     });
   };
   if (env.ENABLE_CLAUDE === "true") {
-    const model = z.string().min(1).parse(env.CLAUDE_MODEL);
+    const model = z
+      .string()
+      .regex(/^[a-z0-9.-]{1,80}$/)
+      .parse(env.CLAUDE_MODEL?.trim() || "claude-opus-5-5");
+    const effort = z
+      .enum(["low", "medium", "high", "xhigh", "max"])
+      .optional()
+      .parse(env.CLAUDE_EFFORT?.trim() || undefined);
+    const refusalFallback = env.CLAUDE_REFUSAL_FALLBACK !== "false";
+    const key = secrets.resolve("ANTHROPIC_API_KEY");
+    const fallback =
+      refusalFallback && supportsRefusalFallback(model) ? "refusal-fallback" : "single";
     register(
-      new ClaudeExecutor(secrets.resolve("ANTHROPIC_API_KEY"), model),
-      `claude-api:${model}:tools-none`,
+      new ClaudeExecutor(key, model, undefined, { ...(effort && { effort }), refusalFallback }),
+      `claude-api:${model}:tools-none:effort-${effort ?? "default"}:${fallback}`,
+      10,
+    );
+    // Realtime conversation: same model at low effort so a short reply budget is not spent
+    // on thinking (mirrors gemini-live).
+    register(
+      new ClaudeExecutor(key, model, undefined, {
+        id: "claude-live",
+        effort: "low",
+        refusalFallback,
+      }),
+      `claude-api:${model}:tools-none:effort-low:${fallback}`,
       10,
     );
   }
@@ -106,6 +133,7 @@ export async function configuredProviders(
       priority: 50,
       // Hide reasoning so the token budget goes to the reply.
       extraBody: { reasoning: { effort: "low", exclude: true } },
+      jsonMode: true,
     },
     {
       flag: "ENABLE_NVIDIA",
@@ -133,6 +161,7 @@ export async function configuredProviders(
           key,
           model,
           ...("extraBody" in free ? { extraBody: free.extraBody } : {}),
+          ...("jsonMode" in free ? { jsonMode: free.jsonMode } : {}),
         }),
         `${free.base}:${model}:tools-none`,
         free.priority,

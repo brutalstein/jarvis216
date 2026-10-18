@@ -52,6 +52,8 @@ export class ActionGateway {
       privacy: claim.spec.privacy,
       budget: claim.spec.budget,
       verification: claim.spec.verification,
+      // Only when set, so approvals and hashes of plain-text actions are unchanged.
+      ...(claim.spec.responseFormat && { responseFormat: claim.spec.responseFormat }),
       configuration: executor.configuration ?? "v1",
       risk,
       taskId: claim.id,

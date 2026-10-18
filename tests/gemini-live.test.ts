@@ -92,4 +92,40 @@ describe("realtime Gemini provider", () => {
       "claude-code",
     ]);
   });
+
+  it("enabling Claude registers claude and a low-effort claude-live with a default model", async () => {
+    const { registry } = await configuredProviders(
+      { ENABLE_CLAUDE: "true", CLAUDE_MODEL: "" },
+      new EnvSecrets({ ANTHROPIC_API_KEY: "anthropic-test-key" }),
+    );
+    const listed = registry.list() as { id: string }[];
+    expect(listed.map((p) => p.id)).toEqual(["claude", "claude-live"]);
+    const live = registry.select(
+      { spec: { ...task.spec, providers: ["claude-live"] } } as Task,
+      [],
+    );
+    expect(live.configuration).toBe(
+      "claude-api:claude-opus-5-5:tools-none:effort-low:refusal-fallback",
+    );
+    expect(conversationProviders(listed.map((p) => p.id))).toEqual(["claude-live"]);
+    await expect(
+      configuredProviders(
+        { ENABLE_CLAUDE: "true", CLAUDE_EFFORT: "extreme" },
+        new EnvSecrets({ ANTHROPIC_API_KEY: "anthropic-test-key" }),
+      ),
+    ).rejects.toThrow();
+    const opted = await configuredProviders(
+      {
+        ENABLE_CLAUDE: "true",
+        CLAUDE_MODEL: "claude-sonnet-5-5",
+        CLAUDE_EFFORT: "high",
+        CLAUDE_REFUSAL_FALLBACK: "false",
+      },
+      new EnvSecrets({ ANTHROPIC_API_KEY: "anthropic-test-key" }),
+    );
+    expect(
+      opted.registry.select({ spec: { ...task.spec, providers: ["claude"] } } as Task, [])
+        .configuration,
+    ).toBe("claude-api:claude-sonnet-5-5:tools-none:effort-high:single");
+  });
 });

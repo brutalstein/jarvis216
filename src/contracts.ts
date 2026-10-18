@@ -105,6 +105,9 @@ export const TaskSpecSchema = z
     privacy: z.enum(["public", "personal", "private", "local-only"]).default("public"),
     // listed: try providers in the order given instead of registry priority.
     providerOrder: z.enum(["priority", "listed"]).default("priority"),
+    // json: providers with a native JSON mode constrain the reply to one JSON value. It shapes
+    // the output only; verification still checks the text. Absent means plain text.
+    responseFormat: z.enum(["text", "json"]).optional(),
     budget: z
       .strictObject({
         maxCalls: z.number().int().min(1).max(5).default(2),
@@ -124,6 +127,12 @@ export const TaskSpecSchema = z
     ]),
   })
   .superRefine((task, ctx) => {
+    if (task.responseFormat && task.capability !== "text.generate")
+      ctx.addIssue({
+        code: "custom",
+        path: ["responseFormat"],
+        message: "responseFormat applies to text.generate only",
+      });
     const schema =
       task.capability === "text.generate"
         ? z.strictObject({})

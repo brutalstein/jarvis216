@@ -93,19 +93,22 @@ export function parseReply(text: string): Reply {
   };
 }
 
-// Realtime order: Gemini with minimal thinking first, free models next, subscription CLI last.
-// Codex is excluded: its HIGH floor would need an approval per turn.
+// Realtime order: Gemini with minimal thinking first, Claude at low effort next, free models,
+// then the subscription CLI last. Codex is excluded: its HIGH floor would need an approval per
+// turn. Adaptive routing may still demote a provider measured as failing or too slow.
 export function conversationProviders(ids: string[]): string[] {
   const rank = (id: string) =>
     id === "gemini-live"
       ? 0
-      : id.startsWith("or-")
+      : id === "claude-live"
         ? 1
-        : id.startsWith("nv-")
+        : id.startsWith("or-")
           ? 2
-          : id === "claude-code"
+          : id.startsWith("nv-")
             ? 3
-            : -1;
+            : id === "claude-code"
+              ? 4
+              : -1;
   return ids
     .filter((id) => rank(id) >= 0)
     .sort((a, b) => rank(a) - rank(b))
@@ -155,6 +158,7 @@ export class ConversationService {
         privacy: "personal",
         deadlineMs: this.deadlineMs,
         maxOutputTokens: 600,
+        json: true,
       },
       `conversation:${id}`,
     );
@@ -172,6 +176,7 @@ export class ConversationService {
             privacy: "personal",
             deadlineMs: this.deadlineMs,
             maxOutputTokens: 1000,
+            json: true,
           },
           `conversation:${id}:repair`,
         );

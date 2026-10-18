@@ -64,6 +64,13 @@
         "listed"
       ]
     },
+    "responseFormat": {
+      "type": "string",
+      "enum": [
+        "text",
+        "json"
+      ]
+    },
     "budget": {
       "default": {
         "maxCalls": 2,

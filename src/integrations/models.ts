@@ -20,17 +20,31 @@ async function classify<T>(fn: () => Promise<T>): Promise<T> {
     throw new ProviderFailure("permanent", false);
   }
 }
+export type ClaudeEffort = "low" | "medium" | "high" | "xhigh" | "max";
+// Models that accept server-side refusal fallbacks ("default" routes by refusal category).
+const refusalFallbackModels = new Set([
+  "claude-fable-5-1",
+  "claude-opus-5-5",
+  "claude-opus-5",
+  "claude-sonnet-5-5",
+]);
+export const supportsRefusalFallback = (model: string) => refusalFallbackModels.has(model);
+
 export class ClaudeExecutor implements Executor {
-  readonly id = "claude";
+  readonly id: string;
   readonly capability = "text.generate";
   readonly external = true;
   readonly retrySafe = true;
+  readonly outputTokenLimitEnforced = true;
   private client: Anthropic;
   constructor(
     key: string,
     private model: string,
     client?: Anthropic,
+    // Realtime turns use their own id at low effort, so thinking cannot eat the reply budget.
+    private options: { id?: string; effort?: ClaudeEffort; refusalFallback?: boolean } = {},
   ) {
+    this.id = options.id ?? "claude";
     this.client =
       client ??
       new Anthropic({
@@ -41,23 +55,44 @@ export class ClaudeExecutor implements Executor {
       });
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
-    const result = await classify(() =>
-      this.client.messages.create(
-        {
-          model: this.model,
-          messages: [{ role: "user", content: task.spec.objective }],
-          max_tokens: task.spec.budget.maxOutputTokens,
-        },
-        { signal },
-      ),
+    const params = {
+      model: this.model,
+      messages: [{ role: "user" as const, content: task.spec.objective }],
+      max_tokens: task.spec.budget.maxOutputTokens,
+      ...(this.options.effort ? { output_config: { effort: this.options.effort } } : {}),
+    };
+    // A declined request is re-run on Anthropic's fallback model inside the same call; the
+    // served model is recorded in the source, so the record never hides the switch.
+    const result = await classify<Anthropic.Message | Anthropic.Beta.BetaMessage>(() =>
+      this.options.refusalFallback && supportsRefusalFallback(this.model)
+        ? this.client.beta.messages.create(
+            { ...params, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" },
+            { signal },
+          )
+        : this.client.messages.create(params, { signal }),
     );
-    if (result.stop_reason !== "end_turn") throw new ProviderFailure("invalid-response", false);
+    switch (result.stop_reason) {
+      case "end_turn":
+      case "stop_sequence":
+        break;
+      // Truncated: another provider with room may still answer.
+      case "max_tokens":
+      case "model_context_window_exceeded":
+        throw new ProviderFailure("invalid-response", true);
+      // A safety decline is final: shopping it to other providers would launder it.
+      case "refusal":
+        throw new ProviderFailure("policy-denied", false);
+      default:
+        throw new ProviderFailure("invalid-response", false);
+    }
+    const blocks: readonly { type: string; text?: unknown }[] = result.content;
+    const text = blocks
+      .flatMap((part) => (part.type === "text" && typeof part.text === "string" ? [part.text] : []))
+      .join("\n");
+    if (!text.trim()) throw new ProviderFailure("invalid-response", true);
     return {
-      text: result.content
-        .filter((part) => part.type === "text")
-        .map((part) => part.text)
-        .join("\n"),
-      source: `claude:${this.model}:model-output`,
+      text,
+      source: `claude:${result.model}:model-output`,
       externalId: result.id,
     };
   }
@@ -94,6 +129,7 @@ export class GeminiExecutor implements Executor {
         config: {
           maxOutputTokens: task.spec.budget.maxOutputTokens,
           abortSignal: signal,
+          ...(task.spec.responseFormat === "json" ? { responseMimeType: "application/json" } : {}),
           ...(this.options.thinkingLevel
             ? { thinkingConfig: { thinkingLevel: this.options.thinkingLevel } }
             : {}),

@@ -31,6 +31,8 @@ export class OpenAICompatibleExecutor implements Executor {
       model: string;
       timeoutMs?: number;
       extraBody?: Record<string, unknown>;
+      // The endpoint honours response_format json_object (OpenRouter routes it per model).
+      jsonMode?: boolean;
     },
   ) {
     this.id = options.id;
@@ -54,6 +56,9 @@ export class OpenAICompatibleExecutor implements Executor {
             model: this.options.model,
             messages: [{ role: "user", content: task.spec.objective }],
             max_tokens: task.spec.budget.maxOutputTokens,
+            ...(this.options.jsonMode && task.spec.responseFormat === "json"
+              ? { response_format: { type: "json_object" } }
+              : {}),
           }),
         },
         AbortSignal.any([signal, timeout]),

@@ -91,3 +91,18 @@ describe("non-empty verification in the gateway", () => {
     expect(await run("   ")).toBe("FAILED");
   });
 });
+
+describe("JSON response format", () => {
+  it("is optional, text.generate only, and absent from plain specs", () => {
+    expect(spec()).not.toHaveProperty("responseFormat");
+    expect(spec({ responseFormat: "json" }).responseFormat).toBe("json");
+    expect(() =>
+      spec({
+        capability: "info.fetch",
+        providers: ["news"],
+        input: { action: "news.brief", args: {} },
+        responseFormat: "json",
+      }),
+    ).toThrow();
+  });
+});

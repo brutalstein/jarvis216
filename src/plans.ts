@@ -546,6 +546,7 @@ export class PlanService extends EventEmitter {
     label: string,
     prompt: string,
     privacy: "personal" | "private",
+    json = false,
   ): Promise<string | null> {
     const providers =
       privacy === "private" ? this.options.privateProviders : this.options.conversationProviders;
@@ -560,6 +561,7 @@ export class PlanService extends EventEmitter {
           privacy,
           deadlineMs: privacy === "private" ? 60_000 : 20_000,
           maxOutputTokens: 600,
+          json,
         },
         `plan:${plan.id}:${label}`,
       );
@@ -647,6 +649,7 @@ export class PlanService extends EventEmitter {
         browserUrls: this.browserUrls(),
       }),
       "private",
+      true,
     );
     const read = text === null ? undefined : readIntent(jsonObject(text)?.intent);
     if (read && "decision" in read && read.decision.kind === "plan") {

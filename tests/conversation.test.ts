@@ -85,12 +85,10 @@ describe("conversation prompt and providers", () => {
     expect(conversationPrompt({ ...input, followUp: true })).toMatch(/follow-up window/i);
   });
   it("conversationProviders orders the realtime providers", () => {
-    expect(conversationProviders(["claude-code", "nv-a", "gemini-live", "or-b", "codex"])).toEqual([
-      "gemini-live",
-      "or-b",
-      "nv-a",
-      "claude-code",
-    ]);
+    expect(
+      conversationProviders(["claude-code", "nv-a", "gemini-live", "or-b", "codex", "claude-live"]),
+    ).toEqual(["gemini-live", "claude-live", "or-b", "nv-a", "claude-code"]);
+    expect(conversationProviders(["claude", "gemini"])).toEqual([]);
   });
 });
 
