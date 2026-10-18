@@ -200,6 +200,22 @@ describe("execution gateway", () => {
     expect((await tasks.get(task.id)).calls).toBe(2);
   });
 
+  it("falls back to another listed provider after a failure tied to the first", async () => {
+    const task = await tasks.create(spec({ providers: ["test", "second"] }), "revoked", "operator");
+    const gateway = new ActionGateway(tasks);
+    await gateway.run(
+      (await tasks.claim("w", 10_000))!,
+      {
+        ...executor,
+        execute: async () => {
+          throw new ProviderFailure("authentication-required", false);
+        },
+      },
+      new AbortController().signal,
+    );
+    expect((await tasks.get(task.id)).status).toBe("READY");
+  });
+
   it("cancellation racing the result cannot become completed", async () => {
     const task = await tasks.create(spec(), "cancel-race", "operator");
     const gateway = new ActionGateway(tasks);

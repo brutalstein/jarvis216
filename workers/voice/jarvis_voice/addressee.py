@@ -10,7 +10,9 @@ NAME = re.compile(r"\b[jcç][ae]rv[iı]s\w*")
 
 
 def is_named(text: str) -> bool:
-    return NAME.search(unicodedata.normalize("NFC", text).lower()) is not None
+    # "İ".lower() leaves a combining dot (U+0307) that would split "JARVİS".
+    folded = unicodedata.normalize("NFC", text).lower().replace("̇", "")
+    return NAME.search(folded) is not None
 
 
 class FollowUpWindow:

@@ -101,7 +101,7 @@ export class GeminiExecutor implements Executor {
       }),
     );
     // A truncated or blocked reply says nothing about other providers: allow fallback.
-    if (result.candidates?.[0]?.finishReason !== "STOP")
+    if (result.candidates?.[0]?.finishReason !== "STOP" || !result.text?.trim())
       throw new ProviderFailure("invalid-response", true);
     return { text: result.text ?? "", source: `gemini:${this.model}:model-output` };
   }

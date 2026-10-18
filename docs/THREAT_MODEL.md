@@ -33,6 +33,17 @@ Subscription-mode additions:
 | OpenClaw operator-scope token theft | Random 48-byte shared secret, loopback Gateway, dedicated agent denying every tool; URL input fetching disabled | Bearer grants operator authority; protect profile config and `.env`, rotate together after compromise |
 | Claude customization injection | `--safe-mode`, no tools/MCP/slash commands, empty working directory, bounded JSON and stderr | Enterprise-managed policy may still apply; account entitlement is checked by live calls |
 
+Voice desktop M1 additions (see [ADR 0009](ADR/0009-voice-desktop-operator-experience.md)):
+
+| Threat | Controls | Residual |
+| --- | --- | --- |
+| TV, other speakers or replayed voice | Local ECAPA gate after enrollment, name/follow-up gate; voice grants no approvals; M1 has no computer actions | Speaker embeddings are spoofable, not authentication; real microphone/TV threshold remains uncalibrated |
+| Desktop renderer compromise | Context isolation, sandbox, no Node integration, self-only scripts, no webviews/navigation/popups; fixed IPC methods | Renderer can access its per-launch voice token and microphone; same-user compromise remains out of scope |
+| Credential exposure | Core token read only in main, minimal voice-child environment; per-launch random token on authenticated loopback endpoints | OS user or main-process compromise exposes local credentials; the voice child holds the full operator token, so "voice never approves" is enforced in code, not by token scope |
+| Model HTML or script injection | Bounded display contract, DOM text nodes, no remote content or executable code rendering | Model prose can still mislead; it has no action authority in M1 |
+| Unwanted personal data retention | No audio recordings; local deletable voice print; addressed transcript export/delete and 30-day purge in Core | Everyday transcripts reach configured external providers under `personal` consent; provider retention is outside local deletion |
+| Silent self-modification or unconfirmed actions | M1 exposes neither computer actions nor a modification mechanism; later milestones must use Core and operator review | M2–M4 need their own implementation and verification gates |
+
 Production gates: Docker/WSL isolation, non-bypassable OpenClaw tool policy, browser egress
 controls, image scans, backup restoration, credential rotation, provider entitlement checks,
 least-privilege DB roles and signed release/upgrade procedure. No production-readiness claim.

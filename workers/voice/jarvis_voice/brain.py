@@ -26,10 +26,16 @@ class Core(Protocol):
 
 
 class Brain(FrameProcessor):  # type: ignore[misc]
-    def __init__(self, core: Core, send: Callable[[dict[str, Any]], Awaitable[None]]) -> None:
+    def __init__(
+        self,
+        core: Core,
+        send: Callable[[dict[str, Any]], Awaitable[None]],
+        enrolled: Callable[[], bool],
+    ) -> None:
         super().__init__()
         self.core = core
         self.send = send
+        self.enrolled = enrolled
         self.window = FollowUpWindow()
         self.pending: asyncio.Task[None] | None = None
         self.sequence = 0
@@ -41,7 +47,8 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         if isinstance(frame, TranscriptionFrame):
             text = frame.text.strip()[:4000]
             named = is_named(text)
-            follow_up = not named and self.window.is_open()
+            # Without a voice print anyone could speak in the window, so the name is required.
+            follow_up = not named and self.window.is_open() and self.enrolled()
             if text and (named or follow_up):
                 self.timing = frame.metadata.copy()
                 self.timing["lang"] = "en" if str(frame.language) == "en" else "tr"
@@ -75,7 +82,7 @@ class Brain(FrameProcessor):  # type: ignore[misc]
             await self.send({"type": "state", "value": "listening"})
             return
         lang = result.lang if result else timing.get("lang", "tr")
-        say = result.say if result else FALLBACK[lang]
+        say = (result.say if result else "") or FALLBACK[lang]
         await self.send({"type": "caption", "role": "jarvis", "text": say})
         await self.send({"type": "display", "blocks": result.display if result else []})
         await self.send({"type": "state", "value": "speaking"})

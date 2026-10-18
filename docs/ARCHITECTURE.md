@@ -15,6 +15,9 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | n8n | External triggers and schedules; registered webhook workflows, execution records |
 | Claude/Gemini SDKs | Text proposals without tools; API credentials distinct from CLI subscriptions |
 | Codex SDK | Explicit opt-in sandboxed analysis; no second OpenClaw-owned session |
+| Conversation service | Core-owned persona, bounded provider fallbacks, addressed turns, transcript export/deletion and retention |
+| Local voice service | Loopback WebRTC, semantic end-of-turn, local speaker gate/STT/TTS; no action or approval authority |
+| Electron desktop | Sandboxed presence, captions, cards, tray/overlay and settings; Core token stays in main |
 
 Core is a modular monolith with a separate Python browser boundary. A single PostgreSQL
 queue avoids two independent global schedulers; Redis is unnecessary at this scale.
@@ -33,8 +36,10 @@ This is a deliberate authority boundary, not an autonomous planning implementati
 
 Effective risk is the maximum of the declared risk, the executor's floor and the policy
 floor. OpenClaw, Codex and n8n executors have a HIGH floor because they can cause side
-effects Core cannot observe. `workflow.invoke`, and any external provider on a private task,
-are HIGH by policy. HIGH requires an exact approval: single use, bound to the action's
+effects Core cannot observe. `workflow.invoke`, and an external provider on a private task
+unless explicitly trusted by `JARVIS_PRIVATE_PROVIDERS`, are HIGH by policy. The `personal`
+class records standing consent for non-sensitive personal context; it adds no risk floor.
+HIGH requires an exact approval: single use, bound to the action's
 parameter and configuration hash, and expiring; CRITICAL is treated the same way. A new action
 supersedes any earlier action still awaiting approval, so an old approval cannot be reused.
 

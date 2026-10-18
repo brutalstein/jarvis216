@@ -20,7 +20,11 @@ const task = {
   }),
 } as Task;
 
-async function gemini(finishReason: string, seen: (config: unknown) => void = () => {}) {
+async function gemini(
+  finishReason: string,
+  seen: (config: unknown) => void = () => {},
+  text = "{",
+) {
   const server = createServer(async (req, res) => {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
@@ -28,7 +32,7 @@ async function gemini(finishReason: string, seen: (config: unknown) => void = ()
     res.setHeader("content-type", "application/json");
     res.end(
       JSON.stringify({
-        candidates: [{ content: { role: "model", parts: [{ text: "{" }] }, finishReason }],
+        candidates: [{ content: { role: "model", parts: [{ text }] }, finishReason }],
       }),
     );
   });
@@ -64,6 +68,11 @@ describe("realtime Gemini provider", () => {
   it("a truncated reply is retryable so the turn can fall back", async () => {
     const error = await gemini("MAX_TOKENS").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ProviderFailure);
+    expect(error).toMatchObject({ kind: "invalid-response", retryable: true });
+  });
+
+  it("an empty reply is retryable so the turn can fall back", async () => {
+    const error = await gemini("STOP", undefined, "  ").catch((e: unknown) => e);
     expect(error).toMatchObject({ kind: "invalid-response", retryable: true });
   });
 

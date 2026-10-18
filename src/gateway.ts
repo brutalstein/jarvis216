@@ -16,6 +16,9 @@ import {
 import { ProviderFailure } from "./routing.js";
 import type { TaskService } from "./tasks.js";
 
+// Failures tied to one provider (revoked key, delisted model): another listed provider may work.
+const providerBound = new Set(["authentication-required", "permanent"]);
+
 export class ActionGateway {
   constructor(
     private tasks: TaskService,
@@ -201,7 +204,7 @@ export class ActionGateway {
               safe &&
               !combined.aborted &&
               error instanceof ProviderFailure &&
-              error.retryable &&
+              (error.retryable || providerBound.has(error.kind)) &&
               task.calls < task.spec.budget.maxCalls &&
               task.spec.providers.some((p) => !targets.includes(p));
             if (safe) await tx.query("UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
