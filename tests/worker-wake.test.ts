@@ -92,6 +92,12 @@ describe("worker wake", () => {
     ).rejects.toThrow("rollback");
     expect(seen).toHaveLength(1);
     expect((await tasks.get(task.id)).status).toBe("READY");
+    // A throwing listener neither fails the committed transaction nor silences later listeners.
+    tasks.changes.prependListener("change", () => {
+      throw new Error("listener");
+    });
+    await expect(tasks.cancel(task.id)).resolves.toMatchObject({ status: "CANCELLED" });
+    expect(seen.at(-1)).toEqual({ id: task.id, status: "CANCELLED" });
   });
 
   it("a text turn returns as soon as its task completes, not on the next poll", async () => {

@@ -56,7 +56,15 @@ export class TaskService {
       await tx.query("SELECT id FROM scheduler_lock WHERE id=1 FOR UPDATE");
       return fn(tx);
     });
-    for (const [id, status] of moved) this.changes.emit("change", { id, status } as TaskChange);
+    // The transaction has committed: a failing listener must neither make it look failed nor
+    // keep the other listeners from hearing about it.
+    for (const [id, status] of moved)
+      for (const listener of this.changes.listeners("change"))
+        try {
+          (listener as (change: TaskChange) => void)({ id, status });
+        } catch {
+          process.stderr.write('{"level":"error","code":"TASK_CHANGE_LISTENER_FAILED"}\n');
+        }
     return value;
   }
   async get(id: string, tx: Sql = this.db): Promise<Task> {
