@@ -45,27 +45,15 @@ export async function containedPath(input: string, roots: string[]): Promise<str
     (process.platform !== "win32" && /^[a-zA-Z]:[\\/]/.test(input))
   )
     throw new GuardError("PATH_OUTSIDE_ROOTS");
-<<<<<<< HEAD
-  const resolved = path.resolve(first, input);
+  const requested = path.resolve(first, input);
   // Lexical check first, so no filesystem call leaves the roots; the real-path check below
   // then catches junctions and symlinks inside them.
-  if (!roots.some((root) => inside(root, resolved))) throw new GuardError("PATH_OUTSIDE_ROOTS");
-  const candidate = await realNearest(resolved);
-  for (const root of roots) {
-    const real = await realpath(root).catch(() => null);
-    if (real && inside(real, candidate)) return candidate;
-=======
-  const requested = path.resolve(first, input);
+  if (!roots.some((root) => inside(root, requested))) throw new GuardError("PATH_OUTSIDE_ROOTS");
   const candidate = await realNearest(requested);
   for (const root of roots) {
     const real = await realpath(root).catch(() => null);
-    if (!real) continue;
-    const rel = path.relative(real, candidate);
-    if (rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)) {
-      // Canonical paths authorize, while the original spelling preserves Windows 8.3 aliases.
-      return requested;
-    }
->>>>>>> origin/feature/latest-development
+    // Canonical paths authorize, while the original spelling preserves Windows 8.3 aliases.
+    if (real && inside(real, candidate)) return requested;
   }
   throw new GuardError("PATH_OUTSIDE_ROOTS");
 }
