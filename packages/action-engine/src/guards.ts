@@ -1,6 +1,7 @@
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 import { normalize } from "./ground.js";
+import { redactSecrets } from "./snapshot.js";
 
 export class GuardError extends Error {
   readonly code: string;
@@ -181,5 +182,16 @@ export function blockedShortcut(keys: string): boolean {
     all("ctrl", "esc") ||
     all("ctrl", "alt", "delete") ||
     all("alt", "f4")
+  );
+}
+
+// Memory reaches conversation providers, so a note holding a credential is refused: key-shaped
+// tokens, card-length digit runs, or words that announce a password, PIN or IBAN.
+const credentialWords = /\b(sifre\w*|parola\w*|password\w*|passcode|pin|iban|cvv|cvc)\b/;
+export function secretNote(text: string): boolean {
+  return (
+    redactSecrets(text) !== text ||
+    credentialWords.test(normalize(text)) ||
+    /(?:\d[ -]?){13,19}/.test(text)
   );
 }

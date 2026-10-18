@@ -62,6 +62,7 @@ export const CapabilitySchema = z.enum([
   "workflow.invoke",
   "desktop.act",
   "info.fetch",
+  "memory.write",
 ]);
 export type Capability = z.infer<typeof CapabilitySchema>;
 export const RiskSchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);

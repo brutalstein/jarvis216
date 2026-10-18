@@ -15,6 +15,7 @@ import {
 } from "./integrations/models.js";
 import { OpenAICompatibleExecutor, providerId } from "./integrations/openai-compatible.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrations/services.js";
+import { MemoryExecutor, type MemoryStore } from "./memory.js";
 import { type Provider, ProviderRegistry } from "./routing.js";
 import { containedPath, type EnvSecrets } from "./security.js";
 
@@ -41,6 +42,7 @@ export const ConfigSchema = z.object({
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
+  local: { memory?: MemoryStore } = {},
 ): Promise<{
   registry: ProviderRegistry;
   tools?: McpToolPort;
@@ -275,6 +277,8 @@ export async function configuredProviders(
     tools = new McpToolPort(options);
     register(new DesktopExecutor(tools, roots), JSON.stringify({ ...options, roots }), 10);
   }
+  if (env.ENABLE_MEMORY === "true" && local.memory)
+    register(new MemoryExecutor(local.memory), "memory:v1:local", 10);
   if (env.ENABLE_NEWS === "true") {
     const feeds = z
       .array(z.url().refine((url) => new URL(url).protocol === "https:"))

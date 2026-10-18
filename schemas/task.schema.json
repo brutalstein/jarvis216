@@ -14,7 +14,8 @@
         "browser.extract",
         "workflow.invoke",
         "desktop.act",
-        "info.fetch"
+        "info.fetch",
+        "memory.write"
       ]
     },
     "input": {

@@ -3,6 +3,7 @@ import Fastify, { type FastifyRequest } from "fastify";
 import { z } from "zod";
 import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
 import type { ConversationService } from "./conversation.js";
+import type { MemoryStore } from "./memory.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
@@ -15,6 +16,7 @@ export interface ServerOptions {
   onAdmit?(): void;
   conversation?: ConversationService;
   plans?: PlanService;
+  memory?: MemoryStore;
 }
 const TaskId = z.strictObject({ id: z.uuid() });
 export function buildServer(
@@ -313,6 +315,24 @@ export function buildServer(
         "SELECT id FROM plans ORDER BY created_at DESC LIMIT 8",
       );
       for (const { id } of recent.rows) if (!closed) onPlan(await plans.get(id));
+    });
+  }
+  const { memory } = options;
+  if (memory) {
+    // Operator-approved long-term memory: review, forget one note, or forget everything.
+    app.get("/v1/memories", async (request) => {
+      authenticate(request, "operator");
+      return { memories: await memory.list() };
+    });
+    app.delete("/v1/memories/:id", async (request, reply) => {
+      authenticate(request, "operator");
+      invariant(await memory.delete(TaskId.parse(request.params).id), "MEMORY_NOT_FOUND", 404);
+      return reply.code(204).send();
+    });
+    app.delete("/v1/memories", async (request, reply) => {
+      authenticate(request, "operator");
+      await memory.deleteAll();
+      return reply.code(204).send();
     });
   }
   const { conversation } = options;

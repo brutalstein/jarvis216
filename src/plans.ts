@@ -122,6 +122,8 @@ export class PlanService extends EventEmitter {
       conversationProviders: string[];
       privateProviders: string[];
       integrations?: IntegrationHub;
+      // Operator-approved long-term memory actions are enabled.
+      memory?: boolean;
       // Text summary of the current screen for a replan (window and element names).
       screen?: () => Promise<string>;
     },
@@ -134,6 +136,13 @@ export class PlanService extends EventEmitter {
   }
   browserUrls(): readonly string[] {
     return this.options.integrations?.browserUrls ?? [];
+  }
+  // Catalog actions offered beyond desktop and info: enabled integrations and memory.
+  optionalActions(): string[] {
+    return [
+      ...this.integrationCapabilities(),
+      ...(this.options.memory ? ["memory.save", "memory.forget"] : []),
+    ];
   }
 
   propose(input: {
@@ -352,6 +361,7 @@ export class PlanService extends EventEmitter {
         ? "integration"
         : "info";
     for (const step of input.steps) {
+      invariant(step.kind !== "memory" || this.options.memory, "MEMORY_DISABLED", 400);
       if (step.kind !== "integration") continue;
       invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
       this.options.integrations.compile(step.action, step.args);
@@ -407,20 +417,24 @@ export class PlanService extends EventEmitter {
     let elapsed = 0;
     for (const [index, step] of plan.steps.entries()) {
       const desktop = step.kind === "desktop";
+      const memory = step.kind === "memory";
       const external =
         step.kind === "integration"
           ? this.options.integrations?.compile(step.action, step.args)
           : undefined;
       invariant(step.kind !== "integration" || external, "INTEGRATION_DISABLED", 400);
-      const duration = external?.budget.maxDurationMs ?? (desktop ? stepWindowMs : planWindowMs);
+      const duration =
+        external?.budget.maxDurationMs ?? (desktop || memory ? stepWindowMs : planWindowMs);
       elapsed += duration;
       const task = await this.options.tasks.createIn(
         tx,
         {
           objective: external?.objective ?? `${plan.goal}: ${step.action}`,
-          capability: external?.capability ?? (desktop ? "desktop.act" : "info.fetch"),
+          capability:
+            external?.capability ??
+            (desktop ? "desktop.act" : memory ? "memory.write" : "info.fetch"),
           input: external?.input ?? { action: step.action, args: step.args },
-          providers: external?.providers ?? [desktop ? "windows-mcp" : "news"],
+          providers: external?.providers ?? [desktop ? "windows-mcp" : memory ? "memory" : "news"],
           risk: external?.risk ?? step.risk,
           privacy: external?.privacy ?? "personal",
           budget: external?.budget ?? { maxCalls: 1, maxDurationMs: duration },
@@ -709,7 +723,7 @@ export class PlanService extends EventEmitter {
         step: { action: step.action, args: step.args },
         observation: evidence.observation,
         ...(screen ? { screen } : {}),
-        enabledIntegrations: this.integrationCapabilities(),
+        enabledIntegrations: this.optionalActions(),
         browserUrls: this.browserUrls(),
       }),
       "private",

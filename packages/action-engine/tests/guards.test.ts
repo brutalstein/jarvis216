@@ -9,6 +9,7 @@ import {
   containedPath,
   escapeTarget,
   GuardError,
+  secretNote,
 } from "../src/guards.js";
 
 // realpath on a UNC path makes Windows contact (and authenticate to) that host.
@@ -194,5 +195,26 @@ describe("blockedShortcut", () => {
 
   it.each(["ctrl+s", "ctrl+c", "ctrl+shift+t", "f5"])("allows %s", (keys) => {
     expect(blockedShortcut(keys)).toBe(false);
+  });
+});
+
+describe("secretNote", () => {
+  it.each([
+    "Wi-Fi şifrem kedi123",
+    "my password is hunter2",
+    "PIN 4821",
+    "kartım 4111 1111 1111 1111",
+    "IBAN TR33 0006 1005 1978 6457 8413 26",
+    "token sk-abcdefghijklmnopqrstuv",
+  ])("refuses %j", (note) => {
+    expect(secretNote(note)).toBe(true);
+  });
+  it.each([
+    "Annemin doğum günü 3 Mayıs",
+    "I take my coffee black",
+    "Toplantılar her salı 10:00'da",
+    "Ali'nin telefonu 0532 123 45 67",
+  ])("keeps %j", (note) => {
+    expect(secretNote(note)).toBe(false);
   });
 });

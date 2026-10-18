@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
+import type { MemoryStore } from "./memory.js";
 import { conversationPrompt } from "./persona.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { TaskService } from "./tasks.js";
@@ -133,6 +134,7 @@ export class ConversationService {
       wake(): void;
       deadlineMs?: number;
       plans?: PlanService;
+      memory?: MemoryStore;
     },
   ) {}
   get deadlineMs(): number {
@@ -166,7 +168,9 @@ export class ConversationService {
       history,
       now: new Date(started),
       enabledIntegrations: this.options.plans?.integrationCapabilities(),
+      optionalActions: this.options.plans?.optionalActions(),
       browserUrls: this.options.plans?.browserUrls(),
+      memories: await this.options.memory?.promptNotes(),
     });
     const { text, provider, taskId } = await runText(
       this.tasks,

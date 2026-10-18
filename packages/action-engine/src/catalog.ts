@@ -138,6 +138,22 @@ const definitions: ActionDef[] = [
     { workflow: label(100), payload: z.record(z.string(), z.json()).default({}) },
   ],
   [
+    "memory.save",
+    "memory",
+    "MEDIUM",
+    "Operatörün açıkça hatırlamamı istediği notu kaydet",
+    "Remember a note the operator explicitly asked to keep",
+    { note: label(500) },
+  ],
+  [
+    "memory.forget",
+    "memory",
+    "MEDIUM",
+    "Bir konudaki notları unut",
+    "Forget the notes about a topic",
+    { about: label(200) },
+  ],
+  [
     "news.brief",
     "info",
     "LOW",
@@ -208,10 +224,12 @@ function signature(args: z.ZodObject): string {
     .join(", ");
 }
 
-/** Desktop/info always listed; integration actions only when `enabled` contains their id. */
+/** Desktop/info always listed; integration and memory actions only when `enabled` has their id. */
 export function catalogLines(enabled?: ReadonlySet<string>): string {
   return definitions
-    .filter((d) => d.kind !== "integration" || !enabled || enabled.has(d.id))
+    .filter(
+      (d) => (d.kind !== "integration" && d.kind !== "memory") || !enabled || enabled.has(d.id),
+    )
     .map((d) => `${d.id}(${signature(d.args)}) — ${d.description.tr} / ${d.description.en}`)
     .join("\n");
 }

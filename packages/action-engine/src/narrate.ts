@@ -28,6 +28,8 @@ const done: Record<string, (name: string) => Pair> = {
   "ui.type": () => ["Yazdım, efendim.", "Typed, sir."],
   "ui.click": () => ["Tıkladım, efendim.", "Clicked, sir."],
   "web.open": () => ["Sayfa açıldı, efendim.", "The page is open, sir."],
+  "memory.save": () => ["Aklımda tutacağım, efendim.", "I'll remember that, sir."],
+  "memory.forget": () => ["Unuttum, efendim.", "Forgotten, sir."],
 };
 
 // Spoken outcomes come from these templates over Core records, never from model claims.

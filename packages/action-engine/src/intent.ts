@@ -45,6 +45,8 @@ export function intentInstructions(enabledIntegrations?: readonly string[]): str
 - "cancel": the operator says stop, cancel, dur, iptal, vazgeç.
 Rules: never invent actions. Anything outside the catalog (deleting files, running commands,
 installing, paying, passwords, messages) is "reply" and "say" explains you cannot do it yet.
+Use memory.save only when the operator explicitly asks you to remember something (hatırla, aklında
+tut, remember), with the note in their words; never for passwords, keys or card numbers.
 For a plan, never claim in "say" that anything is done or started: the system reports outcomes.
 Catalog (action(arguments) — Turkish / English):
 ${catalogLines(enabled)}`;

@@ -4,6 +4,7 @@ import { ConfigSchema, configuredProviders } from "./config.js";
 import { terminal } from "./contracts.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
+import { MemoryStore } from "./memory.js";
 import { PlanService } from "./plans.js";
 import { loadObservations, purgeObservations } from "./reliability.js";
 import { EnvSecrets } from "./security.js";
@@ -21,8 +22,11 @@ async function main() {
     ),
   );
   const secrets = new EnvSecrets(secretValues);
-  const { registry, tools, integrations } = await configuredProviders(process.env, secrets);
   const db = postgres(config.DATABASE_URL);
+  const memory = process.env.ENABLE_MEMORY === "true" ? new MemoryStore(db) : undefined;
+  const { registry, tools, integrations } = await configuredProviders(process.env, secrets, {
+    ...(memory && { memory }),
+  });
   try {
     await migrate(db);
     // Health, usage budgets and open circuits survive a restart: replay the last day.
@@ -36,6 +40,7 @@ async function main() {
         "workflow.invoke": config.WORKFLOW_CONCURRENCY,
         "desktop.act": 1,
         "info.fetch": 2,
+        "memory.write": 1,
       },
       redact: (text) => secrets.redact(text),
     });
@@ -63,6 +68,7 @@ async function main() {
       conversationProviders: providers,
       privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
       integrations,
+      memory: memory !== undefined,
       // A replan sees window and element names from a fresh Snapshot, never field values.
       ...(tools && {
         screen: async () =>
@@ -83,6 +89,7 @@ async function main() {
       providers,
       wake,
       plans,
+      ...(memory && { memory }),
     });
     await conversation.purge(30 * 86_400_000);
     const server = buildServer(tasks, registry, {
@@ -92,6 +99,7 @@ async function main() {
       onAdmit: wake,
       conversation,
       plans,
+      ...(memory && { memory }),
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";

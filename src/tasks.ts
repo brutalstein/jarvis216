@@ -233,6 +233,7 @@ export class TaskService {
           "workflow.invoke": 1,
           "desktop.act": 1,
           "info.fetch": 2,
+          "memory.write": 1,
         };
         const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
         if ((activeByCapability.get(task.spec.capability) ?? 0) >= limit) continue;
