@@ -68,6 +68,19 @@ Routing, memory and outbox additions (see [ADR 0011](ADR/0011-measured-adaptive-
 | Misfired spoken fast path | Only bare stop phrases or a single ordinal skip the model; anything else goes to the model; stop is fail-safe | Speech meant for someone else inside the follow-up window can still stop a plan or pick a candidate |
 | Forged or replayed outcome pushes | Bearer token from the operator's `.env`, loopback service URLs, stable `eventId` for receiver deduplication, results only for verified completions | Callback token theft lets an attacker forge events to n8n; delivery is at least once |
 
+Standing permissions and the learning brain (see
+[ADR 0014](ADR/0014-operator-standing-permissions.md),
+[ADR 0015](ADR/0015-learning-brain-and-layered-intent.md)):
+
+| Threat | Controls | Residual |
+| --- | --- | --- |
+| Misheard or injected utterance running an allowed action | Only the operator widens permissions, in Settings; grants can expire (≤ 30 days); every change is audited with a policy version; grants apply only to steps of a running plan, never to CRITICAL, never to direct API tasks; engine guards stay on in every mode | With `trusted` or `autonomous`, an utterance that compiles to an allowed action runs without a card |
+| Widening permissions from the renderer or by voice | Changes go only through Core's authenticated operator API; the desktop main process validates action ids, modes, durations and presets before calling it, and the renderer never holds the Core token; there is no voice or catalog action for permissions | A compromised renderer can call the fixed Settings bridge like the operator |
+| Turned-off action still running | Denied actions are hidden from every prompt, refused at plan creation and re-checked by the gateway before each step | A step already executing when the action is turned off finishes |
+| Brain poisoning | The brain only proposes: learned plans are compiled against the catalog and pass permissions, approvals and the gateway; reflexes need 3+ successes, a success streak and no context-dependent words; failures and corrections weaken skills faster than successes strengthen them | A practised phrase can propose a wrong learned plan until a failure or correction weakens it |
+| Learned data outliving retention | Experiences follow the 30-day transcript retention; conversation deletion and Settings reset forget everything learned | Skills keep normalized trigger phrases until they fade or are forgotten |
+| Utterances sent for embeddings | Off by default; `BRAIN_EMBEDDINGS=gemini` sends only understood utterances, never results, notes or screen text | Gemini receives every understood utterance while enabled |
+
 Production gates: Docker/WSL isolation, non-bypassable OpenClaw tool policy, browser egress
 controls, image scans, backup restoration, credential rotation, provider entitlement checks,
 least-privilege DB roles and signed release/upgrade procedure. No production-readiness claim.

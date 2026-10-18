@@ -41,7 +41,9 @@ deduplicate by taskId. OpenClaw tools stay denied; Browser Use stays Actor DOM
 readback only (no LLM agent, forms, or credentials).
 
 HIGH integrations need a **second exact Core action approval** beyond the
-plan card (CLI or /v1/actions/:id/approve). Voice cannot grant it. Windows
+plan card (CLI or /v1/actions/:id/approve), unless the operator allowed the
+action in Settings → İzinler ([ADR 0014](ADR/0014-operator-standing-permissions.md));
+the gateway then records the standing grant as the approval. Voice cannot grant it. Windows
 Hello second factor is not implemented. Do not claim unrestricted hands-free
 actions, guaranteed live connectivity or independently verified business
 outcomes. Never replay an UNCERTAIN external result.

@@ -174,16 +174,31 @@ renderer as data URIs. The spoken brief is a `personal` text task over those hea
 
 ## Long-term memory
 
-```dotenv
-ENABLE_MEMORY=true
-```
-
+Always available; Settings → İzinler decides how it runs ([ADR 0014](ADR/0014-operator-standing-permissions.md)).
 "Jarvis, annemin doğum günü 3 Mayıs, hatırla" becomes a `memory.save` plan that waits for one
-tap; "unut" or "forget" proposes `memory.forget(about)` the same way. Notes holding passwords,
+tap (or runs at once when the operator allowed `memory.save`); "unut" or "forget" proposes
+`memory.forget(about)` the same way, and turning an action off hides it from the model. Notes holding passwords,
 PINs, IBANs, card numbers or key-shaped tokens are refused. The newest notes (≤ 3000
 characters) go into conversation prompts as data under `personal` consent. Review or remove
 them with `GET /v1/memories` and `DELETE /v1/memories[/:id]`; conversation deletion and the
-30-day purge leave them alone ([ADR 0012](ADR/0012-operator-approved-memory.md)).
+30-day purge leave them alone ([ADR 0012](ADR/0012-operator-approved-memory.md)); Settings →
+Hafıza lists and forgets them too.
+
+## Learning brain
+
+Core learns from every understood request without configuration ([ADR 0015](ADR/0015-learning-brain-and-layered-intent.md)):
+keyword recall, skills and reflexes run locally on PostgreSQL. Semantic recall is optional:
+
+```dotenv
+BRAIN_EMBEDDINGS=gemini
+BRAIN_EMBEDDING_MODEL=gemini-embedding-001
+```
+
+It needs `ENABLE_GEMINI=true` and sends each understood utterance (not results, notes or screen
+text) to the Gemini embedding endpoint. Without it, recall is BM25 only. Settings → Öğrenme
+turns learning or reflexes off, shows learned skills, forgets one or resets everything;
+`GET /v1/brain`, `POST /v1/brain/consolidate`, `DELETE /v1/brain/skills/:id` and
+`DELETE /v1/brain` do the same over the operator API.
 
 ## Codex SDK
 

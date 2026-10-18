@@ -22,7 +22,9 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | Integration hub (`packages/integration-hub`) | Typed recipes that turn HIGH integration actions into Core tasks for Browser Use, n8n and OpenClaw |
 | Plan service | Model-proposed plans: compile, hash, approval card, one task per step, finishers, replan, voice cancel |
 | Windows-MCP | Desktop tools over MCP stdio, child of Core, allowlisted tools only, telemetry off; pre-warmed at boot, restarts age out of a 10-minute crash window |
-| Memory store | Operator-approved long-term notes ([ADR 0012](ADR/0012-operator-approved-memory.md)); written only by approved `memory.save` / `memory.forget` steps |
+| Memory store | Operator-approved long-term notes ([ADR 0012](ADR/0012-operator-approved-memory.md)); written only by approved or allowed `memory.save` / `memory.forget` steps |
+| Permission service | Operator's standing ask/allow/deny per catalog action, presets, timed grants, learning switches, audit trail ([ADR 0014](ADR/0014-operator-standing-permissions.md)) |
+| Brain (`packages/brain`) | Learning memory: experiences, skills, decay and consolidation, recall, reflexes, learned choices; proposes only ([ADR 0015](ADR/0015-learning-brain-and-layered-intent.md)) |
 | Outbox | Transactional queue of n8n task outcomes, delivered at least once to a registered webhook ([ADR 0013](ADR/0013-n8n-outcome-outbox.md)) |
 
 Core is a modular monolith with a separate Python browser boundary. A single PostgreSQL
@@ -43,8 +45,14 @@ and the operator approves the plan hash before any MEDIUM step runs
 ## Model-proposed plans (M3)
 
 ```
-voice turn ─► ConversationService ─┬─ bare stop / ordinal ─► cancel plan / choose candidate (no model)
-                                   └─ one JSON-mode model call ─► intent: reply | clarify | plan | cancel
+voice turn ─► ConversationService
+  1 Core reflexes     bare stop / status question / ordinal ─► cancel / status from records / choose
+  2 correction        "hayır, ..." ─► previous request marked corrected, turn continues
+  3 learned reflex    practised phrase ─► learned plan (no model call)
+  4 deliberation      one JSON-mode model call (working memory, notes, learned examples, one repair)
+                      ─► intent: reply | clarify | plan | cancel
+  5 policy            turned-off actions refused; confidence < 0.5 ─► confirm question
+  6 plan + learning   experience recorded; plan outcome reinforces the brain
 plan ─► engine.compile (catalog Zod schemas) ─► plans row (hash) ─► one task per step (chain)
   ├─ desktop.act   ─► DesktopExecutor ─► guards ─► grounding ─► Windows-MCP ─► postcondition
   ├─ info.fetch    ─► NewsExecutor    ─► RSS over HTTPS ─► news panel
@@ -53,9 +61,10 @@ plan ─► engine.compile (catalog Zod schemas) ─► plans row (hash) ─► 
 GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; announcements ─► voice TTS
 ```
 
-- LOW-only plans run at once. A plan with a MEDIUM step waits for one tap bound to its hash,
-  valid for two minutes (`POST /v1/plans/:id/approve`). HIGH integration steps also need their
-  own exact approval. Voice can cancel a plan, never approve one.
+- A plan runs at once when every step is allowed in Settings (by default LOW only). Otherwise it
+  waits for one tap bound to its hash, valid for two minutes (`POST /v1/plans/:id/approve`).
+  HIGH integration steps also need their own exact approval unless allowed. Voice can cancel a
+  plan, never approve one.
 - One desktop or integration plan runs at a time; a new one cancels the previous one.
 - The model's spoken text is discarded for plans; JARVIS speaks templates and Core outcomes.
 - Screen text reaches only trusted-private providers (Claude Code), for `screen.describe` and
@@ -67,7 +76,10 @@ GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; annou
   stopped on: a clarification, never an approval; outside the plan's approval window the
   continued plan asks for a new tap. Anything with extra words goes to the model.
 - Conversation turns, repairs and replans request native JSON mode where the provider has one
-  (Gemini, OpenRouter). Memory notes, when enabled, enter the prompt as data.
+  (Gemini, OpenRouter). Memory notes, Core's working memory (active plan, last result, recent
+  names, an open question) and learned examples enter the prompt as data.
+- After an agent delegation or page read JARVIS speaks a short summary of what came back,
+  written by a private provider.
 
 ## Risk and approval
 
@@ -82,6 +94,12 @@ supersedes any earlier action still awaiting approval, so an old approval cannot
 MEDIUM needs either its own exact approval or membership in an approved, running plan whose
 compiled step matches the action's input and risk, within two minutes of the plan approval.
 Such a step emits `approval.granted` with `via: "plan"` and consumes no approval row.
+
+A standing grant from Settings ([ADR 0014](ADR/0014-operator-standing-permissions.md)) counts as
+the operator's approval for a MEDIUM or HIGH step of a running plan, bound to the task by the
+plan's task list (and to the exact compiled step for desktop, info and memory actions). It emits
+`approval.granted` with `via: "standing-grant"`, the action and the policy version, and never
+applies to CRITICAL. A denied action is refused by the gateway even inside an approved plan.
 
 ## Execution and failure classification
 

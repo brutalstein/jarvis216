@@ -262,6 +262,10 @@ any filesystem call, real-path check for junctions, the caller's spelling return
 | Operator-approved long-term memory ([ADR 0012](ADR/0012-operator-approved-memory.md)) | `tests/memory.test.ts`, guard and catalog tests | tested only |
 | n8n outcome push through a transactional outbox ([ADR 0013](ADR/0013-n8n-outcome-outbox.md)) | `tests/outbox.test.ts` against a local HTTP receiver | tested only; example workflow not live-verified |
 | Voice client returns an apology for malformed Core replies | `workers/voice/tests/test_core_client.py` | tested only |
+| Operator-managed standing permissions: presets, per-action ask/allow/deny, timed grants, audit, gateway grants and deny re-check ([ADR 0014](ADR/0014-operator-standing-permissions.md)) | `tests/permissions.test.ts` (API, presets, expiry, plan without card, HIGH integration via grant, deny before and during a plan, prompts) | tested only |
+| Learning brain: experiences, reinforcement, skills, decay, consolidation, BM25 + optional embeddings recall, reflexes, learned choices ([ADR 0015](ADR/0015-learning-brain-and-layered-intent.md)) | `packages/brain/tests/brain.test.ts`, `tests/brain-integration.test.ts` | tested only; Gemini embeddings not live-verified |
+| Layered intent: status and correction signals, working memory, confidence gate, result briefs | engine voice/intent tests, `tests/brain-integration.test.ts`, `tests/conversation-intent.test.ts` | tested only (live eval not re-run) |
+| Desktop Settings tabs for permissions, learning and memory | `apps/desktop/tests/settings.spec.ts` against a fake Core (token stays in main, bridge validation) | tested only (Linux Electron under xvfb) |
 
 Gates on the cloud host (Node 22.22, so outside the declared engine range; CI pins 24.22.0):
 type check, Biome lint (8 existing CSS warnings), Vitest, build, contract drift, desktop type

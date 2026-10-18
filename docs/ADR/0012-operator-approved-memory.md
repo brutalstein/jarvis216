@@ -1,6 +1,8 @@
 # ADR 0012: Operator-approved long-term memory
 
-Status: accepted, 2026-10-18.
+Status: accepted, 2026-10-18. Amended by [ADR 0014](0014-operator-standing-permissions.md):
+the memory actions are always offered unless turned off in Settings, and run without a tap when
+allowed there.
 
 ## Context
 

@@ -11,7 +11,10 @@ typed adapters and never bypass that authority.
 Routing learns from that record: providers measured as failing or too slow for the time left
 move behind the others ([ADR 0011](docs/ADR/0011-measured-adaptive-routing.md)), circuits and
 usage budgets survive restarts, and every component reacts to committed task changes instead of
-polling.
+polling. A learning brain turns repeated successes into skills and corrections into lessons
+([ADR 0015](docs/ADR/0015-learning-brain-and-layered-intent.md)), and the operator decides in
+the desktop Settings which actions a spoken command may run on its own
+([ADR 0014](docs/ADR/0014-operator-standing-permissions.md)).
 
 Status: first foundation release for **one trusted local operator**. It is not a
 multi-tenant system and makes no production-readiness claim. See
@@ -34,8 +37,10 @@ open gates. No frontend is included by design.
 | `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
 | `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, eval set |
 | `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan |
-| `src/conversation.ts`, `src/persona.ts` | Voice turns: persona prompt, JSON intents, instant spoken stop and candidate choice |
-| `src/memory.ts` | Operator-approved long-term memory (one-tap `memory.save` / `memory.forget`) |
+| `src/conversation.ts`, `src/persona.ts` | Layered voice turns: reflexes, corrections, learned skills, working memory, JSON intents, policy |
+| `src/memory.ts` | Operator-approved long-term memory (`memory.save` / `memory.forget`) |
+| `src/permissions.ts` | Operator permissions per catalog action (ask / allow / deny, timed grants, levels, audit) |
+| `packages/brain/`, `src/brain-store.ts` | Learning brain: experiences, skills, reinforcement, decay, recall, reflexes |
 | `src/outbox.ts` | Transactional outbox pushing n8n task outcomes to a registered webhook |
 | `src/security.ts`, `src/telemetry.ts` | Secret references/redaction, path containment, tracing |
 | `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only) |
@@ -132,6 +137,8 @@ endpoints require the separate `N8N_INGRESS_TOKEN` and cannot reach operator rou
 | `GET /v1/stream` | Server-sent plan states, panels and announcements |
 | `POST /v1/conversation/turns`, `GET`/`DELETE /v1/conversation/turns` | Voice turn, transcript export and deletion |
 | `GET /v1/memories`, `DELETE /v1/memories[/:id]` | Review and forget operator-approved memory notes |
+| `GET`/`PUT /v1/permissions`, `POST /v1/permissions/preset`, `GET /v1/permissions/audit` | Operator permissions per action, levels and their audit trail |
+| `GET /v1/brain`, `POST /v1/brain/consolidate`, `DELETE /v1/brain[/skills/:id]` | What JARVIS learned; consolidate now; forget |
 
 Task, result and event envelope contracts are published in `schemas/`.
 
@@ -157,7 +164,7 @@ Task, result and event envelope contracts are published in `schemas/`.
 | `ENABLE_CODEX`, `OPENAI_API_KEY`, `CODEX_MODEL`, `CODEX_ISOLATION_VERIFIED`, `CODEX_WORKSPACE`, `CODEX_ISOLATED_HOME` | Codex SDK adapter (isolated host only) |
 | `ENABLE_DESKTOP`, `WINDOWS_MCP_COMMAND`, `WINDOWS_MCP_ARGS`, `JARVIS_FILE_ROOTS` | Windows-MCP desktop actions and the folders file actions may touch |
 | `ENABLE_NEWS`, `NEWS_FEEDS` | RSS news briefs and panels |
-| `ENABLE_MEMORY` | Operator-approved long-term memory |
+| `BRAIN_EMBEDDINGS`, `BRAIN_EMBEDDING_MODEL` | Optional semantic recall for the learning brain (`gemini`) |
 
 ## Documentation
 

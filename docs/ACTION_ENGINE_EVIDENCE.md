@@ -59,8 +59,19 @@ capture. Run them with the operator present, on a clean Notepad window, after en
 | Replan without the screen | The replan prompt now receives window and element names from a fresh Snapshot (never field values), as the spec intended | tested only |
 | Intent JSON depended on prose discipline | Turns, repairs and replans request native JSON mode (Gemini, OpenRouter); the eval script does the same | tested only (live eval not re-run) |
 
-New catalog actions `memory.save` and `memory.forget` (MEDIUM, only with `ENABLE_MEMORY=true`)
+New catalog actions `memory.save` and `memory.forget` (MEDIUM, governed by Settings permissions)
 are covered by engine and Core tests; the 120-row eval set does not include them yet.
+
+| Former gap | Now | Class |
+| --- | --- | --- |
+| Every MEDIUM/HIGH step waited for a tap, even for routine voice work | Per-action ask/allow/deny with presets and timed grants, managed in Settings; allowed steps of a running plan are approved by the standing grant (recorded as `approval.granted`, `via: "standing-grant"`), denied actions are hidden from prompts and re-checked by the gateway ([ADR 0014](ADR/0014-operator-standing-permissions.md)) | tested only |
+| No learning between requests | `@jarvis/brain`: experiences, outcome reinforcement, skills, decay and consolidation, BM25 (+ optional embeddings) recall into the prompt, reflexes that skip the model for practised phrases, learned candidate choices ([ADR 0015](ADR/0015-learning-brain-and-layered-intent.md)) | tested only |
+| "Durum ne?" needed a model call; corrections taught nothing | Status questions answered from Core's records; "hayır, ..." marks the previous request corrected and weakens what it learned | tested only |
+| Low-confidence plans ran or were proposed as is | Plans with confidence below 0.5 become a confirm question; the next turn sees what was asked | tested only |
+| "Tamam" after an agent or page read | A short spoken summary of what came back (private providers only) | tested only |
+
+The eval set has no rows for reflexes, corrections or status questions yet, and none of these has
+been exercised against a live model or desktop.
 
 ## Known gaps
 

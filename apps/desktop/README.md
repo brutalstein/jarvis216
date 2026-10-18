@@ -44,22 +44,31 @@ service for calibration with the operator's microphone.
 - Cards expire after 20 seconds; pin a card to keep it. Up to three show beside the presence.
   Captions stay 7–14 seconds depending on length. Settings exports conversation records as JSON
   and confirms before deleting them.
+- Settings has four tabs (arrow keys move between them):
+  - **Genel**: microphone, voice print, conversation export and deletion.
+  - **İzinler**: one level for everything (**Güvenli**, **Dengeli**, **Tam yetki**) or **Sor**,
+    **İzin ver**, **Engelle** per action, grouped by area, with risk and availability. **Yeni
+    izinlerin süresi** makes new grants expire after 1 hour, 8 hours or 1 day instead of lasting
+    until changed. An allowed action runs from
+    voice without a card; an action turned off is never offered or run. Core audits every change
+    ([ADR 0014](../../docs/ADR/0014-operator-standing-permissions.md)).
+  - **Öğrenme**: what JARVIS has learned (experiences, skills, success and correction rates),
+    switches for learning and for learned shortcuts, **Şimdi pekiştir**, forgetting one skill and
+    resetting everything after a confirmation
+    ([ADR 0015](../../docs/ADR/0015-learning-brain-and-layered-intent.md)).
+  - **Hafıza**: long-term notes, forget one or all.
+
+  All Settings calls go from the main process to Core with the operator token, which the
+  renderer never receives; the main process validates every change first.
 
 - Spoken commands become plans when Core enables the action engine (`ENABLE_DESKTOP`,
-  `ENABLE_NEWS`). LOW-only plans run at once. A plan with a MEDIUM step shows a card with its
-  steps and risk badges: **Enter** or a tap approves it within two minutes, **Esc** rejects it.
-  Saying "dur", "iptal" or "stop" cancels a running plan; voice never approves one.
+  `ENABLE_NEWS`). A plan whose steps are all allowed runs at once (by default LOW only). Any
+  other plan shows a card with its steps and risk badges: **Enter** or a tap approves it within
+  two minutes, **Esc** rejects it. Saying "dur", "iptal" or "stop" cancels a running plan, and
+  "durum ne?" reports it; voice never approves one.
 - When several on-screen elements match, a numbered candidate panel appears; tap one or say its
-  number. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the
+  number. JARVIS remembers the pick for the same situation. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the
   article in the default browser.
-
-- Spoken commands become plans when Core enables the action engine (`ENABLE_DESKTOP`,
-  `ENABLE_NEWS`). LOW-only plans run at once. A plan with a MEDIUM step shows a card with its
-  steps and risk badges: **Enter** or a tap approves it within two minutes, **Esc** rejects it.
-  Saying "dur", "iptal" or "stop" cancels a running plan; voice never approves one.
-- When several on-screen elements match, a numbered candidate panel appears; tap one to choose
-  it. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the article
-  in the default browser.
 
 The visual system is recorded in [DESIGN.md](DESIGN.md).
 
