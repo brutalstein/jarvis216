@@ -1,0 +1,20 @@
+{
+  "name": "@jarvis/integration-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure voice-to-provider task recipe registry",
+  "exports": {
+    ".": {
+      "jarvis-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

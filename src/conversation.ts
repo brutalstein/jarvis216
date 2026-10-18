@@ -139,7 +139,8 @@ export class ConversationService {
         [started - 30 * 60_000],
       )
     ).rows.reverse();
-    const prompt = conversationPrompt({ ...input, history, now: new Date(started) });
+    const prompt = conversationPrompt({ ...input, history, now: new Date(started),
+      enabledIntegrations: this.options.plans?.integrationCapabilities() });
     const { text, provider, taskId } = await runText(
       this.tasks,
       () => this.options.wake(),

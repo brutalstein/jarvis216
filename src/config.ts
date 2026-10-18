@@ -2,6 +2,7 @@ import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
 import { McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
+import { createIntegrationHub } from "@jarvis/integration-hub";
 import { z } from "zod";
 import type { Executor } from "./contracts.js";
 import { DesktopExecutor, NewsExecutor } from "./integrations/actions.js";
@@ -35,9 +36,10 @@ export const ConfigSchema = z.object({
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
-): Promise<{ registry: ProviderRegistry; tools?: McpToolPort }> {
+): Promise<{ registry: ProviderRegistry; tools?: McpToolPort; integrations: ReturnType<typeof createIntegrationHub> }> {
   const providers: Provider[] = [];
   let tools: McpToolPort | undefined;
+  let workflowNames: string[] = [];
   const trusted = z
     .string()
     .default("")
@@ -195,6 +197,7 @@ export async function configuredProviders(
         z.strictObject({ url: z.url(), tokenRef: z.string(), version: z.string().min(1) }),
       )
       .parse(JSON.parse(env.N8N_WORKFLOWS_JSON ?? "{}"));
+    workflowNames = Object.keys(workflows);
     const configured = Object.fromEntries(
       Object.entries(workflows).map(([name, value]) => [
         name,
@@ -249,5 +252,10 @@ export async function configuredProviders(
       );
     register(new NewsExecutor(feeds), JSON.stringify({ feeds }), 10);
   }
-  return { registry: new ProviderRegistry(providers), ...(tools && { tools }) };
+  const browserUrls = env.ENABLE_BROWSER === "true"
+    ? z.array(z.url()).max(32).parse(JSON.parse(env.BROWSER_ALLOWED_URLS ?? "[]")) : [];
+  const integrations = createIntegrationHub({
+    openclaw: env.ENABLE_OPENCLAW === "true", browserUrls, workflows: workflowNames,
+  });
+  return { registry: new ProviderRegistry(providers), ...(tools && { tools }), integrations };
 }

@@ -18,7 +18,7 @@ async function main() {
     ),
   );
   const secrets = new EnvSecrets(secretValues);
-  const { registry, tools } = await configuredProviders(process.env, secrets);
+  const { registry, tools, integrations } = await configuredProviders(process.env, secrets);
   const db = postgres(config.DATABASE_URL);
   try {
     await migrate(db);
@@ -52,6 +52,7 @@ async function main() {
       onCancel,
       conversationProviders: providers,
       privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
+      integrations,
     });
     const conversation = new ConversationService(tasks, {
       providers,

@@ -43,9 +43,10 @@ describe("catalog", () => {
     expect(catalog[id]?.risk).toBe(risk);
   });
 
-  it("contains no HIGH or shell-like actions", () => {
+  it("keeps HIGH actions constrained to external integrations", () => {
     const ids = Object.keys(catalog);
-    expect(ids).toHaveLength(18);
+    expect(ids).toHaveLength(21);
+    expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual(["agent.delegate", "automation.invoke"]);
     expect(ids.some((id) => /delete|kill|shell|powershell|registry/.test(id))).toBe(false);
   });
 
@@ -53,7 +54,7 @@ describe("catalog", () => {
     const lines = catalogLines();
     expect(lines).toContain("app.open(");
     expect(lines).toContain("name");
-    expect(lines.split("\n")).toHaveLength(18);
+    expect(lines.split("\n")).toHaveLength(21);
   });
 
   it.each(["file:///C:/x", "javascript:alert(1)"])("rejects non-web URL %s", (url) => {

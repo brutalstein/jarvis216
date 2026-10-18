@@ -26,6 +26,7 @@ open gates. No frontend is included by design.
 | `src/context.ts` | Bounded, redacted, expiring task context with provenance |
 | `src/database.ts` | PostgreSQL pool, transactions, append-only migrations |
 | `src/integrations/` | Claude, Gemini, Codex, OpenClaw, Browser Use and n8n adapters |
+| `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
 | `src/security.ts`, `src/telemetry.ts` | Secret references/redaction, path containment, tracing |
 | `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only) |
 | `schemas/` | Published JSON Schemas generated from the runtime contracts |

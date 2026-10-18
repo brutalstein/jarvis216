@@ -13,6 +13,7 @@ import {
   readIntent,
   replanPrompt,
 } from "@jarvis/action-engine";
+import type { IntegrationHub } from "@jarvis/integration-hub";
 import { type ExecutionResult, fingerprint, invariant, type TaskState } from "./contracts.js";
 import type { Sql } from "./database.js";
 import { planApprovalMs } from "./gateway.js";
@@ -31,7 +32,7 @@ export type PlanView = {
   id: string;
   goal: string;
   lang: Lang;
-  kind: "desktop" | "info";
+  kind: "desktop" | "info" | "integration";
   status: PlanStatus;
   hash: string;
   needsApproval: boolean;
@@ -52,7 +53,7 @@ type PlanRow = {
   turn_id: string;
   goal: string;
   lang: Lang;
-  kind: "desktop" | "info";
+  kind: "desktop" | "info" | "integration";
   steps: CompiledStep[];
   hash: string;
   status: PlanStatus;
@@ -106,11 +107,16 @@ export class PlanService extends EventEmitter {
       onCancel(taskId: string): void;
       conversationProviders: string[];
       privateProviders: string[];
+      integrations?: IntegrationHub;
       // Text summary of the current screen for a replan (window and element names).
       screen?: () => Promise<string>;
     },
   ) {
     super();
+  }
+
+  integrationCapabilities(): string[] {
+    return this.options.integrations?.available() ?? [];
   }
 
   propose(input: {
@@ -156,7 +162,7 @@ export class PlanService extends EventEmitter {
   async cancelActive(): Promise<PlanView | null> {
     const plan = (
       await this.options.tasks.db.query<PlanRow>(
-        `SELECT * FROM plans WHERE kind='desktop' AND ${active} ORDER BY created_at DESC LIMIT 1`,
+        `SELECT * FROM plans WHERE kind IN ('desktop','integration') AND ${active} ORDER BY created_at DESC LIMIT 1`,
       )
     ).rows[0];
     if (!plan) return null;
@@ -256,7 +262,8 @@ export class PlanService extends EventEmitter {
     input: { turnId: string; goal: string; lang: Lang; steps: CompiledStep[] },
     flags: { approved: boolean; replanned: boolean },
   ): Promise<PlanView> {
-    const kind = input.steps.some((step) => step.kind === "desktop") ? "desktop" : "info";
+    const kind = input.steps.some((step) => step.kind === "desktop") ? "desktop"
+      : input.steps.some((step) => step.kind === "integration") ? "integration" : "info";
     // Admission is serialized within this Core; multiple Core hosts need a shared plan lock.
     if (kind === "desktop")
       for (const plan of (
@@ -299,19 +306,22 @@ export class PlanService extends EventEmitter {
     const ids: string[] = [];
     for (const [index, step] of plan.steps.entries()) {
       const desktop = step.kind === "desktop";
+      const external = step.kind === "integration"
+        ? this.options.integrations?.compile(step.action, step.args) : undefined;
+      invariant(step.kind !== "integration" || external, "INTEGRATION_DISABLED", 400);
       const task = await this.options.tasks.createIn(
         tx,
         {
-          objective: `${plan.goal}: ${step.action}`,
-          capability: desktop ? "desktop.act" : "info.fetch",
-          input: { action: step.action, args: step.args },
-          providers: [desktop ? "windows-mcp" : "news"],
-          risk: step.risk,
-          privacy: "personal",
-          budget: { maxCalls: 1, maxDurationMs: stepWindowMs },
+          objective: external?.objective ?? `${plan.goal}: ${step.action}`,
+          capability: external?.capability ?? (desktop ? "desktop.act" : "info.fetch"),
+          input: external?.input ?? { action: step.action, args: step.args },
+          providers: external?.providers ?? [desktop ? "windows-mcp" : "news"],
+          risk: external?.risk ?? step.risk,
+          privacy: external?.privacy ?? "personal",
+          budget: external?.budget ?? { maxCalls: 1, maxDurationMs: stepWindowMs },
           deadline: new Date(Date.now() + stepWindowMs).toISOString(),
           dependencies: ids.slice(-1),
-          verification: { kind: "contains", value: '"ok":true' },
+          verification: external?.verification ?? { kind: "contains", value: '"ok":true' },
           planId: id,
         },
         `plan:${id}:${index}`,
