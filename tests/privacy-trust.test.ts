@@ -58,8 +58,8 @@ describe("JARVIS_PRIVATE_PROVIDERS", () => {
     const task = {
       spec: TaskSpecSchema.parse({ ...spec("personal"), providers: ["gemini"] }),
     } as Task;
-    const plain = await configuredProviders(env, secrets);
-    const trusted = await configuredProviders(
+    const { registry: plain } = await configuredProviders(env, secrets);
+    const { registry: trusted } = await configuredProviders(
       { ...env, JARVIS_PRIVATE_PROVIDERS: " gemini, ,other" },
       secrets,
     );

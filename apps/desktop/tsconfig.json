@@ -3,6 +3,7 @@
     "target": "ES2024",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "customConditions": ["jarvis-source"],
     "strict": true,
     "noEmit": true,
     "lib": ["ES2024", "DOM", "DOM.Iterable"],

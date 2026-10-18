@@ -1,12 +1,15 @@
 import asyncio
 import unittest
+from unittest.mock import AsyncMock, patch
 
 from pipecat.frames.frames import (
     BotStoppedSpeakingFrame,
     TranscriptionFrame,
     TTSSpeakFrame,
+    UserStartedSpeakingFrame,
     UserStoppedSpeakingFrame,
 )
+from pipecat.processors.frame_processor import FrameDirection
 from pipecat.tests.utils import SleepFrame, run_test
 
 from jarvis_voice.brain import Brain
@@ -32,6 +35,59 @@ class FakeCore:
 
 
 class BrainTest(unittest.IsolatedAsyncioTestCase):
+    async def test_announcement_sends_caption_and_language_to_tts(self) -> None:
+        messages: list[dict] = []
+
+        async def send(message: dict) -> None:
+            messages.append(message)
+
+        brain = Brain(FakeCore(), send, lambda: True)
+        with patch.object(brain, "push_frame", new_callable=AsyncMock) as push:
+            await brain.announce("Spotify açıldı.", "tr")
+        self.assertIn({"type": "caption", "role": "jarvis", "text": "Spotify açıldı."}, messages)
+        speech = push.call_args.args[0]
+        self.assertIsInstance(speech, TTSSpeakFrame)
+        self.assertEqual(speech.text, "Spotify açıldı.")
+        self.assertEqual(speech.metadata["lang"], "tr")
+
+    async def test_announcement_skips_the_operator_turn_then_resumes(self) -> None:
+        send = AsyncMock()
+        brain = Brain(FakeCore(), send, lambda: True)
+        with patch.object(brain, "push_frame", new_callable=AsyncMock) as push:
+            await brain.process_frame(UserStartedSpeakingFrame(), FrameDirection.DOWNSTREAM)
+            await brain.announce("Done.", "en")
+            send.assert_not_awaited()
+            self.assertFalse(any(isinstance(c.args[0], TTSSpeakFrame) for c in push.call_args_list))
+            await brain.process_frame(UserStoppedSpeakingFrame(), FrameDirection.DOWNSTREAM)
+            await brain.announce("Done.", "en")
+            speech = push.call_args.args[0]
+            self.assertEqual(speech.text, "Done.")
+            self.assertEqual(speech.metadata["lang"], "en")
+
+    async def test_announcement_skips_a_pending_reply(self) -> None:
+        send = AsyncMock()
+        brain = Brain(FakeCore(), send, lambda: True)
+        brain.pending = asyncio.create_task(asyncio.sleep(10))
+        try:
+            with patch.object(brain, "push_frame", new_callable=AsyncMock) as push:
+                await brain.announce("Done.", "en")
+                send.assert_not_awaited()
+                push.assert_not_awaited()
+        finally:
+            brain.pending.cancel()
+            await asyncio.gather(brain.pending, return_exceptions=True)
+
+    async def test_announcement_skips_a_reply_already_queued_for_speech(self) -> None:
+        send = AsyncMock()
+        brain = Brain(FakeCore(), send, lambda: True)
+        with patch.object(brain, "push_frame", new_callable=AsyncMock) as push:
+            await brain.reply("Jarvis merhaba", False, 0)
+            send.reset_mock()
+            push.reset_mock()
+            await brain.announce("Done.", "en")
+            send.assert_not_awaited()
+            push.assert_not_awaited()
+
     async def exercise(self, core: FakeCore, texts: list[str]) -> tuple[Brain, list[object]]:
         messages: list[dict] = []
 

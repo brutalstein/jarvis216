@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
+import { narrate, readIntent, repairInstructions } from "@jarvis/action-engine";
 import { z } from "zod";
 import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
 import { conversationPrompt } from "./persona.js";
+import type { PlanService } from "./plans.js";
 import type { TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
 
@@ -24,12 +26,19 @@ export const DisplayBlockSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export type DisplayBlock = z.infer<typeof DisplayBlockSchema>;
-export type Reply = { addressed: boolean; say: string; lang: "tr" | "en"; display: DisplayBlock[] };
+export type Reply = {
+  addressed: boolean;
+  say: string;
+  lang: "tr" | "en";
+  display: DisplayBlock[];
+  intent?: unknown;
+};
 export type TurnResult = Reply & {
   id: string;
   taskId: string;
   provider: string | null;
   latencyMs: number;
+  planId?: string;
 };
 export type TurnRecord = {
   id: string;
@@ -62,6 +71,7 @@ export function parseReply(text: string): Reply {
       say: z.string().catch(""),
       lang: z.enum(["tr", "en"]).optional().catch(undefined),
       display: z.array(z.unknown()).catch([]),
+      intent: z.unknown().optional(),
     })
     .safeParse(value);
   if (!parsed.success) {
@@ -79,6 +89,7 @@ export function parseReply(text: string): Reply {
         return valid.success ? [valid.data] : [];
       })
       .slice(0, 3),
+    ...(parsed.data.intent !== undefined ? { intent: parsed.data.intent } : {}),
   };
 }
 
@@ -107,7 +118,12 @@ const onScreen = { tr: "Ekranda, efendim.", en: "It's on the screen, sir." };
 export class ConversationService {
   constructor(
     private tasks: TaskService,
-    private options: { providers: string[]; wake(): void; deadlineMs?: number },
+    private options: {
+      providers: string[];
+      wake(): void;
+      deadlineMs?: number;
+      plans?: PlanService;
+    },
   ) {}
   get deadlineMs(): number {
     return this.options.deadlineMs ?? 20_000;
@@ -123,11 +139,12 @@ export class ConversationService {
         [started - 30 * 60_000],
       )
     ).rows.reverse();
+    const prompt = conversationPrompt({ ...input, history, now: new Date(started) });
     const { text, provider, taskId } = await runText(
       this.tasks,
       () => this.options.wake(),
       {
-        prompt: conversationPrompt({ ...input, history, now: new Date(started) }),
+        prompt,
         providers,
         privacy: "personal",
         deadlineMs: this.deadlineMs,
@@ -135,7 +152,54 @@ export class ConversationService {
       },
       `conversation:${id}`,
     );
-    const reply = parseReply(text);
+    let reply = parseReply(text);
+    let planId: string | undefined;
+    if (reply.addressed && this.options.plans) {
+      let parsed = readIntent(reply.intent);
+      if ("errors" in parsed) {
+        const repaired = await runText(
+          this.tasks,
+          () => this.options.wake(),
+          {
+            prompt: `${prompt}\n\n${repairInstructions(parsed.errors)}`,
+            providers,
+            privacy: "personal",
+            deadlineMs: this.deadlineMs,
+            maxOutputTokens: 1000,
+          },
+          `conversation:${id}:repair`,
+        );
+        reply = parseReply(repaired.text);
+        parsed = readIntent(reply.intent);
+      }
+      if (reply.addressed && "errors" in parsed) {
+        reply.say = narrate({ type: "not-understood" }, reply.lang);
+        reply.display = [];
+      } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "cancel") {
+        const cancelled = await this.options.plans.cancelActive();
+        reply.say = cancelled?.say ?? narrate({ type: "cancelled" }, reply.lang);
+        reply.display = [];
+      } else if (reply.addressed && "decision" in parsed && parsed.decision.kind === "plan") {
+        const decision = parsed.decision;
+        let view = await this.options.plans.propose({
+          turnId: id,
+          goal: decision.goal,
+          lang: reply.lang,
+          steps: decision.steps,
+        });
+        planId = view.id;
+        if (!view.needsApproval) view = await this.options.plans.waitSettled(view.id, 5000);
+        reply.display = [];
+        reply.say = narrate(
+          { type: "proposed", goal: view.goal, needsApproval: view.needsApproval },
+          reply.lang,
+        );
+        if (view.status !== "RUNNING" && view.status !== "AWAITING_APPROVAL") {
+          if (await this.options.plans.claimNarration(view.id))
+            reply.say = view.say ?? narrate({ type: "plan-uncertain" }, reply.lang);
+        }
+      }
+    }
     // An empty spoken reply would leave the voice service "speaking" with no audio.
     if (reply.addressed && !reply.say) {
       if (!reply.display.length) throw new CoreError("TURN_FAILED", 502);
@@ -147,8 +211,18 @@ export class ConversationService {
         "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
         [id, started, input.utterance, input.followUp, taskId, JSON.stringify(reply), provider],
       );
-    else await this.tasks.db.transaction((tx) => this.forget(tx, "id = $1", taskId));
-    return { id, taskId, ...reply, provider, latencyMs: Date.now() - started };
+    else
+      await this.tasks.db.transaction((tx) =>
+        this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
+      );
+    return {
+      id,
+      taskId,
+      ...reply,
+      provider,
+      latencyMs: Date.now() - started,
+      ...(planId && { planId }),
+    };
   }
   async list(limit: number): Promise<TurnRecord[]> {
     const rows = (

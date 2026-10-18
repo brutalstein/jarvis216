@@ -1,8 +1,10 @@
 import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
+import { McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
 import { z } from "zod";
 import type { Executor } from "./contracts.js";
+import { DesktopExecutor, NewsExecutor } from "./integrations/actions.js";
 import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
 import { ClaudeExecutor, CodexExecutor, GeminiExecutor } from "./integrations/models.js";
 import { OpenAICompatibleExecutor, providerId } from "./integrations/openai-compatible.js";
@@ -33,8 +35,9 @@ export const ConfigSchema = z.object({
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
-): Promise<ProviderRegistry> {
+): Promise<{ registry: ProviderRegistry; tools?: McpToolPort }> {
   const providers: Provider[] = [];
+  let tools: McpToolPort | undefined;
   const trusted = z
     .string()
     .default("")
@@ -49,6 +52,9 @@ export async function configuredProviders(
       capability: executor.capability,
       external: executor.external,
       retrySafe: executor.retrySafe,
+      ...(executor.outcomeObservable !== undefined
+        ? { outcomeObservable: executor.outcomeObservable }
+        : {}),
       ...(executor.outputTokenLimitEnforced !== undefined
         ? { outputTokenLimitEnforced: executor.outputTokenLimitEnforced }
         : {}),
@@ -197,5 +203,51 @@ export async function configuredProviders(
     );
     register(new WorkflowExecutor(configured), JSON.stringify(workflows), 10);
   }
-  return new ProviderRegistry(providers);
+  if (env.ENABLE_DESKTOP === "true") {
+    const profile = z.string().min(1).parse(env.USERPROFILE);
+    const desktop = await access(path.join(profile, "OneDrive", "Desktop")).then(
+      () => path.join(profile, "OneDrive", "Desktop"),
+      () => path.join(profile, "Desktop"),
+    );
+    const requested = env.JARVIS_FILE_ROOTS?.trim()
+      ? z.array(z.string().min(1)).min(1).max(16).parse(JSON.parse(env.JARVIS_FILE_ROOTS))
+      : [desktop, path.join(profile, "Documents"), path.join(profile, "Downloads")];
+    const roots = await Promise.all(requested.map((root) => profilePath(root, [profile])));
+    const allow = [
+      "App",
+      "Click",
+      "Type",
+      "Scroll",
+      "Shortcut",
+      "Snapshot",
+      "Screenshot",
+      "FileSystem",
+      "Clipboard",
+      "Wait",
+      "WaitFor",
+      "ControlStatus",
+    ];
+    const options = {
+      command: z.string().min(1).default("uvx").parse(env.WINDOWS_MCP_COMMAND),
+      args: z
+        .array(z.string())
+        .min(1)
+        .parse(JSON.parse(env.WINDOWS_MCP_ARGS || '["windows-mcp@0.8.8","serve"]')),
+      env: { ANONYMIZED_TELEMETRY: "false", WINDOWS_MCP_TOOLS: allow.join(",") },
+      allow,
+    };
+    tools = new McpToolPort(options);
+    register(new DesktopExecutor(tools, roots), JSON.stringify({ ...options, roots }), 10);
+  }
+  if (env.ENABLE_NEWS === "true") {
+    const feeds = z
+      .array(z.url().refine((url) => new URL(url).protocol === "https:"))
+      .min(1)
+      .max(16)
+      .parse(
+        JSON.parse(env.NEWS_FEEDS || '["https://news.google.com/rss?hl=tr&gl=TR&ceid=TR:tr"]'),
+      );
+    register(new NewsExecutor(feeds), JSON.stringify({ feeds }), 10);
+  }
+  return { registry: new ProviderRegistry(providers), ...(tools && { tools }) };
 }

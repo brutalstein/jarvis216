@@ -120,7 +120,7 @@ describe("OpenAI-compatible free-model executor", () => {
   });
 
   it("configuration registers one provider per model", async () => {
-    const registry = await configuredProviders(
+    const { registry } = await configuredProviders(
       { ENABLE_OPENROUTER: "true", OPENROUTER_MODELS: "a/b:free, c/d:free" },
       new EnvSecrets({ OPENROUTER_API_KEY: "openrouter-test-key" }),
     );

@@ -11,6 +11,13 @@ const bridge: Bridge = {
     export: () => ipcRenderer.invoke("turns:export"),
     deleteAll: () => ipcRenderer.invoke("turns:delete"),
   },
+  plans: {
+    approve: (id, hash) => ipcRenderer.invoke("plans:approve", id, hash),
+    reject: (id) => ipcRenderer.invoke("plans:reject", id),
+    cancel: (id) => ipcRenderer.invoke("plans:cancel", id),
+    choose: (id, index) => ipcRenderer.invoke("plans:choose", id, index),
+    open: (url) => ipcRenderer.invoke("plans:open", url),
+  },
   enrollment: {
     status: () => ipcRenderer.invoke("enroll:status"),
     start: () => ipcRenderer.invoke("enroll:start"),
@@ -32,7 +39,8 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("mousemove", (event) => {
     ipcRenderer.send(
       "overlay:pointer",
-      event.target instanceof Element && Boolean(event.target.closest("[data-card]")),
+      event.target instanceof Element &&
+        Boolean(event.target.closest("[data-card], [data-hud-card]")),
     );
   });
   window.addEventListener("mouseleave", () => ipcRenderer.send("overlay:pointer", false));

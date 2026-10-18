@@ -14,6 +14,8 @@ from pipecat.frames.frames import (
     InterruptionFrame,
     TranscriptionFrame,
     TTSSpeakFrame,
+    UserStartedSpeakingFrame,
+    UserStoppedSpeakingFrame,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
@@ -41,9 +43,15 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         self.sequence = 0
         self.timing: dict[str, Any] = {}
         self.replied = False
+        self.user_speaking = False
+        self.announcing = False
 
     async def process_frame(self, frame: Frame, direction: FrameDirection) -> None:
         await super().process_frame(frame, direction)
+        if isinstance(frame, UserStartedSpeakingFrame):
+            self.user_speaking = True
+        if isinstance(frame, UserStoppedSpeakingFrame):
+            self.user_speaking = False
         if isinstance(frame, TranscriptionFrame):
             text = frame.text.strip()[:4000]
             named = is_named(text)
@@ -59,9 +67,11 @@ class Brain(FrameProcessor):  # type: ignore[misc]
                 await self.broadcast_frame(InterruptionFrame)
                 self.pending = self.create_task(self.reply(text, follow_up, self.sequence))
             return
-        if isinstance(frame, BotStoppedSpeakingFrame) and self.replied:
+        if isinstance(frame, BotStoppedSpeakingFrame) and (self.replied or self.announcing):
+            if self.replied:
+                self.window.open()
             self.replied = False
-            self.window.open()
+            self.announcing = False
             await self.send({"type": "state", "value": "listening"})
         if isinstance(frame, EndFrame) and self.pending:
             with suppress(asyncio.CancelledError):
@@ -69,6 +79,29 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         if isinstance(frame, CancelFrame) and self.pending:
             self.pending.cancel()
         await self.push_frame(frame, direction)
+
+    async def announce(self, text: str, lang: str) -> None:
+        if (
+            self.user_speaking
+            or (self.pending is not None and not self.pending.done())
+            or self.replied
+            or self.announcing
+        ):
+            return
+        self.announcing = True
+        try:
+            await self.send({"type": "caption", "role": "jarvis", "text": text})
+            await self.send({"type": "state", "value": "speaking"})
+            # A user turn may have arrived while the caption was being sent.
+            if self.user_speaking or (self.pending is not None and not self.pending.done()):
+                self.announcing = False
+                return
+            speech = TTSSpeakFrame(text)
+            speech.metadata["lang"] = lang
+            await self.push_frame(speech)
+        except BaseException:
+            self.announcing = False
+            raise
 
     async def reply(self, text: str, follow_up: bool, sequence: int) -> None:
         await self.send({"type": "caption", "role": "user", "text": text})

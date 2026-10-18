@@ -5,11 +5,13 @@ import hmac
 import json
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from aiohttp import web
 
+from jarvis_voice.brain import Brain
 from jarvis_voice.stt_gated import Enrollment
 
 
@@ -40,6 +42,28 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
     app = web.Application(middlewares=[authenticate], client_max_size=128 * 1024)
     sessions: set[asyncio.Task[None]] = set()
     peer: Any = None
+    brain: Brain | None = None
+
+    async def announce(request: web.Request) -> web.Response:
+        try:
+            data = await request.json()
+            if (
+                not isinstance(data, dict)
+                or not isinstance(data.get("text"), str)
+                or not 1 <= len(data["text"]) <= 600
+                or not data["text"].strip()
+                or data.get("lang") not in ("tr", "en")
+            ):
+                raise ValueError("INVALID_ANNOUNCEMENT")
+        except (TypeError, ValueError):
+            return web.json_response({"error": "INVALID_ANNOUNCEMENT"}, status=400)
+        if brain is None:
+            return web.json_response({"error": "NO_SESSION"}, status=409)
+        try:
+            await brain.announce(data["text"], data["lang"])
+        except Exception:
+            return web.json_response({"error": "ANNOUNCEMENT_FAILED"}, status=503)
+        return web.Response(status=204)
 
     async def health(request: web.Request) -> web.Response:
         return web.json_response(
@@ -99,15 +123,26 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
 
                 @connection.event_handler("closed")  # type: ignore[untyped-decorator]
                 async def closed(connection: Any) -> None:
-                    nonlocal peer
+                    nonlocal peer, brain
                     if peer is connection:
                         peer = None
+                        brain = None
 
-                task = asyncio.create_task(run_session(connection, enrollment))
+                session_open = True
+
+                def set_brain(current: Brain | None) -> None:
+                    nonlocal brain, session_open
+                    if current is None:
+                        session_open = False
+                    if peer is connection and (current is None or session_open):
+                        brain = current
+
+                task = asyncio.create_task(run_session(connection, enrollment, set_brain))
                 sessions.add(task)
 
                 def finished(done: asyncio.Task[None]) -> None:
                     sessions.discard(done)
+                    set_brain(None)
                     if not done.cancelled() and (error := done.exception()) is not None:
                         print(
                             f"VOICE_PIPELINE_FAILED: {type(error).__name__}: {error}",
@@ -140,13 +175,16 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
     app.router.add_post("/enroll/cancel", cancel)
     app.router.add_delete("/enroll", remove)
     app.router.add_post("/offer", offer)
+    app.router.add_post("/announce", announce)
     app.router.add_patch("/offer", offer)
     app.router.add_route("OPTIONS", "/{path:.*}", health)
     app.on_cleanup.append(cleanup)
     return app
 
 
-async def run_session(connection: Any, enrollment: Enrollment) -> None:
+async def run_session(
+    connection: Any, enrollment: Enrollment, set_brain: Callable[[Brain | None], None]
+) -> None:
     from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
     from pipecat.audio.vad.silero import SileroVADAnalyzer
     from pipecat.pipeline.pipeline import Pipeline
@@ -161,7 +199,6 @@ async def run_session(connection: Any, enrollment: Enrollment) -> None:
     from pipecat.turns.user_turn_strategies import UserTurnStrategies
     from pipecat.workers.runner import WorkerRunner
 
-    from jarvis_voice.brain import Brain
     from jarvis_voice.core_client import CoreClient
     from jarvis_voice.stt_gated import GatedSTT
     from jarvis_voice.tts import BilingualTTS
@@ -187,13 +224,14 @@ async def run_session(connection: Any, enrollment: Enrollment) -> None:
             ],
         )
     )
+    brain = Brain(core, rtvi.send_server_message, enrollment.gate.enrolled)
     pipeline = Pipeline(
         [
             transport.input(),
             VADProcessor(vad_analyzer=SileroVADAnalyzer()),
             turns,
             GatedSTT(enrollment),
-            Brain(core, rtvi.send_server_message, enrollment.gate.enrolled),
+            brain,
             BilingualTTS(),
             transport.output(),
         ]
@@ -206,13 +244,19 @@ async def run_session(connection: Any, enrollment: Enrollment) -> None:
 
     @transport.event_handler("on_client_disconnected")  # type: ignore[untyped-decorator]
     async def disconnected(*args: Any) -> None:
+        set_brain(None)
         await worker.cancel()
+
+    @worker.event_handler("on_pipeline_started")  # type: ignore[untyped-decorator]
+    async def started(*args: Any) -> None:
+        set_brain(brain)
 
     runner = WorkerRunner(handle_sigint=False)
     try:
         await runner.add_workers(worker)
         await runner.run()
     finally:
+        set_brain(None)
         await core.http.aclose()
 
 

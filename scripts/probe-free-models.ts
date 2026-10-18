@@ -5,7 +5,7 @@ import { type Task, TaskSpecSchema } from "../src/contracts.js";
 import { ProviderFailure } from "../src/routing.js";
 import { EnvSecrets } from "../src/security.js";
 
-const registry = await configuredProviders(process.env, new EnvSecrets(process.env));
+const { registry } = await configuredProviders(process.env, new EnvSecrets(process.env));
 const ids = registry
   .list()
   .map((p) => (p as { id: string }).id)

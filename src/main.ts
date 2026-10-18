@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ConfigSchema, configuredProviders } from "./config.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
+import { PlanService } from "./plans.js";
 import { EnvSecrets } from "./security.js";
 import { buildServer } from "./server.js";
 import { TaskService } from "./tasks.js";
@@ -17,16 +18,19 @@ async function main() {
     ),
   );
   const secrets = new EnvSecrets(secretValues);
-  const registry = await configuredProviders(process.env, secrets);
+  const { registry, tools } = await configuredProviders(process.env, secrets);
   const db = postgres(config.DATABASE_URL);
   try {
     await migrate(db);
+    await tools?.start();
     const tasks = new TaskService(db, {
       concurrency: config.WORKER_CONCURRENCY,
       limits: {
         "text.generate": config.MODEL_CONCURRENCY,
         "browser.extract": config.BROWSER_CONCURRENCY,
         "workflow.invoke": config.WORKFLOW_CONCURRENCY,
+        "desktop.act": 1,
+        "info.fetch": 2,
       },
       redact: (text) => secrets.redact(text),
     });
@@ -38,19 +42,30 @@ async function main() {
     const wake = () => {
       for (const worker of workers) worker.wake();
     };
-    const conversation = new ConversationService(tasks, {
-      providers: conversationProviders(registry.list().map((p) => (p as { id: string }).id)),
+    const onCancel = (id: string) => {
+      for (const worker of workers) worker.cancel(id);
+    };
+    const providers = conversationProviders(registry.list().map((p) => (p as { id: string }).id));
+    const plans = new PlanService({
+      tasks,
       wake,
+      onCancel,
+      conversationProviders: providers,
+      privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
+    });
+    const conversation = new ConversationService(tasks, {
+      providers,
+      wake,
+      plans,
     });
     await conversation.purge(30 * 86_400_000);
     const server = buildServer(tasks, registry, {
       operatorToken: config.JARVIS_TOKEN,
       webhookToken: config.N8N_INGRESS_TOKEN,
-      onCancel: (id) => {
-        for (const worker of workers) worker.cancel(id);
-      },
+      onCancel,
       onAdmit: wake,
       conversation,
+      plans,
     });
     // Container publication is still loopback-only in Compose; native execution is loopback.
     const host = process.env.JARVIS_CONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
@@ -70,13 +85,17 @@ async function main() {
       })}\n`,
     );
     try {
-      await Promise.all(workers.map((worker) => worker.run(stop.signal)));
+      await Promise.all([
+        ...workers.map((worker) => worker.run(stop.signal)),
+        plans.start(stop.signal),
+      ]);
     } finally {
       process.off("SIGINT", abort);
       process.off("SIGTERM", abort);
       await server.close();
     }
   } finally {
+    await tools?.close();
     await db.close();
     await shutdownTracing();
   }

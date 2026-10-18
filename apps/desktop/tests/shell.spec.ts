@@ -7,7 +7,7 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
     await expect(run.page).toHaveTitle("JARVIS");
     expect(await run.page.evaluate(() => typeof Reflect.get(window, "require"))).toBe("undefined");
     expect(await run.page.evaluate(() => Object.keys(window.jarvis).sort())).toEqual(
-      ["voice", "onEvent", "turns", "enrollment", "setListening"].sort(),
+      ["voice", "onEvent", "turns", "plans", "enrollment", "setListening"].sort(),
     );
     expect(
       await run.page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"),

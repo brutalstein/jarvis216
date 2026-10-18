@@ -9,10 +9,12 @@ import {
   nativeImage,
   screen,
   session,
+  shell,
   Tray,
 } from "electron";
-import type { UiEvent, Voice } from "../shared";
+import type { PlanView, UiEvent, Voice } from "../shared";
 import { readOperatorEnv } from "./env";
+import { streamPlans } from "./plans";
 import { startVoiceService } from "./voice";
 
 const testing = process.env.JARVIS_DESKTOP_TEST === "1";
@@ -24,6 +26,32 @@ let quitting = false;
 let service: (Voice & { stop(): void }) | undefined;
 let voice: Promise<Voice>;
 let env: ReturnType<typeof readOperatorEnv>;
+const streamStop = new AbortController();
+const plans = new Map<string, PlanView>();
+
+function receivePlan(event: UiEvent) {
+  if (event.type === "plan") {
+    plans.set(event.plan.id, event.plan);
+    // shortcut: retain 20 recent plans in this window; fetch history from Core if a history UI is added.
+    if (plans.size > 20) plans.delete(plans.keys().next().value ?? "");
+  }
+  broadcast(event);
+  if (event.type === "announce") {
+    void voice
+      .then(async (connection) => {
+        await fetch(`${connection.url}/announce`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${connection.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ text: event.text, lang: event.lang }),
+          signal: AbortSignal.timeout(5000),
+        });
+      })
+      .catch(() => {});
+  }
+}
 
 function broadcast(event: UiEvent) {
   for (const win of [main, overlay])
@@ -98,6 +126,9 @@ app.whenReady().then(async () => {
     win.webContents.on("will-navigate", (event) => event.preventDefault());
     win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
     win.webContents.on("will-attach-webview", (event) => event.preventDefault());
+    win.webContents.on("did-finish-load", () => {
+      for (const plan of plans.values()) win.webContents.send("ui:event", { type: "plan", plan });
+    });
     void win.loadURL(pathToFileURL(join(__dirname, file)).href);
     return win;
   }
@@ -181,6 +212,46 @@ app.whenReady().then(async () => {
   }
   // Renderer pulls status after DOM startup, so an early error is never lost.
   voice.catch(() => {});
+  if (env) void streamPlans(env, receivePlan, streamStop.signal);
+  for (const action of ["approve", "reject", "cancel", "choose"] as const) {
+    ipcMain.handle(`plans:${action}`, async (event, id: unknown, value: unknown) => {
+      if (!allowed(event.sender)) throw new Error("FORBIDDEN");
+      if (
+        typeof id !== "string" ||
+        !/^[a-zA-Z0-9_-]{1,100}$/.test(id) ||
+        (action === "approve" &&
+          (typeof value !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(value))) ||
+        (action === "choose" &&
+          (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 100))
+      )
+        throw new Error("INVALID_PLAN");
+      if (!env) throw new Error("CORE_UNAVAILABLE");
+      const response = await fetch(`${env.coreUrl}/v1/plans/${id}/${action}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${env.coreToken}`, "content-type": "application/json" },
+        body: JSON.stringify(
+          action === "approve" ? { hash: value } : action === "choose" ? { index: value } : {},
+        ),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error("PLAN_UPDATE_FAILED");
+      if (action === "choose") return response.json();
+    });
+  }
+  ipcMain.handle("plans:open", async (event, url: unknown) => {
+    if (!allowed(event.sender) || typeof url !== "string" || !url.startsWith("https:"))
+      throw new Error("FORBIDDEN");
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" || !parsed.hostname || parsed.username || parsed.password)
+      throw new Error("FORBIDDEN");
+    const known = [...plans.values()].some((plan) =>
+      plan.panels.some(
+        (panel) => panel.type === "news" && panel.items.some((item) => item.url === url),
+      ),
+    );
+    if (!known) throw new Error("FORBIDDEN");
+    await shell.openExternal(url);
+  });
   ipcMain.handle("voice", async (event) => {
     if (!allowed(event.sender) || event.sender !== main.webContents) throw new Error("FORBIDDEN");
     // Retry after a crash or failed start spawns a fresh service instead of reusing a dead port.
@@ -238,6 +309,7 @@ app.whenReady().then(async () => {
 });
 app.on("before-quit", () => {
   quitting = true;
+  streamStop.abort();
   service?.stop();
   globalShortcut.unregisterAll();
 });

@@ -1,12 +1,43 @@
+import asyncio
 import tempfile
 import unittest
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import numpy as np
 from aiohttp.test_utils import TestClient, TestServer
+from pipecat.frames.frames import TTSSpeakFrame
 
+from jarvis_voice.brain import Brain
 from jarvis_voice.server import create_app
 from jarvis_voice.stt_gated import Enrollment
+
+
+class FakeConnection:
+    def __init__(self, **kwargs: Any) -> None:
+        self.pc_id = "connection"
+        self.handlers: dict[str, Any] = {}
+
+    async def initialize(self, sdp: str, kind: str) -> None:
+        pass
+
+    def event_handler(self, name: str) -> Callable[[Any], Any]:
+        def register(handler: Any) -> Any:
+            self.handlers[name] = handler
+            return handler
+
+        return register
+
+    def get_answer(self) -> dict[str, str]:
+        return {"pc_id": self.pc_id, "sdp": "answer", "type": "answer"}
+
+    def send_app_message(self, message: dict) -> None:
+        pass
+
+    async def disconnect(self) -> None:
+        await self.handlers["closed"](self)
 
 
 class ServerTest(unittest.IsolatedAsyncioTestCase):
@@ -24,6 +55,7 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         for method, path in [
             ("GET", "/health"),
             ("POST", "/offer"),
+            ("POST", "/announce"),
             ("POST", "/enroll/start"),
             ("POST", "/enroll/finish"),
             ("POST", "/enroll/cancel"),
@@ -37,6 +69,115 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
             "/offer", json={"sdp": 5}, headers={"authorization": "Bearer secret"}
         )
         self.assertEqual(response.status, 400)
+
+    async def test_announcement_without_a_session_returns_conflict(self) -> None:
+        response = await self.client.post(
+            "/announce",
+            json={"text": "Spotify açıldı.", "lang": "tr"},
+            headers={"authorization": "Bearer secret"},
+        )
+        self.assertEqual(response.status, 409)
+        self.assertEqual(await response.json(), {"error": "NO_SESSION"})
+
+    async def test_announcement_rejects_invalid_payloads(self) -> None:
+        for data in [
+            [],
+            {},
+            {"text": "", "lang": "tr"},
+            {"text": " ", "lang": "tr"},
+            {"text": "x" * 601, "lang": "tr"},
+            {"text": 1, "lang": "tr"},
+            {"text": "Done.", "lang": "de"},
+            {"text": "Done.", "lang": []},
+        ]:
+            with self.subTest(data=data):
+                response = await self.client.post(
+                    "/announce", json=data, headers={"authorization": "Bearer secret"}
+                )
+                self.assertEqual(response.status, 400)
+                self.assertEqual(await response.json(), {"error": "INVALID_ANNOUNCEMENT"})
+        response = await self.client.post(
+            "/announce", data="{", headers={"authorization": "Bearer secret"}
+        )
+        self.assertEqual(response.status, 400)
+
+    async def test_announcement_uses_active_brain_and_clears_after_session_end(self) -> None:
+        for ending in ["finished", "failed", "disconnected", "transport_disconnected"]:
+            with self.subTest(ending=ending):
+                await self.exercise_announcement_session(ending)
+
+    async def exercise_announcement_session(self, ending: str) -> None:
+        ready = asyncio.Event()
+        stop = asyncio.Event()
+        disconnected = asyncio.Event()
+        release = asyncio.Event()
+        messages: list[dict] = []
+        frames: list[Any] = []
+
+        async def send(message: dict) -> None:
+            messages.append(message)
+
+        # No Core calls or audio/model startup are needed for announcements.
+        brain = Brain(AsyncMock(), send, lambda: True)
+
+        async def session(connection: Any, enrollment: Enrollment, set_brain: Callable) -> None:
+            set_brain(brain)
+            ready.set()
+            await stop.wait()
+            if ending == "failed":
+                raise RuntimeError("private failure details")
+            if ending == "disconnected":
+                await connection.disconnect()
+                # A late startup callback must not revive a closed session.
+                set_brain(brain)
+            if ending == "transport_disconnected":
+                set_brain(None)
+                set_brain(brain)
+                disconnected.set()
+                await release.wait()
+
+        client = TestClient(TestServer(create_app("secret", self.enrollment)))
+        with (
+            patch("jarvis_voice.server.run_session", session),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection",
+                FakeConnection,
+            ),
+            patch.object(brain, "push_frame", side_effect=frames.append),
+        ):
+            await client.start_server()
+            try:
+                headers = {"authorization": "Bearer secret"}
+                response = await client.post(
+                    "/offer", json={"sdp": "offer", "type": "offer"}, headers=headers
+                )
+                self.assertEqual(response.status, 200)
+                await asyncio.wait_for(ready.wait(), timeout=1)
+                response = await client.post(
+                    "/announce", json={"text": "x" * 600, "lang": "en"}, headers=headers
+                )
+                self.assertEqual(response.status, 204)
+                self.assertIn({"type": "caption", "role": "jarvis", "text": "x" * 600}, messages)
+                self.assertIsInstance(frames[0], TTSSpeakFrame)
+                self.assertEqual(frames[0].metadata["lang"], "en")
+                with patch.object(brain, "announce", side_effect=RuntimeError("private details")):
+                    response = await client.post(
+                        "/announce", json={"text": "Done.", "lang": "en"}, headers=headers
+                    )
+                    self.assertEqual(response.status, 503)
+                    self.assertEqual(await response.json(), {"error": "ANNOUNCEMENT_FAILED"})
+                stop.set()
+                if ending == "transport_disconnected":
+                    await asyncio.wait_for(disconnected.wait(), timeout=1)
+                response = await client.post(
+                    "/announce", json={"text": "Done.", "lang": "en"}, headers=headers
+                )
+                self.assertEqual(response.status, 409)
+                self.assertEqual(await response.json(), {"error": "NO_SESSION"})
+            finally:
+                stop.set()
+                release.set()
+                await client.close()
 
     async def test_enrollment_requires_speech_and_can_be_deleted(self) -> None:
         headers = {"authorization": "Bearer secret"}

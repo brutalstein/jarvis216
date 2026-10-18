@@ -1,5 +1,6 @@
 import type { State, UiEvent } from "../shared";
 import { connect, type Link } from "./connection";
+import { hud } from "./hud";
 import { Presence } from "./presence";
 import { settings } from "./settings";
 import { captions, el, hydrateIcons, isState, STATES, setIcon, stage } from "./ui";
@@ -24,6 +25,7 @@ const show = stage(el("[data-stage]"), {
   },
 });
 const notice = el("[role=alert]");
+const showPlan = hud(el("[data-stage]"));
 const toggle = el<HTMLButtonElement>("#listen-toggle");
 let listening = true;
 let link: Link | undefined;
@@ -64,6 +66,8 @@ function receive(event: UiEvent) {
     body.dataset.heard = "true";
     caption(event.role === "user" ? "user" : "jarvis", event.text);
   } else if (event.type === "display" && Array.isArray(event.blocks)) show(event.blocks);
+  else if (event.type === "plan") showPlan(event.plan);
+  else if (event.type === "announce" && event.text.trim()) caption("jarvis", event.text);
   else if (event.type === "listening") setListening(event.value === true);
   else if (event.type === "error") fail(typeof event.code === "string" ? event.code : "");
 }

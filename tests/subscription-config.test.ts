@@ -40,7 +40,7 @@ it("codex api-key options keep current behavior", () => {
   expect(options.env?.OPENAI_API_KEY).toBe("fixture-api-key");
 });
 it("codex chatgpt mode registers without OPENAI_API_KEY when auth.json exists", async () => {
-  const registry = await configuredProviders(await codexEnv(true), secrets);
+  const { registry } = await configuredProviders(await codexEnv(true), secrets);
   expect(registry.list()).toEqual([
     expect.objectContaining({ id: "codex", riskFloor: "HIGH", outputTokenLimitEnforced: false }),
   ]);
@@ -63,7 +63,7 @@ const claude = {
   CLAUDE_CODE_MODEL: "test-model",
 };
 it("claude code registers with an existing absolute path", async () => {
-  const registry = await configuredProviders(claude, secrets);
+  const { registry } = await configuredProviders(claude, secrets);
   expect(registry.list()).toEqual([
     expect.objectContaining({ id: "claude-code", outputTokenLimitEnforced: false }),
   ]);
@@ -92,4 +92,54 @@ it.each(["", "   ", undefined])("claude code requires a model: %s", async (value
   await expect(
     configuredProviders({ ...claude, CLAUDE_CODE_MODEL: value }, secrets),
   ).rejects.toThrow();
+});
+
+it("desktop uses restricted MCP tools and profile-contained default roots", async () => {
+  const profile = await mkdtemp(path.resolve("data/profile-test-"));
+  paths.push(profile);
+  await mkdir(path.join(profile, "OneDrive", "Desktop"), { recursive: true });
+  const { registry, tools } = await configuredProviders(
+    { ENABLE_DESKTOP: "true", USERPROFILE: profile },
+    secrets,
+  );
+  const spec = TaskSpecSchema.parse({
+    objective: "windows",
+    capability: "desktop.act",
+    input: { action: "window.list", args: {} },
+    providers: ["windows-mcp"],
+    deadline: new Date(Date.now() + 60000).toISOString(),
+    verification: { kind: "non-empty" },
+  });
+  const provider = registry.select({ spec } as Task, []);
+  const configured = JSON.parse(provider.configuration!);
+  expect(configured.command).toBe("uvx");
+  expect(configured.args).toEqual(["windows-mcp@0.8.8", "serve"]);
+  expect(configured.roots[0]).toBe(path.join(profile, "OneDrive", "Desktop"));
+  expect(configured.env.ANONYMIZED_TELEMETRY).toBe("false");
+  expect(configured.allow).not.toContain("Shell");
+  expect(configured.env.WINDOWS_MCP_TOOLS.split(",")).toEqual(configured.allow);
+  expect(provider.outcomeObservable).toBe(true);
+  expect(tools).toBeDefined();
+  await tools?.close();
+});
+
+it("desktop refuses roots outside the operator profile", async () => {
+  const profile = await mkdtemp(path.resolve("data/profile-test-"));
+  paths.push(profile);
+  await expect(
+    configuredProviders(
+      {
+        ENABLE_DESKTOP: "true",
+        USERPROFILE: profile,
+        JARVIS_FILE_ROOTS: JSON.stringify([path.dirname(profile)]),
+      },
+      secrets,
+    ),
+  ).rejects.toThrow("PATH_OUTSIDE_ROOTS");
+});
+
+it("news can be enabled independently of desktop tools", async () => {
+  const { registry, tools } = await configuredProviders({ ENABLE_NEWS: "true" }, secrets);
+  expect(registry.list()).toMatchObject([{ id: "news", capability: "info.fetch" }]);
+  expect(tools).toBeUndefined();
 });

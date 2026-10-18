@@ -791,3 +791,167 @@ body.overlay {
     animation: none;
   }
 }
+
+/* Typed plan HUD keeps the presence and display cards on the same visual grid. */
+body:has([data-hud-card]) .presence {
+  transform: translateX(calc(var(--stage-w) / -2 - 16px));
+}
+.hud {
+  display: grid;
+  gap: 12px;
+}
+.plan-card {
+  border-color: var(--hairline-strong);
+  padding: 18px;
+}
+.plan-card[data-plan-status="AWAITING_APPROVAL"] {
+  border-top-color: var(--peach);
+}
+.plan-card[data-plan-status="RUNNING"] {
+  border-top-color: var(--mint);
+}
+.plan-card .plan-status {
+  color: var(--mint);
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.plan-card[data-plan-status="AWAITING_APPROVAL"] .plan-status {
+  color: var(--peach);
+}
+.plan-card[data-plan-status="FAILED"] .plan-status,
+.plan-card[data-plan-status="RECOVERY_REQUIRED"] .plan-status,
+.plan-card .hud-error {
+  color: var(--rose);
+}
+.plan-card h2 {
+  margin-right: 0;
+  font-size: 17px;
+}
+.plan-card h3 {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 18px 0 10px;
+}
+.progress-rail {
+  display: grid;
+  gap: 12px;
+  padding: 0 0 0 12px;
+  margin: 18px 0;
+  list-style: none;
+  border-left: 1px solid var(--hairline-strong);
+}
+.progress-rail li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  font-size: 12px;
+}
+.progress-rail li::before {
+  display: none;
+}
+.step-action {
+  color: var(--ink);
+  font-family: var(--font-mono);
+}
+.risk {
+  color: var(--mint);
+}
+.risk[data-risk="MEDIUM"] {
+  color: var(--peach);
+}
+.step-status {
+  width: 100%;
+  color: var(--ink-soft);
+}
+.plan-card .step-args {
+  width: 100%;
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.plan-card .plan-keys {
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 11px;
+}
+.candidate-list {
+  display: grid;
+  gap: 8px;
+}
+.candidate-list .btn {
+  text-align: left;
+  justify-content: flex-start;
+}
+.news-grid {
+  display: grid;
+  gap: 0;
+}
+.news-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--hairline-strong);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.news-text {
+  display: grid;
+  gap: 5px;
+}
+.news-headline {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.news-item:hover .news-headline {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.news-source {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.news-item img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.control-indicator {
+  position: absolute;
+  left: var(--gutter);
+  top: 16px;
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 2px solid var(--mint);
+  background: var(--surface);
+  color: var(--mint);
+  font-size: 12px;
+}
+.overlay:has([data-hud-card]) .presence {
+  transform: none;
+}
+.overlay .control-indicator {
+  position: static;
+  flex: none;
+  font-size: 11px;
+}
+.overlay .stage {
+  min-height: 0;
+  overflow-y: auto;
+}
+.overlay .plan-card .progress-rail {
+  display: none;
+}
+.overlay .hud .card {
+  display: block;
+}

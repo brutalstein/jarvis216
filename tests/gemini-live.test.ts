@@ -77,7 +77,7 @@ describe("realtime Gemini provider", () => {
   });
 
   it("enabling Gemini also registers gemini-live, which leads the realtime order", async () => {
-    const registry = await configuredProviders(
+    const { registry } = await configuredProviders(
       { ENABLE_GEMINI: "true", GEMINI_MODEL: "m" },
       new EnvSecrets({ GEMINI_API_KEY: "gemini-test-key" }),
     );
