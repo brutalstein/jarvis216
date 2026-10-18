@@ -115,8 +115,7 @@ export class MemoryExecutor implements Executor {
     const compiled = compile([task.spec.input]);
     const step = compiled.ok ? compiled.steps[0] : undefined;
     if (
-      !step ||
-      step.kind !== "memory" ||
+      step?.kind !== "memory" ||
       task.spec.capability !== "memory.write" ||
       (step.risk === "MEDIUM" && task.spec.risk === "LOW")
     )

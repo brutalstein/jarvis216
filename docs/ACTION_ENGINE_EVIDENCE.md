@@ -49,10 +49,22 @@ capture. Run them with the operator present, on a clean Notepad window, after en
 | `uv run --project workers/browser --locked python -m unittest discover -s workers/browser`, mypy | 9 tests OK; mypy clean |
 | `uv run --frozen --directory workers/voice python -m unittest discover -s tests` | 28 tests OK |
 
+## Follow-up (2026-10-18, branch `feature/jarvis-latest-v2`)
+
+| Former gap | Now | Class |
+| --- | --- | --- |
+| Candidates chosen by tap only | A bare spoken ordinal ("ikincisi", "ilkine tıkla", "the second one", "3rd", "sonuncusu") continues the plan that just stopped on several matches, without a model call; a bare stop phrase cancels the active plan the same way (`readVoiceCommand`, 29 parser cases, Core integration tests) | tested only |
+| First desktop step could exceed 15 s while `uvx` provisions Windows-MCP | Core starts Windows-MCP in the background at boot | tested only |
+| Snapshot text kept in plan task records until deletion or purge | Replaced by a marker in every task and action record once the describe finisher or replan has used it | tested only |
+| Replan without the screen | The replan prompt now receives window and element names from a fresh Snapshot (never field values), as the spec intended | tested only |
+| Intent JSON depended on prose discipline | Turns, repairs and replans request native JSON mode (Gemini, OpenRouter); the eval script does the same | tested only (live eval not re-run) |
+
+New catalog actions `memory.save` and `memory.forget` (MEDIUM, only with `ENABLE_MEMORY=true`)
+are covered by engine and Core tests; the 120-row eval set does not include them yet.
+
 ## Known gaps
 
-- A candidate is chosen by tap only; the spec's spoken choice ("ikincisi") is not implemented.
-- The first desktop step after a fresh install can exceed the 15 s step limit while `uvx`
-  provisions Windows-MCP.
-- Plan task records keep Snapshot text locally until conversation deletion or the 30-day purge.
-- Free OpenRouter keys allow about 50 requests a day, so the full eval cannot run there daily.
+- Free OpenRouter keys allow about 50 requests a day, so the full eval cannot run there daily;
+  `PROVIDER_BUDGETS_JSON` can now keep routing within that quota.
+- The live eval (`EVAL_RESULTS` above) and the voice desktop scenarios have not been re-run since
+  the follow-up changes.

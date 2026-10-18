@@ -48,7 +48,9 @@ routing and a circuit breaker. Browser Use runs in a separate Python worker. Det
 | `src/database.ts` | Verified | Pool, transactions with broken-connection handling, append-only migrations with advisory lock |
 | `src/tasks.ts` | Verified | Admission with idempotency and quotas, DAG with cycle checks, claim, lease, cancel, recover, quarantine, approve, reject, reconcile, list |
 | `src/gateway.ts` | Verified | Risk floor, exact approval, intent, verification, failure classification, fallback |
-| `src/routing.ts` | Verified | Registry, deterministic routing, circuit breaker |
+| `src/routing.ts`, `src/reliability.ts` | Verified (local) | Registry, measured adaptive routing (`adaptive-v1`), durable circuit breaker, daily call/token budgets |
+| `src/memory.ts` | Verified (local) | Operator-approved long-term memory store and executor |
+| `src/outbox.ts` | Verified (local) | Transactional outbox pushing n8n task outcomes (contract tests against a local HTTP receiver) |
 | `src/worker.ts` | Verified | Claim loop, heartbeat with retry, graceful drain |
 | `src/server.ts`, `src/cli.ts` | Verified | Authenticated loopback API and CLI (live in Docker) |
 | `src/context.ts` | Verified (local) | Bounded, redacted, expiring context with provenance |
@@ -185,7 +187,8 @@ eviction; operator reconciliation with redacted evidence. Procedures:
 ## 13. Known risks and limitations
 
 - One trusted operator; the operator principal is a fixed literal. No multi-tenancy.
-- The circuit breaker is per process and resets on restart.
+- The circuit breaker and routing measurements are per process; since the follow-up they are
+  rebuilt from `provider_observations` at startup instead of resetting.
 - Browser 400/429 and n8n timeouts are treated as uncertain and need operator review.
 - The Core-to-n8n result text comes from the workflow itself; it proves invocation, not an
   external business outcome.
@@ -194,7 +197,8 @@ eviction; operator reconciliation with redacted evidence. Procedures:
 - Docker 28+ accepts loopback-published ports (Core, n8n) from every Compose network.
 - The default database role is privileged; separate migration and runtime roles are pending.
 - Attestation flags record operator claims; they do not create isolation.
-- No financial cost cap for model calls.
+- No money-denominated cost cap for model calls; `PROVIDER_BUDGETS_JSON` caps daily calls or
+  provider-reported tokens per provider.
 - Claude Code and Codex do not enforce the task output-token cap; readiness explicitly
   reports `outputTokenLimitEnforced: false`. Byte bounds/deadlines do not cap quota usage.
 
@@ -227,11 +231,42 @@ integrate; n8n workflows are added by registering webhook URLs.
 ## 17. Next milestones
 
 1. Re-run the OpenClaw denial probes after every OpenClaw or Codex plugin upgrade.
-2. Free-model routing (OpenRouter, NVIDIA build) and the voice interface; financial cost caps remain outside the implementation.
+2. Re-run the live intent eval and the voice desktop scenarios on the operator's laptop with the
+   follow-up changes (JSON mode, `claude-live`, spoken stop and choice, memory).
 3. Browser-worker container with an enforced egress proxy, then live failure injection.
 4. Separate PostgreSQL migration and runtime roles; backup and restore drill.
-5. Model-proposed DAGs converted to typed tasks by deterministic policy.
+5. Money-denominated budgets from per-model prices, on top of the token budgets.
 6. Authoritative read-after-write verifiers for each side-effecting integration.
+
+Done since the first report: free-model routing (OpenRouter, NVIDIA) and the voice interface;
+model-proposed plans converted to typed tasks by deterministic policy (ADR 0010); measured
+adaptive routing with durable circuits and usage budgets (ADR 0011).
+
+## Follow-up, 2026-10-18 (branch `feature/jarvis-latest-v2`)
+
+Debug first: the merge `9b2d101` had left conflict markers in
+`packages/action-engine/src/guards.ts` and `packages/integration-hub/src/index.ts`, so type
+check, lint and build failed. `containedPath` now keeps both sides (lexical root check before
+any filesystem call, real-path check for junctions, the caller's spelling returned for Windows
+8.3 aliases).
+
+| Change | Evidence | Class |
+| --- | --- | --- |
+| Measured adaptive routing, durable circuits, daily budgets ([ADR 0011](ADR/0011-measured-adaptive-routing.md)) | `tests/reliability.test.ts` (Wilson bound, window, demotion, latency, budgets, restart replay, gateway observations, worker explanation) | tested only |
+| Claude adapter: stop reasons, effort, refusal fallback, served model, token usage, `claude-live` | `tests/model-contracts.test.ts`, `tests/gemini-live.test.ts` against local fixture servers | tested only; Claude Messages API still not live-verified |
+| Native JSON mode for turns, repairs and replans | Gemini and OpenAI-compatible request contract tests | tested only |
+| Spoken stop and candidate choice without a model call | engine parser tests, `tests/conversation-intent.test.ts` | tested only |
+| Event-driven task coordination | `tests/worker-wake.test.ts` (commit-only, rollback, listener isolation, sub-poll latency) | tested only |
+| Replan screen summary, Windows-MCP pre-warm, self-healing restarts | snapshot and MCP stdio tests | tested only |
+| Screen text discarded after use | `tests/plans.test.ts` | tested only |
+| Operator-approved long-term memory ([ADR 0012](ADR/0012-operator-approved-memory.md)) | `tests/memory.test.ts`, guard and catalog tests | tested only |
+| n8n outcome push through a transactional outbox ([ADR 0013](ADR/0013-n8n-outcome-outbox.md)) | `tests/outbox.test.ts` against a local HTTP receiver | tested only; example workflow not live-verified |
+| Voice client returns an apology for malformed Core replies | `workers/voice/tests/test_core_client.py` | tested only |
+
+Gates on the cloud host (Node 22.22, so outside the declared engine range; CI pins 24.22.0):
+type check, Biome lint (8 existing CSS warnings), Vitest, build, contract drift, desktop type
+check, browser worker unittest/ruff, voice `test_core_client` with ruff and mypy. The full voice
+suite needs the CUDA torch wheels, which this host could not download.
 
 ## §21 acceptance matrix
 

@@ -7,12 +7,28 @@ the official CLI paths below; never substitute them for an API key.
 
 ## Claude and Gemini APIs
 
-Set `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `ENABLE_CLAUDE=true` for the official Messages
-SDK. Set `GEMINI_API_KEY`, `GEMINI_MODEL`, `ENABLE_GEMINI=true` for the official GenAI
-SDK. Core does not supply tools to these models. Requests are bounded by task calls,
-output tokens, context size and total deadline. Financial cost caps and measured reliability
-routing are not implemented; do not use these modes for tasks requiring a hard money cap.
-Private tasks require exact per-action approval before remote disclosure.
+Set `ANTHROPIC_API_KEY` and `ENABLE_CLAUDE=true` for the official Messages SDK.
+`CLAUDE_MODEL` defaults to `claude-opus-5-5`. Enabling Claude registers two providers on the
+same model: `claude` (optional `CLAUDE_EFFORT`: low, medium, high, xhigh or max) and
+`claude-live` at low effort for realtime voice turns, ranked right after `gemini-live`. Every
+stop reason is mapped: a truncated reply (`max_tokens`, context window) may fall back to
+another listed provider, a safety `refusal` is final and is never shopped to other providers.
+On models that accept it (Fable 5.1, Opus 5.5, Opus 5, Sonnet 5.5) Core enables Anthropic's
+server-side refusal fallback; the result's `source` names the model that actually served.
+Set `CLAUDE_REFUSAL_FALLBACK=false` to send single-model requests only.
+
+Set `GEMINI_API_KEY`, `GEMINI_MODEL`, `ENABLE_GEMINI=true` for the official GenAI SDK. Core
+does not supply tools to these models. Requests are bounded by task calls, output tokens,
+context size and total deadline. Conversation turns and replans ask for native JSON mode where
+it exists (Gemini `application/json`, OpenRouter `json_object`); Claude follows the prompt's
+JSON contract. Claude, Gemini, OpenAI-compatible and Claude Code results report token usage.
+
+Routing measures every provider (see [ADR 0011](ADR/0011-measured-adaptive-routing.md)).
+`PROVIDER_BUDGETS_JSON` sets rolling 24-hour call or token ceilings per provider id, for
+example `{"or-some-model":{"callsPerDay":45},"claude":{"tokensPerDay":500000}}`; free
+OpenRouter keys allow about 50 requests a day. Money-denominated caps are not implemented; do
+not use these modes for tasks requiring a hard money cap. Private tasks require exact
+per-action approval before remote disclosure.
 
 ## Claude Code subscription
 
@@ -156,6 +172,19 @@ builds panels from the fetched headlines only. Thumbnails come only from the fee
 URL, private addresses are refused, and only JPEG/PNG/WebP up to 200 KB are sent to the
 renderer as data URIs. The spoken brief is a `personal` text task over those headlines.
 
+## Long-term memory
+
+```dotenv
+ENABLE_MEMORY=true
+```
+
+"Jarvis, annemin doğum günü 3 Mayıs, hatırla" becomes a `memory.save` plan that waits for one
+tap; "unut" or "forget" proposes `memory.forget(about)` the same way. Notes holding passwords,
+PINs, IBANs, card numbers or key-shaped tokens are refused. The newest notes (≤ 3000
+characters) go into conversation prompts as data under `personal` consent. Review or remove
+them with `GET /v1/memories` and `DELETE /v1/memories[/:id]`; conversation deletion and the
+30-day purge leave them alone ([ADR 0012](ADR/0012-operator-approved-memory.md)).
+
 ## Codex SDK
 
 Provision a dedicated container/VM with no personal files, host home, `.env`, Docker socket
@@ -229,6 +258,26 @@ deduplicate task IDs durably before external writes and return `{ "text": "...",
 verification. Core cannot prove external truth from arbitrary webhook JSON. Admin discovery
 and status reads use `N8nClient` with an independently scoped `X-N8N-API-KEY`. Workflow
 discovery is currently a bounded first page. Public execution stopping is explicitly rejected.
+
+### Pushed task outcomes (optional)
+
+Instead of polling, n8n can receive each notable status of the tasks it submitted (completed,
+failed, cancelled, recovery required, waiting for approval, blocked). Import
+`examples/n8n/jarvis-task-events.json`, give its webhook a Header Auth credential (`Authorization`,
+`Bearer <random 32+ character token>`), publish it, then set `N8N_CALLBACK_URL` (for example
+`http://n8n:5678/webhook/jarvis-task-events`) and `N8N_CALLBACK_TOKEN` in `.env`. Core queues
+each event in the transition's own transaction and posts:
+
+```json
+{"protocolVersion":1,"type":"task.status","eventId":"<uuid>","taskId":"<uuid>",
+ "correlationId":"<uuid>","status":"COMPLETED","occurredAt":"<ISO time>",
+ "result":{"text":"...","source":"..."}}
+```
+
+Delivery is at least once: the workflow drops repeated `eventId`s. Failed deliveries back off
+from 2 s to 5 minutes and are dead-lettered after 12 attempts; `/v1/metrics` reports pending,
+delivered and failed counts. Only verified completions carry `result`. Core's side is covered by
+contract tests; the example workflow is not live-verified.
 
 `examples/n8n/jarvis-core-callee.json` is a reference callee: a header-authenticated webhook,
 a Remove Duplicates node keyed on `taskId` across executions, and a response in Core's result

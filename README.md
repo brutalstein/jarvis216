@@ -8,6 +8,11 @@ typed adapters and never bypass that authority.
 > Models propose. Policies authorize. Executors act. Evidence verifies. The core records
 > the authoritative result.
 
+Routing learns from that record: providers measured as failing or too slow for the time left
+move behind the others ([ADR 0011](docs/ADR/0011-measured-adaptive-routing.md)), circuits and
+usage budgets survive restarts, and every component reacts to committed task changes instead of
+polling.
+
 Status: first foundation release for **one trusted local operator**. It is not a
 multi-tenant system and makes no production-readiness claim. See
 [docs/ENGINEERING_REPORT.md](docs/ENGINEERING_REPORT.md) for verified evidence and
@@ -20,7 +25,7 @@ open gates. No frontend is included by design.
 | `src/contracts.ts` | Task state machine, schemas, event families, canonical hashing |
 | `src/tasks.ts` | Task service: admission, DAG, leases, cancel, recover, approve, reconcile |
 | `src/gateway.ts` | Action gateway: risk floor, exact approval, durable intent, verification |
-| `src/routing.ts` | Versioned provider registry, deterministic routing, circuit breaker |
+| `src/routing.ts`, `src/reliability.ts` | Versioned provider registry, measured adaptive routing, durable circuits, usage budgets |
 | `src/worker.ts` | Lease-holding worker loop with heartbeat and graceful drain |
 | `src/server.ts`, `src/cli.ts` | Authenticated loopback HTTP control API and developer CLI |
 | `src/context.ts` | Bounded, redacted, expiring task context with provenance |
@@ -29,6 +34,9 @@ open gates. No frontend is included by design.
 | `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
 | `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, eval set |
 | `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan |
+| `src/conversation.ts`, `src/persona.ts` | Voice turns: persona prompt, JSON intents, instant spoken stop and candidate choice |
+| `src/memory.ts` | Operator-approved long-term memory (one-tap `memory.save` / `memory.forget`) |
+| `src/outbox.ts` | Transactional outbox pushing n8n task outcomes to a registered webhook |
 | `src/security.ts`, `src/telemetry.ts` | Secret references/redaction, path containment, tracing |
 | `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only) |
 | `schemas/` | Published JSON Schemas generated from the runtime contracts |
@@ -122,6 +130,8 @@ endpoints require the separate `N8N_INGRESS_TOKEN` and cannot reach operator rou
 | `GET /v1/plans/:id` | Model-proposed plan, its steps and state |
 | `POST /v1/plans/:id/approve {hash}`, `/reject`, `/cancel`, `/choose` | Hash-bound plan approval, rejection, cancellation, candidate choice |
 | `GET /v1/stream` | Server-sent plan states, panels and announcements |
+| `POST /v1/conversation/turns`, `GET`/`DELETE /v1/conversation/turns` | Voice turn, transcript export and deletion |
+| `GET /v1/memories`, `DELETE /v1/memories[/:id]` | Review and forget operator-approved memory notes |
 
 Task, result and event envelope contracts are published in `schemas/`.
 
@@ -135,14 +145,19 @@ Task, result and event envelope contracts are published in `schemas/`.
 | `JARVIS_TOKEN`, `N8N_INGRESS_TOKEN` | Distinct operator and n8n ingress credentials (32+ chars) |
 | `PORT` | Core HTTP port (loopback only), default 2160 |
 | `WORKER_CONCURRENCY`, `MODEL_CONCURRENCY`, `BROWSER_CONCURRENCY`, `WORKFLOW_CONCURRENCY` | Backpressure limits |
-| `ENABLE_CLAUDE`, `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` | Claude Messages API adapter |
+| `ENABLE_CLAUDE`, `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_EFFORT`, `CLAUDE_REFUSAL_FALLBACK` | Claude Messages API adapter (`claude` plus low-effort `claude-live` for voice; model defaults to `claude-opus-5-5`) |
+| `ENABLE_CLAUDE_CODE`, `CLAUDE_CODE_PATH`, `CLAUDE_CODE_MODEL`, `JARVIS_PRIVATE_PROVIDERS` | Claude Code subscription harness; providers trusted with private data |
+| `ENABLE_OPENROUTER`, `OPENROUTER_MODELS`, `ENABLE_NVIDIA`, `NVIDIA_MODELS` (+ keys) | Free OpenAI-compatible models |
+| `PROVIDER_BUDGETS_JSON` | Rolling 24 h call or token ceilings per provider id |
 | `ENABLE_GEMINI`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Gemini API adapter |
 | `ENABLE_OPENCLAW`, `OPENCLAW_URL`, `OPENCLAW_AGENT_ID`, `OPENCLAW_TOKEN`, `OPENCLAW_POLICY_VERIFIED` | OpenClaw OpenResponses adapter |
 | `ENABLE_BROWSER`, `BROWSER_WORKER_URL`, `BROWSER_WORKER_TOKEN`, `BROWSER_EGRESS_VERIFIED`, `BROWSER_ALLOWED_URLS` | Browser Use worker |
 | `ENABLE_N8N`, `N8N_WORKFLOWS_JSON` (+ referenced token variables), `N8N_ENCRYPTION_KEY` | Core-invoked n8n workflows |
+| `N8N_CALLBACK_URL`, `N8N_CALLBACK_TOKEN` | Optional push of n8n-submitted task outcomes (set both) |
 | `ENABLE_CODEX`, `OPENAI_API_KEY`, `CODEX_MODEL`, `CODEX_ISOLATION_VERIFIED`, `CODEX_WORKSPACE`, `CODEX_ISOLATED_HOME` | Codex SDK adapter (isolated host only) |
 | `ENABLE_DESKTOP`, `WINDOWS_MCP_COMMAND`, `WINDOWS_MCP_ARGS`, `JARVIS_FILE_ROOTS` | Windows-MCP desktop actions and the folders file actions may touch |
 | `ENABLE_NEWS`, `NEWS_FEEDS` | RSS news briefs and panels |
+| `ENABLE_MEMORY` | Operator-approved long-term memory |
 
 ## Documentation
 

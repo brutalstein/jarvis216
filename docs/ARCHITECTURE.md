@@ -9,7 +9,7 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | Core task service | Admission, DAG, state transitions, deadlines, leases, cancellation, recovery |
 | Action gateway | Exact typed action, permissions, risk, approval, call budget, durable intent, verification |
 | PostgreSQL | Tasks, dependencies, single-use approvals, actions, ordered durable events |
-| Provider registry | Versioned capabilities, deterministic routing, circuit state, bounded safe fallback |
+| Provider registry | Versioned capabilities, measured adaptive routing ([ADR 0011](ADR/0011-measured-adaptive-routing.md)), durable circuit state, usage budgets, bounded safe fallback |
 | OpenClaw | Delegated agent runtime; OpenResponses HTTP integration; no Core policy ownership |
 | Browser Use worker | Isolated deterministic public-page extraction using official Actor API |
 | n8n | External triggers and schedules; registered webhook workflows, execution records |
@@ -21,7 +21,9 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | Action engine (`packages/action-engine`) | Intent parsing, typed action catalog, compiler, guards, grounding, Windows-MCP bindings, news fetch, narration; imports nothing from Core |
 | Integration hub (`packages/integration-hub`) | Typed recipes that turn HIGH integration actions into Core tasks for Browser Use, n8n and OpenClaw |
 | Plan service | Model-proposed plans: compile, hash, approval card, one task per step, finishers, replan, voice cancel |
-| Windows-MCP | Desktop tools over MCP stdio, child of Core, allowlisted tools only, telemetry off |
+| Windows-MCP | Desktop tools over MCP stdio, child of Core, allowlisted tools only, telemetry off; pre-warmed at boot, restarts age out of a 10-minute crash window |
+| Memory store | Operator-approved long-term notes ([ADR 0012](ADR/0012-operator-approved-memory.md)); written only by approved `memory.save` / `memory.forget` steps |
+| Outbox | Transactional queue of n8n task outcomes, delivered at least once to a registered webhook ([ADR 0013](ADR/0013-n8n-outcome-outbox.md)) |
 
 Core is a modular monolith with a separate Python browser boundary. A single PostgreSQL
 queue avoids two independent global schedulers; Redis is unnecessary at this scale.
@@ -41,10 +43,12 @@ and the operator approves the plan hash before any MEDIUM step runs
 ## Model-proposed plans (M3)
 
 ```
-voice turn ─► ConversationService ─► one model call ─► intent: reply | clarify | plan | cancel
+voice turn ─► ConversationService ─┬─ bare stop / ordinal ─► cancel plan / choose candidate (no model)
+                                   └─ one JSON-mode model call ─► intent: reply | clarify | plan | cancel
 plan ─► engine.compile (catalog Zod schemas) ─► plans row (hash) ─► one task per step (chain)
   ├─ desktop.act   ─► DesktopExecutor ─► guards ─► grounding ─► Windows-MCP ─► postcondition
   ├─ info.fetch    ─► NewsExecutor    ─► RSS over HTTPS ─► news panel
+  ├─ memory.write  ─► MemoryExecutor  ─► secret guard ─► memories table ─► read back
   └─ integration   ─► IntegrationHub  ─► browser.extract / workflow.invoke / agent.delegate
 GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; announcements ─► voice TTS
 ```
@@ -55,7 +59,15 @@ GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; annou
 - One desktop or integration plan runs at a time; a new one cancels the previous one.
 - The model's spoken text is discarded for plans; JARVIS speaks templates and Core outcomes.
 - Screen text reaches only trusted-private providers (Claude Code), for `screen.describe` and
-  for one replan after an observed failure. A replanned plan is compiled and approved again.
+  for one replan after an observed failure (window and element names from a fresh Snapshot,
+  never field values). A replanned plan is compiled and approved again. Once used, the screen
+  text is replaced by a marker in every task and action record.
+- A bare spoken stop ("dur", "iptal", "stop") cancels the active plan without a model call. A
+  bare ordinal ("ikincisi", "the second one") picks one of the candidates the newest plan
+  stopped on: a clarification, never an approval; outside the plan's approval window the
+  continued plan asks for a new tap. Anything with extra words goes to the model.
+- Conversation turns, repairs and replans request native JSON mode where the provider has one
+  (Gemini, OpenRouter). Memory notes, when enabled, enter the prompt as data.
 
 ## Risk and approval
 
@@ -85,9 +97,24 @@ is only evidence of an output contract, never external truth. An executor that o
 own outcome (`outcomeObservable`, e.g. the desktop executor's postconditions) moves an unmet
 result to FAILED instead of RECOVERY_REQUIRED, because the state was seen.
 
-Each provider has an in-process circuit breaker: three outage-class failures (transient,
-rate limited, unavailable) open it for 60 seconds; a success closes it; after the cooldown
-one further outage reopens it. Routing skips open circuits and `/readyz` reports them.
+Each provider has a circuit breaker: three outage-class failures (transient, rate limited,
+unavailable) open it for 60 seconds; a success closes it; after the cooldown one further outage
+reopens it. Routing skips open circuits and `/readyz` reports them.
+
+Every attempt is also recorded in `provider_observations` with the outcome's transaction. Policy
+filters still decide who may run; measurements only reorder the eligible: a provider that fails
+more often than not with statistical confidence (95% Wilson upper bound below 0.5, at least 8
+attempts) or whose p90 latency exceeds the time left moves behind the others but stays a last
+resort. Ties fall back to the base order and the id, and `provider.selected` records the
+statistics used. Startup replays the last day, so health, usage budgets
+(`PROVIDER_BUDGETS_JSON`) and open circuits survive restarts.
+
+## Event-driven coordination
+
+`TaskService` emits a change per moved task after its transaction commits (never on rollback;
+each listener is isolated). Text turns, plan waits, the plan refresher, the outbox and idle
+workers react at once; the previous polls stay as a safety net with longer intervals. A worker
+that ran a task claims again immediately, so chained plan steps do not wait for a poll.
 
 Workers hold 30-second leases renewed every 10 seconds. A failed renewal is retried while
 the lease is still valid; only a lost or expiring lease aborts the action. On shutdown a
