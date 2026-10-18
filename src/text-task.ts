@@ -9,6 +9,8 @@ export type TextSpec = {
   maxOutputTokens: number;
   // The reply must be one JSON object (conversation intents, replans).
   json?: boolean;
+  // Safety-net poll while waiting for the task's change event.
+  pollMs?: number;
 };
 
 // States where waiting longer cannot produce a reply.
@@ -62,7 +64,7 @@ export async function runText(
     while (!settled.has(current.status) && Date.now() < started + spec.deadlineMs + 2000) {
       if (!dirty)
         await new Promise<void>((resolve) => {
-          const timer = setTimeout(resolve, 250);
+          const timer = setTimeout(resolve, spec.pollMs ?? 250);
           resume = () => {
             clearTimeout(timer);
             resolve();

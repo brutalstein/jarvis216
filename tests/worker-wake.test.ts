@@ -42,17 +42,19 @@ describe("worker wake", () => {
   });
 
   it("wake shortens the idle wait", async () => {
-    const worker = new Worker(tasks, registry);
+    // A 10 s idle wait: only the wake can explain a completion within seconds, however slow
+    // the host is.
+    const worker = new Worker(tasks, registry, undefined, { idleMs: 10_000 });
     const stop = new AbortController();
     const running = worker.run(stop.signal);
     await delay(50);
     const task = await tasks.create(TaskSpecSchema.parse(spec()), "wake", "operator");
     const admitted = Date.now();
     worker.wake();
-    while ((await tasks.get(task.id)).status !== "COMPLETED" && Date.now() - admitted < 1000)
+    while ((await tasks.get(task.id)).status !== "COMPLETED" && Date.now() - admitted < 9000)
       await delay(10);
     expect((await tasks.get(task.id)).status).toBe("COMPLETED");
-    expect(Date.now() - admitted).toBeLessThan(250);
+    expect(Date.now() - admitted).toBeLessThan(5000);
     stop.abort();
     await running;
   });
@@ -101,10 +103,10 @@ describe("worker wake", () => {
   });
 
   it("a text turn returns as soon as its task completes, not on the next poll", async () => {
-    const worker = new Worker(tasks, registry);
+    const worker = new Worker(tasks, registry, undefined, { idleMs: 10_000 });
     const stop = new AbortController();
     const running = worker.run(stop.signal);
-    // Without the change event the waiter would only notice on its 250 ms safety poll.
+    // Without the change event the waiter would only notice on its 10 s safety poll.
     await delay(50);
     const started = Date.now();
     const result = await runText(
@@ -114,13 +116,14 @@ describe("worker wake", () => {
         prompt: "hello",
         providers: ["instant"],
         privacy: "personal",
-        deadlineMs: 5000,
+        deadlineMs: 15_000,
         maxOutputTokens: 50,
+        pollMs: 10_000,
       },
       "conversation:event-driven",
     );
     expect(result.text).toBe("hello");
-    expect(Date.now() - started).toBeLessThan(200);
+    expect(Date.now() - started).toBeLessThan(5000);
     stop.abort();
     await running;
   });

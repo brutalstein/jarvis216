@@ -11,6 +11,8 @@ export interface WorkerTiming {
   renewMs: number;
   // Shutdown grace for in-flight actions before they are aborted (keep below stop timeout).
   drainMs: number;
+  // Idle wait between claim attempts when nothing wakes the worker.
+  idleMs: number;
 }
 export class Worker {
   private running = new Map<string, AbortController>();
@@ -25,7 +27,7 @@ export class Worker {
     timing: Partial<WorkerTiming> = {},
   ) {
     this.gateway = new ActionGateway(tasks, redact, (observation) => registry.record(observation));
-    this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, ...timing };
+    this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, idleMs: 500, ...timing };
   }
   cancel(id: string): void {
     this.running.get(id)?.abort();
@@ -132,7 +134,9 @@ export class Worker {
       // A finished task may have unblocked the next step of a chain: claim again at once.
       if (worked) continue;
       try {
-        await delay(500, undefined, { signal: AbortSignal.any([signal, this.idle.signal]) });
+        await delay(this.timing.idleMs, undefined, {
+          signal: AbortSignal.any([signal, this.idle.signal]),
+        });
       } catch {
         if (signal.aborted) break;
         this.idle = new AbortController();
