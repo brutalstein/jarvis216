@@ -12,39 +12,37 @@ From the repository root, with Node 24 and `uv` on PATH:
 npm --prefix apps/desktop ci
 uv sync --frozen --directory workers/voice
 npm run build
-$env:JARVIS_ENV_FILE = (Resolve-Path .env.voice-dev).Path
+$env:JARVIS_ENV_FILE = (Resolve-Path .env).Path
 npm --prefix apps/desktop start
 ```
 
-The inherited development Core on `127.0.0.1:2161` and its disposable PostgreSQL on `55433`
-must be running. `.env.voice-dev` is an existing gitignored development configuration, not a
-shipped credential file. The original Core on `2160` does not include this branch's conversation
-endpoint; do not point this UI at it until the branch is integrated.
+The Core named by `JARVIS_ENV_FILE` must be running and built from this revision: it serves the
+`/v1/conversation` endpoints the voice service calls. A Core started before this code was merged
+lacks them, so rebuild and restart it first. `JARVIS_ENV_FILE` must be an absolute path to the
+Core configuration containing its `PORT` and `JARVIS_TOKEN`. Only the main process reads that
+token. It launches an authenticated loopback voice service automatically and terminates its
+process tree on exit. Provider credentials are never copied into the desktop directory or voice
+child environment. The voice models live in the gitignored `data/voice/models`.
 
-If the development Core needs starting, use a separate terminal at this repository root:
-
-```powershell
-Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
-node --env-file=C:\Users\cenke\OneDrive\Desktop\jarvis216\.env --env-file=.env.voice-dev dist/main.js
-```
-
-For another installation, `JARVIS_ENV_FILE` must be an absolute path to the Core configuration
-containing its `PORT` and `JARVIS_TOKEN`. Only the main process reads that token. It launches an
-authenticated loopback voice service automatically and terminates its process tree on exit.
-Provider credentials are never copied into the desktop directory or voice child environment.
+`VOICE_SPEAKER_THRESHOLD` (default `0.7`), when set before launch, is passed to the voice
+service for calibration with the operator's microphone.
 
 ## Use
 
 - Say “Jarvis” (Turkish spelling variations are accepted), then speak normally. Without a voice
   print, the assistant requires its name. After a reply, an eight-second follow-up window opens.
-- Settings → **Sesimi tanı**: read the three prompts for about 30 seconds, then **Kaydı tamamla**.
-  More speech may be required; only an embedding is saved, never a recording. **Ses izini sil**
-  removes it. The similarity threshold still needs calibration using the operator's microphone.
+- Settings (gear, top right) → **Sesimi tanıt**: read the rotating sentences aloud while the line
+  fills; **Tamamla** unlocks after 25 of 30 seconds. **Vazgeç**, or closing the sheet, cancels and
+  returns the service to listening. Only an embedding is saved, never a recording. **Ses izini
+  sil** removes it after a confirmation. The similarity threshold still needs calibration.
 - **Ctrl+Alt+J**, the footer control and tray menu toggle listening. Closing the main window
   leaves the tray and edge overlay running; **Çık** quits. The overlay accepts pointer input only
-  over its cards.
-- Cards expire after 20 seconds; pin a card to keep it. Captions disappear after six seconds.
-  Settings exports conversation records as JSON and confirms before deleting them.
+  over its cards. After a voice error, **Yeniden dene** reconnects and restarts a crashed service.
+- Cards expire after 20 seconds; pin a card to keep it. Up to three show beside the presence.
+  Captions stay 7–14 seconds depending on length. Settings exports conversation records as JSON
+  and confirms before deleting them.
+
+The visual system is recorded in [DESIGN.md](DESIGN.md).
 
 Voice prints default to `data/voice/operator.npy` in this checkout. `VOICE_DATA_DIR` can select
 another local directory; the end-to-end test uses a disposable directory. Audio denoising, echo

@@ -60,8 +60,8 @@ A newer addressed turn cancels the pending request and stale replies are dropped
 speaks a fixed apology in the detected Turkish/English language. The follow-up window opens after
 bot playback stops. Enrollment never sends its speech to Core.
 
-The default speaker threshold is `0.7`; a manually launched voice process can set
-`VOICE_SPEAKER_THRESHOLD` for calibration. This print filters conversation, not security approvals.
+The default speaker threshold is `0.7`; `VOICE_SPEAKER_THRESHOLD`, set before launching the
+desktop or a manual voice process, overrides it for calibration. This print filters conversation, not security approvals.
 Vendor debug logging is disabled to avoid transcript logs. Numeric `turn.timing` output reports
 STT, Core, synthesis and first-generated-audio latency; speaker score logs support local calibration.
 Physical output-device latency is not measured. Current full-path observations: 3.25–4.75 seconds
