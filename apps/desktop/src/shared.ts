@@ -10,11 +10,18 @@ export type UiEvent =
   | { type: "listening"; value: boolean }
   | { type: "error"; code: string };
 export type Voice = { url: string; token: string; test?: boolean };
+export type Enrollment = { enrolled: boolean; seconds: number };
 export interface Bridge {
   voice(): Promise<Voice>;
   onEvent(cb: (event: UiEvent) => void): void;
   turns: { export(): Promise<unknown>; deleteAll(): Promise<void> };
-  enrollment: { start(): Promise<void>; finish(): Promise<void>; remove(): Promise<void> };
+  enrollment: {
+    status(): Promise<Enrollment>;
+    start(): Promise<void>;
+    finish(): Promise<void>;
+    cancel(): Promise<void>;
+    remove(): Promise<void>;
+  };
   setListening(on: boolean): void;
 }
 declare global {

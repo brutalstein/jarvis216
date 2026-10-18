@@ -105,7 +105,7 @@ app.whenReady().then(async () => {
     height: 760,
     minWidth: 700,
     minHeight: 560,
-    backgroundColor: "#080d12",
+    backgroundColor: "#0c0a09",
     autoHideMenuBar: true,
     show: false,
   });
@@ -136,7 +136,7 @@ app.whenReady().then(async () => {
   // An embedded geometric application mark; no external asset or network request.
   const icon = nativeImage.createFromBuffer(
     Buffer.from(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="7" fill="#101c25"/><path d="M9 10h13v9c0 8-13 8-13 0" fill="none" stroke="#b7dee0" stroke-width="3"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="#a7e5d3" stroke-width="1.6"><rect width="32" height="32" rx="8" fill="#1c1917" stroke="none"/><circle cx="16" cy="16" r="10"/><circle cx="16" cy="16" r="6.5"/><circle cx="16" cy="16" r="3"/></svg>',
     ),
   );
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
@@ -146,18 +146,34 @@ app.whenReady().then(async () => {
   globalShortcut.register("Control+Alt+J", () => setListening(!listening));
   if (testing) ipcMain.on("test:toggle-listening", () => setListening(!listening));
 
+  let voiceFailed = false;
+  const startVoice = () => {
+    voiceFailed = false;
+    voice = startVoiceService({
+      repoRoot: resolve(__dirname, "../../.."),
+      ...env,
+      dataDir: process.env.VOICE_DATA_DIR ?? resolve(__dirname, "../../../data/voice"),
+      onExit: () => {
+        voiceFailed = !quitting;
+        service = undefined;
+      },
+    }).then((value) => {
+      service = value;
+      return value;
+    });
+    voice.catch(() => {
+      voiceFailed = true;
+    });
+  };
   try {
     env = readOperatorEnv(process.env.JARVIS_ENV_FILE ?? "");
-    voice = testing
-      ? Promise.resolve({ url: "http://127.0.0.1:1", token: "launch-test-token", test: true })
-      : startVoiceService({
-          repoRoot: resolve(__dirname, "../../.."),
-          ...env,
-          dataDir: process.env.VOICE_DATA_DIR ?? resolve(__dirname, "../../../data/voice"),
-        }).then((value) => {
-          service = value;
-          return value;
-        });
+    if (testing)
+      voice = Promise.resolve({
+        url: "http://127.0.0.1:1",
+        token: "launch-test-token",
+        test: true,
+      });
+    else startVoice();
   } catch {
     voice = Promise.reject(new Error("ENV_MISSING"));
   }
@@ -165,6 +181,8 @@ app.whenReady().then(async () => {
   voice.catch(() => {});
   ipcMain.handle("voice", async (event) => {
     if (!allowed(event.sender) || event.sender !== main.webContents) throw new Error("FORBIDDEN");
+    // Retry after a crash or failed start spawns a fresh service instead of reusing a dead port.
+    if (voiceFailed) startVoice();
     const { url, token, test } = await voice;
     return { url, token, test };
   });
@@ -178,8 +196,10 @@ app.whenReady().then(async () => {
     });
   }
   for (const [channel, path, method] of [
+    ["enroll:status", "/health", "GET"],
     ["enroll:start", "/enroll/start", "POST"],
     ["enroll:finish", "/enroll/finish", "POST"],
+    ["enroll:cancel", "/enroll/cancel", "POST"],
     ["enroll:remove", "/enroll", "DELETE"],
   ]) {
     ipcMain.handle(channel, async (event) => {
@@ -192,6 +212,10 @@ app.whenReady().then(async () => {
       });
       if (!response.ok)
         throw new Error(response.status === 409 ? "MORE_SPEECH_NEEDED" : "VOICE_UNAVAILABLE");
+      if (method === "GET") {
+        const { enrolled, seconds } = await response.json();
+        return { enrolled: enrolled === true, seconds: Number(seconds) || 0 };
+      }
     });
   }
   ipcMain.on("listening", (event, on: unknown) => {

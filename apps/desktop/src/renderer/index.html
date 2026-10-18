@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>JARVIS</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src http://127.0.0.1:*; media-src 'self' blob:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="app.js"></script>
+  </head>
+  <body data-state="idle" data-listening="true" data-cards="false" data-heard="false">
+    <header class="topbar">
+      <h1 class="wordmark">JARVIS</h1>
+      <button
+        type="button"
+        class="icon-button"
+        id="settings-open"
+        aria-label="Ayarlar"
+        aria-haspopup="dialog"
+      >
+        <span data-icon="gear"></span>
+      </button>
+    </header>
+
+    <main class="scene">
+      <section class="presence" aria-label="JARVIS">
+        <canvas data-presence role="img" aria-label="JARVIS"></canvas>
+        <p class="state" data-status role="status">Beklemede</p>
+        <p class="hint" data-hint>“Jarvis” diye seslenin.</p>
+        <p class="caption" data-caption aria-live="polite" hidden></p>
+      </section>
+      <section class="stage" data-stage aria-label="Kartlar" aria-live="polite"></section>
+      <div class="notice" role="alert" hidden>
+        <span data-icon="warning"></span>
+        <p data-notice></p>
+        <button type="button" class="btn outline" id="retry">Yeniden dene</button>
+      </div>
+    </main>
+
+    <footer class="dock">
+      <button type="button" class="btn outline listen" id="listen-toggle" aria-pressed="true">
+        <span data-icon="mic" data-listen-icon></span><span data-listen-label>Dinlemeyi durdur</span>
+      </button>
+      <span class="keys" role="img" aria-label="Kısayol: Ctrl Alt J">
+        <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>J</kbd>
+      </span>
+    </footer>
+
+    <dialog class="sheet" aria-labelledby="settings-title">
+      <div class="sheet-body">
+        <div class="sheet-head">
+          <h2 id="settings-title">Ayarlar</h2>
+          <form method="dialog">
+            <button type="submit" class="icon-button" aria-label="Kapat"><span data-icon="close"></span></button>
+          </form>
+        </div>
+        <p class="lede">Sesiniz bu bilgisayarda kalır. Ses kaydı saklanmaz.</p>
+
+        <section class="group">
+          <label for="microphone">Mikrofon</label>
+          <div class="select">
+            <select id="microphone">
+              <option value="">Varsayılan mikrofon</option>
+            </select>
+            <span data-icon="caret"></span>
+          </div>
+        </section>
+
+        <section class="group" data-enroll="none" aria-labelledby="voice-title">
+          <h3 id="voice-title">Sesiniz</h3>
+          <p class="note" data-enroll-note></p>
+          <div class="recording" data-recording hidden>
+            <p class="phrase" data-phrase></p>
+            <div class="meter">
+              <span class="meter-line" data-meter></span>
+              <span class="meter-value" data-meter-value>0 / 30 sn</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="enroll-start">Sesimi tanıt</button>
+            <button type="button" class="btn primary" id="enroll-finish" hidden disabled>
+              Tamamla
+            </button>
+            <button type="button" class="btn text" id="enroll-cancel" hidden>Vazgeç</button>
+            <button type="button" class="btn text danger" id="enroll-remove" hidden>
+              Ses izini sil
+            </button>
+          </div>
+          <div class="confirm" data-voice-confirm hidden>
+            <p>Ses iziniz silinir; JARVIS yine yalnızca adını duyduğunda yanıt verir.</p>
+            <div class="actions">
+              <button type="button" class="btn danger-fill" id="voice-confirm">Sil</button>
+              <button type="button" class="btn text" id="voice-keep">Vazgeç</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="turns-title">
+          <h3 id="turns-title">Konuşmalar</h3>
+          <div class="actions">
+            <button type="button" class="btn outline" id="turns-export">
+              <span data-icon="export"></span>Dışa aktar
+            </button>
+            <button type="button" class="btn outline danger" id="turns-delete">
+              <span data-icon="trash"></span>Tümünü sil
+            </button>
+          </div>
+          <div class="confirm" data-confirm hidden>
+            <p>Tüm konuşmalar kalıcı olarak silinir.</p>
+            <div class="actions">
+              <button type="button" class="btn danger-fill" id="turns-confirm">Sil</button>
+              <button type="button" class="btn text" id="turns-keep">Vazgeç</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <p class="sheet-status" data-settings-status role="status"></p>
+    </dialog>
+  </body>
+</html>

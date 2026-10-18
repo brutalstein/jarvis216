@@ -22,11 +22,14 @@ await build({
   external: ["electron"],
 });
 await build({
-  entryPoints: ["src/renderer/app.ts", "src/renderer/overlay.ts"],
+  entryPoints: ["src/renderer/app.ts", "src/renderer/overlay.ts", "src/renderer/styles.css"],
   bundle: true,
   platform: "browser",
   outdir: "dist",
   target: "chrome142",
+  // Icons inline as SVG text; fonts ship beside the bundle so the CSP needs no remote origin.
+  loader: { ".svg": "text", ".woff2": "file" },
+  assetNames: "fonts/[name]-[hash]",
 });
-for (const name of ["index.html", "overlay.html", "styles.css"])
+for (const name of ["index.html", "overlay.html"])
   await copyFile(`src/renderer/${name}`, `dist/${name}`);

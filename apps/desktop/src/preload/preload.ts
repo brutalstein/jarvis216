@@ -12,8 +12,10 @@ const bridge: Bridge = {
     deleteAll: () => ipcRenderer.invoke("turns:delete"),
   },
   enrollment: {
+    status: () => ipcRenderer.invoke("enroll:status"),
     start: () => ipcRenderer.invoke("enroll:start"),
     finish: () => ipcRenderer.invoke("enroll:finish"),
+    cancel: () => ipcRenderer.invoke("enroll:cancel"),
     remove: () => ipcRenderer.invoke("enroll:remove"),
   },
   setListening: (on) => {

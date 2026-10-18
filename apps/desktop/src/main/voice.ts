@@ -9,6 +9,7 @@ export async function startVoiceService(options: {
   coreUrl: string;
   coreToken: string;
   dataDir: string;
+  onExit?(): void;
 }): Promise<Voice & { stop(): void }> {
   const token = randomBytes(32).toString("hex");
   const env: NodeJS.ProcessEnv = {};
@@ -80,6 +81,7 @@ export async function startVoiceService(options: {
     child.once("error", fail);
     child.once("exit", () => {
       if (!ready) fail();
+      else options.onExit?.();
     });
     const lines = createInterface({ input: child.stdout });
     lines.on("line", (line: string) => {
