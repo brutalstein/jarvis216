@@ -10,7 +10,12 @@ const active = () =>
 describe("allowlisted integration recipes", () => {
   it("advertises enabled providers only", () => {
     expect(createIntegrationHub({}).available()).toEqual([]);
-    expect(active().available()).toEqual(["agent.delegate", "automation.invoke", "browser.read"]);
+    expect(active().available()).toEqual([
+      "agent.delegate",
+      "automation.invoke",
+      "browser.read",
+      "browser.read_many",
+    ]);
     expect(() =>
       createIntegrationHub({}).compile("agent.delegate", { instruction: "hi" }),
     ).toThrow();
@@ -50,12 +55,25 @@ describe("allowlisted integration recipes", () => {
       risk: "LOW",
       verification: { kind: "contains", value: "Example Domain" },
     });
+    expect(
+      active().compile("browser.read_many", {
+        pages: [{ url: "https://example.com/", expectedText: "Example Domain" }],
+      }),
+    ).toMatchObject({
+      capability: "browser.extract",
+      input: { pages: [{ url: "https://example.com/", expectedText: "Example Domain" }] },
+    });
     for (const url of [
       "https://example.com/other",
       "https://example.com.evil/",
       "http://example.com/",
     ])
       expect(() => active().compile("browser.read", { url, expectedText: "x" })).toThrow();
+    expect(() =>
+      active().compile("browser.read_many", {
+        pages: [{ url: "https://example.com/other", expectedText: "x" }],
+      }),
+    ).toThrow();
     expect(() => createIntegrationHub({ browserUrls: ["https://example.com/#secret"] })).toThrow();
   });
   it("rejects duplicate or malformed registration", () => {

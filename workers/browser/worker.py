@@ -25,28 +25,30 @@ def authorize(header: str | None, token: str) -> bool:
 
 
 @dataclass(frozen=True)
-class Request:
-    task_id: str
+class PageSpec:
     url: str
     expected_text: str
+
+
+@dataclass(frozen=True)
+class Request:
+    task_id: str
+    pages: tuple[PageSpec, ...]
     timeout_ms: int
 
+    @property
+    def url(self) -> str:
+        return self.pages[0].url
+
+    @property
+    def expected_text(self) -> str:
+        return self.pages[0].expected_text
+
     @classmethod
-    def parse(cls, payload: object, allowed: frozenset[str]) -> Request:
-        if not isinstance(payload, dict) or set(payload) != {
-            "taskId",
-            "url",
-            "expectedText",
-            "timeoutMs",
-        }:
-            raise WorkerError("INVALID_REQUEST")
-        task_id, url, text, timeout = (
-            payload[k] for k in ("taskId", "url", "expectedText", "timeoutMs")
-        )
-        if not all(isinstance(value, str) for value in (task_id, url, text)):
+    def _page(cls, url: object, text: object, allowed: frozenset[str]) -> PageSpec:
+        if not isinstance(url, str) or not isinstance(text, str):
             raise WorkerError("INVALID_REQUEST")
         try:
-            UUID(task_id)
             parsed = urlsplit(url)
         except ValueError as error:
             raise WorkerError("INVALID_REQUEST") from error
@@ -58,18 +60,67 @@ class Request:
             or parsed.fragment
         ):
             raise WorkerError("URL_NOT_ALLOWED")
-        if not text or len(text) > 4096 or type(timeout) is not int or not 100 <= timeout <= 60000:
+        if not text or len(text) > 4096:
             raise WorkerError("INVALID_BUDGET")
-        return cls(task_id, url, text, timeout)
+        return PageSpec(url, text)
+
+    @classmethod
+    def parse(cls, payload: object, allowed: frozenset[str]) -> Request:
+        if not isinstance(payload, dict):
+            raise WorkerError("INVALID_REQUEST")
+        keys = set(payload)
+        if keys == {"taskId", "url", "expectedText", "timeoutMs"}:
+            pages: tuple[PageSpec, ...] = (
+                cls._page(payload["url"], payload["expectedText"], allowed),
+            )
+        elif keys == {"taskId", "pages", "timeoutMs"}:
+            raw_pages = payload["pages"]
+            if not isinstance(raw_pages, list) or not 1 <= len(raw_pages) <= 4:
+                raise WorkerError("INVALID_REQUEST")
+            pages_list: list[PageSpec] = []
+            for item in raw_pages:
+                if not isinstance(item, dict) or set(item) != {"url", "expectedText"}:
+                    raise WorkerError("INVALID_REQUEST")
+                pages_list.append(cls._page(item["url"], item["expectedText"], allowed))
+            pages = tuple(pages_list)
+        else:
+            raise WorkerError("INVALID_REQUEST")
+        task_id, timeout = payload["taskId"], payload["timeoutMs"]
+        if not isinstance(task_id, str):
+            raise WorkerError("INVALID_REQUEST")
+        try:
+            UUID(task_id)
+        except ValueError as error:
+            raise WorkerError("INVALID_REQUEST") from error
+        if type(timeout) is not int or not 100 <= timeout <= 60000:
+            raise WorkerError("INVALID_BUDGET")
+        return cls(task_id, pages, timeout)
+
+
+async def _read_page(browser: Any, page: PageSpec) -> str:
+    await browser.navigate_to(page.url)
+    current = await browser.get_current_page()
+    if current is None:
+        raise WorkerError("NO_BROWSER_PAGE")
+    # This is application-owned fixed code. Never execute scripts from a task/model.
+    raw = await current.evaluate(
+        "() => JSON.stringify({url:location.href,"
+        "text:(document.body?.innerText || '').slice(0,30000)})"
+    )
+    data: dict[str, Any] = json.loads(raw)
+    if data.get("url") != page.url or page.expected_text not in data.get("text", ""):
+        raise WorkerError("READBACK_VERIFICATION_FAILED")
+    return str(data["text"])
 
 
 async def extract(request: Request) -> dict[str, str]:
     # Lazy import keeps auth/schema checks independent of a browser installation.
     from browser_use import Browser
 
+    hosts = sorted({urlsplit(page.url).hostname or "" for page in request.pages})
     browser = Browser(
         headless=True,
-        allowed_domains=[urlsplit(request.url).hostname or ""],
+        allowed_domains=[host for host in hosts if host],
         user_data_dir=None,
         permissions=[],
         accept_downloads=False,
@@ -80,22 +131,11 @@ async def extract(request: Request) -> dict[str, str]:
     try:
         async with asyncio.timeout(request.timeout_ms / 1000):
             await browser.start()
-            # Actor Page.goto returns before document readiness. The supported session
-            # navigation path waits for lifecycle events and enforces domain policy.
-            await browser.navigate_to(request.url)
-            page = await browser.get_current_page()
-            if page is None:
-                raise WorkerError("NO_BROWSER_PAGE")
-            # This is application-owned fixed code. Never execute scripts from a task/model.
-            raw = await page.evaluate(
-                "() => JSON.stringify({url:location.href,"
-                "text:(document.body?.innerText || '').slice(0,30000)})"
-            )
-            data: dict[str, Any] = json.loads(raw)
-            if data.get("url") != request.url or request.expected_text not in data.get("text", ""):
-                raise WorkerError("READBACK_VERIFICATION_FAILED")
+            texts: list[str] = []
+            for page in request.pages:
+                texts.append(await _read_page(browser, page))
             return {
-                "text": str(data["text"]),
+                "text": "\n\n---\n\n".join(texts),
                 "source": "browser-use:dom-readback",
                 "externalId": request.task_id,
             }

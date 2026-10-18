@@ -45,7 +45,7 @@ describe("catalog", () => {
 
   it("keeps HIGH actions constrained to external integrations", () => {
     const ids = Object.keys(catalog);
-    expect(ids).toHaveLength(21);
+    expect(ids).toHaveLength(22);
     expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual([
       "agent.delegate",
       "automation.invoke",
@@ -57,7 +57,17 @@ describe("catalog", () => {
     const lines = catalogLines();
     expect(lines).toContain("app.open(");
     expect(lines).toContain("name");
-    expect(lines.split("\n")).toHaveLength(21);
+    expect(lines.split("\n")).toHaveLength(22);
+  });
+
+  it("omits disabled integration actions from catalog lines", () => {
+    const none = catalogLines(new Set());
+    expect(none).not.toContain("agent.delegate");
+    expect(none).not.toContain("browser.read");
+    expect(none).toContain("app.open(");
+    const some = catalogLines(new Set(["browser.read"]));
+    expect(some).toContain("browser.read(");
+    expect(some).not.toContain("agent.delegate");
   });
 
   it.each(["file:///C:/x", "javascript:alert(1)"])("rejects non-web URL %s", (url) => {

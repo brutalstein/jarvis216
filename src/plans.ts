@@ -553,7 +553,22 @@ export class PlanService extends EventEmitter {
       });
       return;
     }
+    // Single external integration: speak a capped slice of the verified provider text.
     const [only] = steps;
+    if (
+      steps.length === 1 &&
+      only?.kind === "integration" &&
+      ["agent.delegate", "automation.invoke", "browser.read", "browser.read_many"].includes(
+        only.action,
+      )
+    ) {
+      const text = tasks[0]?.result?.text?.trim() ?? "";
+      const clipped = text.length > 400 ? `${text.slice(0, 400)}…` : text;
+      const say =
+        clipped || narrate({ type: "step-done", action: only.action, args: only.args }, lang);
+      await this.#settle(plan, "COMPLETED", { say });
+      return;
+    }
     const say =
       steps.length === 1 && only
         ? narrate({ type: "step-done", action: only.action, args: only.args }, lang)

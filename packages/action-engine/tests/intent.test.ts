@@ -71,6 +71,12 @@ describe("intent instructions", () => {
     expect(text).toContain("say");
   });
 
+  it("hides integration actions when none are enabled", () => {
+    const text = intentInstructions([]);
+    expect(text).not.toContain("agent.delegate");
+    expect(text).toContain("app.open");
+  });
+
   it("repair instructions quote the validation errors", () => {
     expect(repairInstructions(['step 1: unknown action "x"'])).toContain('unknown action "x"');
   });

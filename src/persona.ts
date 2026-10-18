@@ -44,7 +44,7 @@ export function conversationPrompt(input: {
     ...(history ? [`Recent conversation, oldest first:\n${history}`] : []),
     `The operator now says (speech transcript, may contain recognition errors):\n${input.utterance}`,
     FORMAT,
-    intentInstructions(),
+    intentInstructions(input.enabledIntegrations),
     `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
   ].join("\n\n");
 }

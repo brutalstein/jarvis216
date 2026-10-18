@@ -119,7 +119,9 @@ the browser service. Before service activation, provide verified egress controls
 private networks, loopback, metadata endpoints and unapproved destinations, including page
 subresources and redirects. A top-level URL/domain allowlist is not that network boundary.
 Then set `BROWSER_EGRESS_VERIFIED=true`, a random `BROWSER_WORKER_TOKEN` and the exact
-`BROWSER_ALLOWED_URLS` array. Start the Python worker or the opt-in Compose browser profile.
+`BROWSER_ALLOWED_URLS` array. Start the native worker with `.\scripts\browser-native.ps1`,
+or use `.\scripts\integrations-native.ps1` to bring up OpenClaw, the browser worker and the
+n8n Compose profile together. The opt-in Compose browser profile remains available.
 Configure Core with its worker URL and enable Browser. The container and Chromium sandbox
 combination is not live-tested here; never “fix” it by disabling Chromium security.
 
@@ -159,7 +161,11 @@ Auth mode is part of the action configuration fingerprint, so changing it invali
 
 ## n8n
 
+n8n stays in Docker (no native Windows binary path). Prefer the shared launcher or:
+
 ```powershell
+.\scripts\integrations-native.ps1 -SkipOpenClaw -SkipBrowser
+# or:
 docker compose --profile automations up -d --build
 ```
 

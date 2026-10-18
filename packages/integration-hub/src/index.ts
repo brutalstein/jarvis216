@@ -19,7 +19,7 @@ export class IntegrationError extends Error {
 export class IntegrationHub {
   private recipes = new Map<string, (args: Record<string, unknown>) => HubTask>();
   register(action: string, recipe: (args: Record<string, unknown>) => HubTask): void {
-    if (!/^[a-z][a-z0-9-]+\.[a-z][a-z0-9-]+$/.test(action) || this.recipes.has(action))
+    if (!/^[a-z][a-z0-9_-]+\.[a-z][a-z0-9_-]+$/.test(action) || this.recipes.has(action))
       throw new Error("INVALID_RECIPE");
     this.recipes.set(action, recipe);
   }
@@ -36,6 +36,17 @@ const agent = z.strictObject({ instruction: z.string().trim().min(1).max(2000) }
 const browser = z.strictObject({
   url: z.url({ protocol: /^https$/ }).max(2000),
   expectedText: z.string().trim().min(1).max(4096),
+});
+const browserMany = z.strictObject({
+  pages: z
+    .array(
+      z.strictObject({
+        url: z.url({ protocol: /^https$/ }).max(2000),
+        expectedText: z.string().trim().min(1).max(4096),
+      }),
+    )
+    .min(1)
+    .max(4),
 });
 const workflow = z.strictObject({
   workflow: z.string().regex(/^[a-z][a-z0-9_-]{0,99}$/),
@@ -85,7 +96,7 @@ export function createIntegrationHub(settings: {
       };
     });
   const urls = new Set((settings.browserUrls ?? []).map(exactUrl));
-  if (urls.size)
+  if (urls.size) {
     hub.register("browser.read", (args) => {
       const { url, expectedText } = read(browser, args);
       if (!urls.has(url)) throw new IntegrationError("INTEGRATION_DENIED");
@@ -100,13 +111,31 @@ export function createIntegrationHub(settings: {
         verification: { kind: "contains", value: expectedText },
       };
     });
+    hub.register("browser.read_many", (args) => {
+      const { pages } = read(browserMany, args);
+      const [first, ...rest] = pages;
+      if (!first) throw new IntegrationError("INTEGRATION_DENIED");
+      for (const page of [first, ...rest])
+        if (!urls.has(page.url)) throw new IntegrationError("INTEGRATION_DENIED");
+      return {
+        capability: "browser.extract",
+        providers: ["browser-use"],
+        objective: `Read ${pages.length} allowlisted public pages and verify each.`,
+        input: { pages },
+        risk: "LOW",
+        privacy: "public",
+        budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 4096 },
+        verification: { kind: "contains", value: first.expectedText },
+      };
+    });
+  }
   const names = new Set(settings.workflows ?? []);
   for (const name of names)
     if (!/^[a-z][a-z0-9_-]{0,99}$/.test(name)) throw new Error("INVALID_WORKFLOW_NAME");
   if (names.size)
     hub.register("automation.invoke", (args) => {
       const { workflow: id, payload } = read(workflow, args);
-      if (!names.has(id) || Buffer.byteLength(JSON.stringify(payload)) > 8192)
+      if (!names.has(id) || new TextEncoder().encode(JSON.stringify(payload)).length > 8192)
         throw new IntegrationError("INTEGRATION_DENIED");
       return {
         capability: "workflow.invoke",

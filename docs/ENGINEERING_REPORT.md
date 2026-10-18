@@ -53,11 +53,13 @@ routing and a circuit breaker. Browser Use runs in a separate Python worker. Det
 | `src/server.ts`, `src/cli.ts` | Verified | Authenticated loopback API and CLI (live in Docker) |
 | `src/context.ts` | Verified (local) | Bounded, redacted, expiring context with provenance |
 | `src/security.ts`, `src/telemetry.ts` | Verified (local) | Secret references and redaction, path containment, OpenTelemetry spans |
-| `src/integrations/http.ts` | Verified (local) | Bounded HTTP with dispatch classification |
+| `src/integrations/http.ts` | Verified (local) | Bounded HTTP with undici keep-alive dispatcher and dispatch classification |
 | `src/integrations/models.ts` | Partial live | Codex ChatGPT subscription and Gemini API (`gemini-3.5-flash`) completed; Claude Messages API not live-verified (no API key by design) |
 | `src/integrations/claude-code.ts` | Verified live | Official CLI subscription harness, 15 subprocess tests; live Core tasks COMPLETED without git, hook or CLAUDE.md context |
-| `src/integrations/services.ts` | Partial live | OpenClaw (live), Browser Use (live readback), n8n webhook (live) and API client (not live) |
-| `workers/browser/worker.py` | Verified (native) | Authenticated worker, exact URL allowlist, ephemeral browser, DOM readback |
+| `src/integrations/services.ts` | Partial live | OpenClaw (live), Browser Use (live readback), n8n webhook (live); API client multi-page discovery + waitExecution (contract tests) |
+| `packages/integration-hub` | Verified (local) | Voice recipes for OpenClaw / Browser / n8n including `browser.read_many` |
+| `scripts/browser-native.ps1`, `scripts/integrations-native.ps1` | Verified (local) | Native Windows launchers; n8n remains Compose-only |
+| `workers/browser/worker.py` | Verified (native) | Authenticated worker, exact URL allowlist, single or multi-page Actor DOM readback |
 | `schemas/` | Verified | JSON Schemas generated from runtime contracts; drift test |
 | `compose.yaml`, `Dockerfile` | Verified | Pinned images, segmented networks, hardened Core container |
 
@@ -76,9 +78,9 @@ Locks: `package-lock.json`, `workers/browser/uv.lock`. Source and release resear
 | PostgreSQL | `pg` pool, migrations, row locks | **Verified** | Live suite on 18.3: concurrent migrate, competing claims, reconnect after `pg_terminate_backend`; benchmark |
 | n8n → Core | Scoped webhook, status read | **Verified** | n8n 2.43.7 roundtrip: 202, polling, BLOCKED (OpenClaw absent at the time), safe stop branch |
 | Core → n8n | Registered published webhook | **Verified** | HIGH approval, COMPLETED with n8n execution ID; `taskId` replay returned empty body without re-execution; wrong token 403 |
-| n8n API client | `X-N8N-API-KEY` discovery and status | Not live-verified | Contract tests only; needs an owner API key |
-| Browser Use | Python worker, Actor DOM readback | **Verified** (native) / Not live-verified (container) | Real ephemeral Chromium read example.com; container needs egress attestation |
-| OpenClaw | OpenResponses `POST /v1/responses` | **Verified (native)** | 2026.10.4 Gateway, ChatGPT OAuth via `@openclaw/codex`, denial probes, approved task COMPLETED, stopped Gateway FAILED not dispatched |
+| n8n API client | `X-N8N-API-KEY` discovery (≤5×50 pages) and `waitExecution` | Not live-verified | Contract tests only; needs an owner API key |
+| Browser Use | Python worker, Actor DOM readback (1–4 allowlisted URLs) | **Verified** (native) / Not live-verified (container) | Real ephemeral Chromium read example.com; multi-page contract tests; container needs egress attestation |
+| OpenClaw | OpenResponses `POST /v1/responses`, plan-scoped `user` | **Verified (native)** | 2026.10.4 Gateway, ChatGPT OAuth via `@openclaw/codex`, denial probes, approved task COMPLETED, stopped Gateway FAILED not dispatched; tools remain denied |
 | Claude | Messages SDK | Not live-verified, **Blocked** | No API key; 529 to Gemini fallback tested end to end against fixtures |
 | Gemini | GenAI SDK | **Verified** | Operator free-tier key; `gemini-3.5-flash` task COMPLETED |
 | Claude Code | Official CLI, subscription | **Verified** | Subscription login; Core tasks COMPLETED. Earlier organization 403 did not recur |

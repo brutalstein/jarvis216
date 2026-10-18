@@ -2,10 +2,16 @@ import { once } from "node:events";
 import { createServer } from "node:http";
 import { describe, expect, it } from "vitest";
 import { type Task, TaskSpecSchema } from "../src/contracts.js";
-import { N8nClient, OpenClawExecutor } from "../src/integrations/services.js";
+import { jsonRequest } from "../src/integrations/http.js";
+import {
+  N8nClient,
+  OpenClawExecutor,
+  openClawUserKey,
+  probeOpenClaw,
+} from "../src/integrations/services.js";
 import { ProviderFailure, ProviderRegistry } from "../src/routing.js";
 
-function task(): Task {
+function task(planId?: string): Task {
   return {
     id: "12bef226-dd16-4ed6-9600-5e2196fe7df5",
     correlation_id: "706e41dc-aa62-454d-a159-18d0eb5255fa",
@@ -25,6 +31,7 @@ function task(): Task {
       providers: ["openclaw"],
       deadline: new Date(Date.now() + 60_000).toISOString(),
       verification: { kind: "contains", value: "answer" },
+      ...(planId ? { planId } : {}),
     }),
   };
 }
@@ -71,6 +78,54 @@ describe("official service contracts against local HTTP servers", () => {
         stream: false,
         user: "12bef226-dd16-4ed6-9600-5e2196fe7df5",
       });
+      const planTask = task("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+      expect(openClawUserKey(planTask)).toBe("plan:a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+      expect((await executor.execute(planTask, new AbortController().signal)).text).toBe("answer");
+      expect(received).toMatchObject({ user: "plan:a1b2c3d4-e5f6-7890-abcd-ef1234567890" });
+    } finally {
+      server.close();
+      await once(server, "close");
+    }
+  });
+
+  it("probes OpenClaw readiness without claiming policy verification", async () => {
+    const server = createServer((_req, res) => {
+      res.statusCode = 200;
+      res.end("ok");
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    try {
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("address");
+      await expect(
+        probeOpenClaw(`http://127.0.0.1:${address.port}`, "t", new AbortController().signal),
+      ).resolves.toBe("ready");
+      await expect(
+        probeOpenClaw("http://127.0.0.1:1", "t", AbortSignal.timeout(200)),
+      ).resolves.toBe("unavailable");
+    } finally {
+      server.close();
+      await once(server, "close");
+    }
+  });
+
+  it("reuses keep-alive connections for consecutive local requests", async () => {
+    let hits = 0;
+    const server = createServer((_req, res) => {
+      hits += 1;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ ok: hits }));
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    try {
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("address");
+      const url = `http://127.0.0.1:${address.port}/`;
+      const signal = new AbortController().signal;
+      expect(await jsonRequest(url, { method: "GET" }, signal)).toEqual({ ok: 1 });
+      expect(await jsonRequest(url, { method: "GET" }, signal)).toEqual({ ok: 2 });
     } finally {
       server.close();
       await once(server, "close");
@@ -79,11 +134,14 @@ describe("official service contracts against local HTTP servers", () => {
 
   it("does not call undocumented n8n execute/stop endpoints", async () => {
     const paths: string[] = [];
+    let page = 0;
     const server = createServer((req, res) => {
       paths.push(req.url ?? "");
       expect(req.headers["x-n8n-api-key"]).toBe("n8n-token");
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ data: [], nextCursor: null }));
+      page += 1;
+      if (page === 1) res.end(JSON.stringify({ data: [{ id: "1" }], nextCursor: "cursor-2" }));
+      else res.end(JSON.stringify({ data: [{ id: "2" }], nextCursor: null }));
     });
     server.listen(0, "127.0.0.1");
     await once(server, "listening");
@@ -91,9 +149,45 @@ describe("official service contracts against local HTTP servers", () => {
       const address = server.address();
       if (!address || typeof address === "string") throw new Error("address");
       const client = new N8nClient(`http://127.0.0.1:${address.port}`, "n8n-token");
-      await client.workflows(new AbortController().signal);
-      expect(paths).toEqual(["/api/v1/workflows?limit=50"]);
+      const workflows = await client.workflows(new AbortController().signal);
+      expect(workflows).toEqual([{ id: "1" }, { id: "2" }]);
+      expect(paths).toEqual([
+        "/api/v1/workflows?limit=50",
+        "/api/v1/workflows?limit=50&cursor=cursor-2",
+      ]);
       await expect(client.stop()).rejects.toThrow("UNSUPPORTED");
+    } finally {
+      server.close();
+      await once(server, "close");
+    }
+  });
+
+  it("waitExecution stops when finished", async () => {
+    let calls = 0;
+    const server = createServer((_req, res) => {
+      calls += 1;
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify(
+          calls === 1
+            ? { finished: false, status: "running" }
+            : { finished: true, status: "success", id: "9" },
+        ),
+      );
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    try {
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("address");
+      const client = new N8nClient(`http://127.0.0.1:${address.port}`, "n8n-token");
+      const result = await client.waitExecution("9", {
+        intervalMs: 10,
+        maxAttempts: 5,
+        signal: new AbortController().signal,
+      });
+      expect(result).toMatchObject({ finished: true, status: "success" });
+      expect(calls).toBe(2);
     } finally {
       server.close();
       await once(server, "close");

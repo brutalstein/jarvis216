@@ -112,6 +112,24 @@ const definitions: ActionDef[] = [
     { url: z.url({ protocol: /^https$/ }).max(2000), expectedText: label(4096) },
   ],
   [
+    "browser.read_many",
+    "integration",
+    "LOW",
+    "Birkaç izinli sayfayı oku",
+    "Read several allowlisted public pages",
+    {
+      pages: z
+        .array(
+          z.strictObject({
+            url: z.url({ protocol: /^https$/ }).max(2000),
+            expectedText: label(4096),
+          }),
+        )
+        .min(1)
+        .max(4),
+    },
+  ],
+  [
     "automation.invoke",
     "integration",
     "HIGH",
@@ -190,8 +208,10 @@ function signature(args: z.ZodObject): string {
     .join(", ");
 }
 
-export function catalogLines(): string {
+/** Desktop/info always listed; integration actions only when `enabled` contains their id. */
+export function catalogLines(enabled?: ReadonlySet<string>): string {
   return definitions
+    .filter((d) => d.kind !== "integration" || !enabled || enabled.has(d.id))
     .map((d) => `${d.id}(${signature(d.args)}) — ${d.description.tr} / ${d.description.en}`)
     .join("\n");
 }

@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 import {
   BrowserInputSchema,
@@ -24,6 +25,34 @@ const OpenResponse = z.object({
     )
     .min(1),
 });
+
+/** Bounded readiness check; never treats a reachable Gateway as policy-verified. */
+export async function probeOpenClaw(
+  base: string,
+  token: string,
+  signal: AbortSignal,
+): Promise<"ready" | "unavailable"> {
+  const url = `${serviceUrl(base)}/`;
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}` },
+      signal,
+      redirect: "error",
+    });
+    await response.body?.cancel();
+    return response.status < 500 ? "ready" : "unavailable";
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return "unavailable";
+  }
+}
+
+/** Stable Gateway session key: plan-scoped when present so chained delegates share a session. */
+export function openClawUserKey(task: Task): string {
+  return task.spec.planId ? `plan:${task.spec.planId}` : task.id;
+}
+
 export class OpenClawExecutor implements Executor {
   readonly id = "openclaw";
   readonly capability = "text.generate";
@@ -54,7 +83,7 @@ export class OpenClawExecutor implements Executor {
           body: JSON.stringify({
             model: "openclaw",
             input: task.spec.objective,
-            user: task.id,
+            user: openClawUserKey(task),
             stream: false,
             max_output_tokens: task.spec.budget.maxOutputTokens,
             tools: [],
@@ -72,6 +101,13 @@ export class OpenClawExecutor implements Executor {
   }
 }
 
+function browserPages(input: z.infer<typeof BrowserInputSchema>): {
+  url: string;
+  expectedText: string;
+}[] {
+  return "pages" in input ? input.pages : [input];
+}
+
 export class BrowserExecutor implements Executor {
   readonly id = "browser-use";
   readonly capability = "browser.extract";
@@ -86,6 +122,22 @@ export class BrowserExecutor implements Executor {
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const input = BrowserInputSchema.parse(task.spec.input);
+    const pages = browserPages(input);
+    const [first] = pages;
+    if (!first) throw new ProviderFailure("invalid-response", false, false);
+    const body =
+      pages.length === 1
+        ? {
+            url: first.url,
+            expectedText: first.expectedText,
+            taskId: task.id,
+            timeoutMs: Math.min(task.spec.budget.maxDurationMs, 60_000),
+          }
+        : {
+            pages,
+            taskId: task.id,
+            timeoutMs: Math.min(task.spec.budget.maxDurationMs, 60_000),
+          };
     return ResultSchema.parse(
       await jsonRequest(
         `${this.base}/v1/extract`,
@@ -96,17 +148,18 @@ export class BrowserExecutor implements Executor {
             "content-type": "application/json",
             "x-correlation-id": task.correlation_id,
           },
-          body: JSON.stringify({
-            ...input,
-            taskId: task.id,
-            timeoutMs: Math.min(task.spec.budget.maxDurationMs, 60_000),
-          }),
+          body: JSON.stringify(body),
         },
         signal,
       ),
     );
   }
 }
+
+const WorkflowListSchema = z.object({
+  data: z.array(z.unknown()).default([]),
+  nextCursor: z.string().nullable().optional(),
+});
 
 export class N8nClient {
   private base: string;
@@ -116,12 +169,45 @@ export class N8nClient {
   ) {
     this.base = serviceUrl(base);
   }
-  workflows(signal: AbortSignal): Promise<unknown> {
-    return this.get("workflows?limit=50", signal);
+  /** Bounded multi-page discovery (at most 5 × 50). */
+  async workflows(signal: AbortSignal): Promise<unknown[]> {
+    const collected: unknown[] = [];
+    let cursor: string | undefined;
+    for (let page = 0; page < 5; page++) {
+      const query = cursor
+        ? `workflows?limit=50&cursor=${encodeURIComponent(cursor)}`
+        : "workflows?limit=50";
+      const parsed = WorkflowListSchema.parse(await this.get(query, signal));
+      collected.push(...parsed.data);
+      if (!parsed.nextCursor) break;
+      cursor = parsed.nextCursor;
+    }
+    return collected;
   }
   execution(id: string, signal: AbortSignal): Promise<unknown> {
     if (!/^\d{1,30}$/.test(id)) throw new CoreError("INVALID_EXECUTION_ID", 400);
     return this.get(`executions/${id}?includeData=false`, signal);
+  }
+  /** Bounded outbound status poll; never starts or stops workflows. */
+  async waitExecution(
+    id: string,
+    options: { intervalMs?: number; maxAttempts?: number; signal: AbortSignal },
+  ): Promise<unknown> {
+    const intervalMs = options.intervalMs ?? 2000;
+    const maxAttempts = options.maxAttempts ?? 30;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const execution = (await this.execution(id, options.signal)) as {
+        finished?: boolean;
+        status?: string;
+      };
+      if (
+        execution.finished ||
+        ["success", "error", "crashed", "canceled"].includes(execution.status ?? "")
+      )
+        return execution;
+      await delay(intervalMs, undefined, { signal: options.signal });
+    }
+    throw new CoreError("N8N_EXECUTION_TIMEOUT", 504);
   }
   stop(): Promise<never> {
     return Promise.reject(new CoreError("UNSUPPORTED_N8N_PUBLIC_API_STOP"));

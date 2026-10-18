@@ -39,6 +39,27 @@ class BoundaryTests(unittest.TestCase):
         request = Request.parse(self.payload(), frozenset({"https://example.com/"}))
         self.assertEqual(request.url, "https://example.com/")
 
+    def test_multi_page_payload_is_accepted(self) -> None:
+        payload = {
+            "taskId": str(uuid4()),
+            "pages": [
+                {"url": "https://example.com/", "expectedText": "Example"},
+                {"url": "https://example.com/", "expectedText": "Domain"},
+            ],
+            "timeoutMs": 5000,
+        }
+        request = Request.parse(payload, frozenset({"https://example.com/"}))
+        self.assertEqual(len(request.pages), 2)
+
+    def test_multi_page_rejects_unlisted_url(self) -> None:
+        payload = {
+            "taskId": str(uuid4()),
+            "pages": [{"url": "https://example.com/other", "expectedText": "x"}],
+            "timeoutMs": 1000,
+        }
+        with self.assertRaises(WorkerError):
+            Request.parse(payload, frozenset({"https://example.com/"}))
+
     def test_missing_or_incorrect_credentials_fail_closed(self) -> None:
         for token in (None, "Bearer bad", "Bearer " + "x" * 32):
             self.assertFalse(authorize(token, "a" * 32))

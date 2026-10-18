@@ -1,5 +1,14 @@
 import { context, propagation } from "@opentelemetry/api";
+import { Agent } from "undici";
 import { ProviderFailure } from "../routing.js";
+
+// Shared keep-alive pool for loopback OpenClaw / browser / n8n. One dispatcher per process.
+export const serviceDispatcher = new Agent({
+  keepAliveTimeout: 30_000,
+  keepAliveMaxTimeout: 60_000,
+  connections: 8,
+  pipelining: 1,
+});
 
 export function serviceUrl(raw: string): string {
   const url = new URL(raw);
@@ -44,7 +53,14 @@ export async function jsonRequest(
   for (const [key, value] of Object.entries(carrier)) headers.set(key, value);
   let response: Response;
   try {
-    response = await fetch(url, { ...init, headers, signal, redirect: "error" });
+    response = await fetch(url, {
+      ...init,
+      headers,
+      signal,
+      redirect: "error",
+      // Node's fetch is undici; reuse TCP to local gateways.
+      dispatcher: serviceDispatcher,
+    } as RequestInit & { dispatcher: Agent });
   } catch (error) {
     if (!signal.aborted && neverDispatched(error))
       throw new ProviderFailure("provider-unavailable", true, false);

@@ -71,10 +71,16 @@ export const ContextEntrySchema = z.strictObject({
   text: z.string().min(1).max(16_000),
   expiresAt: z.number().int().positive(),
 });
-export const BrowserInputSchema = z.strictObject({
+export const BrowserPageSchema = z.strictObject({
   url: z.url(),
   expectedText: z.string().min(1).max(4096),
 });
+export const BrowserInputSchema = z.union([
+  BrowserPageSchema,
+  z.strictObject({
+    pages: z.array(BrowserPageSchema).min(1).max(4),
+  }),
+]);
 export const WorkflowInputSchema = z.strictObject({
   workflow: z.string().min(1).max(100),
   payload: z.record(z.string(), z.json()),
