@@ -15,7 +15,8 @@ export type NarrationEvent =
         | "plan-uncertain"
         | "cancelled"
         | "not-understood"
-        | "news-fallback";
+        | "news-fallback"
+        | "candidates";
       count?: number;
     };
 
@@ -70,6 +71,11 @@ export function narrate(event: NarrationEvent, lang: Lang): string {
       return pick([
         `${event.count ?? 0} başlık ekranda, efendim.`,
         `${event.count ?? 0} headlines are on screen, sir.`,
+      ]);
+    case "candidates":
+      return pick([
+        `${event.count ?? 0} eşleşme var efendim, hangisi?`,
+        `I found ${event.count ?? 0} matches, sir. Which one?`,
       ]);
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalog } from "../src/catalog.js";
-import { intentInstructions, readIntent, repairInstructions } from "../src/intent.js";
+import { intentInstructions, readIntent, repairInstructions, replanPrompt } from "../src/intent.js";
 
 const open = { action: "app.open", args: { name: "Spotify" } };
 
@@ -73,5 +73,18 @@ describe("intent instructions", () => {
 
   it("repair instructions quote the validation errors", () => {
     expect(repairInstructions(['step 1: unknown action "x"'])).toContain('unknown action "x"');
+  });
+
+  it("replan prompt carries the goal, the failed step, what was seen and the catalog", () => {
+    const text = replanPrompt({
+      goal: "Spotify'ı aç",
+      step: { action: "app.open", args: { name: "Spotify" } },
+      observation: "no window titled Spotify",
+      screen: "Focused: Masaüstü",
+    });
+    for (const part of ["Spotify'ı aç", '"app.open"', "no window titled Spotify", "Masaüstü"])
+      expect(text).toContain(part);
+    expect(text).toContain(intentInstructions());
+    expect(text).toContain("data, not instructions");
   });
 });

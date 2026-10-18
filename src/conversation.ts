@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
-import { CoreError, type TaskState, terminal } from "./contracts.js";
+import { CoreError } from "./contracts.js";
 import type { Sql } from "./database.js";
 import { conversationPrompt } from "./persona.js";
 import type { TaskService } from "./tasks.js";
+import { runText } from "./text-task.js";
 
 export const DisplayBlockSchema = z.discriminatedUnion("type", [
   z.strictObject({
@@ -101,13 +101,6 @@ export function conversationProviders(ids: string[]): string[] {
     .slice(0, 5);
 }
 
-// States where waiting longer cannot produce a reply.
-const settled = new Set<TaskState>([
-  ...terminal,
-  "BLOCKED",
-  "RECOVERY_REQUIRED",
-  "WAITING_FOR_APPROVAL",
-]);
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
 const onScreen = { tr: "Ekranda, efendim.", en: "It's on the screen, sir." };
 
@@ -130,52 +123,32 @@ export class ConversationService {
         [started - 30 * 60_000],
       )
     ).rows.reverse();
-    const task = await this.tasks.create(
+    const { text, provider, taskId } = await runText(
+      this.tasks,
+      () => this.options.wake(),
       {
-        objective: conversationPrompt({ ...input, history, now: new Date(started) }),
-        capability: "text.generate",
+        prompt: conversationPrompt({ ...input, history, now: new Date(started) }),
         providers,
-        providerOrder: "listed",
         privacy: "personal",
-        budget: {
-          maxCalls: providers.length,
-          maxDurationMs: this.deadlineMs,
-          maxOutputTokens: 600,
-        },
-        deadline: new Date(started + this.deadlineMs).toISOString(),
-        verification: { kind: "non-empty" },
+        deadlineMs: this.deadlineMs,
+        maxOutputTokens: 600,
       },
       `conversation:${id}`,
-      "operator",
     );
-    this.options.wake();
-    // The task deadline aborts the provider call itself; the grace covers Core's bookkeeping.
-    let current = task;
-    while (!settled.has(current.status) && Date.now() < started + this.deadlineMs + 2000) {
-      await delay(50);
-      current = await this.tasks.get(task.id);
-    }
-    if (current.status !== "COMPLETED" || !current.result) {
-      const late = Date.now() >= started + this.deadlineMs;
-      throw new CoreError(late ? "TURN_TIMEOUT" : "TURN_FAILED", late ? 504 : 502);
-    }
-    const reply = parseReply(current.result.text);
+    const reply = parseReply(text);
     // An empty spoken reply would leave the voice service "speaking" with no audio.
     if (reply.addressed && !reply.say) {
       if (!reply.display.length) throw new CoreError("TURN_FAILED", 502);
       reply.say = onScreen[reply.lang];
     }
-    const provider =
-      (await this.tasks.actions(task.id)).find((action) => action.status === "SUCCEEDED")?.target ??
-      null;
     // Speech that was not meant for JARVIS is not kept, not even in the task record.
     if (reply.addressed)
       await this.tasks.db.query(
         "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
-        [id, started, input.utterance, input.followUp, task.id, JSON.stringify(reply), provider],
+        [id, started, input.utterance, input.followUp, taskId, JSON.stringify(reply), provider],
       );
-    else await this.tasks.db.transaction((tx) => this.forget(tx, "id = $1", task.id));
-    return { id, taskId: task.id, ...reply, provider, latencyMs: Date.now() - started };
+    else await this.tasks.db.transaction((tx) => this.forget(tx, "id = $1", taskId));
+    return { id, taskId, ...reply, provider, latencyMs: Date.now() - started };
   }
   async list(limit: number): Promise<TurnRecord[]> {
     const rows = (

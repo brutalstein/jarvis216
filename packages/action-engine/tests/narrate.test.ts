@@ -12,6 +12,7 @@ const events: NarrationEvent[] = [
   { type: "cancelled" },
   { type: "not-understood" },
   { type: "news-fallback", count: 5 },
+  { type: "candidates", count: 3 },
 ];
 
 describe("narrate", () => {
@@ -28,5 +29,7 @@ describe("narrate", () => {
   it("names the application and the count", () => {
     expect(narrate(events[2] as NarrationEvent, "tr")).toContain("Spotify");
     expect(narrate(events[9] as NarrationEvent, "tr")).toContain("5");
+    expect(narrate(events[10] as NarrationEvent, "tr")).toContain("3");
+    expect(narrate(events[10] as NarrationEvent, "en")).toContain("3");
   });
 });
