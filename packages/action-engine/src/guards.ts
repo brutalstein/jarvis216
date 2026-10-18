@@ -34,7 +34,7 @@ export async function containedPath(input: string, roots: string[]): Promise<str
   if (
     !first ||
     input.split(/[\\/]/).includes("..") ||
-    (process.platform !== "win32" && path.win32.isAbsolute(input))
+    (process.platform !== "win32" && (/^[a-zA-Z]:[\\/]/.test(input) || /^\\\\/.test(input)))
   )
     throw new GuardError("PATH_OUTSIDE_ROOTS");
   const candidate = await realNearest(path.resolve(first, input));
