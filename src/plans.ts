@@ -262,8 +262,11 @@ export class PlanService extends EventEmitter {
     input: { turnId: string; goal: string; lang: Lang; steps: CompiledStep[] },
     flags: { approved: boolean; replanned: boolean },
   ): Promise<PlanView> {
-    const kind = input.steps.some((step) => step.kind === "desktop") ? "desktop"
-      : input.steps.some((step) => step.kind === "integration") ? "integration" : "info";
+    const kind = input.steps.some((step) => step.kind === "desktop")
+      ? "desktop"
+      : input.steps.some((step) => step.kind === "integration")
+        ? "integration"
+        : "info";
     // Admission is serialized within this Core; multiple Core hosts need a shared plan lock.
     if (kind === "desktop")
       for (const plan of (
@@ -311,8 +314,10 @@ export class PlanService extends EventEmitter {
     const ids: string[] = [];
     for (const [index, step] of plan.steps.entries()) {
       const desktop = step.kind === "desktop";
-      const external = step.kind === "integration"
-        ? this.options.integrations?.compile(step.action, step.args) : undefined;
+      const external =
+        step.kind === "integration"
+          ? this.options.integrations?.compile(step.action, step.args)
+          : undefined;
       invariant(step.kind !== "integration" || external, "INTEGRATION_DISABLED", 400);
       const task = await this.options.tasks.createIn(
         tx,
@@ -464,7 +469,8 @@ export class PlanService extends EventEmitter {
         if (plan.steps.some((step) => step.kind === "integration" && step.risk === "HIGH"))
           await this.#publish(plan.id);
         else {
-          for (const taskId of plan.task_ids) await this.options.tasks.cancel(taskId).catch(() => {});
+          for (const taskId of plan.task_ids)
+            await this.options.tasks.cancel(taskId).catch(() => {});
           await this.#settle(plan, "FAILED", say("plan-failed"));
         }
       } else if (
