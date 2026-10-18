@@ -658,6 +658,7 @@ export class PlanService extends EventEmitter {
         "private",
       );
       const say = answer === null ? null : readBrief(answer);
+      await this.#forgetScreen(plan, "describe", tasks[describe]?.id);
       await this.#settle(plan, say === null ? "FAILED" : "COMPLETED", {
         say: say ?? narrate({ type: "plan-failed" }, lang),
       });
@@ -714,6 +715,7 @@ export class PlanService extends EventEmitter {
       "private",
       true,
     );
+    if (screen) await this.#forgetScreen(plan, "replan");
     const read = text === null ? undefined : readIntent(jsonObject(text)?.intent);
     if (read && "decision" in read && read.decision.kind === "plan") {
       try {
@@ -735,6 +737,34 @@ export class PlanService extends EventEmitter {
         this.emit("announce", { text: failedSay, lang: plan.lang });
       }
     } else this.emit("announce", { text: failedSay, lang: plan.lang });
+  }
+
+  // Screen text served its one question or replan: drop it from the prompt and step records,
+  // keep the outcome. The spoken answer itself stays in the plan outcome.
+  async #forgetScreen(plan: PlanRow, label: "describe" | "replan", stepTaskId?: string) {
+    const key = `plan:${plan.id}:${label}`;
+    const marker = '"[screen text discarded]"';
+    await this.options.tasks.db.transaction(async (tx) => {
+      await tx.query(
+        `UPDATE actions SET parameters = jsonb_set(parameters, '{objective}', '${marker}') WHERE task_id IN (SELECT id FROM tasks WHERE principal='operator' AND idempotency_key=$1)`,
+        [key],
+      );
+      await tx.query(
+        `UPDATE tasks SET spec = jsonb_set(spec, '{objective}', '${marker}') WHERE principal='operator' AND idempotency_key=$1`,
+        [key],
+      );
+      if (!stepTaskId) return;
+      const evidence = JSON.stringify({
+        ok: true,
+        evidence: "postcondition",
+        observation: "[screen text discarded]",
+      });
+      for (const table of ["tasks", "actions"] as const)
+        await tx.query(
+          `UPDATE ${table} SET result = jsonb_set(result, '{text}', to_jsonb($2::text)) WHERE ${table === "tasks" ? "id" : "task_id"}=$1 AND result IS NOT NULL`,
+          [stepTaskId, evidence],
+        );
+    });
   }
 
   // Each ended plan is spoken once, after the turn had its chance to narrate it.

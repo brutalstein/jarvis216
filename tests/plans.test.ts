@@ -378,6 +378,14 @@ describe("plan outcomes", () => {
     expect(announced[0]?.text).toBe("Ekranda Not Defteri açık, efendim.");
     expect(prompts["claude-code"]?.[0]).toContain("Focused: Not Defteri — merhaba");
     expect(prompts["gemini-live"]).toBeUndefined();
+    // Once answered, the screen text is gone from every task and action record.
+    const records = await db.query(
+      "SELECT t.spec, t.result, a.parameters, a.result AS action FROM tasks t LEFT JOIN actions a ON a.task_id=t.id",
+    );
+    expect(JSON.stringify(records.rows)).not.toContain("merhaba");
+    expect((await plans.get(view.id)).steps[0]?.evidence?.observation).toBe(
+      "[screen text discarded]",
+    );
   });
 });
 

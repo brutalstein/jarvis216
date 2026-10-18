@@ -55,6 +55,8 @@ async function evaluate(id: string): Promise<string> {
         capability: "text.generate",
         providers: [id],
         privacy: "personal",
+        // Same as production turns: providers with a JSON mode use it.
+        responseFormat: "json",
         budget: { maxOutputTokens: 600 },
         deadline: new Date(Date.now() + 60_000).toISOString(),
         verification: { kind: "non-empty" },
