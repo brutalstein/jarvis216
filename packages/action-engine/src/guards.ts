@@ -29,7 +29,11 @@ async function realNearest(target: string): Promise<string> {
 
 export async function containedPath(input: string, roots: string[]): Promise<string> {
   const [first] = roots;
-  if (!first || input.split(/[\\/]/).includes("..")) throw new GuardError("PATH_OUTSIDE_ROOTS");
+  // On POSIX, path.resolve treats Windows absolute paths as ordinary relative strings.
+  // Reject foreign-root forms rather than ever writing a "C:\\..." file in an allowed folder.
+  if (!first || input.split(/[\\/]/).includes("..") ||
+      (process.platform !== "win32" && path.win32.isAbsolute(input)))
+    throw new GuardError("PATH_OUTSIDE_ROOTS");
   const candidate = await realNearest(path.resolve(first, input));
   for (const root of roots) {
     const real = await realpath(root).catch(() => null);
