@@ -136,7 +136,11 @@ export function createIntegrationHub(settings: {
   if (names.size)
     hub.register("automation.invoke", (args) => {
       const { workflow: id, payload } = read(workflow, args);
+<<<<<<< HEAD
       if (!names.has(id) || new TextEncoder().encode(JSON.stringify(payload)).length > 8192)
+=======
+      if (!names.has(id) || new TextEncoder().encode(JSON.stringify(payload)).byteLength > 8192)
+>>>>>>> origin/feature/latest-development
         throw new IntegrationError("INTEGRATION_DENIED");
       return {
         capability: "workflow.invoke",
