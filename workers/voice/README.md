@@ -34,3 +34,37 @@ The voice choice still needs the operator's ear; alternative English sample:
 
 `torchaudio` 2.11 needs `torchcodec` for file I/O, so audio files are read and written with
 `soundfile`; `torchaudio.functional` is still used for resampling.
+
+## Runtime
+
+Electron starts `uv run --frozen --directory workers/voice python -m jarvis_voice` with
+`JARVIS_CORE_URL`, `JARVIS_CORE_TOKEN`, random `VOICE_TOKEN`, `VOICE_PORT=0` and `VOICE_DATA_DIR`.
+The service binds only `127.0.0.1` and prints `{"event":"voice.ready","port":N}` after binding.
+All HTTP endpoints require `Authorization: Bearer <VOICE_TOKEN>`:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST / PATCH | `/offer` | One SmallWebRTC peer, offer/answer and ICE updates |
+| GET | `/health` | Enrollment flag and captured enrollment duration |
+| POST | `/enroll/start` | Start collecting speaker embeddings in memory |
+| POST | `/enroll/finish` | Persist the normalized print (at least 3 segments and 25 seconds); otherwise 409 |
+| DELETE | `/enroll` | Delete the print and cancel enrollment |
+
+Only opaque-origin Electron requests receive CORS headers; preflight discloses no data and does
+not authorize subsequent requests. The service uses Pipecat's connection directly because its
+optional request-handler helper imports FastAPI, which this aiohttp environment does not require.
+
+Smart Turn decides the semantic end before speaker verification and STT. Raw VAD cannot interrupt
+playback. Accepted transcripts are checked for the name/follow-up window, then Core is called once.
+A newer addressed turn cancels the pending request and stale replies are dropped. Core failure
+speaks a fixed apology in the detected Turkish/English language. The follow-up window opens after
+bot playback stops. Enrollment never sends its speech to Core.
+
+The default speaker threshold is `0.7`; a manually launched voice process can set
+`VOICE_SPEAKER_THRESHOLD` for calibration. This print filters conversation, not security approvals.
+Vendor debug logging is disabled to avoid transcript logs. Numeric `turn.timing` output reports
+STT, Core, synthesis and first-generated-audio latency; speaker score logs support local calibration.
+Physical output-device latency is not measured. Current full-path observations: 3.25–4.75 seconds
+to first generated audio, slower than the 2.5-second target.
+
+Verification and operator checks: [M1 evidence](../../docs/VOICE_DESKTOP_EVIDENCE.md).

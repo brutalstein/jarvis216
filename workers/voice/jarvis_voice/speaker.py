@@ -42,7 +42,6 @@ class SpeakerGate:
 
 _encoder: Any = None
 
-
 def embed(audio: bytes, sample_rate: int) -> Vector:
     """ECAPA embedding of 16-bit mono PCM."""
     global _encoder
