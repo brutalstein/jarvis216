@@ -28,5 +28,7 @@ export async function containedPath(root: string, candidate: string): Promise<st
     "WORKSPACE_ESCAPE",
     403,
   );
-  return resolved;
+  // Preserve the caller-visible path spelling (including DOS 8.3 aliases) after
+  // validating canonical location and symlink/junction containment.
+  return path.resolve(candidate);
 }

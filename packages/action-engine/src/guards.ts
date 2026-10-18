@@ -37,12 +37,16 @@ export async function containedPath(input: string, roots: string[]): Promise<str
     (process.platform !== "win32" && (/^[a-zA-Z]:[\\/]/.test(input) || /^\\\\/.test(input)))
   )
     throw new GuardError("PATH_OUTSIDE_ROOTS");
-  const candidate = await realNearest(path.resolve(first, input));
+  const requested = path.resolve(first, input);
+  const candidate = await realNearest(requested);
   for (const root of roots) {
     const real = await realpath(root).catch(() => null);
     if (!real) continue;
     const rel = path.relative(real, candidate);
-    if (rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)) return candidate;
+    if (rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)) {
+      // Canonical paths authorize, while the original spelling preserves Windows 8.3 aliases.
+      return requested;
+    }
   }
   throw new GuardError("PATH_OUTSIDE_ROOTS");
 }
