@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readVoiceCommand } from "../src/voice.js";
+import { isCorrection, readVoiceCommand } from "../src/voice.js";
 
 describe("readVoiceCommand", () => {
   it.each([
@@ -47,4 +47,32 @@ describe("readVoiceCommand", () => {
   ])("leaves %j to the model", (utterance) => {
     expect(readVoiceCommand(utterance)).toBeNull();
   });
+
+  it.each([
+    ["Jarvis, durum ne?", "tr"],
+    ["ne yapıyorsun", "tr"],
+    ["iş bitti mi", "tr"],
+    ["What's the status?", "en"],
+    ["are you done", "en"],
+  ])("reads the status question %j", (utterance, lang) => {
+    expect(readVoiceCommand(utterance)).toEqual({ kind: "status", lang });
+  });
+});
+
+describe("isCorrection", () => {
+  it.each([
+    "Hayır, Not Defteri'ni aç",
+    "Jarvis yanlış",
+    "onu demedim",
+    "No, the other one",
+    "wrong",
+  ])("hears a correction in %j", (utterance) => {
+    expect(isCorrection(utterance)).toBe(true);
+  });
+  it.each(["Hayırlı sabahlar", "Not Defteri'ni aç", "nothing yet", "Wrongful? no idea"])(
+    "does not hear one in %j",
+    (utterance) => {
+      expect(isCorrection(utterance)).toBe(false);
+    },
+  );
 });
