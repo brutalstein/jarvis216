@@ -40,6 +40,7 @@ const plan: PlanView = {
       action: "app.close",
       args: { name: "Notepad" },
       risk: "MEDIUM",
+      mode: "ask",
       status: "WAITING_FOR_APPROVAL",
     },
   ],

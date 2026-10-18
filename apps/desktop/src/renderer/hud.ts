@@ -75,16 +75,22 @@ export function hud(root: HTMLElement, compact = false) {
       const row = node("li");
       row.dataset.step = step.status;
       row.append(node("span", step.action, "step-action"));
+      // The badge states the rule that applies now: the operator's Settings decide.
+      const granted = step.mode === "allow" && step.risk !== "LOW";
       const risk = node(
         "span",
-        step.risk === "HIGH"
-          ? "Ayrı onay gerekir"
-          : step.risk === "MEDIUM"
+        granted
+          ? "Ayarlardan izinli"
+          : step.mode === "ask" && step.risk === "LOW"
             ? "Onay gerekir"
-            : "Otomatik",
+            : step.risk === "HIGH"
+              ? "Ayrı onay gerekir"
+              : step.risk === "MEDIUM"
+                ? "Onay gerekir"
+                : "Otomatik",
         "risk",
       );
-      risk.dataset.risk = step.risk;
+      risk.dataset.risk = granted ? "LOW" : step.mode === "ask" ? "MEDIUM" : step.risk;
       const status = node("span", states[step.status] ?? step.status, "step-status");
       status.dataset.stepStatus = "";
       row.append(risk, status);

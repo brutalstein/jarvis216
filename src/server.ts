@@ -5,7 +5,7 @@ import { z } from "zod";
 import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
 import type { ConversationService } from "./conversation.js";
 import type { MemoryStore } from "./memory.js";
-import type { PermissionService } from "./permissions.js";
+import { maxGrantMs, type PermissionService } from "./permissions.js";
 import type { PlanService, PlanView } from "./plans.js";
 import type { ProviderRegistry } from "./routing.js";
 import type { TaskService } from "./tasks.js";
@@ -339,10 +339,13 @@ export function buildServer(
     });
     app.post("/v1/permissions/preset", async (request) => {
       authenticate(request, "operator");
-      const { preset } = z
-        .strictObject({ preset: z.enum(["guarded", "trusted", "autonomous"]) })
+      const { preset, expiresInMs } = z
+        .strictObject({
+          preset: z.enum(["guarded", "trusted", "autonomous"]),
+          expiresInMs: z.number().int().min(60_000).max(maxGrantMs).optional(),
+        })
         .parse(request.body);
-      return permissions.preset(preset, "operator");
+      return permissions.preset(preset, "operator", expiresInMs);
     });
     app.get("/v1/permissions/audit", async (request) => {
       authenticate(request, "operator");

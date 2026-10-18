@@ -12,6 +12,33 @@ export type UiEvent =
   | { type: "announce"; text: string; lang: "tr" | "en" }
   | { type: "error"; code: string };
 export type Voice = { url: string; token: string; test?: boolean };
+export type PermissionMode = "ask" | "allow" | "deny";
+export type Preset = "guarded" | "trusted" | "autonomous";
+export type PermissionChange = {
+  actions?: Record<string, { mode: PermissionMode; expiresInMs?: number }>;
+  settings?: { learning?: boolean; reflexes?: boolean };
+};
+export type BrainView = {
+  stats: {
+    experiences: number;
+    skills: number;
+    preferences: number;
+    planSuccessRate: number | null;
+    correctionRate: number | null;
+    reflexShare: number | null;
+    lastConsolidatedAt: number | null;
+  };
+  skills: {
+    id: string;
+    goal: string;
+    phrases: string[];
+    steps: string[];
+    strength: number;
+    successes: number;
+    uses: number;
+  }[];
+};
+export type MemoryNote = { id: string; note: string; createdAt: number };
 export type Enrollment = { enrolled: boolean; seconds: number };
 export interface Bridge {
   voice(): Promise<Voice>;
@@ -24,6 +51,22 @@ export interface Bridge {
     cancel(id: string): Promise<void>;
     choose(id: string, index: number): Promise<PlanView>;
     open(url: string): Promise<void>;
+  };
+  permissions: {
+    get(): Promise<PermissionView>;
+    set(change: PermissionChange): Promise<PermissionView>;
+    preset(name: Preset, expiresInMs?: number): Promise<PermissionView>;
+  };
+  brain: {
+    get(): Promise<BrainView>;
+    consolidate(): Promise<void>;
+    forgetSkill(id: string): Promise<void>;
+    reset(): Promise<void>;
+  };
+  memories: {
+    get(): Promise<MemoryNote[]>;
+    forget(id: string): Promise<void>;
+    clear(): Promise<void>;
   };
   enrollment: {
     status(): Promise<Enrollment>;
@@ -40,6 +83,7 @@ declare global {
   }
 }
 
+import type { PermissionView } from "../../../src/permissions";
 import type { PlanView } from "../../../src/plans";
 
-export type { PlanView };
+export type { PermissionView, PlanView };

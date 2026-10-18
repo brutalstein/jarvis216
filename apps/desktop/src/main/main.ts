@@ -12,7 +12,7 @@ import {
   shell,
   Tray,
 } from "electron";
-import type { PlanView, UiEvent, Voice } from "../shared";
+import type { PermissionChange, PlanView, UiEvent, Voice } from "../shared";
 import { readOperatorEnv } from "./env";
 import { streamPlans } from "./plans";
 import { startVoiceService } from "./voice";
@@ -96,6 +96,58 @@ async function coreCall(method: string) {
   });
   if (!response.ok) throw new Error("CORE_UNAVAILABLE");
   return method === "GET" ? response.json() : undefined;
+}
+
+// One authenticated Core request from the main process; the renderer never holds the token.
+async function coreJson(method: string, path: string, body?: unknown): Promise<unknown> {
+  if (!env) throw new Error("CORE_UNAVAILABLE");
+  const response = await fetch(`${env.coreUrl}${path}`, {
+    method,
+    headers: {
+      authorization: `Bearer ${env.coreToken}`,
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) throw new Error(`CORE_${response.status}`);
+  return response.status === 204 ? undefined : response.json();
+}
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Shape check before anything reaches Core; Core validates again.
+function permissionChange(value: unknown): PermissionChange {
+  if (!value || typeof value !== "object") throw new Error("INVALID_PERMISSIONS");
+  const { actions, settings } = value as PermissionChange;
+  const change: PermissionChange = {};
+  if (actions !== undefined) {
+    if (!actions || typeof actions !== "object") throw new Error("INVALID_PERMISSIONS");
+    change.actions = {};
+    for (const [id, grant] of Object.entries(actions)) {
+      if (
+        !/^[a-z]+\.[a-z_]+$/.test(id) ||
+        !grant ||
+        !["ask", "allow", "deny"].includes(grant.mode) ||
+        (grant.expiresInMs !== undefined &&
+          (!Number.isInteger(grant.expiresInMs) || grant.expiresInMs < 60_000))
+      )
+        throw new Error("INVALID_PERMISSIONS");
+      change.actions[id] = {
+        mode: grant.mode,
+        ...(grant.expiresInMs !== undefined && { expiresInMs: grant.expiresInMs }),
+      };
+    }
+  }
+  if (settings !== undefined) {
+    if (!settings || typeof settings !== "object") throw new Error("INVALID_PERMISSIONS");
+    change.settings = {};
+    for (const key of ["learning", "reflexes"] as const) {
+      const flag = settings[key];
+      if (flag === undefined) continue;
+      if (typeof flag !== "boolean") throw new Error("INVALID_PERMISSIONS");
+      change.settings[key] = flag;
+    }
+  }
+  return change;
 }
 
 app.whenReady().then(async () => {
@@ -316,6 +368,51 @@ app.whenReady().then(async () => {
       }
     });
   }
+  // Settings: permissions, learning and memory, all through Core's authenticated API.
+  const settingsCall = (channel: string, run: (...args: unknown[]) => Promise<unknown>) =>
+    ipcMain.handle(channel, (event, ...args: unknown[]) => {
+      if (!allowed(event.sender) || event.sender !== main.webContents) throw new Error("FORBIDDEN");
+      return run(...args);
+    });
+  settingsCall("permissions:get", () => coreJson("GET", "/v1/permissions"));
+  settingsCall("permissions:set", (change) =>
+    coreJson("PUT", "/v1/permissions", permissionChange(change)),
+  );
+  settingsCall("permissions:preset", (name, expiresInMs) => {
+    if (
+      typeof name !== "string" ||
+      !["guarded", "trusted", "autonomous"].includes(name) ||
+      (expiresInMs !== undefined &&
+        (typeof expiresInMs !== "number" || !Number.isInteger(expiresInMs) || expiresInMs < 60_000))
+    )
+      throw new Error("INVALID_PRESET");
+    return coreJson("POST", "/v1/permissions/preset", {
+      preset: name,
+      ...(expiresInMs !== undefined && { expiresInMs }),
+    });
+  });
+  settingsCall("brain:get", () => coreJson("GET", "/v1/brain"));
+  settingsCall("brain:consolidate", async () => {
+    await coreJson("POST", "/v1/brain/consolidate");
+  });
+  settingsCall("brain:forget-skill", async (id) => {
+    if (typeof id !== "string" || !uuid.test(id)) throw new Error("INVALID_SKILL");
+    await coreJson("DELETE", `/v1/brain/skills/${id}`);
+  });
+  settingsCall("brain:reset", async () => {
+    await coreJson("DELETE", "/v1/brain");
+  });
+  settingsCall("memories:get", async () => {
+    const { memories } = (await coreJson("GET", "/v1/memories")) as { memories: unknown[] };
+    return memories;
+  });
+  settingsCall("memories:forget", async (id) => {
+    if (typeof id !== "string" || !uuid.test(id)) throw new Error("INVALID_MEMORY");
+    await coreJson("DELETE", `/v1/memories/${id}`);
+  });
+  settingsCall("memories:clear", async () => {
+    await coreJson("DELETE", "/v1/memories");
+  });
   ipcMain.on("listening", (event, on: unknown) => {
     if (allowed(event.sender) && typeof on === "boolean") setListening(on);
   });

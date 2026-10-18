@@ -59,6 +59,14 @@
         </div>
         <p class="lede">Sesiniz bu bilgisayarda kalır. Ses kaydı saklanmaz.</p>
 
+        <div class="tabs" role="tablist" aria-label="Ayar bölümleri">
+          <button type="button" role="tab" id="tab-general" aria-controls="panel-general" aria-selected="true">Genel</button>
+          <button type="button" role="tab" id="tab-permissions" aria-controls="panel-permissions" aria-selected="false" tabindex="-1">İzinler</button>
+          <button type="button" role="tab" id="tab-learning" aria-controls="panel-learning" aria-selected="false" tabindex="-1">Öğrenme</button>
+          <button type="button" role="tab" id="tab-memory" aria-controls="panel-memory" aria-selected="false" tabindex="-1">Hafıza</button>
+        </div>
+
+        <div role="tabpanel" id="panel-general" aria-labelledby="tab-general">
         <section class="group">
           <label for="microphone">Mikrofon</label>
           <div class="select">
@@ -109,13 +117,78 @@
             </button>
           </div>
           <div class="confirm" data-confirm hidden>
-            <p>Tüm konuşmalar kalıcı olarak silinir.</p>
+            <p>Tüm konuşmalar ve onlardan öğrenilenler kalıcı olarak silinir.</p>
             <div class="actions">
               <button type="button" class="btn danger-fill" id="turns-confirm">Sil</button>
               <button type="button" class="btn text" id="turns-keep">Vazgeç</button>
             </div>
           </div>
         </section>
+        </div>
+
+        <div role="tabpanel" id="panel-permissions" aria-labelledby="tab-permissions" hidden>
+          <section class="group" aria-labelledby="preset-title">
+            <h3 id="preset-title">Yetki düzeyi</h3>
+            <p class="note">İzin verdiğiniz işlemler sesli komutla onay kartı olmadan çalışır. Kabuklar, parola alanları ve izinli klasörlerin dışı her düzeyde kapalıdır.</p>
+            <fieldset class="segmented" data-presets>
+              <legend class="sr-only">Yetki düzeyi</legend>
+              <label><input type="radio" name="preset" value="guarded" /><span>Güvenli</span></label>
+              <label><input type="radio" name="preset" value="trusted" /><span>Dengeli</span></label>
+              <label><input type="radio" name="preset" value="autonomous" /><span>Tam yetki</span></label>
+            </fieldset>
+            <p class="note" data-preset-note></p>
+            <label for="grant-duration">Yeni izinlerin süresi</label>
+            <div class="select">
+              <select id="grant-duration">
+                <option value="">Ben değiştirene kadar</option>
+                <option value="3600000">1 saat</option>
+                <option value="28800000">8 saat</option>
+                <option value="86400000">1 gün</option>
+              </select>
+              <span data-icon="caret"></span>
+            </div>
+          </section>
+          <section class="group" aria-labelledby="actions-title">
+            <h3 id="actions-title">İşlemler</h3>
+            <div class="permission-list" data-permission-list></div>
+          </section>
+        </div>
+
+        <div role="tabpanel" id="panel-learning" aria-labelledby="tab-learning" hidden>
+          <section class="group" aria-labelledby="learning-title">
+            <h3 id="learning-title">Öğrenme</h3>
+            <label class="toggle"><input type="checkbox" id="learning-toggle" /><span>Etkileşimlerden öğren</span></label>
+            <label class="toggle"><input type="checkbox" id="reflex-toggle" /><span>Öğrenilen kısayolları kullan</span></label>
+            <p class="note">JARVIS başarılı istekleri ve düzeltmelerinizi hatırlar; sık tekrarlananları beceri olarak öğrenir ve kullanılmayanları zamanla unutur. Öğrenilenler bu bilgisayarda kalır.</p>
+            <p class="note" data-brain-stats></p>
+          </section>
+          <section class="group" aria-labelledby="skills-title">
+            <h3 id="skills-title">Öğrenilen beceriler</h3>
+            <ul class="item-list" data-skill-list></ul>
+            <div class="actions">
+              <button type="button" class="btn outline" id="brain-sleep">Şimdi pekiştir</button>
+              <button type="button" class="btn outline danger" id="brain-reset">Öğrenileni sıfırla</button>
+            </div>
+            <div class="confirm" data-brain-confirm hidden>
+              <p>Tüm deneyimler, beceriler ve öğrenilen seçimler silinir.</p>
+              <div class="actions">
+                <button type="button" class="btn danger-fill" id="brain-confirm">Sıfırla</button>
+                <button type="button" class="btn text" id="brain-keep">Vazgeç</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div role="tabpanel" id="panel-memory" aria-labelledby="tab-memory" hidden>
+          <section class="group" aria-labelledby="memory-title">
+            <h3 id="memory-title">Hatırladıklarım</h3>
+            <p class="note">“Jarvis, … hatırla” dediğinizde onayınızla eklenir. Parola ve kart bilgisi hiç saklanmaz.</p>
+            <ul class="item-list" data-memory-list></ul>
+            <div class="actions">
+              <button type="button" class="btn outline danger" id="memory-clear">Tümünü unut</button>
+            </div>
+          </section>
+        </div>
       </div>
       <p class="sheet-status" data-settings-status role="status"></p>
     </dialog>

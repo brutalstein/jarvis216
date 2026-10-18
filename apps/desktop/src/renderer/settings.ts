@@ -1,3 +1,4 @@
+import { controls } from "./controls";
 import { el } from "./ui";
 
 // Read aloud during enrollment; the print is taken from whatever the operator says.
@@ -40,6 +41,9 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
   let poll: ReturnType<typeof setInterval> | undefined;
   let seconds = 0;
   let chosenMic = "";
+  const panels = controls((text) => {
+    status.textContent = text;
+  });
 
   function view(mode: Mode) {
     voice.dataset.enroll = mode;
@@ -106,6 +110,7 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
 
   el("#settings-open").addEventListener("click", () => {
     status.textContent = "";
+    panels.reset();
     sheet.showModal();
     void refresh();
     void listMicrophones();
@@ -194,7 +199,7 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
   action(el<HTMLButtonElement>("#turns-confirm"), async () => {
     await window.jarvis.turns.deleteAll();
     confirm.hidden = true;
-    status.textContent = "Tüm konuşmalar silindi.";
+    status.textContent = "Tüm konuşmalar ve onlardan öğrenilenler silindi.";
   });
 
   view("none");

@@ -181,12 +181,14 @@ export class PermissionService extends EventEmitter {
     return this.view();
   }
 
-  preset(name: Preset, actor = "operator"): Promise<PermissionView> {
+  // An optional expiry applies to the allows the preset grants beyond the defaults.
+  preset(name: Preset, actor = "operator", expiresInMs?: number): Promise<PermissionView> {
     const actions = Object.fromEntries(
-      Object.values(catalog).map((definition) => [
-        definition.id,
-        { mode: presetMode[name](definition.risk) },
-      ]),
+      Object.values(catalog).map((definition) => {
+        const mode = presetMode[name](definition.risk);
+        const expiring = expiresInMs && mode === "allow" && defaultMode(definition.id) !== "allow";
+        return [definition.id, { mode, ...(expiring && { expiresInMs }) }];
+      }),
     );
     return this.update({ actions }, `${actor}:preset:${name}`);
   }

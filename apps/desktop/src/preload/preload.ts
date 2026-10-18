@@ -19,6 +19,22 @@ const bridge: Bridge = {
     choose: (id, index) => ipcRenderer.invoke("plans:choose", id, index),
     open: (url) => ipcRenderer.invoke("plans:open", url),
   },
+  permissions: {
+    get: () => ipcRenderer.invoke("permissions:get"),
+    set: (change) => ipcRenderer.invoke("permissions:set", change),
+    preset: (name, expiresInMs) => ipcRenderer.invoke("permissions:preset", name, expiresInMs),
+  },
+  brain: {
+    get: () => ipcRenderer.invoke("brain:get"),
+    consolidate: () => ipcRenderer.invoke("brain:consolidate"),
+    forgetSkill: (id) => ipcRenderer.invoke("brain:forget-skill", id),
+    reset: () => ipcRenderer.invoke("brain:reset"),
+  },
+  memories: {
+    get: () => ipcRenderer.invoke("memories:get"),
+    forget: (id) => ipcRenderer.invoke("memories:forget", id),
+    clear: () => ipcRenderer.invoke("memories:clear"),
+  },
   enrollment: {
     status: () => ipcRenderer.invoke("enroll:status"),
     start: () => ipcRenderer.invoke("enroll:start"),

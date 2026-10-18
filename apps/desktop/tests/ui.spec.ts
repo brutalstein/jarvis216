@@ -178,11 +178,15 @@ test("settings sheet holds microphone, voice and conversations; Escape closes it
     await expect(sheet.getByLabel("Mikrofon")).toBeVisible();
     await expect(sheet.getByRole("button", { name: "Sesimi tanıt" })).toBeVisible();
     await sheet.getByRole("button", { name: "Tümünü sil" }).click();
-    await expect(sheet.getByText("Tüm konuşmalar kalıcı olarak silinir.")).toBeVisible();
+    await expect(
+      sheet.getByText("Tüm konuşmalar ve onlardan öğrenilenler kalıcı olarak silinir."),
+    ).toBeVisible();
     await run.page.waitForTimeout(500);
     await run.page.screenshot({ path: `${shots}/settings.png` });
     await sheet.getByRole("button", { name: "Vazgeç" }).click();
-    await expect(sheet.getByText("Tüm konuşmalar kalıcı olarak silinir.")).toBeHidden();
+    await expect(
+      sheet.getByText("Tüm konuşmalar ve onlardan öğrenilenler kalıcı olarak silinir."),
+    ).toBeHidden();
     await run.page.keyboard.press("Escape");
     await expect(sheet).toBeHidden();
   } finally {

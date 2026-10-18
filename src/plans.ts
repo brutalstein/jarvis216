@@ -56,6 +56,8 @@ export type PlanView = {
     action: string;
     args: Record<string, unknown>;
     risk: CompiledStep["risk"];
+    // The operator's current Settings decision for this action.
+    mode: PermissionMode;
     status: TaskState;
     evidence?: Evidence;
     approval?: { id: string; target: string };
@@ -585,6 +587,7 @@ export class PlanService extends EventEmitter {
         action: step.action,
         args: step.args,
         risk: step.risk,
+        mode: this.modeOf(step),
         status,
         ...(evidence && { evidence }),
         ...(task?.status === "WAITING_FOR_APPROVAL" && task.approval

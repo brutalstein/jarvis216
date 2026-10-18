@@ -86,6 +86,18 @@ describe("permission service", () => {
     expect(permissions.mode("agent.delegate")).toBe("allow");
     expect((await permissions.preset("guarded")).preset).toBe("guarded");
   });
+
+  it("a preset can grant its extra allows for a limited time", async () => {
+    let now = Date.now();
+    const timed = new PermissionService(db, { now: () => now });
+    await timed.preset("autonomous", "operator", 3_600_000);
+    expect(timed.mode("agent.delegate")).toBe("allow");
+    // Defaults that already allow do not expire.
+    expect(timed.view().actions.find((a) => a.id === "app.open")?.expiresAt).toBeNull();
+    now += 3_600_001;
+    expect(timed.mode("agent.delegate")).toBe("ask");
+    expect(timed.mode("app.open")).toBe("allow");
+  });
 });
 
 describe("permissions in plans and the gateway", () => {
