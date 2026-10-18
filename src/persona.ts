@@ -45,6 +45,6 @@ export function conversationPrompt(input: {
     `The operator now says (speech transcript, may contain recognition errors):\n${input.utterance}`,
     FORMAT,
     intentInstructions(),
-    "Enabled external actions: " + (input.enabledIntegrations?.join(", ") || "none") + ". Never propose disabled integrations. HIGH actions require separate exact approval.",
+    `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
   ].join("\n\n");
 }

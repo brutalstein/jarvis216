@@ -180,21 +180,49 @@ test("authenticated SSE delivers plans; arbitrary external URLs cannot open", as
       run.page.evaluate(() => window.jarvis.plans.approve("../escape", "hash")),
     ).rejects.toThrow("INVALID_PLAN");
     await run.app.evaluate(({ shell }) => {
-      shell.openExternal = async (url: string) => { Reflect.set(globalThis, "openedNews", url); };
+      shell.openExternal = async (url: string) => {
+        Reflect.set(globalThis, "openedNews", url);
+      };
     });
-    const news = { ...plan, id: "stream-news", panels: [{ type: "news", title: "Bugün", items: [{ headline: "Başlık", source: "Kaynak", publishedAt: "2026-10-18", url: "https://news.example/known" }] }] };
+    const news = {
+      ...plan,
+      id: "stream-news",
+      panels: [
+        {
+          type: "news",
+          title: "Bugün",
+          items: [
+            {
+              headline: "Başlık",
+              source: "Kaynak",
+              publishedAt: "2026-10-18",
+              url: "https://news.example/known",
+            },
+          ],
+        },
+      ],
+    };
     (stream as ServerResponse | undefined)?.write(`event: plan\ndata: ${JSON.stringify(news)}\n\n`);
     await expect(run.page.locator("[data-news]")).toHaveCount(1);
     await run.page.locator("[data-news]").click();
-    await expect.poll(() => run.app.evaluate(() => Reflect.get(globalThis, "openedNews"))).toBe("https://news.example/known");
-    (stream as ServerResponse | undefined)?.write('event: announce\ndata: {"text":"İşlem tamamlandı.","lang":"tr"}\n\n');
+    await expect
+      .poll(() => run.app.evaluate(() => Reflect.get(globalThis, "openedNews")))
+      .toBe("https://news.example/known");
+    (stream as ServerResponse | undefined)?.write(
+      'event: announce\ndata: {"text":"İşlem tamamlandı.","lang":"tr"}\n\n',
+    );
     await expect(run.page.locator("[data-caption]")).toHaveText("İşlem tamamlandı.");
     const previous = stream as ServerResponse | undefined;
     stream = undefined;
     previous?.end();
     await expect.poll(() => Boolean(stream)).toBe(true);
-    (stream as ServerResponse | undefined)?.write(`event: plan\ndata: ${JSON.stringify({ ...plan, status: "CANCELLED" })}\n\n`);
-    await expect(run.page.locator("[data-hud-card=hud-plan]")).toHaveAttribute("data-plan-status", "CANCELLED");
+    (stream as ServerResponse | undefined)?.write(
+      `event: plan\ndata: ${JSON.stringify({ ...plan, status: "CANCELLED" })}\n\n`,
+    );
+    await expect(run.page.locator("[data-hud-card=hud-plan]")).toHaveAttribute(
+      "data-plan-status",
+      "CANCELLED",
+    );
   } finally {
     await run.close();
   }

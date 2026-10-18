@@ -272,6 +272,11 @@ export class PlanService extends EventEmitter {
         )
       ).rows)
         await this.#cancel(plan, true);
+    for (const step of input.steps) {
+      if (step.kind !== "integration") continue;
+      invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
+      this.options.integrations.compile(step.action, step.args);
+    }
     const needsApproval = !flags.approved && input.steps.some((step) => step.risk !== "LOW");
     const id = randomUUID();
     const now = Date.now();
@@ -454,9 +459,14 @@ export class PlanService extends EventEmitter {
       else if (states.every((state) => state === "COMPLETED"))
         this.#detach(plan, () => this.#finish(plan, tasks));
       else if (states.includes("WAITING_FOR_APPROVAL")) {
-        // An approved plan's step asks again only after the execution window closed.
-        for (const taskId of plan.task_ids) await this.options.tasks.cancel(taskId).catch(() => {});
-        await this.#settle(plan, "FAILED", say("plan-failed"));
+        // External HIGH actions need their own exact Core action approval. Keep the plan
+        // active while the operator decides; task deadlines still bound the wait.
+        if (plan.steps.some((step) => step.kind === "integration" && step.risk === "HIGH"))
+          await this.#publish(plan.id);
+        else {
+          for (const taskId of plan.task_ids) await this.options.tasks.cancel(taskId).catch(() => {});
+          await this.#settle(plan, "FAILED", say("plan-failed"));
+        }
       } else if (
         states.some(
           (state) => state === "FAILED" || state === "CANCELLED" || state === "BLOCKED",

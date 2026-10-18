@@ -12,7 +12,9 @@ export type HubTask = {
   verification: { kind: "non-empty" } | { kind: "contains"; value: string };
 };
 export class IntegrationError extends Error {
-  constructor(readonly code: "INTEGRATION_DISABLED" | "INTEGRATION_DENIED") { super(code); }
+  constructor(readonly code: "INTEGRATION_DISABLED" | "INTEGRATION_DENIED") {
+    super(code);
+  }
 }
 export class IntegrationHub {
   private recipes = new Map<string, (args: Record<string, unknown>) => HubTask>();
@@ -21,7 +23,9 @@ export class IntegrationHub {
       throw new Error("INVALID_RECIPE");
     this.recipes.set(action, recipe);
   }
-  available(): string[] { return [...this.recipes.keys()].sort(); }
+  available(): string[] {
+    return [...this.recipes.keys()].sort();
+  }
   compile(action: string, args: Record<string, unknown>): HubTask {
     const recipe = this.recipes.get(action);
     if (!recipe) throw new IntegrationError("INTEGRATION_DISABLED");
@@ -44,51 +48,76 @@ function read<T>(schema: z.ZodType<T>, args: Record<string, unknown>): T {
 }
 function exactUrl(value: string): string {
   let parsed: URL;
-  try { parsed = new URL(value); } catch { throw new Error("INVALID_BROWSER_ALLOWLIST"); }
-  if (parsed.protocol !== "https:" || parsed.username || parsed.password ||
-      parsed.hash || parsed.href !== value || !parsed.hostname)
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("INVALID_BROWSER_ALLOWLIST");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.username ||
+    parsed.password ||
+    parsed.hash ||
+    parsed.href !== value ||
+    !parsed.hostname
+  )
     throw new Error("INVALID_BROWSER_ALLOWLIST");
   return value;
 }
 export function createIntegrationHub(settings: {
-  openclaw?: boolean; browserUrls?: readonly string[]; workflows?: readonly string[];
+  openclaw?: boolean;
+  browserUrls?: readonly string[];
+  workflows?: readonly string[];
 }): IntegrationHub {
   const hub = new IntegrationHub();
-  if (settings.openclaw) hub.register("agent.delegate", (args) => {
-    const { instruction } = read(agent, args);
-    return {
-      capability: "text.generate", providers: ["openclaw"], objective: instruction, input: {},
-      risk: "HIGH", privacy: "private",
-      budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1200 },
-      verification: { kind: "non-empty" },
-    };
-  });
+  if (settings.openclaw)
+    hub.register("agent.delegate", (args) => {
+      const { instruction } = read(agent, args);
+      return {
+        capability: "text.generate",
+        providers: ["openclaw"],
+        objective: instruction,
+        input: {},
+        risk: "HIGH",
+        privacy: "private",
+        budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1200 },
+        verification: { kind: "non-empty" },
+      };
+    });
   const urls = new Set((settings.browserUrls ?? []).map(exactUrl));
-  if (urls.size) hub.register("browser.read", (args) => {
-    const { url, expectedText } = read(browser, args);
-    if (!urls.has(url)) throw new IntegrationError("INTEGRATION_DENIED");
-    return {
-      capability: "browser.extract", providers: ["browser-use"],
-      objective: "Read the exact allowlisted public page and verify its content.",
-      input: { url, expectedText }, risk: "LOW", privacy: "public",
-      budget: { maxCalls: 1, maxDurationMs: 60000, maxOutputTokens: 1024 },
-      verification: { kind: "contains", value: expectedText },
-    };
-  });
+  if (urls.size)
+    hub.register("browser.read", (args) => {
+      const { url, expectedText } = read(browser, args);
+      if (!urls.has(url)) throw new IntegrationError("INTEGRATION_DENIED");
+      return {
+        capability: "browser.extract",
+        providers: ["browser-use"],
+        objective: "Read the exact allowlisted public page and verify its content.",
+        input: { url, expectedText },
+        risk: "LOW",
+        privacy: "public",
+        budget: { maxCalls: 1, maxDurationMs: 60000, maxOutputTokens: 1024 },
+        verification: { kind: "contains", value: expectedText },
+      };
+    });
   const names = new Set(settings.workflows ?? []);
-  for (const name of names) if (!/^[a-z][a-z0-9_-]{0,99}$/.test(name))
-    throw new Error("INVALID_WORKFLOW_NAME");
-  if (names.size) hub.register("automation.invoke", (args) => {
-    const { workflow: id, payload } = read(workflow, args);
-    if (!names.has(id) || Buffer.byteLength(JSON.stringify(payload)) > 8192)
-      throw new IntegrationError("INTEGRATION_DENIED");
-    return {
-      capability: "workflow.invoke", providers: ["n8n"],
-      objective: "Invoke registered n8n workflow " + id,
-      input: { workflow: id, payload }, risk: "HIGH", privacy: "private",
-      budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1024 },
-      verification: { kind: "non-empty" },
-    };
-  });
+  for (const name of names)
+    if (!/^[a-z][a-z0-9_-]{0,99}$/.test(name)) throw new Error("INVALID_WORKFLOW_NAME");
+  if (names.size)
+    hub.register("automation.invoke", (args) => {
+      const { workflow: id, payload } = read(workflow, args);
+      if (!names.has(id) || Buffer.byteLength(JSON.stringify(payload)) > 8192)
+        throw new IntegrationError("INTEGRATION_DENIED");
+      return {
+        capability: "workflow.invoke",
+        providers: ["n8n"],
+        objective: `Invoke registered n8n workflow ${id}`,
+        input: { workflow: id, payload },
+        risk: "HIGH",
+        privacy: "private",
+        budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1024 },
+        verification: { kind: "non-empty" },
+      };
+    });
   return hub;
 }

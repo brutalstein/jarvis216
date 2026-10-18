@@ -36,7 +36,11 @@ export const ConfigSchema = z.object({
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
-): Promise<{ registry: ProviderRegistry; tools?: McpToolPort; integrations: ReturnType<typeof createIntegrationHub> }> {
+): Promise<{
+  registry: ProviderRegistry;
+  tools?: McpToolPort;
+  integrations: ReturnType<typeof createIntegrationHub>;
+}> {
   const providers: Provider[] = [];
   let tools: McpToolPort | undefined;
   let workflowNames: string[] = [];
@@ -252,10 +256,17 @@ export async function configuredProviders(
       );
     register(new NewsExecutor(feeds), JSON.stringify({ feeds }), 10);
   }
-  const browserUrls = env.ENABLE_BROWSER === "true"
-    ? z.array(z.url()).max(32).parse(JSON.parse(env.BROWSER_ALLOWED_URLS ?? "[]")) : [];
+  const browserUrls =
+    env.ENABLE_BROWSER === "true"
+      ? z
+          .array(z.url())
+          .max(32)
+          .parse(JSON.parse(env.BROWSER_ALLOWED_URLS ?? "[]"))
+      : [];
   const integrations = createIntegrationHub({
-    openclaw: env.ENABLE_OPENCLAW === "true", browserUrls, workflows: workflowNames,
+    openclaw: env.ENABLE_OPENCLAW === "true",
+    browserUrls,
+    workflows: workflowNames,
   });
   return { registry: new ProviderRegistry(providers), ...(tools && { tools }), integrations };
 }

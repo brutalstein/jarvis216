@@ -46,7 +46,10 @@ describe("catalog", () => {
   it("keeps HIGH actions constrained to external integrations", () => {
     const ids = Object.keys(catalog);
     expect(ids).toHaveLength(21);
-    expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual(["agent.delegate", "automation.invoke"]);
+    expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual([
+      "agent.delegate",
+      "automation.invoke",
+    ]);
     expect(ids.some((id) => /delete|kill|shell|powershell|registry/.test(id))).toBe(false);
   });
 
