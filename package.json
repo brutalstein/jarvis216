@@ -17,8 +17,8 @@
     "test": "vitest run",
     "test:postgres": "vitest run tests/postgres.live.test.ts",
     "start": "node --env-file=.env dist/main.js",
-    "dev": "node --env-file=.env --conditions=source --import tsx src/main.ts",
-    "cli": "node --env-file=.env --conditions=source --import tsx src/cli.ts",
+    "dev": "node --env-file=.env --conditions=jarvis-source --import tsx src/main.ts",
+    "cli": "node --env-file=.env --conditions=jarvis-source --import tsx src/cli.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "benchmark": "tsx scripts/benchmark.ts",
     "contracts": "tsx scripts/export-contracts.ts"
