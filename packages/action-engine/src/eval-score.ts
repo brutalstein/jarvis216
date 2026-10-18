@@ -11,6 +11,12 @@ export const EvalCommandSchema = z.strictObject({
 });
 export type EvalCommand = z.infer<typeof EvalCommandSchema>;
 
+// URLs compare by their parsed form ("https://x.com" = "https://X.com/"); other text normalized.
+function canonical(text: string): string {
+  if (/^https?:\/\//i.test(text) && URL.canParse(text)) return new URL(text).href;
+  return normalize(text);
+}
+
 /** Stable, conservative action-sequence scoring; never grants runtime permissions. */
 export function scoreIntent(gold: EvalCommand, decision: Decision): boolean {
   if (gold.kind !== decision.kind) return false;
@@ -24,7 +30,7 @@ export function scoreIntent(gold: EvalCommand, decision: Decision): boolean {
       if (!Object.hasOwn(step.args, key)) return false;
       const actual = step.args[key];
       return typeof value === "string" && typeof actual === "string"
-        ? normalize(value) === normalize(actual)
+        ? canonical(value) === canonical(actual)
         : JSON.stringify(value) === JSON.stringify(actual);
     });
   });

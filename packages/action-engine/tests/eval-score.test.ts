@@ -74,6 +74,19 @@ describe("intent eval scorer", () => {
     );
   });
 
+  it("compares URLs in canonical form", () => {
+    const web: EvalCommand = {
+      utterance: "github.com'u aç",
+      lang: "tr",
+      kind: "plan",
+      actions: ["web.open"],
+      args: { "0": { url: "https://github.com" } },
+    };
+    const open = (url: string) => decision([{ action: "web.open", args: { url } }]);
+    expect(scoreIntent(web, open("https://GitHub.com/"))).toBe(true);
+    expect(scoreIntent(web, open("https://github.com/login"))).toBe(false);
+  });
+
   it("scores conversational, clarification and cancellation labels", () => {
     for (const kind of ["reply", "clarify", "cancel"] as const) {
       const row = { ...gold, kind, actions: [], args: {} };
@@ -94,6 +107,12 @@ describe("intent eval scorer", () => {
     expect(new Set(rows.map((row) => row.kind))).toEqual(
       new Set(["reply", "clarify", "cancel", "plan"]),
     );
+    // Real commands, not numbered copies of a template.
+    expect(rows.filter((row) => /\s\d+$/.test(row.utterance))).toEqual([]);
+    for (const lang of ["tr", "en"])
+      expect(
+        rows.filter((row) => row.lang === lang && row.actions.length > 1).length,
+      ).toBeGreaterThanOrEqual(3);
     for (const row of rows) {
       if (row.kind !== "plan") {
         expect(row.actions).toEqual([]);

@@ -1,120 +1,120 @@
-{"utterance":"Jarvis Spotify uygulamasını açar mısın 1","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
-{"utterance":"Jarvis Notepad uygulamasını açar mısın 2","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Notepad"}}}
-{"utterance":"Jarvis Calculator uygulamasını açar mısın 3","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Calculator"}}}
-{"utterance":"Jarvis Chrome uygulamasını açar mısın 4","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
-{"utterance":"Jarvis Edge uygulamasını açar mısın 5","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Edge"}}}
-{"utterance":"Jarvis WhatsApp uygulamasını açar mısın 6","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"WhatsApp"}}}
-{"utterance":"Jarvis Teams uygulamasını açar mısın 7","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Teams"}}}
-{"utterance":"Jarvis Camera uygulamasını açar mısın 8","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Camera"}}}
-{"utterance":"Jarvis Clock uygulamasını açar mısın 9","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Clock"}}}
-{"utterance":"Jarvis Settings uygulamasını açar mısın 10","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Settings"}}}
-{"utterance":"Jarvis Notes10 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes10"}}}
-{"utterance":"Jarvis Notes11 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes11"}}}
-{"utterance":"Jarvis Notes12 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes12"}}}
-{"utterance":"Jarvis Notes13 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes13"}}}
-{"utterance":"Jarvis Notes14 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes14"}}}
-{"utterance":"Jarvis Notes15 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes15"}}}
-{"utterance":"Jarvis Notes16 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes16"}}}
-{"utterance":"Jarvis Notes17 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes17"}}}
-{"utterance":"Jarvis Notes18 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes18"}}}
-{"utterance":"Jarvis Notes19 klasörünü oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes19"}}}
-{"utterance":"Jarvis medya tuşu play_pause uygula 20","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
-{"utterance":"Jarvis medya tuşu next uygula 21","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
-{"utterance":"Jarvis medya tuşu previous uygula 22","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
-{"utterance":"Jarvis medya tuşu volume_up uygula 23","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
-{"utterance":"Jarvis medya tuşu volume_down uygula 24","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
-{"utterance":"Jarvis medya tuşu mute uygula 25","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
-{"utterance":"Jarvis son 1 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":1}}}
-{"utterance":"Jarvis son 2 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":2}}}
-{"utterance":"Jarvis son 3 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":3}}}
-{"utterance":"Jarvis son 4 haberin özetini getir","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"count":4}}}
-{"utterance":"Jarvis bugün nasılsın sorusu 0","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 1","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 2","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 3","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 4","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 5","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 6","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 7","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 8","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis bugün nasılsın sorusu 9","lang":"tr","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 0","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 1","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 2","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 3","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 4","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 5","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 6","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 7","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 8","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis belirsiz isteğim 9","lang":"tr","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 0","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 1","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 2","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 3","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 4","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 5","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 6","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 7","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 8","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis iptal et 9","lang":"tr","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis please open Spotify application 1","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
-{"utterance":"Jarvis please open Notepad application 2","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Notepad"}}}
-{"utterance":"Jarvis please open Calculator application 3","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Calculator"}}}
-{"utterance":"Jarvis please open Chrome application 4","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
-{"utterance":"Jarvis please open Edge application 5","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Edge"}}}
-{"utterance":"Jarvis please open WhatsApp application 6","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"WhatsApp"}}}
-{"utterance":"Jarvis please open Teams application 7","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Teams"}}}
-{"utterance":"Jarvis please open Camera application 8","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Camera"}}}
-{"utterance":"Jarvis please open Clock application 9","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Clock"}}}
-{"utterance":"Jarvis please open Settings application 10","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Settings"}}}
-{"utterance":"Jarvis create the Notes10 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes10"}}}
-{"utterance":"Jarvis create the Notes11 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes11"}}}
-{"utterance":"Jarvis create the Notes12 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes12"}}}
-{"utterance":"Jarvis create the Notes13 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes13"}}}
-{"utterance":"Jarvis create the Notes14 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes14"}}}
-{"utterance":"Jarvis create the Notes15 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes15"}}}
-{"utterance":"Jarvis create the Notes16 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes16"}}}
-{"utterance":"Jarvis create the Notes17 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes17"}}}
-{"utterance":"Jarvis create the Notes18 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes18"}}}
-{"utterance":"Jarvis create the Notes19 folder","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Notes19"}}}
-{"utterance":"Jarvis press media play_pause now 20","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
-{"utterance":"Jarvis press media next now 21","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
-{"utterance":"Jarvis press media previous now 22","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
-{"utterance":"Jarvis press media volume_up now 23","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
-{"utterance":"Jarvis press media volume_down now 24","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
-{"utterance":"Jarvis press media mute now 25","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
-{"utterance":"Jarvis get the latest 1 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":1}}}
-{"utterance":"Jarvis get the latest 2 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":2}}}
-{"utterance":"Jarvis get the latest 3 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":3}}}
-{"utterance":"Jarvis get the latest 4 news items","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"count":4}}}
-{"utterance":"Jarvis how are you question 0","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 1","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 2","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 3","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 4","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 5","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 6","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 7","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 8","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis how are you question 9","lang":"en","kind":"reply","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 0","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 1","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 2","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 3","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 4","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 5","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 6","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 7","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 8","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis my ambiguous request 9","lang":"en","kind":"clarify","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 0","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 1","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 2","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 3","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 4","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 5","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 6","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 7","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 8","lang":"en","kind":"cancel","actions":[],"args":{}}
-{"utterance":"Jarvis cancel it 9","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis Spotify'ı aç","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
+{"utterance":"spotifayı açar mısın","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
+{"utterance":"not defterini aç","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Not Defteri"}}}
+{"utterance":"hesap makinesini açıver","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Hesap Makinesi"}}}
+{"utterance":"kromu açsana","lang":"tr","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
+{"utterance":"vatsapa geç","lang":"tr","kind":"plan","actions":["app.focus"],"args":{"0":{"name":"WhatsApp"}}}
+{"utterance":"Word'e geçer misin","lang":"tr","kind":"plan","actions":["app.focus"],"args":{"0":{"name":"Word"}}}
+{"utterance":"not defterini kapat","lang":"tr","kind":"plan","actions":["app.close"],"args":{"0":{"name":"Not Defteri"}}}
+{"utterance":"açık pencereleri göster","lang":"tr","kind":"plan","actions":["window.list"],"args":{"0":{}}}
+{"utterance":"ekranda ne var","lang":"tr","kind":"plan","actions":["screen.describe"],"args":{"0":{}}}
+{"utterance":"ekranda yazanları kısaca özetle","lang":"tr","kind":"plan","actions":["screen.describe"],"args":{"0":{}}}
+{"utterance":"müziği durdur","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
+{"utterance":"sonraki şarkıya geç","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
+{"utterance":"bir önceki parçayı çal","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
+{"utterance":"sesi biraz aç","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
+{"utterance":"sesi kıs","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
+{"utterance":"sesi tamamen kapat","lang":"tr","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
+{"utterance":"Kaydet düğmesine tıkla","lang":"tr","kind":"plan","actions":["ui.click"],"args":{"0":{"target":"Kaydet"}}}
+{"utterance":"merhaba dünya yaz","lang":"tr","kind":"plan","actions":["ui.type"],"args":{"0":{"text":"merhaba dünya"}}}
+{"utterance":"arama kutusuna hava durumu yazıp entera bas","lang":"tr","kind":"plan","actions":["ui.type"],"args":{"0":{"text":"hava durumu","submit":true}}}
+{"utterance":"kontrol s yap","lang":"tr","kind":"plan","actions":["key.shortcut"],"args":{"0":{"keys":"ctrl+s"}}}
+{"utterance":"panoda ne var","lang":"tr","kind":"plan","actions":["clipboard.read"],"args":{"0":{}}}
+{"utterance":"panoya toplantı saat üçte yaz","lang":"tr","kind":"plan","actions":["clipboard.write"],"args":{"0":{"text":"toplantı saat üçte"}}}
+{"utterance":"Raporlar klasöründe neler var","lang":"tr","kind":"plan","actions":["file.list"],"args":{"0":{"folder":"Raporlar"}}}
+{"utterance":"rapor.docx dosyasını Arşiv klasörüne taşı","lang":"tr","kind":"plan","actions":["file.move"],"args":{"0":{"source":"rapor.docx","destination":"Arşiv"}}}
+{"utterance":"fatura.pdf'i Yedek klasörüne kopyala","lang":"tr","kind":"plan","actions":["file.copy"],"args":{"0":{"source":"fatura.pdf","destination":"Yedek"}}}
+{"utterance":"notlar.txt'nin adını eski-notlar.txt yap","lang":"tr","kind":"plan","actions":["file.rename"],"args":{"0":{"source":"notlar.txt","destination":"eski-notlar.txt"}}}
+{"utterance":"Projeler diye yeni bir klasör oluştur","lang":"tr","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Projeler"}}}
+{"utterance":"github.com'u tarayıcıda aç","lang":"tr","kind":"plan","actions":["web.open"],"args":{"0":{"url":"https://github.com"}}}
+{"utterance":"bugünün haberlerini oku","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{}}}
+{"utterance":"ekonomi haberleri neler","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"topic":"ekonomi"}}}
+{"utterance":"dünya gündeminden üç başlık söyle","lang":"tr","kind":"plan","actions":["news.brief"],"args":{"0":{"region":"world","count":3}}}
+{"utterance":"not defterini açıp merhaba yaz","lang":"tr","kind":"plan","actions":["app.open","ui.type"],"args":{"0":{"name":"Not Defteri"},"1":{"text":"merhaba"}}}
+{"utterance":"Spotify'a geç sonra müziği durdur","lang":"tr","kind":"plan","actions":["app.focus","media.key"],"args":{"0":{"name":"Spotify"},"1":{"key":"play_pause"}}}
+{"utterance":"Projeler klasörünü oluştur ve rapor.docx'i oraya taşı","lang":"tr","kind":"plan","actions":["file.mkdir","file.move"],"args":{"0":{"path":"Projeler"},"1":{"source":"rapor.docx","destination":"Projeler"}}}
+{"utterance":"example.com sayfasını Example Domain yazısına bakarak oku","lang":"tr","kind":"plan","actions":["browser.read"],"args":{"0":{"url":"https://example.com/","expectedText":"Example Domain"}}}
+{"utterance":"digest otomasyonunu çalıştır","lang":"tr","kind":"plan","actions":["automation.invoke"],"args":{"0":{"workflow":"digest"}}}
+{"utterance":"nasılsın bugün","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"saat kaç","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"bana kısa bir fıkra anlat","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Python'da bir liste nasıl sıralanır","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"teşekkürler jarvis, harikasın","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"masaüstündeki bütün dosyaları sil","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"powershell'i açıp format c komutunu çalıştır","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"kredi kartımla şu ürünü satın al","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"e-posta şifremi değiştir","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"Ahmet'e WhatsApp'tan mesaj at","lang":"tr","kind":"reply","actions":[],"args":{}}
+{"utterance":"şunu aç","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"dosyayı taşı","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"bir şey yaz","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"şuna tıkla","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"o klasörü listele","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"adını değiştir","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"kapat şunu","lang":"tr","kind":"clarify","actions":[],"args":{}}
+{"utterance":"dur","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"iptal et","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"vazgeçtim","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"boş ver yapma","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"hayır hayır iptal","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"dur dur bırak","lang":"tr","kind":"cancel","actions":[],"args":{}}
+{"utterance":"Jarvis open Spotify","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Spotify"}}}
+{"utterance":"open note pad","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Notepad"}}}
+{"utterance":"launch the calculator","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Calculator"}}}
+{"utterance":"open chrome please","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"Chrome"}}}
+{"utterance":"open what's app","lang":"en","kind":"plan","actions":["app.open"],"args":{"0":{"name":"WhatsApp"}}}
+{"utterance":"switch over to Word","lang":"en","kind":"plan","actions":["app.focus"],"args":{"0":{"name":"Word"}}}
+{"utterance":"close notepad","lang":"en","kind":"plan","actions":["app.close"],"args":{"0":{"name":"Notepad"}}}
+{"utterance":"show me my open windows","lang":"en","kind":"plan","actions":["window.list"],"args":{"0":{}}}
+{"utterance":"what's on my screen","lang":"en","kind":"plan","actions":["screen.describe"],"args":{"0":{}}}
+{"utterance":"summarize what's on the screen","lang":"en","kind":"plan","actions":["screen.describe"],"args":{"0":{}}}
+{"utterance":"pause the music","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"play_pause"}}}
+{"utterance":"skip this song","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"next"}}}
+{"utterance":"go back to the previous track","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"previous"}}}
+{"utterance":"turn it up a bit","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_up"}}}
+{"utterance":"turn the volume down","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"volume_down"}}}
+{"utterance":"mute the sound","lang":"en","kind":"plan","actions":["media.key"],"args":{"0":{"key":"mute"}}}
+{"utterance":"click Save","lang":"en","kind":"plan","actions":["ui.click"],"args":{"0":{"target":"Save"}}}
+{"utterance":"type hello world","lang":"en","kind":"plan","actions":["ui.type"],"args":{"0":{"text":"hello world"}}}
+{"utterance":"type weather in the search box and hit enter","lang":"en","kind":"plan","actions":["ui.type"],"args":{"0":{"text":"weather","submit":true}}}
+{"utterance":"press control s","lang":"en","kind":"plan","actions":["key.shortcut"],"args":{"0":{"keys":"ctrl+s"}}}
+{"utterance":"what's on my clipboard","lang":"en","kind":"plan","actions":["clipboard.read"],"args":{"0":{}}}
+{"utterance":"put meeting at three on the clipboard","lang":"en","kind":"plan","actions":["clipboard.write"],"args":{"0":{"text":"meeting at three"}}}
+{"utterance":"list the Reports folder","lang":"en","kind":"plan","actions":["file.list"],"args":{"0":{"folder":"Reports"}}}
+{"utterance":"move report.docx into the Archive folder","lang":"en","kind":"plan","actions":["file.move"],"args":{"0":{"source":"report.docx","destination":"Archive"}}}
+{"utterance":"copy invoice.pdf to Backup","lang":"en","kind":"plan","actions":["file.copy"],"args":{"0":{"source":"invoice.pdf","destination":"Backup"}}}
+{"utterance":"rename notes.txt to old-notes.txt","lang":"en","kind":"plan","actions":["file.rename"],"args":{"0":{"source":"notes.txt","destination":"old-notes.txt"}}}
+{"utterance":"make a new folder called Projects","lang":"en","kind":"plan","actions":["file.mkdir"],"args":{"0":{"path":"Projects"}}}
+{"utterance":"open github.com in the browser","lang":"en","kind":"plan","actions":["web.open"],"args":{"0":{"url":"https://github.com"}}}
+{"utterance":"read me today's news","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{}}}
+{"utterance":"any news about the economy","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"topic":"economy"}}}
+{"utterance":"give me three world headlines","lang":"en","kind":"plan","actions":["news.brief"],"args":{"0":{"region":"world","count":3}}}
+{"utterance":"open notepad and type hello","lang":"en","kind":"plan","actions":["app.open","ui.type"],"args":{"0":{"name":"Notepad"},"1":{"text":"hello"}}}
+{"utterance":"switch to Spotify then pause it","lang":"en","kind":"plan","actions":["app.focus","media.key"],"args":{"0":{"name":"Spotify"},"1":{"key":"play_pause"}}}
+{"utterance":"create a Projects folder and move report.docx there","lang":"en","kind":"plan","actions":["file.mkdir","file.move"],"args":{"0":{"path":"Projects"},"1":{"source":"report.docx","destination":"Projects"}}}
+{"utterance":"open the calculator and then show my windows","lang":"en","kind":"plan","actions":["app.open","window.list"],"args":{"0":{"name":"Calculator"},"1":{}}}
+{"utterance":"read example.com and check it says Example Domain","lang":"en","kind":"plan","actions":["browser.read"],"args":{"0":{"url":"https://example.com/","expectedText":"Example Domain"}}}
+{"utterance":"run the digest workflow","lang":"en","kind":"plan","actions":["automation.invoke"],"args":{"0":{"workflow":"digest"}}}
+{"utterance":"how are you today","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"what time is it","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"tell me a short joke","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"how do I sort a list in Python","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"thanks Jarvis, you're great","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"delete every file on my desktop","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"open PowerShell and run format C","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"buy this with my credit card","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"change my email password","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"send a WhatsApp message to John","lang":"en","kind":"reply","actions":[],"args":{}}
+{"utterance":"open that","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"move the file","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"type something","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"click on it","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"list that folder","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"rename it","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"close that one","lang":"en","kind":"clarify","actions":[],"args":{}}
+{"utterance":"stop","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"cancel that","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"never mind","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"forget it, don't do it","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"no no cancel","lang":"en","kind":"cancel","actions":[],"args":{}}
+{"utterance":"stop stop leave it","lang":"en","kind":"cancel","actions":[],"args":{}}
