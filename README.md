@@ -112,6 +112,8 @@ to remove the temporary PostgreSQL publication. The engineering report records l
 | --- | --- |
 | `npm run check` | Type check, Biome lint, Vitest suite, build |
 | `npm test` | Unit, property, contract, security, resilience and local E2E tests |
+| `npm run test:e2e` | Core composition-root matrix on PGlite, or disposable schemas when `E2E_DATABASE_URL` is set |
+| `npm run matrix:generate` / `npm run matrix:check` | Regenerate / verify reviewable matrix inputs; see `tests/e2e/matrix/README.md` for executed and pending coverage |
 | `npm run test:postgres` | Opt-in real PostgreSQL suite (`JARVIS_LIVE_POSTGRES_TEST=true`, `TEST_DATABASE_URL`) |
 | `npm run benchmark` | Lifecycle and scheduler baseline (`BENCHMARK_DATABASE_URL` for PostgreSQL) |
 | `npm run contracts` | Regenerate `schemas/*.schema.json` (a test fails if they drift) |
