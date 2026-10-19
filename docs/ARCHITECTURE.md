@@ -43,6 +43,29 @@ catalog actions: the engine compiles and validates every step, the risk comes fr
 and the operator approves the plan hash before any MEDIUM step runs
 ([ADR 0010](ADR/0010-model-proposed-typed-plans.md)). There is no free agent loop.
 
+## Code organization
+
+Modules live in layers with one dependency direction, enforced by `tests/architecture.test.ts`
+([ADR 0017](ADR/0017-layered-modules-and-composition-root.md)):
+
+```
+src/main.ts, src/cli.ts      entry points: configuration, signals, tracing, the pool
+  └─ src/app/                createCore(): the composition root, ordered start and stop
+      └─ src/http/           server (auth, rate limit, error mapping) + route modules
+          └─ src/services/   plans/ (model, view, finishers, working memory, service),
+          │                  conversation, persona, narrator, eta, permissions, memory,
+          │                  brain store, outbox
+          └─ src/integrations/  model and service adapters, desktop and news executors
+              └─ src/core/   contracts, tasks, gateway, worker, routing, reliability,
+                             context, database, security, telemetry, text tasks
+```
+
+`createCore()` wires every service once. Its `stop()` stops accepting requests, lets in-flight
+ones finish while the workers still run, then drains the workers and closes the Windows-MCP
+child. Retention (transcripts and their tasks, provider observations, step durations past 30
+days) runs at startup and every six hours. The entry point logs a stray promise rejection and
+keeps serving; an uncaught exception exits for the supervisor to restart.
+
 ## Model-proposed plans (M3)
 
 ```
@@ -153,6 +176,10 @@ that ran a task claims again immediately, so chained plan steps do not wait for 
 Workers hold 30-second leases renewed every 10 seconds. A failed renewal is retried while
 the lease is still valid; only a lost or expiring lease aborts the action. On shutdown a
 worker stops claiming, waits up to 20 seconds for in-flight actions, then aborts them.
+
+An interrupted call of a retry-safe provider (models, page reads, news) changes nothing outside
+Core: when the operator cancels it or its worker loses the lease, the action is marked failed
+and the task is cancelled or queued again instead of quarantined.
 
 Cancellation aborts local requests and fences commits. For workflows and remote agent runs,
 transport abortion is not proof of remote cancellation: record RECOVERY_REQUIRED.

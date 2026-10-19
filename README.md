@@ -26,28 +26,25 @@ open gates. No frontend is included by design.
 
 ## Layout
 
+Source modules sit in layers with one dependency direction, enforced by
+`tests/architecture.test.ts`: `core` ← `integrations` ← `services` ← `http` ← `app` ← entry points.
+
 | Path | Purpose |
 | --- | --- |
-| `src/contracts.ts` | Task state machine, schemas, event families, canonical hashing |
-| `src/tasks.ts` | Task service: admission, DAG, leases, cancel, recover, approve, reconcile |
-| `src/gateway.ts` | Action gateway: risk floor, exact approval, durable intent, verification |
-| `src/routing.ts`, `src/reliability.ts` | Versioned provider registry, measured adaptive routing, durable circuits, usage budgets |
-| `src/worker.ts` | Lease-holding worker loop with heartbeat and graceful drain |
-| `src/server.ts`, `src/cli.ts` | Authenticated loopback HTTP control API and developer CLI |
-| `src/context.ts` | Bounded, redacted, expiring task context with provenance |
-| `src/database.ts` | PostgreSQL pool, transactions, append-only migrations |
-| `src/integrations/` | Claude, Gemini, Codex, OpenClaw, Browser Use and n8n adapters |
+| `src/core/` | Task authority: contracts and state machine, task service (admission, DAG, leases, lanes, recovery, approvals), action gateway (risk, approvals, durable intent, verification), workers, provider registry with measured routing, PostgreSQL and migrations, context, secrets, tracing |
+| `src/integrations/` | Claude, Gemini, Codex, OpenClaw, Browser Use, n8n, OpenAI-compatible and desktop/news adapters |
+| `src/services/plans/` | Model-proposed plans: model, view and live progress, finishers and replan, working memory, the service (admission, approval, lifecycle) |
+| `src/services/` | Conversation (layered voice turns) and persona, narrator and measured durations, permissions, long-term memory, brain store, n8n outbox |
+| `src/http/` | Authenticated loopback API: server (auth, rate limit, error mapping) and route modules (health, tasks, hooks, plans and the live stream, settings, conversation) |
+| `src/app/` | Configuration and provider setup; `createCore()`, the composition root with ordered start and stop |
+| `src/main.ts`, `src/cli.ts` | Process entry point (configuration, signals, tracing, pool) and developer CLI |
+| `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, narration templates, eval set |
 | `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
-| `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, live narration templates, eval set |
-| `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan, live progress |
-| `src/eta.ts`, `src/narrator.ts` | Measured step durations (ETAs) and what JARVIS says while long work runs |
-| `src/conversation.ts`, `src/persona.ts` | Layered voice turns: reflexes, corrections, learned skills, working memory, JSON intents, policy |
-| `src/memory.ts` | Operator-approved long-term memory (`memory.save` / `memory.forget`) |
-| `src/permissions.ts` | Operator permissions per catalog action (ask / allow / deny, timed grants, levels, audit) |
-| `packages/brain/`, `src/brain-store.ts` | Learning brain: experiences, skills, reinforcement, decay, recall, reflexes |
-| `src/outbox.ts` | Transactional outbox pushing n8n task outcomes to a registered webhook |
-| `src/security.ts`, `src/telemetry.ts` | Secret references/redaction, path containment, tracing |
-| `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only) |
+| `packages/brain/` | Learning brain: experiences, skills, reinforcement, decay, recall, reflexes |
+| `apps/desktop/` | Electron presence, captions, plan cards with live progress, Settings |
+| `workers/voice/` | Local voice service: semantic end of turn, speaker gate, STT/TTS, duplex announcement queue |
+| `workers/browser/` | Isolated Python Browser Use worker (fixed DOM readback only, NDJSON progress) |
+| `tests/` | Unit and integration tests; `tests/e2e/` boots the whole Core through `createCore()` against fake services |
 | `schemas/` | Published JSON Schemas generated from the runtime contracts |
 | `examples/n8n/` | n8n workflows for both directions of the integration |
 | `docs/` | Architecture, ADRs, threat model, runbook, research, engineering report |

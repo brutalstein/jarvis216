@@ -30,9 +30,9 @@ routing and a circuit breaker. Browser Use runs in a separate Python worker. Det
 
 | Responsibility | Owner | Not owned by |
 | --- | --- | --- |
-| Task state, DAG, deadlines, leases | Core task service (`src/tasks.ts`) | Providers, n8n, OpenClaw |
-| Policy, risk, approvals, call budget | Action gateway (`src/gateway.ts`) | Models, task submitters |
-| Provider selection and fallback | Provider registry (`src/routing.ts`) | Models |
+| Task state, DAG, deadlines, leases | Core task service (`src/core/tasks.ts`) | Providers, n8n, OpenClaw |
+| Policy, risk, approvals, call budget | Action gateway (`src/core/gateway.ts`) | Models, task submitters |
+| Provider selection and fallback | Provider registry (`src/core/routing.ts`) | Models |
 | Final verification and result | Action gateway + operator reconciliation | Providers' self-reported success |
 | Agent runtime sessions | OpenClaw Gateway | Core (no second session manager) |
 | Browser execution | Python Browser Use worker | Core process |
@@ -44,17 +44,17 @@ routing and a circuit breaker. Browser Use runs in a separate Python worker. Det
 
 | Module | Status | Content |
 | --- | --- | --- |
-| `src/contracts.ts` | Verified | Task states and transitions, Zod schemas, event envelope and closed event families, canonical fingerprint |
-| `src/database.ts` | Verified | Pool, transactions with broken-connection handling, append-only migrations with advisory lock |
-| `src/tasks.ts` | Verified | Admission with idempotency and quotas, DAG with cycle checks, claim, lease, cancel, recover, quarantine, approve, reject, reconcile, list |
-| `src/gateway.ts` | Verified | Risk floor, exact approval, intent, verification, failure classification, fallback |
-| `src/routing.ts`, `src/reliability.ts` | Verified (local) | Registry, measured adaptive routing (`adaptive-v1`), durable circuit breaker, daily call/token budgets |
-| `src/memory.ts` | Verified (local) | Operator-approved long-term memory store and executor |
-| `src/outbox.ts` | Verified (local) | Transactional outbox pushing n8n task outcomes (contract tests against a local HTTP receiver) |
-| `src/worker.ts` | Verified | Claim loop, heartbeat with retry, graceful drain |
-| `src/server.ts`, `src/cli.ts` | Verified | Authenticated loopback API and CLI (live in Docker) |
-| `src/context.ts` | Verified (local) | Bounded, redacted, expiring context with provenance |
-| `src/security.ts`, `src/telemetry.ts` | Verified (local) | Secret references and redaction, path containment, OpenTelemetry spans |
+| `src/core/contracts.ts` | Verified | Task states and transitions, Zod schemas, event envelope and closed event families, canonical fingerprint |
+| `src/core/database.ts` | Verified | Pool, transactions with broken-connection handling, append-only migrations with advisory lock |
+| `src/core/tasks.ts` | Verified | Admission with idempotency and quotas, DAG with cycle checks, claim, lease, cancel, recover, quarantine, approve, reject, reconcile, list |
+| `src/core/gateway.ts` | Verified | Risk floor, exact approval, intent, verification, failure classification, fallback |
+| `src/core/routing.ts`, `src/core/reliability.ts` | Verified (local) | Registry, measured adaptive routing (`adaptive-v1`), durable circuit breaker, daily call/token budgets |
+| `src/services/memory.ts` | Verified (local) | Operator-approved long-term memory store and executor |
+| `src/services/outbox.ts` | Verified (local) | Transactional outbox pushing n8n task outcomes (contract tests against a local HTTP receiver) |
+| `src/core/worker.ts` | Verified | Claim loop, heartbeat with retry, graceful drain |
+| `src/http/server.ts`, `src/cli.ts` | Verified | Authenticated loopback API and CLI (live in Docker) |
+| `src/core/context.ts` | Verified (local) | Bounded, redacted, expiring context with provenance |
+| `src/core/security.ts`, `src/core/telemetry.ts` | Verified (local) | Secret references and redaction, path containment, OpenTelemetry spans |
 | `src/integrations/http.ts` | Verified (local) | Bounded HTTP with undici keep-alive dispatcher and dispatch classification |
 | `src/integrations/models.ts` | Partial live | Codex ChatGPT subscription and Gemini API (`gemini-3.5-flash`) completed; Claude Messages API not live-verified (no API key by design) |
 | `src/integrations/claude-code.ts` | Verified live | Official CLI subscription harness, 15 subprocess tests; live Core tasks COMPLETED without git, hook or CLAUDE.md context |
@@ -223,7 +223,7 @@ These numbers measure Core overhead only, not provider latency.
 
 ## 16. Extension points
 
-New providers implement `Executor` and register in `src/config.ts`; new capabilities extend
+New providers implement `Executor` and register in `src/app/config.ts`; new capabilities extend
 `CapabilitySchema` and policy floors; new verification kinds extend the verification schema;
 event consumers read the ordered event stream; published JSON Schemas let other languages
 integrate; n8n workflows are added by registering webhook URLs.
@@ -296,6 +296,25 @@ holds the general worker (before the lane, that turn would have waited for the s
 Before the plan-bookkeeping change the idle turn p95 was 120 ms. This host is slower than the
 one in section 15, so compare within a run, not across.
 
+## Follow-up, 2026-10-19: hardening round
+
+No new features. Audit first (every module, coverage per file), then structure, fixes with
+regression tests, end-to-end tests and CI for every component
+([ADR 0017](ADR/0017-layered-modules-and-composition-root.md)).
+
+| Change | Evidence | Class |
+| --- | --- | --- |
+| Layered modules with an enforced dependency rule; plan service and HTTP routes split by responsibility | `tests/architecture.test.ts` (proven to fail on a planted core → services import) | verified |
+| `createCore()` composition root with ordered stop; thin entry point with a rejection policy | `tests/e2e/core.test.ts` boots, restarts and stops it | tested only |
+| A failing learning store no longer fails a turn; unrunnable model plans are answered; a failed continuation keeps the candidate pick open; 5xx logged by route only; live-stream restore failures end the stream; retention every six hours | `tests/audit-regressions.test.ts` (each fails without its fix) | tested only |
+| Page reads are retry-safe; interrupted retry-safe calls (cancel, lost lease) end definite instead of quarantined | end-to-end and regression tests | tested only |
+| End-to-end suite: auth sweep of every route, research with live progress and the outcome announcement, status and voice stop, a failed readback, approvals by hash, Settings grants and denials with audit, agent and n8n workflow behind both approvals, n8n ingress with outcome push, learning across a restart, deletion and retention | `tests/e2e` (11 scenarios; PGlite here, PostgreSQL in CI) | tested only |
+| Voice service tests without CUDA (torch-free enrollment module); browser worker over a real socket | 35 voice tests; 15 browser worker tests | tested only |
+| CI: desktop (typecheck, Playwright under xvfb), voice (ruff, mypy, tests), end-to-end on PostgreSQL, coverage floors; zero lint warnings | `.github/workflows/ci.yml` | CI |
+
+Coverage (V8, `src` and packages, entry points excluded): lines 96.2 %, statements 94.2 %,
+functions 93.9 %, branches 85.8 %, up from 91.1 / 89.2 / 88.2 / 82.7. Floors: 95 / 93 / 92 / 84.
+
 ## §21 acceptance matrix
 
 | Criterion | Status | Evidence |
@@ -345,7 +364,7 @@ reachable from the n8n network, and native startup would use an inherited remote
 | Agent reliability | Unverified side-effect output marked FAILED and resubmittable; aborted retry-safe calls retried. Fixed: quarantine | Webhook result text is self-reported |
 | Performance | Batched claim queries; benchmark added | No multi-host load test |
 | Windows deployment | Port 5432 conflict with native PostgreSQL; CRLF in Python edits; Luxon offset timestamps rejected; an inherited shell `DATABASE_URL` (a remote Supabase pooler on this host) silently took precedence over `.env`. All fixed: Core now refuses non-local databases and names the failing setting | Docker Desktop required |
-| Maintainability | Closed event enum; contract drift test; cross-language browser fixture | `src/tasks.ts` is 421 lines; split when it grows |
+| Maintainability | Closed event enum; contract drift test; cross-language browser fixture | Layered modules with an enforced dependency rule (`tests/architecture.test.ts`); the plan service split by responsibility |
 
 Self-review is not proof of correctness; the executable tests and live runs above are the
 evidence.
