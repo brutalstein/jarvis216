@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -31,7 +31,7 @@ function files(dir: string): string[] {
   });
 }
 const layerOf = (path: string) => {
-  const [first, second] = relative(join(root, "src"), path).split("/");
+  const [first, second] = relative(join(root, "src"), path).split(sep);
   return second === undefined ? "entry" : (first ?? "entry");
 };
 const imports = (path: string) =>
@@ -43,6 +43,10 @@ describe("architecture", () => {
   const sources = files(join(root, "src"));
 
   it("places every source file in a known layer", () => {
+    // Guards the classification itself on every platform (Windows paths use backslashes).
+    expect(layerOf(join(root, "src", "core", "tasks.ts"))).toBe("core");
+    expect(layerOf(join(root, "src", "services", "plans", "service.ts"))).toBe("services");
+    expect(layerOf(join(root, "src", "main.ts"))).toBe("entry");
     for (const path of sources) expect(Object.keys(allowed)).toContain(layerOf(path));
   });
 

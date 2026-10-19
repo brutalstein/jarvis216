@@ -110,18 +110,31 @@ describe("the HTTP surface", () => {
 
 describe("talking while JARVIS works", () => {
   it("acknowledges research at once, streams where it looks and speaks the result", async () => {
+    // The page stays open until the card has shown it: progress is coalesced to the latest
+    // state, so pages read back to back would otherwise race the stream.
+    let release = () => {};
+    fakes.browser.gate = new Promise((resolve) => {
+      release = resolve;
+    });
     model.turns.push(read());
     model.briefs.push("Reuters'ta piyasalar sakin, BBC seçimleri yazıyor.");
     const ack = await say("Jarvis, Reuters ve BBC'de ne var bak");
     expect(ack.say).toMatch(/^Reuters\.com ve bbc\.com sayfalarına bakıyorum, efendim; .* sürer\./);
     const id = ack.planId ?? "";
+    const looking = await until(
+      () =>
+        stream.history.find(
+          (view) =>
+            view.id === id &&
+            (view.progress as { detail?: string } | undefined)?.detail === "reuters.com",
+        ),
+      (view) => view !== undefined,
+      10_000,
+    );
+    expect(looking).toBeDefined();
+    release();
     const done = await settled(id);
     expect(done?.say).toBe("Reuters'ta piyasalar sakin, BBC seçimleri yazıyor.");
-    const details = stream.history
-      .filter((view) => view.id === id)
-      .map((view) => (view.progress as { detail?: string } | undefined)?.detail)
-      .filter(Boolean);
-    expect(details).toContain("reuters.com");
     // The outcome is announced once the reply window has passed, tagged for the voice queue.
     const outcome = await until(
       () => stream.announcements.find((a) => a.planId === id && a.kind === "outcome"),

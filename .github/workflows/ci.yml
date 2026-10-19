@@ -47,8 +47,9 @@ jobs:
             package-lock.json
             apps/desktop/package-lock.json
       - run: npm ci --ignore-scripts
-      # With install scripts: Electron downloads its binary.
-      - run: npm ci --prefix apps/desktop
+      - run: npm ci --prefix apps/desktop --ignore-scripts
+      # Electron 44 has no install script; it fetches its binary (checksum-verified) on demand.
+      - run: node apps/desktop/node_modules/electron/install.js
       # Ubuntu restricts unprivileged user namespaces; Electron then needs its SUID sandbox helper.
       - run: |
           sudo chown root:root apps/desktop/node_modules/electron/dist/chrome-sandbox
