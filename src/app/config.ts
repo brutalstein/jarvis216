@@ -52,12 +52,16 @@ export const ConfigSchema = z
     message: "Set N8N_CALLBACK_URL and N8N_CALLBACK_TOKEN together",
     path: ["N8N_CALLBACK_URL"],
   });
+export type Config = z.infer<typeof ConfigSchema>;
+
 export async function configuredProviders(
   env: NodeJS.ProcessEnv,
   secrets: EnvSecrets,
   local: {
     memory?: MemoryStore;
     prefer?: (target: string, candidates: string[]) => string | undefined;
+    // Registered like configured executors, after them (fake models in end-to-end tests).
+    executors?: Executor[];
   } = {},
 ): Promise<{
   registry: ProviderRegistry;
@@ -299,6 +303,7 @@ export async function configuredProviders(
   }
   // Local and governed per action by the operator's permissions (default: ask).
   if (local.memory) register(new MemoryExecutor(local.memory), "memory:v1:local", 10);
+  for (const executor of local.executors ?? []) register(executor, `injected:${executor.id}`, 10);
   if (env.ENABLE_NEWS === "true") {
     const feeds = z
       .array(z.url().refine((url) => new URL(url).protocol === "https:"))
