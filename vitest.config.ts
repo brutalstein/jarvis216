@@ -18,5 +18,16 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
     setupFiles: ["./tests/network-guard.ts"],
     testTimeout: 15_000,
+    // npm run coverage; CI fails when coverage drops below these floors.
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts", "packages/*/src/**/*.ts"],
+      // Process entry points: covered by the end-to-end suite through createCore.
+      exclude: ["src/main.ts", "src/cli.ts"],
+      reporter: ["text-summary", "json-summary"],
+      reportsDirectory: "artifacts/coverage",
+      // Measured 2026-10-19: lines 96.2, statements 94.2, functions 93.9, branches 85.8.
+      thresholds: { lines: 95, statements: 93, functions: 92, branches: 84 },
+    },
   },
 });

@@ -80,6 +80,7 @@ body[data-state="error"] {
 }
 
 [hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: hidden must win over every display rule */
   display: none !important;
 }
 
@@ -154,10 +155,6 @@ body[data-state="error"] {
   justify-items: center;
   gap: 14px;
   transition: transform 800ms var(--ease);
-}
-
-body[data-cards="true"] .presence {
-  transform: translateX(calc(var(--stage-w) / -2 - 16px));
 }
 
 .presence::before {
@@ -294,10 +291,6 @@ body[data-state="error"] .hint {
   overflow-wrap: anywhere;
 }
 
-.card h2 + p {
-  padding-right: 0;
-}
-
 .card ul {
   display: grid;
   gap: 6px;
@@ -342,11 +335,6 @@ body[data-state="error"] .hint {
   right: 8px;
   width: 32px;
   height: 32px;
-}
-
-.card .pin .icon {
-  width: 17px;
-  height: 17px;
 }
 
 .card .pin[aria-pressed="true"] {
@@ -622,6 +610,10 @@ body[data-listening="false"] .listen {
   font-size: 14px;
 }
 
+.card h2 + p {
+  padding-right: 0;
+}
+
 .select {
   position: relative;
 }
@@ -654,6 +646,11 @@ body[data-listening="false"] .listen {
 .select .icon {
   width: 18px;
   height: 18px;
+}
+
+.card .pin .icon {
+  width: 17px;
+  height: 17px;
 }
 
 .actions {
@@ -958,6 +955,10 @@ body.overlay {
   background: rgb(12 10 9 / 0.78);
 }
 
+body[data-cards="true"] .presence {
+  transform: translateX(calc(var(--stage-w) / -2 - 16px));
+}
+
 .overlay .presence::before {
   display: none;
 }
@@ -1008,6 +1009,7 @@ body.overlay {
   *::before,
   *::after,
   .sheet::backdrop {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion overrides every transition */
     transition-duration: 0s !important;
   }
 

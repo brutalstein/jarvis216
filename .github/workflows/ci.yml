@@ -11,7 +11,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.22.0, cache: npm }
       - run: npm ci --ignore-scripts
+      # Linux also enforces the coverage floors; Windows runs the same suite without them.
+      - run: npm run check:ci
+        if: matrix.os == 'ubuntu-latest'
       - run: npm run check
+        if: matrix.os == 'windows-latest'
       - run: npm audit --audit-level=high
   postgres:
     runs-on: ubuntu-latest
@@ -28,6 +32,30 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run test:postgres
         env: { JARVIS_LIVE_POSTGRES_TEST: "true", TEST_DATABASE_URL: "postgresql://jarvis:ci-only-local-password@127.0.0.1:5432/jarvis_test" }
+      # The whole Core end to end on a real PostgreSQL (one disposable schema per scenario).
+      - run: npm run test:e2e
+        env: { E2E_DATABASE_URL: "postgresql://jarvis:ci-only-local-password@127.0.0.1:5432/jarvis_test" }
+  desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.0
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/desktop/package-lock.json
+      - run: npm ci --ignore-scripts
+      # With install scripts: Electron downloads its binary.
+      - run: npm ci --prefix apps/desktop
+      # Ubuntu restricts unprivileged user namespaces; Electron then needs its SUID sandbox helper.
+      - run: |
+          sudo chown root:root apps/desktop/node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 apps/desktop/node_modules/electron/dist/chrome-sandbox
+      - run: npm --prefix apps/desktop run typecheck
+      - run: xvfb-run -a npm --prefix apps/desktop test
+      - run: npm audit --prefix apps/desktop --audit-level=high
   python:
     runs-on: ubuntu-latest
     steps:
@@ -36,5 +64,25 @@ jobs:
         with: { version: 0.11.23, enable-cache: true }
       - run: uv sync --project workers/browser --locked --python 3.12
       - run: uv run --project workers/browser --locked ruff check workers/browser
+      - run: uv run --project workers/browser --locked ruff format --check workers/browser
       - run: uv run --project workers/browser --locked mypy workers/browser/worker.py
       - run: uv run --project workers/browser --locked python -m unittest discover -s workers/browser -v
+  voice:
+    # Everything but the GPU models: turn handling, the announcement queue, signalling,
+    # enrollment and the Core client, with the versions pinned in workers/voice/uv.lock.
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: workers/voice } }
+    env:
+      DEPS: >-
+        --with pipecat-ai[webrtc]==1.12.0 --with httpx==0.28.1 --with aiohttp==3.14.5
+        --with numpy==1.26.4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: 0.11.23, enable-cache: true }
+      - run: uv run --no-project --python 3.12 --with ruff==0.17.1 ruff check jarvis_voice tests
+      - run: uv run --no-project --python 3.12 --with ruff==0.17.1 ruff format --check jarvis_voice tests
+      - run: uv run --no-project --python 3.12 $DEPS --with mypy==2.4.0 mypy jarvis_voice
+      - run: >-
+          uv run --no-project --python 3.12 $DEPS python -m unittest -v
+          tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker
