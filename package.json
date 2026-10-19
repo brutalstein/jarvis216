@@ -16,6 +16,8 @@
     "format": "biome check --write src tests scripts packages/action-engine/src packages/action-engine/tests packages/brain/src packages/brain/tests packages/integration-hub/src packages/integration-hub/tests",
     "test": "vitest run",
     "test:e2e": "vitest run tests/e2e",
+    "matrix:generate": "node --conditions=jarvis-source --import tsx tests/e2e/matrix/generate.ts",
+    "matrix:check": "npm run matrix:generate -- --check",
     "coverage": "vitest run --coverage",
     "test:postgres": "vitest run tests/postgres.live.test.ts",
     "start": "node --env-file=.env dist/main.js",

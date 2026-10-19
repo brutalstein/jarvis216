@@ -1,0 +1,355 @@
+{
+  "evidence": "Inputs only; execution evidence is recorded by the consuming matrix suites.",
+  "actions": [
+    {
+      "id": "agent.delegate",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
+      "id": "app.close",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "app.focus",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "app.open",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "automation.invoke",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.read",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.read_many",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "clipboard.read",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "clipboard.write",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.copy",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.list",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.mkdir",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.move",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.rename",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "key.shortcut",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "media.key",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "memory.forget",
+      "risk": "MEDIUM",
+      "kind": "memory"
+    },
+    {
+      "id": "memory.save",
+      "risk": "MEDIUM",
+      "kind": "memory"
+    },
+    {
+      "id": "news.brief",
+      "risk": "LOW",
+      "kind": "info"
+    },
+    {
+      "id": "screen.describe",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
+      "id": "ui.click",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "ui.type",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "web.open",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "window.list",
+      "risk": "LOW",
+      "kind": "desktop"
+    }
+  ],
+  "topology": [
+    {
+      "id": "topology-001",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "tr",
+      "load": "idle",
+      "provider": "none"
+    },
+    {
+      "id": "topology-002",
+      "desktop": "off",
+      "news": "on",
+      "browser": "on",
+      "openclaw": "on",
+      "n8n": "on",
+      "codex": "on",
+      "language": "en",
+      "load": "busy",
+      "provider": "gemini-live"
+    },
+    {
+      "id": "topology-003",
+      "desktop": "on",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "on",
+      "codex": "on",
+      "language": "mixed",
+      "load": "busy",
+      "provider": "claude-live"
+    },
+    {
+      "id": "topology-004",
+      "desktop": "on",
+      "news": "on",
+      "browser": "on",
+      "openclaw": "on",
+      "n8n": "off",
+      "codex": "off",
+      "language": "mixed",
+      "load": "idle",
+      "provider": "claude-code"
+    },
+    {
+      "id": "topology-005",
+      "desktop": "on",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "on",
+      "n8n": "off",
+      "codex": "off",
+      "language": "en",
+      "load": "busy",
+      "provider": "or-fixture"
+    },
+    {
+      "id": "topology-006",
+      "desktop": "on",
+      "news": "on",
+      "browser": "on",
+      "openclaw": "off",
+      "n8n": "on",
+      "codex": "on",
+      "language": "tr",
+      "load": "idle",
+      "provider": "nv-fixture"
+    },
+    {
+      "id": "topology-007",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "on",
+      "language": "tr",
+      "load": "busy",
+      "provider": "claude-code"
+    },
+    {
+      "id": "topology-008",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "on",
+      "n8n": "off",
+      "codex": "off",
+      "language": "mixed",
+      "load": "busy",
+      "provider": "nv-fixture"
+    },
+    {
+      "id": "topology-009",
+      "desktop": "off",
+      "news": "off",
+      "browser": "on",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "en",
+      "load": "idle",
+      "provider": "claude-live"
+    },
+    {
+      "id": "topology-010",
+      "desktop": "off",
+      "news": "on",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "on",
+      "codex": "off",
+      "language": "tr",
+      "load": "idle",
+      "provider": "or-fixture"
+    },
+    {
+      "id": "topology-011",
+      "desktop": "on",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "tr",
+      "load": "idle",
+      "provider": "gemini-live"
+    },
+    {
+      "id": "topology-012",
+      "desktop": "on",
+      "news": "on",
+      "browser": "on",
+      "openclaw": "on",
+      "n8n": "on",
+      "codex": "on",
+      "language": "tr",
+      "load": "busy",
+      "provider": "none"
+    },
+    {
+      "id": "topology-013",
+      "desktop": "off",
+      "news": "off",
+      "browser": "on",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "on",
+      "language": "mixed",
+      "load": "idle",
+      "provider": "or-fixture"
+    },
+    {
+      "id": "topology-014",
+      "desktop": "off",
+      "news": "on",
+      "browser": "off",
+      "openclaw": "on",
+      "n8n": "off",
+      "codex": "off",
+      "language": "tr",
+      "load": "idle",
+      "provider": "claude-live"
+    },
+    {
+      "id": "topology-015",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "on",
+      "codex": "off",
+      "language": "en",
+      "load": "idle",
+      "provider": "claude-code"
+    },
+    {
+      "id": "topology-016",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "en",
+      "load": "idle",
+      "provider": "none"
+    },
+    {
+      "id": "topology-017",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "en",
+      "load": "idle",
+      "provider": "nv-fixture"
+    },
+    {
+      "id": "topology-018",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "mixed",
+      "load": "idle",
+      "provider": "none"
+    },
+    {
+      "id": "topology-019",
+      "desktop": "off",
+      "news": "off",
+      "browser": "off",
+      "openclaw": "off",
+      "n8n": "off",
+      "codex": "off",
+      "language": "mixed",
+      "load": "idle",
+      "provider": "gemini-live"
+    }
+  ]
+}
