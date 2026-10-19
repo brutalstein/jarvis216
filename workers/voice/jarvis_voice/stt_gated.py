@@ -4,6 +4,7 @@ import asyncio
 import json
 import time
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +58,22 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
         )
         self.enrollment = enrollment
         self.speech_end = time.monotonic()
+
+    async def warm_up(self) -> None:
+        """Pay first-use costs (CUDA kernels, the speaker model) before the operator speaks."""
+
+        def run() -> None:
+            silence = bytes(16_000 * 2)
+            if self.enrollment.gate.enrolled():
+                embed(silence, 16_000)
+            model = getattr(self, "_model", None)
+            if model is not None:
+                segments, _ = model.transcribe(np.zeros(16_000, dtype=np.float32), language="tr")
+                list(segments)
+
+        # A failed warm-up only means the first turn pays the cost itself.
+        with suppress(Exception):
+            await asyncio.to_thread(run)
 
     async def process_frame(self, frame: Frame, direction: FrameDirection) -> None:
         # Smart Turn ends the segment; a brief VAD pause must not launch a model call.

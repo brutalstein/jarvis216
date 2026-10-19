@@ -64,7 +64,13 @@ export class ActionGateway {
     private grants?: StandingGrants,
   ) {}
 
-  async run(claim: Task, executor: Executor, signal: AbortSignal): Promise<TaskState> {
+  // `selection` is the routing explanation, recorded in the same transaction as the intent.
+  async run(
+    claim: Task,
+    executor: Executor,
+    signal: AbortSignal,
+    selection?: Record<string, string | number | boolean | null>,
+  ): Promise<TaskState> {
     invariant(
       executor.capability === claim.spec.capability && claim.spec.providers.includes(executor.id),
       "CAPABILITY_DENIED",
@@ -98,6 +104,7 @@ export class ActionGateway {
     const action = await this.tasks.locked(async (tx) => {
       const task = await this.tasks.get(claim.id, tx);
       this.tasks.assertLease(task, claim.owner, claim.fence);
+      if (selection) await this.tasks.event(tx, task, "provider.selected", selection);
       invariant(taskDeadline(task) > Date.now(), "DEADLINE_EXPIRED");
       invariant(task.calls < task.spec.budget.maxCalls, "CALL_BUDGET_EXCEEDED");
       let current = (

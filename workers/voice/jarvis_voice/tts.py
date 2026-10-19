@@ -4,6 +4,7 @@ import asyncio
 import json
 import time
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from typing import Any
 
 from pipecat.frames.frames import Frame, TTSAudioRawFrame, TTSSpeakFrame
@@ -33,6 +34,16 @@ class BilingualTTS(TTSService):  # type: ignore[misc]
                 download_voice(name, store)
             self.voices[lang] = PiperVoice.load(path)
         self.timing: dict[str, Any] = {}
+
+    async def warm_up(self) -> None:
+        """The first synthesis of each voice is slow; do it before JARVIS first speaks."""
+
+        def run() -> None:
+            for voice in self.voices.values():
+                list(voice.synthesize("Merhaba."))
+
+        with suppress(Exception):
+            await asyncio.to_thread(run)
 
     async def process_frame(self, frame: Frame, direction: FrameDirection) -> None:
         if isinstance(frame, TTSSpeakFrame):

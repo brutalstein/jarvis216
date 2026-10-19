@@ -1,9 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { PGlite } from "@electric-sql/pglite";
+import { ConversationService } from "../src/conversation.js";
 import { type Database, migrate, postgres } from "../src/database.js";
+import { Durations } from "../src/eta.js";
 import { ActionGateway } from "../src/gateway.js";
+import { PlanService } from "../src/plans.js";
+import { type Provider, ProviderRegistry } from "../src/routing.js";
 import { TaskService } from "../src/tasks.js";
+import { Worker } from "../src/worker.js";
 
 // Default: in-memory PGlite. BENCHMARK_DATABASE_URL: a local disposable PostgreSQL; the run
 // uses a fresh schema and drops it afterwards.
@@ -71,6 +76,91 @@ try {
     await tasks.claim("benchmark", 10_000);
     claims.push(performance.now() - start);
   }
+  // A spoken turn end to end through Core (instant model fixture): admission, an interactive
+  // worker, gateway, verification, conversation record. Then the same while a background
+  // step holds the general worker, as when JARVIS researches while the operator talks.
+  const provider = (id: string, capability: Provider["capability"], run: () => Promise<string>) =>
+    ({
+      id,
+      capability,
+      external: false,
+      retrySafe: true,
+      trustedForPrivate: true,
+      enabled: true,
+      authenticated: true,
+      priority: 1,
+      maxInputChars: 200_000,
+      execute: async () => ({ text: await run(), source: id }),
+    }) satisfies Provider;
+  let release = () => {};
+  const busy = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const registry = new ProviderRegistry([
+    provider("gemini-live", "text.generate", async () =>
+      JSON.stringify({
+        addressed: true,
+        say: "Buradayım, efendim.",
+        lang: "tr",
+        intent: { kind: "reply" },
+      }),
+    ),
+    provider("browser-use", "browser.extract", async () => {
+      await busy;
+      return "page";
+    }),
+  ]);
+  const live = new TaskService(db, { concurrency: 1, interactive: 2 });
+  const stop = new AbortController();
+  const workers = [
+    new Worker(live, registry),
+    new Worker(live, registry, undefined, {}, undefined, ["interactive"]),
+  ];
+  const wake = () => {
+    for (const worker of workers) worker.wake();
+  };
+  const running = workers.map((worker) => worker.run(stop.signal));
+  const plans = new PlanService({
+    tasks: live,
+    wake,
+    onCancel: () => {},
+    conversationProviders: ["gemini-live"],
+    privateProviders: [],
+    durations: new Durations(),
+  });
+  plans.start(stop.signal);
+  const conversation = new ConversationService(live, { providers: ["gemini-live"], wake, plans });
+  const turns = async () => {
+    const samples: number[] = [];
+    for (let i = 0; i < 40; i++) {
+      const start = performance.now();
+      await conversation.turn({ utterance: "Jarvis, orada mısın?", followUp: false });
+      samples.push(performance.now() - start);
+    }
+    return {
+      samples: samples.length,
+      p50: percentile(samples, 0.5),
+      p95: percentile(samples, 0.95),
+    };
+  };
+  const idleTurns = await turns();
+  await live.create(
+    {
+      objective: "Read a page",
+      capability: "browser.extract",
+      input: { url: "https://example.com/", expectedText: "Example" },
+      providers: ["browser-use"],
+      deadline: new Date(Date.now() + 600_000).toISOString(),
+      verification: { kind: "non-empty" },
+    },
+    "background-read",
+    "operator",
+  );
+  wake();
+  const busyTurns = await turns();
+  release();
+  stop.abort();
+  await Promise.all(running);
   process.stdout.write(
     `${JSON.stringify({
       database: url ? "PostgreSQL (local, isolated schema)" : "PGlite in-memory",
@@ -85,6 +175,8 @@ try {
         p50: percentile(claims, 0.5),
         p95: percentile(claims, 0.95),
       },
+      spokenTurnMs: idleTurns,
+      spokenTurnWhileWorkingMs: busyTurns,
       rssMiB: process.memoryUsage().rss / 1024 ** 2,
       node: process.version,
     })}\n`,

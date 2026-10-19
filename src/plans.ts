@@ -29,7 +29,7 @@ import { type Durations, durationKey, finisherOf } from "./eta.js";
 import { planApprovalMs } from "./gateway.js";
 import type { Announcement } from "./narrator.js";
 import type { PermissionMode, PermissionService } from "./permissions.js";
-import type { TaskService } from "./tasks.js";
+import type { TaskChange, TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
 
 export type PlanStatus =
@@ -160,9 +160,12 @@ export class PlanService extends EventEmitter {
   #finishing = new Set<string>();
   // When Core first saw each step task running, and when each plan's finisher started.
   #stepStarted = new Map<string, number>();
+  #timers = new Set<ReturnType<typeof setTimeout>>();
   #finishStarted = new Map<string, number>();
   #refreshing: Promise<void> | undefined;
   #again = false;
+  // Any plan running or awaiting approval at the last refresh (sets the poll cadence).
+  #active = true;
   #creating = Promise.resolve();
   constructor(
     private options: {
@@ -453,7 +456,10 @@ export class PlanService extends EventEmitter {
     const onPlan = (view: PlanView) => {
       if (view.id === id) poke();
     };
-    this.options.tasks.changes.on("change", poke);
+    const onChange = (change: TaskChange) => {
+      if (change.planId === id) poke();
+    };
+    this.options.tasks.changes.on("change", onChange);
     this.on("plan", onPlan);
     try {
       for (;;) {
@@ -471,7 +477,7 @@ export class PlanService extends EventEmitter {
           });
       }
     } finally {
-      this.options.tasks.changes.off("change", poke);
+      this.options.tasks.changes.off("change", onChange);
       this.off("plan", onPlan);
     }
   }
@@ -497,7 +503,7 @@ export class PlanService extends EventEmitter {
     this.#refreshing = (async () => {
       do {
         this.#again = false;
-        await this.#refresh();
+        this.#active = await this.#refresh();
       } while (this.#again);
     })().finally(() => {
       this.#refreshing = undefined;
@@ -509,23 +515,29 @@ export class PlanService extends EventEmitter {
     const failed = () => {
       process.stderr.write('{"level":"error","code":"PLAN_REFRESH_FAILED"}\n');
     };
-    // Step transitions refresh plans at once; the poll covers expiries and announcements.
-    const onChange = () => void this.refresh().catch(failed);
-    this.options.tasks.changes.on("change", onChange);
+    // A plan step's transition refreshes plans at once; other tasks (spoken turns, API tasks)
+    // never touch plan state, so they do not cost a refresh. The poll covers expiries.
+    const onChange = (change: TaskChange) => {
+      if (change.planId) void this.refresh().catch(failed);
+    };
     // A step reporting where it looks updates its plan card and narration at once.
-    this.options.tasks.progress.on("progress", onChange);
+    const onProgress = () => void this.refresh().catch(failed);
+    this.options.tasks.changes.on("change", onChange);
+    this.options.tasks.progress.on("progress", onProgress);
     signal.addEventListener(
       "abort",
       () => {
         this.options.tasks.changes.off("change", onChange);
-        this.options.tasks.progress.off("progress", onChange);
+        this.options.tasks.progress.off("progress", onProgress);
+        for (const timer of this.#timers) clearTimeout(timer);
       },
       { once: true },
     );
     void (async () => {
       while (!signal.aborted) {
         await this.refresh().catch(failed);
-        await delay(500, undefined, { signal }).catch(() => {});
+        // Idle, a slower poll is enough: new plans and step transitions refresh at once.
+        await delay(this.#active ? 500 : 2000, undefined, { signal }).catch(() => {});
       }
     })();
   }
@@ -783,13 +795,15 @@ export class PlanService extends EventEmitter {
 
   // Emits the view when it changed since it was last emitted.
   async #publish(id: string): Promise<PlanView> {
-    const view = await this.get(id);
+    return this.#emitChanged(await this.get(id));
+  }
+  #emitChanged(view: PlanView): PlanView {
     const seen = JSON.stringify(view);
-    if (this.#seen.get(id) !== seen) {
-      this.#seen.set(id, seen);
+    if (this.#seen.get(view.id) !== seen) {
+      this.#seen.set(view.id, seen);
       this.emit("plan", view);
     }
-    if (ended.has(view.status)) this.#seen.delete(id);
+    if (ended.has(view.status)) this.#seen.delete(view.id);
     return view;
   }
 
@@ -815,6 +829,16 @@ export class PlanService extends EventEmitter {
       for (const taskId of plan.task_ids) this.#stepStarted.delete(taskId);
       this.#finishStarted.delete(plan.id);
       await this.#publish(plan.id);
+      // Its announcement is due once the turn's reply window has passed.
+      const due = Number(plan.created_at) + replyWaitMs - Date.now();
+      if (!flags.narrated && due > 0) {
+        const timer = setTimeout(() => {
+          this.#timers.delete(timer);
+          void this.refresh().catch(() => {});
+        }, due + 20);
+        timer.unref?.();
+        this.#timers.add(timer);
+      }
     }
     return updated.rows.length > 0;
   }
@@ -836,7 +860,7 @@ export class PlanService extends EventEmitter {
     );
   }
 
-  async #refresh(): Promise<void> {
+  async #refresh(): Promise<boolean> {
     const { db } = this.options.tasks;
     const plans = (
       await db.query<PlanRow>(`SELECT * FROM plans WHERE ${active} ORDER BY created_at`)
@@ -873,9 +897,11 @@ export class PlanService extends EventEmitter {
         !states.some((state) => state === "RUNNING" || state === "VERIFYING")
       )
         this.#detach(plan, () => this.#fail(plan, tasks));
-      else await this.#publish(plan.id);
+      // Steady state: the rows just read are current, no second read.
+      else this.#emitChanged(this.#view(plan, tasks));
     }
     await this.#announce();
+    return plans.length > 0;
   }
 
   #detach(plan: PlanRow, work: () => Promise<void>): void {

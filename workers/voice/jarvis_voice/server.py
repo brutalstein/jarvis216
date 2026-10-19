@@ -237,14 +237,18 @@ async def run_session(
         enrollment.gate.enrolled,
         filler_s=float(os.environ.get("VOICE_FILLER_SECONDS", "1.2")),
     )
+    stt = GatedSTT(enrollment)
+    tts = BilingualTTS()
+    # Models warm up while the operator is still getting ready to speak.
+    warming = [asyncio.create_task(stt.warm_up()), asyncio.create_task(tts.warm_up())]
     pipeline = Pipeline(
         [
             transport.input(),
             VADProcessor(vad_analyzer=SileroVADAnalyzer()),
             turns,
-            GatedSTT(enrollment),
+            stt,
             brain,
-            BilingualTTS(),
+            tts,
             transport.output(),
         ]
     )
@@ -269,6 +273,8 @@ async def run_session(
         await runner.run()
     finally:
         set_brain(None)
+        for task in warming:
+            task.cancel()
         await core.http.aclose()
 
 

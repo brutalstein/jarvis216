@@ -238,4 +238,16 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=11")).rows.length)
+      return;
+    // Every spoken turn reads recent plans (working memory, pending choice) and a turn's plan.
+    const ddl = `
+      CREATE INDEX plan_recency ON plans(created_at);
+      CREATE INDEX plan_turn ON plans(turn_id);
+      INSERT INTO schema_migrations VALUES (11);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

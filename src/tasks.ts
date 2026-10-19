@@ -20,7 +20,8 @@ import {
 } from "./contracts.js";
 import type { Database, Sql } from "./database.js";
 
-export type TaskChange = { id: string; status: TaskState };
+// planId: the plan a step task belongs to, so plan bookkeeping can ignore unrelated tasks.
+export type TaskChange = { id: string; status: TaskState; planId?: string };
 export type TaskProgress = Progress & { at: number };
 const bounded = (text: string | undefined, max: number) =>
   text === undefined ? undefined : text.replace(/\s+/g, " ").trim().slice(0, max) || undefined;
@@ -48,7 +49,7 @@ export class TaskService {
   // "progress" fires with { id, ...TaskProgress } when a running executor reports progress.
   readonly progress = new EventEmitter().setMaxListeners(100);
   #progress = new Map<string, TaskProgress>();
-  #moved = new WeakMap<Sql, Map<string, TaskState>>();
+  #moved = new WeakMap<Sql, Map<string, { status: TaskState; planId?: string }>>();
   constructor(
     public readonly db: Database,
     private options: {
@@ -67,7 +68,7 @@ export class TaskService {
   ) {}
 
   async locked<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
-    const moved = new Map<string, TaskState>();
+    const moved = new Map<string, { status: TaskState; planId?: string }>();
     const value = await this.db.transaction(async (tx) => {
       this.#moved.set(tx, moved);
       await tx.query("SELECT id FROM scheduler_lock WHERE id=1 FOR UPDATE");
@@ -75,11 +76,11 @@ export class TaskService {
     });
     // The transaction has committed: a failing listener must neither make it look failed nor
     // keep the other listeners from hearing about it.
-    for (const [id, status] of moved) {
+    for (const [id, { status, planId }] of moved) {
       if (status !== "RUNNING" && status !== "VERIFYING") this.#progress.delete(id);
       for (const listener of this.changes.listeners("change"))
         try {
-          (listener as (change: TaskChange) => void)({ id, status });
+          (listener as (change: TaskChange) => void)({ id, status, ...(planId && { planId }) });
         } catch {
           process.stderr.write('{"level":"error","code":"TASK_CHANGE_LISTENER_FAILED"}\n');
         }
@@ -156,7 +157,7 @@ export class TaskService {
     await tx.query("UPDATE tasks SET status=$2 WHERE id=$1", [task.id, state]);
     await this.event(tx, task, "task.transition", { from: task.status, to: state, reason });
     task.status = state;
-    this.#moved.get(tx)?.set(task.id, state);
+    this.#moved.get(tx)?.set(task.id, { status: state, planId: task.spec?.planId });
     if (this.options.outbox?.principals.includes(task.principal) && notified.has(state))
       await tx.query(
         "INSERT INTO deliveries(id,task_id,status,created_at,next_attempt_at) VALUES($1,$2,$3,$4,$4)",

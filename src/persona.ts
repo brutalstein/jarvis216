@@ -60,17 +60,7 @@ export function conversationPromptParts(input: ConversationInput): {
   const history = input.history
     .map((turn) => `Operator: ${clip(turn.utterance)}\nJARVIS: ${clip(turn.say)}`)
     .join("\n");
-  const stable = [
-    PERSONA,
-    FORMAT,
-    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
-    `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
-    ...(input.browserUrls?.length
-      ? [
-          `Exact browser.read URLs allowed: ${input.browserUrls.join(", ")}. Supply expectedText as a short phrase likely present on that exact page.`,
-        ]
-      : []),
-  ].join("\n\n");
+  const stable = stablePart(input);
   const turn = [
     `Local time: ${time} (${zone}).`,
     ...(input.followUp ? [FOLLOW_UP] : []),
@@ -94,7 +84,34 @@ export function conversationPromptParts(input: ConversationInput): {
     `The operator now says (speech transcript, may contain recognition errors):\n${input.utterance}`,
     "Reply now with the one JSON object.",
   ].join("\n\n");
-  return { stable: `${stable}\n\n`, turn };
+  return { stable, turn };
+}
+
+// The stable part changes only with Settings or configuration; built once per combination.
+const stableParts = new Map<string, string>();
+function stablePart(input: ConversationInput): string {
+  const key = JSON.stringify([
+    input.optionalActions ?? null,
+    input.enabledIntegrations ?? null,
+    input.denied ?? null,
+    input.browserUrls ?? null,
+  ]);
+  const cached = stableParts.get(key);
+  if (cached) return cached;
+  const stable = `${[
+    PERSONA,
+    FORMAT,
+    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
+    `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
+    ...(input.browserUrls?.length
+      ? [
+          `Exact browser.read URLs allowed: ${input.browserUrls.join(", ")}. Supply expectedText as a short phrase likely present on that exact page.`,
+        ]
+      : []),
+  ].join("\n\n")}\n\n`;
+  if (stableParts.size >= 16) stableParts.clear();
+  stableParts.set(key, stable);
+  return stable;
 }
 
 export function conversationPrompt(input: ConversationInput): string {
