@@ -42,10 +42,30 @@ export function neverDispatched(error: unknown): boolean {
   return notConnected.has(networkCode(error) ?? "");
 }
 
+const failure = (status: number) => {
+  const kind =
+    status === 401 || status === 403
+      ? "authentication-required"
+      : status === 429
+        ? "rate-limited"
+        : status >= 500
+          ? "provider-unavailable"
+          : "permanent";
+  // Authentication is checked before a request is processed: a 401/403 was not executed.
+  return new ProviderFailure(
+    kind,
+    status === 429 || status >= 500,
+    kind !== "authentication-required",
+  );
+};
+
+// A JSON reply, or NDJSON when the service streams progress lines before one result (or
+// error) line; `onProgress` receives each progress object.
 export async function jsonRequest(
   url: string,
   init: RequestInit,
   signal: AbortSignal,
+  onProgress?: (progress: unknown) => void,
 ): Promise<unknown> {
   const headers = new Headers(init.headers);
   const carrier: Record<string, string> = {};
@@ -68,33 +88,45 @@ export async function jsonRequest(
   }
   if (!response.ok) {
     await response.body?.cancel();
-    const kind =
-      response.status === 401 || response.status === 403
-        ? "authentication-required"
-        : response.status === 429
-          ? "rate-limited"
-          : response.status >= 500
-            ? "provider-unavailable"
-            : "permanent";
-    // Authentication is checked before a request is processed: a 401/403 was not executed.
-    throw new ProviderFailure(
-      kind,
-      response.status === 429 || response.status >= 500,
-      kind !== "authentication-required",
-    );
+    throw failure(response.status);
   }
   if (!response.body) throw new ProviderFailure("invalid-response", false);
+  const streamed = (response.headers.get("content-type") ?? "").includes("application/x-ndjson");
   const reader = response.body.getReader();
+  // Progress lines are tiny; the result line has the same cap as a plain reply.
+  const limit = streamed ? 160_000 : 128_000;
   let size = 0;
   const chunks: Uint8Array[] = [];
+  let pending = "";
+  const decoder = new TextDecoder();
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > 128_000) throw new ProviderFailure("invalid-response", false);
-      chunks.push(value);
+      if (size > limit) throw new ProviderFailure("invalid-response", false);
+      if (!streamed) {
+        chunks.push(value);
+        continue;
+      }
+      pending += decoder.decode(value, { stream: true });
+      for (let end = pending.indexOf("\n"); end >= 0; end = pending.indexOf("\n")) {
+        const line = pending.slice(0, end).trim();
+        pending = pending.slice(end + 1);
+        if (!line) continue;
+        let item: { progress?: unknown; result?: unknown; error?: unknown; status?: unknown };
+        try {
+          item = JSON.parse(line);
+        } catch {
+          throw new ProviderFailure("invalid-response", false);
+        }
+        if (item.result !== undefined) return item.result;
+        if (item.error !== undefined)
+          throw failure(typeof item.status === "number" ? item.status : 503);
+        if (item.progress !== undefined) onProgress?.(item.progress);
+      }
     }
+    if (streamed) throw new ProviderFailure("invalid-response", false);
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } finally {
     await reader.cancel();

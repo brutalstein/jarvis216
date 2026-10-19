@@ -103,11 +103,24 @@ export function conversationPrompt(input: ConversationInput): string {
 }
 
 const minutes = (ms: number) => Math.max(1, Math.round(ms / 60_000));
+const seconds = (ms: number) => Math.max(0, Math.round(ms / 1000));
+function progressLine(progress: NonNullable<WorkingMemory["active"][number]["progress"]>): string {
+  const left =
+    progress.remainingMs === undefined
+      ? ""
+      : progress.remainingMs > 0
+        ? `, about ${seconds(progress.remainingMs)} s left`
+        : ", taking longer than usual";
+  const now = progress.finishing
+    ? "composing the spoken result"
+    : `step ${progress.step} of ${progress.steps} (${progress.action})${progress.detail ? `, now on ${progress.detail}` : ""}`;
+  return `${now}, ${seconds(progress.elapsedMs)} s so far${left}`;
+}
 function workingMemory(memory: WorkingMemory): string {
   const lines = [
     ...memory.active.map(
       (plan) =>
-        `- ${plan.status === "AWAITING_APPROVAL" ? "Waiting for the operator's approval" : "Running"}: ${JSON.stringify(plan.goal)} (${plan.actions.join(", ")})`,
+        `- ${plan.status === "AWAITING_APPROVAL" ? "Waiting for the operator's approval" : "Running"}: ${JSON.stringify(plan.goal)} (${plan.actions.join(", ")})${plan.progress ? ` — ${progressLine(plan.progress)}` : ""}`,
     ),
     ...(memory.last
       ? [

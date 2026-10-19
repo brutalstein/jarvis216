@@ -6,8 +6,10 @@ import { ConfigSchema, configuredProviders } from "./config.js";
 import { terminal } from "./contracts.js";
 import { ConversationService, conversationProviders } from "./conversation.js";
 import { migrate, postgres } from "./database.js";
+import { Durations } from "./eta.js";
 import { geminiEmbedder } from "./integrations/models.js";
 import { MemoryStore } from "./memory.js";
+import { Narrator } from "./narrator.js";
 import { Outbox } from "./outbox.js";
 import { type BrainSettings, PermissionService } from "./permissions.js";
 import { PlanService } from "./plans.js";
@@ -71,6 +73,9 @@ async function main() {
     brainSettings = () => permissions.settings();
     await brain.load();
     await brain.consolidate();
+    // How long steps take on this computer: ETAs and pacing what JARVIS says while it works.
+    const durations = new Durations(db);
+    await durations.load();
     const outbox =
       config.N8N_CALLBACK_URL && config.N8N_CALLBACK_TOKEN
         ? new Outbox(db, { url: config.N8N_CALLBACK_URL, token: config.N8N_CALLBACK_TOKEN })
@@ -128,6 +133,7 @@ async function main() {
             (set, action) => (action.available ? set.add(action.id) : set),
             new Set<string>(),
           ),
+      durations,
       onChoice: (target, candidates, chosen) => {
         if (permissions.settings().learning)
           void brain.learnChoice(target, candidates, chosen).catch(() => {});
@@ -190,6 +196,7 @@ async function main() {
       })}\n`,
     );
     outbox?.start(stop.signal, tasks.changes);
+    new Narrator(plans).start(stop.signal);
     // "Sleep" every half hour: consolidate experiences into skills and let unused ones fade.
     const sleep = setInterval(() => {
       void brain.consolidate().catch(() => {

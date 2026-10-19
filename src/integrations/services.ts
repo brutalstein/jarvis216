@@ -5,6 +5,7 @@ import {
   CoreError,
   type ExecutionResult,
   type Executor,
+  type Progress,
   ResultSchema,
   type Task,
   WorkflowInputSchema,
@@ -120,11 +121,17 @@ export class BrowserExecutor implements Executor {
   ) {
     this.base = serviceUrl(base);
   }
-  async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
+  async execute(
+    task: Task,
+    signal: AbortSignal,
+    progress?: (update: Progress) => void,
+  ): Promise<ExecutionResult> {
     const input = BrowserInputSchema.parse(task.spec.input);
     const pages = browserPages(input);
     const [first] = pages;
     if (!first) throw new ProviderFailure("invalid-response", false, false);
+    const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
+    progress?.({ stage: "opening", detail: host(first.url), index: 1, total: pages.length });
     const body =
       pages.length === 1
         ? {
@@ -145,11 +152,30 @@ export class BrowserExecutor implements Executor {
         headers: {
           authorization: `Bearer ${this.token}`,
           "content-type": "application/json",
+          // The worker streams which page it is on; an older worker just answers JSON.
+          accept: "application/x-ndjson, application/json",
           "x-correlation-id": task.correlation_id,
         },
         body: JSON.stringify(body),
       },
       signal,
+      (raw) => {
+        const step = z
+          .object({
+            index: z.number().int().min(1).max(4),
+            total: z.number().int().min(1).max(4),
+            host: z.string().max(253),
+            state: z.enum(["reading", "read"]),
+          })
+          .safeParse(raw);
+        if (step.success)
+          progress?.({
+            stage: step.data.state,
+            detail: step.data.host.replace(/^www\./, ""),
+            index: step.data.index,
+            total: step.data.total,
+          });
+      },
     );
     const output = z.object({ text: z.string() }).passthrough().parse(response);
     return ResultSchema.parse({ ...output, text: output.text.slice(0, 64_000) });

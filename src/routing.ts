@@ -1,4 +1,4 @@
-import { CoreError, type Executor, type Task, taskDeadline } from "./contracts.js";
+import { CoreError, type Executor, type Progress, type Task, taskDeadline } from "./contracts.js";
 import { type Budget, type Observation, ReliabilityTracker } from "./reliability.js";
 
 export class ProviderFailure extends Error {
@@ -162,7 +162,10 @@ export class ProviderRegistry {
     const chosen = health.get(selected.id);
     const demoted = base.slice(0, base.indexOf(selected)).map((p) => p.id);
     return {
-      provider: { ...selected, execute: (t, signal) => this.observe(selected, t, signal) },
+      provider: {
+        ...selected,
+        execute: (t, signal, progress) => this.observe(selected, t, signal, progress),
+      },
       reason: {
         provider: selected.id,
         registryVersion: this.version,
@@ -177,9 +180,14 @@ export class ProviderRegistry {
       },
     };
   }
-  private async observe(provider: Provider, task: Task, signal: AbortSignal) {
+  private async observe(
+    provider: Provider,
+    task: Task,
+    signal: AbortSignal,
+    progress?: (update: Progress) => void,
+  ) {
     try {
-      const result = await provider.execute(task, signal);
+      const result = await provider.execute(task, signal, progress);
       this.circuits.delete(provider.id);
       return result;
     } catch (error) {

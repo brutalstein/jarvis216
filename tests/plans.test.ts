@@ -221,7 +221,9 @@ describe("plan admission and approval", () => {
     await pastReplyWindow(view.id);
     await spoken();
     await delay(700);
-    expect(announced).toEqual([{ text: "Not Defteri açıldı, efendim.", lang: "tr" }]);
+    expect(announced).toEqual([
+      { text: "Not Defteri açıldı, efendim.", lang: "tr", kind: "outcome", planId: view.id },
+    ]);
     const done = await plans.get(view.id);
     expect(done.status).toBe("COMPLETED");
     expect(done.steps[0]).toMatchObject({ status: "COMPLETED", evidence: { ok: true } });

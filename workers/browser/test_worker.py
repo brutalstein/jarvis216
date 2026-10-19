@@ -1,9 +1,12 @@
 import json
+import sys
+import types
 import unittest
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
-from worker import Request, WorkerError, authorize, encode
+from worker import Request, WorkerError, authorize, encode, stream
 
 # Shared with tests/browser-contract.test.ts: both sides must accept the same wire shapes.
 CONTRACT = json.loads(
@@ -79,6 +82,80 @@ class BoundaryTests(unittest.TestCase):
         body = encode({"text": "ğ" * 30000, "source": "s", "externalId": "e"})
         self.assertIn("ğ".encode(), body)
         self.assertLess(len(body), 128_000)
+
+
+class FakePage:
+    def __init__(self, url: str, text: str) -> None:
+        self.url, self.text = url, text
+
+    async def evaluate(self, script: str) -> str:
+        return json.dumps({"url": self.url, "text": self.text})
+
+
+class FakeBrowser:
+    pages: dict[str, str] = {}
+
+    def __init__(self, **options: Any) -> None:
+        self.current: FakePage | None = None
+
+    async def start(self) -> None:
+        pass
+
+    async def navigate_to(self, url: str) -> None:
+        self.current = FakePage(url, self.pages[url])
+
+    async def get_current_page(self) -> FakePage | None:
+        return self.current
+
+    async def kill(self) -> None:
+        pass
+
+
+class StreamTests(unittest.TestCase):
+    def setUp(self) -> None:
+        module = types.ModuleType("browser_use")
+        module.Browser = FakeBrowser  # type: ignore[attr-defined]
+        sys.modules["browser_use"] = module
+        self.addCleanup(sys.modules.pop, "browser_use", None)
+        FakeBrowser.pages = {
+            "https://example.com/": "Example Domain",
+            "https://news.example.org/": "Headlines today",
+        }
+
+    def request(self, second_text: str) -> Request:
+        payload = {
+            "taskId": str(uuid4()),
+            "pages": [
+                {"url": "https://example.com/", "expectedText": "Example"},
+                {"url": "https://news.example.org/", "expectedText": second_text},
+            ],
+            "timeoutMs": 5000,
+        }
+        return Request.parse(payload, frozenset(FakeBrowser.pages))
+
+    def lines(self, request: Request) -> list[dict[str, Any]]:
+        chunks: list[bytes] = []
+        stream(request, chunks.append)
+        return [json.loads(chunk) for chunk in b"".join(chunks).splitlines()]
+
+    def test_streams_where_it_looks_then_the_result(self) -> None:
+        lines = self.lines(self.request("Headlines"))
+        self.assertEqual(
+            [line.get("progress") for line in lines[:-1]],
+            [
+                {"index": 1, "total": 2, "host": "example.com", "state": "reading"},
+                {"index": 1, "total": 2, "host": "example.com", "state": "read"},
+                {"index": 2, "total": 2, "host": "news.example.org", "state": "reading"},
+                {"index": 2, "total": 2, "host": "news.example.org", "state": "read"},
+            ],
+        )
+        self.assertEqual(set(lines[-1]["result"]), {"text", "source", "externalId"})
+        self.assertIn("Headlines today", lines[-1]["result"]["text"])
+
+    def test_a_failed_readback_ends_with_an_in_band_error(self) -> None:
+        lines = self.lines(self.request("Missing phrase"))
+        self.assertEqual(lines[-1], {"error": "REQUEST_OR_VERIFICATION_FAILED", "status": 400})
+        self.assertNotIn("result", lines[-1])
 
 
 if __name__ == "__main__":

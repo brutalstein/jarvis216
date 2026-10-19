@@ -224,4 +224,18 @@ export async function migrate(db: Database): Promise<void> {
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
   });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=10")).rows.length)
+      return;
+    // Measured step and finisher durations: how long work takes on this computer (ETAs).
+    const ddl = `
+      CREATE TABLE step_durations (
+        id bigserial PRIMARY KEY, key text NOT NULL, ms integer NOT NULL CHECK(ms>=0), at bigint NOT NULL
+      );
+      CREATE INDEX step_duration_recency ON step_durations(key, at);
+      INSERT INTO schema_migrations VALUES (10);
+    `;
+    for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
 }

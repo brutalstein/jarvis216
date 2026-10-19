@@ -7,6 +7,7 @@ import hmac
 import json
 import os
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
@@ -113,7 +114,10 @@ async def _read_page(browser: Any, page: PageSpec) -> str:
     return str(data["text"])
 
 
-async def extract(request: Request) -> dict[str, str]:
+Progress = Callable[[dict[str, object]], None]
+
+
+async def extract(request: Request, progress: Progress | None = None) -> dict[str, str]:
     # Lazy import keeps auth/schema checks independent of a browser installation.
     from browser_use import Browser
 
@@ -132,8 +136,15 @@ async def extract(request: Request) -> dict[str, str]:
         async with asyncio.timeout(request.timeout_ms / 1000):
             await browser.start()
             texts: list[str] = []
-            for page in request.pages:
+            total = len(request.pages)
+            for index, page in enumerate(request.pages, 1):
+                # Only the host and position leave the worker: Core narrates where it looks.
+                step = {"index": index, "total": total, "host": urlsplit(page.url).hostname or ""}
+                if progress:
+                    progress({**step, "state": "reading"})
                 texts.append(await _read_page(browser, page))
+                if progress:
+                    progress({**step, "state": "read"})
             return {
                 "text": "\n\n---\n\n".join(texts),
                 "source": "browser-use:dom-readback",
@@ -143,9 +154,26 @@ async def extract(request: Request) -> dict[str, str]:
         await asyncio.wait_for(browser.kill(), timeout=10)
 
 
-def encode(payload: dict[str, str]) -> bytes:
+def encode(payload: dict[str, Any]) -> bytes:
     # Raw UTF-8: ASCII escaping would inflate non-ASCII pages up to 6x past Core's 128 KB cap.
     return json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+
+def stream(request: Request, write: Callable[[bytes], None]) -> None:
+    """NDJSON for Core's live narration: progress lines, then one result or error line.
+
+    The status line is already sent, so failures travel in-band with the status Core maps.
+    """
+
+    def line(payload: dict[str, Any]) -> None:
+        write(encode(payload) + b"\n")
+
+    try:
+        line({"result": asyncio.run(extract(request, lambda step: line({"progress": step})))})
+    except (WorkerError, ValueError):
+        line({"error": "REQUEST_OR_VERIFICATION_FAILED", "status": 400})
+    except Exception:
+        line({"error": "BROWSER_EXECUTION_FAILED", "status": 503})
 
 
 def main() -> None:
@@ -198,6 +226,19 @@ def main() -> None:
                 if not 1 <= size <= 16384 or self.headers.get("Transfer-Encoding"):
                     raise WorkerError("INVALID_BODY")
                 request = Request.parse(json.loads(self.rfile.read(size)), allowed)
+                if "application/x-ndjson" in self.headers.get("Accept", ""):
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+                    self.send_header("Connection", "close")
+                    self.end_headers()
+                    self.close_connection = True
+
+                    def write(data: bytes) -> None:
+                        self.wfile.write(data)
+                        self.wfile.flush()
+
+                    stream(request, write)
+                    return
                 result = asyncio.run(extract(request))
                 self.respond(200, result)
             except (WorkerError, ValueError):

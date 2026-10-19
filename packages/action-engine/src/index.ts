@@ -3,6 +3,7 @@ export * from "./catalog.js";
 export * from "./ground.js";
 export * from "./guards.js";
 export * from "./intent.js";
+export * from "./live.js";
 export * from "./mcp.js";
 export * from "./narrate.js";
 export * from "./news.js";

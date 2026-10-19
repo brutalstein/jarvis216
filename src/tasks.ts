@@ -10,6 +10,7 @@ import {
   type EventType,
   fingerprint,
   invariant,
+  type Progress,
   type Task,
   TaskSpecSchema,
   type TaskState,
@@ -20,6 +21,13 @@ import {
 import type { Database, Sql } from "./database.js";
 
 export type TaskChange = { id: string; status: TaskState };
+export type TaskProgress = Progress & { at: number };
+const bounded = (text: string | undefined, max: number) =>
+  text === undefined ? undefined : text.replace(/\s+/g, " ").trim().slice(0, max) || undefined;
+const count = (value: number | undefined) =>
+  Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 1000
+    ? value
+    : undefined;
 export type Lane = "interactive" | "background";
 export const lanes: readonly Lane[] = ["interactive", "background"];
 // States an external submitter needs to hear about: settled, or waiting on the operator.
@@ -37,6 +45,9 @@ export class TaskService {
   // final state, so waiters react at once instead of polling. In-process only: pollers remain
   // the safety net.
   readonly changes = new EventEmitter().setMaxListeners(100);
+  // "progress" fires with { id, ...TaskProgress } when a running executor reports progress.
+  readonly progress = new EventEmitter().setMaxListeners(100);
+  #progress = new Map<string, TaskProgress>();
   #moved = new WeakMap<Sql, Map<string, TaskState>>();
   constructor(
     public readonly db: Database,
@@ -64,14 +75,41 @@ export class TaskService {
     });
     // The transaction has committed: a failing listener must neither make it look failed nor
     // keep the other listeners from hearing about it.
-    for (const [id, status] of moved)
+    for (const [id, status] of moved) {
+      if (status !== "RUNNING" && status !== "VERIFYING") this.#progress.delete(id);
       for (const listener of this.changes.listeners("change"))
         try {
           (listener as (change: TaskChange) => void)({ id, status });
         } catch {
           process.stderr.write('{"level":"error","code":"TASK_CHANGE_LISTENER_FAILED"}\n');
         }
+    }
     return value;
+  }
+  // In memory only, bounded and cleared when the task leaves RUNNING/VERIFYING.
+  report(id: string, update: Progress): void {
+    const stage = bounded(update.stage, 40);
+    if (!stage) return;
+    const detail = bounded(update.detail, 120);
+    const index = count(update.index);
+    const total = count(update.total);
+    const value: TaskProgress = {
+      stage,
+      ...(detail && { detail }),
+      ...(index !== undefined && { index }),
+      ...(total !== undefined && { total }),
+      at: Date.now(),
+    };
+    this.#progress.set(id, value);
+    for (const listener of this.progress.listeners("progress"))
+      try {
+        (listener as (event: TaskProgress & { id: string }) => void)({ id, ...value });
+      } catch {
+        process.stderr.write('{"level":"error","code":"TASK_PROGRESS_LISTENER_FAILED"}\n');
+      }
+  }
+  progressOf(id: string): TaskProgress | undefined {
+    return this.#progress.get(id);
   }
   async get(id: string, tx: Sql = this.db): Promise<Task> {
     const task = (await tx.query<Task>("SELECT * FROM tasks WHERE id=$1", [id])).rows[0];

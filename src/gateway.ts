@@ -206,7 +206,11 @@ export class ActionGateway {
         });
         let responded = false;
         try {
-          const received = ResultSchema.parse(await executor.execute(claim, combined));
+          const received = ResultSchema.parse(
+            await executor.execute(claim, combined, (update) =>
+              this.tasks.report(claim.id, update),
+            ),
+          );
           responded = true;
           const result = ResultSchema.parse({
             ...received,

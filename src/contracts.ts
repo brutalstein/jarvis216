@@ -174,6 +174,9 @@ export const ResultSchema = z.strictObject({
     .optional(),
 });
 export type ExecutionResult = z.infer<typeof ResultSchema>;
+// Live progress an executor reports while it works: where it looks and how far it got. Never
+// persisted, never a result; Core narrates it and shows it on plan cards.
+export type Progress = { stage: string; detail?: string; index?: number; total?: number };
 export interface Executor {
   id: string;
   capability: Capability;
@@ -188,7 +191,11 @@ export interface Executor {
   trustedForPrivate?: boolean;
   // The executor observes the outcome itself, so an unmet result is a definite failure.
   outcomeObservable?: boolean;
-  execute(task: Task, signal: AbortSignal): Promise<ExecutionResult>;
+  execute(
+    task: Task,
+    signal: AbortSignal,
+    progress?: (update: Progress) => void,
+  ): Promise<ExecutionResult>;
 }
 export interface Task {
   id: string;

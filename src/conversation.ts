@@ -4,6 +4,7 @@ import {
   isCorrection,
   type Lang,
   narrate,
+  narrateLive,
   readIntent,
   readVoiceCommand,
   repairInstructions,
@@ -128,6 +129,8 @@ export function conversationProviders(ids: string[]): string[] {
 }
 
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
+// Plans expected to finish within this are waited for, so the reply can say how they ended.
+const quickPlanMs = 3000;
 const onScreen = { tr: "Ekranda, efendim.", en: "It's on the screen, sir." };
 
 export class ConversationService {
@@ -448,11 +451,24 @@ export class ConversationService {
     );
   }
 
-  // Template speech for a proposed plan: a quick LOW-only outcome is narrated in the reply itself.
+  // Template speech for a proposed plan. A quick plan's outcome is spoken in the reply itself;
+  // a slow one is acknowledged at once (what JARVIS is doing, where it looks, roughly how long)
+  // and its progress and outcome follow as announcements while the conversation goes on.
   async #planSay(proposed: PlanView, lang: Lang): Promise<string> {
     const plans = this.options.plans;
     if (!plans) return narrate({ type: "plan-uncertain" }, lang);
-    const view = proposed.needsApproval ? proposed : await plans.waitSettled(proposed.id, 5000);
+    const expected = proposed.needsApproval ? undefined : plans.expectedMs(proposed.steps);
+    if (expected !== undefined && expected > quickPlanMs)
+      return narrateLive(
+        { type: "working", steps: proposed.steps, etaMs: expected, invite: expected >= 15_000 },
+        lang,
+      );
+    const view = proposed.needsApproval
+      ? proposed
+      : await plans.waitSettled(
+          proposed.id,
+          expected === undefined ? 5000 : Math.min(5000, Math.max(1500, expected * 2)),
+        );
     const say = narrate(
       { type: "proposed", goal: view.goal, needsApproval: view.needsApproval },
       lang,

@@ -9,6 +9,7 @@ import {
   type Evidence,
   type Lang,
   narrate,
+  narrateLive,
   type Panel,
   readBrief,
   readIntent,
@@ -24,7 +25,9 @@ import {
   type TaskState,
 } from "./contracts.js";
 import type { Sql } from "./database.js";
+import { type Durations, durationKey, finisherOf } from "./eta.js";
 import { planApprovalMs } from "./gateway.js";
+import type { Announcement } from "./narrator.js";
 import type { PermissionMode, PermissionService } from "./permissions.js";
 import type { TaskService } from "./tasks.js";
 import { runText } from "./text-task.js";
@@ -38,7 +41,22 @@ export type PlanStatus =
   | "RECOVERY_REQUIRED";
 export type PlanPanel = Panel | { type: "candidates"; planId: string; items: string[] };
 export type WorkingMemory = {
-  active: { goal: string; status: PlanStatus; actions: string[] }[];
+  active: {
+    goal: string;
+    status: PlanStatus;
+    actions: string[];
+    // Where a running plan is: its step, what that step reported, time spent and left.
+    progress?: {
+      step: number;
+      steps: number;
+      action: string;
+      args: Record<string, unknown>;
+      detail?: string;
+      elapsedMs: number;
+      remainingMs?: number;
+      finishing?: boolean;
+    };
+  }[];
   last?: { goal: string; status: PlanStatus; say: string | null; agoMs: number };
   entities: string[];
   asked?: string;
@@ -64,6 +82,24 @@ export type PlanView = {
   }[];
   panels: PlanPanel[];
   say?: string;
+  // A running plan's live state: the step it is on, what that step reported (where it looks),
+  // and when it is expected to end, from measured durations. Timestamps keep the view stable.
+  progress?: PlanProgress;
+};
+export type PlanProgress = {
+  step: number;
+  steps: number;
+  action: string;
+  args: Record<string, unknown>;
+  stage?: string;
+  detail?: string;
+  index?: number;
+  total?: number;
+  startedAt: number;
+  stepStartedAt?: number;
+  etaAt?: number;
+  // Every step is done; JARVIS is composing the spoken result.
+  finishing?: boolean;
 };
 type Outcome = { say: string; candidates?: { index: number; items: string[] } };
 type PlanRow = {
@@ -122,6 +158,9 @@ function jsonObject(text: string): Record<string, unknown> | undefined {
 export class PlanService extends EventEmitter {
   #seen = new Map<string, string>();
   #finishing = new Set<string>();
+  // When Core first saw each step task running, and when each plan's finisher started.
+  #stepStarted = new Map<string, number>();
+  #finishStarted = new Map<string, number>();
   #refreshing: Promise<void> | undefined;
   #again = false;
   #creating = Promise.resolve();
@@ -143,6 +182,8 @@ export class PlanService extends EventEmitter {
       onChoice?: (target: string, candidates: string[], chosen: string) => void;
       // Text summary of the current screen for a replan (window and element names).
       screen?: () => Promise<string>;
+      // Measured durations: learned here, used for ETAs and pacing the spoken reply.
+      durations?: Durations;
     },
   ) {
     super();
@@ -189,13 +230,33 @@ export class PlanService extends EventEmitter {
         [now - 15 * 60_000],
       )
     ).rows;
-    const active = recent
-      .filter((plan) => !ended.has(plan.status))
-      .map((plan) => ({
-        goal: plan.goal,
-        status: plan.status,
-        actions: plan.steps.map((step) => step.action),
-      }));
+    const active = await Promise.all(
+      recent
+        .filter((plan) => !ended.has(plan.status))
+        .map(async (plan) => {
+          const progress =
+            plan.status === "RUNNING"
+              ? (await this.get(plan.id).catch(() => undefined))?.progress
+              : undefined;
+          return {
+            goal: plan.goal,
+            status: plan.status,
+            actions: plan.steps.map((step) => step.action),
+            ...(progress && {
+              progress: {
+                step: progress.step,
+                steps: progress.steps,
+                action: progress.action,
+                args: progress.args,
+                ...(progress.detail && { detail: progress.detail }),
+                elapsedMs: now - progress.startedAt,
+                ...(progress.etaAt !== undefined && { remainingMs: progress.etaAt - now }),
+                ...(progress.finishing && { finishing: true }),
+              },
+            }),
+          };
+        }),
+    );
     const last = recent.find((plan) => ended.has(plan.status) && plan.goal !== "[deleted]");
     const entities = [
       ...new Set(
@@ -233,6 +294,19 @@ export class PlanService extends EventEmitter {
   async statusSay(lang: Lang): Promise<string> {
     const memory = await this.workingMemory();
     const [current] = memory.active;
+    const progress = current?.progress;
+    if (current && progress && !progress.finishing)
+      return narrateLive(
+        {
+          type: "status",
+          goal: current.goal,
+          step: { action: progress.action, args: progress.args },
+          ...(progress.detail && { detail: progress.detail }),
+          ...(progress.remainingMs !== undefined && { remainingMs: progress.remainingMs }),
+        },
+        lang,
+      );
+    if (current && progress?.finishing) return narrateLive({ type: "composing" }, lang);
     if (current)
       return narrate(
         {
@@ -248,6 +322,13 @@ export class PlanService extends EventEmitter {
   // ask: the plan waits for a tap; allow: it runs; deny: it is refused.
   modeOf(step: Pick<CompiledStep, "action" | "risk">): PermissionMode {
     return this.options.permissions?.mode(step.action) ?? (step.risk === "LOW" ? "allow" : "ask");
+  }
+
+  // How long this plan is expected to take, end to end, from what Core measured.
+  expectedMs(
+    steps: readonly { action: string; args: Record<string, unknown> }[],
+  ): number | undefined {
+    return this.options.durations?.plan(steps);
   }
 
   propose(input: {
@@ -431,9 +512,16 @@ export class PlanService extends EventEmitter {
     // Step transitions refresh plans at once; the poll covers expiries and announcements.
     const onChange = () => void this.refresh().catch(failed);
     this.options.tasks.changes.on("change", onChange);
-    signal.addEventListener("abort", () => this.options.tasks.changes.off("change", onChange), {
-      once: true,
-    });
+    // A step reporting where it looks updates its plan card and narration at once.
+    this.options.tasks.progress.on("progress", onChange);
+    signal.addEventListener(
+      "abort",
+      () => {
+        this.options.tasks.changes.off("change", onChange);
+        this.options.tasks.progress.off("progress", onChange);
+      },
+      { once: true },
+    );
     void (async () => {
       while (!signal.aborted) {
         await this.refresh().catch(failed);
@@ -612,6 +700,7 @@ export class PlanService extends EventEmitter {
       });
     const candidates = plan.outcome?.candidates;
     if (candidates) panels.push({ type: "candidates", planId: plan.id, items: candidates.items });
+    const progress = plan.status === "RUNNING" ? this.#progress(plan, tasks) : undefined;
     return {
       id: plan.id,
       goal: plan.goal,
@@ -624,7 +713,72 @@ export class PlanService extends EventEmitter {
       steps,
       panels,
       ...(plan.outcome?.say && { say: plan.outcome.say }),
+      ...(progress && { progress }),
     };
+  }
+
+  #progress(plan: PlanRow, tasks: (StepTask | undefined)[]): PlanProgress | undefined {
+    const durations = this.options.durations;
+    const states = tasks.map((task) => task?.status);
+    const finishing = states.length > 0 && states.every((state) => state === "COMPLETED");
+    let index = states.findIndex((state) => state === "RUNNING" || state === "VERIFYING");
+    if (index < 0) index = states.findIndex((state) => state !== "COMPLETED");
+    if (index < 0) index = plan.steps.length - 1;
+    const step = plan.steps[index];
+    if (!step) return undefined;
+    const task = tasks[index];
+    const reported = task && !finishing ? this.options.tasks.progressOf(task.id) : undefined;
+    const stepStartedAt = task ? this.#stepStarted.get(task.id) : undefined;
+    const finishStartedAt = this.#finishStarted.get(plan.id);
+    const finisher = durations?.finisher(finisherOf(plan.steps)) ?? 0;
+    const later = plan.steps
+      .slice(index + 1)
+      .reduce((sum, s) => sum + (durations?.step(s) ?? 0), 0);
+    const etaAt = !durations
+      ? undefined
+      : finishing
+        ? finishStartedAt !== undefined
+          ? finishStartedAt + finisher
+          : undefined
+        : stepStartedAt !== undefined
+          ? stepStartedAt + durations.step(step) + later + finisher
+          : undefined;
+    return {
+      step: index + 1,
+      steps: plan.steps.length,
+      action: step.action,
+      args: step.args,
+      ...(reported && {
+        stage: reported.stage,
+        ...(reported.detail && { detail: reported.detail }),
+        ...(reported.index !== undefined && { index: reported.index }),
+        ...(reported.total !== undefined && { total: reported.total }),
+      }),
+      startedAt: Number(plan.approved_at ?? plan.created_at),
+      ...(stepStartedAt !== undefined && !finishing && { stepStartedAt }),
+      ...(etaAt !== undefined && { etaAt: Math.round(etaAt) }),
+      ...(finishing && { finishing: true }),
+    };
+  }
+
+  // Step durations as Core observes them: first seen running to completed.
+  #time(plan: PlanRow, tasks: (StepTask | undefined)[]): void {
+    const now = Date.now();
+    tasks.forEach((task, index) => {
+      if (!task) return;
+      const started = this.#stepStarted.get(task.id);
+      if (task.status === "RUNNING" || task.status === "VERIFYING") {
+        if (started === undefined) this.#stepStarted.set(task.id, now);
+        return;
+      }
+      if (started === undefined) return;
+      this.#stepStarted.delete(task.id);
+      const step = plan.steps[index];
+      if (task.status === "COMPLETED" && step) {
+        const { key, units } = durationKey(step);
+        this.options.durations?.record(key, (now - started) / units);
+      }
+    });
   }
 
   // Emits the view when it changed since it was last emitted.
@@ -657,7 +811,11 @@ export class PlanService extends EventEmitter {
         plan.status,
       ],
     );
-    if (updated.rows.length) await this.#publish(plan.id);
+    if (updated.rows.length) {
+      for (const taskId of plan.task_ids) this.#stepStarted.delete(taskId);
+      this.#finishStarted.delete(plan.id);
+      await this.#publish(plan.id);
+    }
     return updated.rows.length > 0;
   }
 
@@ -689,6 +847,7 @@ export class PlanService extends EventEmitter {
         continue;
       }
       const tasks = await this.#stepTasks(plan);
+      this.#time(plan, tasks);
       const states = tasks.map((task) => task?.status);
       const say = (type: "plan-uncertain" | "plan-failed") => ({
         say: narrate({ type }, plan.lang),
@@ -761,6 +920,20 @@ export class PlanService extends EventEmitter {
   }
 
   async #finish(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<void> {
+    const finisher = finisherOf(plan.steps);
+    if (!finisher) {
+      await this.#compose(plan, tasks);
+      return;
+    }
+    const started = Date.now();
+    this.#finishStarted.set(plan.id, started);
+    await this.#publish(plan.id);
+    // Only a spoken result a model composed is a finisher run worth learning from.
+    if (await this.#compose(plan, tasks))
+      this.options.durations?.record(`finish:${finisher}`, Date.now() - started);
+  }
+
+  async #compose(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<boolean> {
     const { lang, steps } = plan;
     const news = steps.findIndex((step) => step.action === "news.brief");
     const describe = steps.findIndex((step) => step.action === "screen.describe");
@@ -772,7 +945,7 @@ export class PlanService extends EventEmitter {
         (brief === null ? null : readBrief(brief)) ??
         narrate({ type: "news-fallback", count: items.length }, lang);
       await this.#settle(plan, "COMPLETED", { say });
-      return;
+      return true;
     }
     if (describe >= 0) {
       const question = steps[describe]?.args.question;
@@ -788,7 +961,7 @@ export class PlanService extends EventEmitter {
       await this.#settle(plan, say === null ? "FAILED" : "COMPLETED", {
         say: say ?? narrate({ type: "plan-failed" }, lang),
       });
-      return;
+      return true;
     }
     // An agent or page read came back with text: say what it found, not just "done".
     const results = tasks.flatMap((task, index) =>
@@ -812,7 +985,7 @@ export class PlanService extends EventEmitter {
       const say =
         (brief === null ? null : readBrief(brief)) ?? narrate({ type: "plan-done" }, lang);
       await this.#settle(plan, "COMPLETED", { say });
-      return;
+      return true;
     }
     const [only] = steps;
     const say =
@@ -820,6 +993,7 @@ export class PlanService extends EventEmitter {
         ? narrate({ type: "step-done", action: only.action, args: only.args }, lang)
         : narrate({ type: "plan-done" }, lang);
     await this.#settle(plan, "COMPLETED", { say });
+    return false;
   }
 
   async #fail(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<void> {
@@ -880,14 +1054,15 @@ export class PlanService extends EventEmitter {
           { approved: false, replanned: true, originCreatedAt: Number(plan.created_at) },
         );
         if (next.needsApproval)
-          this.emit("announce", {
-            text: narrate({ type: "proposed", goal: next.goal, needsApproval: true }, plan.lang),
-            lang: plan.lang,
-          });
+          this.#outcome(
+            narrate({ type: "proposed", goal: next.goal, needsApproval: true }, plan.lang),
+            plan.lang,
+            next.id,
+          );
       } catch {
-        this.emit("announce", { text: failedSay, lang: plan.lang });
+        this.#outcome(failedSay, plan.lang, plan.id);
       }
-    } else this.emit("announce", { text: failedSay, lang: plan.lang });
+    } else this.#outcome(failedSay, plan.lang, plan.id);
   }
 
   // Screen text served its one question or replan: drop it from the prompt and step records,
@@ -921,11 +1096,19 @@ export class PlanService extends EventEmitter {
   // Each ended plan is spoken once, after the turn had its chance to narrate it.
   async #announce(): Promise<void> {
     const now = Date.now();
-    const due = await this.options.tasks.db.query<{ lang: Lang; outcome: Outcome | null }>(
-      "UPDATE plans SET narrated=true WHERE narrated=false AND status IN ('COMPLETED','FAILED','CANCELLED','RECOVERY_REQUIRED') AND created_at<=$1 AND created_at>$2 RETURNING lang,outcome",
+    const due = await this.options.tasks.db.query<{
+      id: string;
+      lang: Lang;
+      outcome: Outcome | null;
+    }>(
+      "UPDATE plans SET narrated=true WHERE narrated=false AND status IN ('COMPLETED','FAILED','CANCELLED','RECOVERY_REQUIRED') AND created_at<=$1 AND created_at>$2 RETURNING id,lang,outcome",
       [now - replyWaitMs, now - 600_000],
     );
-    for (const { lang, outcome } of due.rows)
-      if (outcome?.say) this.emit("announce", { text: outcome.say, lang });
+    for (const { id, lang, outcome } of due.rows)
+      if (outcome?.say) this.#outcome(outcome.say, lang, id);
+  }
+  #outcome(text: string, lang: Lang, planId: string): void {
+    const announcement: Announcement = { text, lang, kind: "outcome", planId };
+    this.emit("announce", announcement);
   }
 }
