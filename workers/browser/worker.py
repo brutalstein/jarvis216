@@ -176,20 +176,10 @@ def stream(request: Request, write: Callable[[bytes], None]) -> None:
         line({"error": "BROWSER_EXECUTION_FAILED", "status": 503})
 
 
-def main() -> None:
-    token = os.environ.get("BROWSER_WORKER_TOKEN", "")
-    if len(token) < 32 or os.environ.get("BROWSER_EGRESS_VERIFIED") != "true":
-        raise SystemExit("Strong worker token and verified network egress isolation required")
-    raw_allowlist = json.loads(os.environ.get("BROWSER_ALLOWED_URLS", "[]"))
-    if (
-        not isinstance(raw_allowlist, list)
-        or not raw_allowlist
-        or not all(isinstance(url, str) for url in raw_allowlist)
-    ):
-        raise SystemExit(
-            "BROWSER_ALLOWED_URLS must be a nonempty JSON array of exact public HTTPS URLs"
-        )
-    allowed = frozenset(raw_allowlist)
+def build_server(
+    token: str, allowed: frozenset[str], host: str = "127.0.0.1", port: int = 8765
+) -> ThreadingHTTPServer:
+    """The authenticated extract endpoint; port 0 picks a free port (tests)."""
     # Immediate backpressure. No unbounded browser queue or shared profile.
     slot = threading.BoundedSemaphore(1)
 
@@ -249,9 +239,27 @@ def main() -> None:
             finally:
                 slot.release()
 
-    host = "0.0.0.0" if os.environ.get("JARVIS_CONTAINER") == "true" else "127.0.0.1"
-    server = ThreadingHTTPServer((host, 8765), Handler)
+    server = ThreadingHTTPServer((host, port), Handler)
     server.request_queue_size = 4
+    return server
+
+
+def main() -> None:
+    token = os.environ.get("BROWSER_WORKER_TOKEN", "")
+    if len(token) < 32 or os.environ.get("BROWSER_EGRESS_VERIFIED") != "true":
+        raise SystemExit("Strong worker token and verified network egress isolation required")
+    raw_allowlist = json.loads(os.environ.get("BROWSER_ALLOWED_URLS", "[]"))
+    if (
+        not isinstance(raw_allowlist, list)
+        or not raw_allowlist
+        or not all(isinstance(url, str) for url in raw_allowlist)
+    ):
+        raise SystemExit(
+            "BROWSER_ALLOWED_URLS must be a nonempty JSON array of exact public HTTPS URLs"
+        )
+    allowed = frozenset(raw_allowlist)
+    host = "0.0.0.0" if os.environ.get("JARVIS_CONTAINER") == "true" else "127.0.0.1"
+    server = build_server(token, allowed, host)
     try:
         server.serve_forever()
     finally:

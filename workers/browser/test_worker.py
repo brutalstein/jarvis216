@@ -1,12 +1,15 @@
 import json
 import sys
+import threading
 import types
 import unittest
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from worker import Request, WorkerError, authorize, encode, stream
+from worker import Request, WorkerError, authorize, build_server, encode, stream
 
 # Shared with tests/browser-contract.test.ts: both sides must accept the same wire shapes.
 CONTRACT = json.loads(
@@ -156,6 +159,102 @@ class StreamTests(unittest.TestCase):
         lines = self.lines(self.request("Missing phrase"))
         self.assertEqual(lines[-1], {"error": "REQUEST_OR_VERIFICATION_FAILED", "status": 400})
         self.assertNotIn("result", lines[-1])
+
+
+class ServerTests(unittest.TestCase):
+    """The real HTTP server on a free port, as Core reaches it."""
+
+    token = "t" * 40
+
+    def setUp(self) -> None:
+        module = types.ModuleType("browser_use")
+        module.Browser = FakeBrowser  # type: ignore[attr-defined]
+        sys.modules["browser_use"] = module
+        self.addCleanup(sys.modules.pop, "browser_use", None)
+        FakeBrowser.pages = {"https://example.com/": "Example Domain"}
+        self.server = build_server(self.token, frozenset(FakeBrowser.pages), "127.0.0.1", 0)
+        thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+        self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
+
+    def post(
+        self, body: object, headers: dict[str, str] | None = None, path: str = "/v1/extract"
+    ) -> tuple[int, str, str]:
+        data = json.dumps(body).encode()
+        request = urllib.request.Request(
+            self.base + path,
+            data=data,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+                **(headers or {}),
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                return response.status, response.headers["Content-Type"], response.read().decode()
+        except urllib.error.HTTPError as error:
+            return error.code, error.headers["Content-Type"], error.read().decode()
+
+    def payload(self, text: str = "Example") -> dict[str, object]:
+        return {
+            "taskId": str(uuid4()),
+            "url": "https://example.com/",
+            "expectedText": text,
+            "timeoutMs": 5000,
+        }
+
+    def test_health_is_open_and_extract_needs_the_token(self) -> None:
+        with urllib.request.urlopen(self.base + "/healthz", timeout=5) as response:
+            self.assertEqual(response.status, 200)
+        status, _, body = self.post(self.payload(), {"Authorization": "Bearer wrong"})
+        self.assertEqual((status, json.loads(body)), (401, {"error": "UNAUTHORIZED"}))
+        self.assertEqual(self.post(self.payload(), path="/v1/other")[0], 404)
+
+    def test_reads_the_page_as_json_or_streams_it_as_ndjson(self) -> None:
+        status, kind, body = self.post(self.payload())
+        self.assertEqual(status, 200)
+        self.assertIn("application/json", kind)
+        self.assertIn("Example Domain", json.loads(body)["text"])
+        status, kind, body = self.post(self.payload(), {"Accept": "application/x-ndjson"})
+        lines = [json.loads(line) for line in body.splitlines()]
+        self.assertEqual((status, "application/x-ndjson" in kind), (200, True))
+        self.assertEqual(
+            [line.get("progress", {}).get("state") for line in lines[:-1]], ["reading", "read"]
+        )
+        self.assertIn("result", lines[-1])
+
+    def test_refuses_invalid_requests_and_failed_readback(self) -> None:
+        bad = self.payload()
+        bad["url"] = "https://example.com/?x=1"
+        self.assertEqual(self.post(bad)[0], 400)
+        self.assertEqual(self.post(self.payload("not on the page"))[0], 400)
+        status, _, body = self.post(self.payload(), {"Transfer-Encoding": "chunked"})
+        self.assertEqual(status, 400)
+
+    def test_one_browser_at_a_time(self) -> None:
+        entered, release = threading.Event(), threading.Event()
+        navigate = FakeBrowser.navigate_to
+
+        async def slow(browser: FakeBrowser, url: str) -> None:
+            entered.set()
+            await __import__("asyncio").to_thread(release.wait, 10)
+            await navigate(browser, url)
+
+        FakeBrowser.navigate_to = slow  # type: ignore[method-assign]
+        self.addCleanup(setattr, FakeBrowser, "navigate_to", navigate)
+        first: list[int] = []
+        thread = threading.Thread(target=lambda: first.append(self.post(self.payload())[0]))
+        thread.start()
+        self.assertTrue(entered.wait(10))
+        status, _, body = self.post(self.payload())
+        self.assertEqual((status, json.loads(body)), (429, {"error": "BROWSER_BUSY"}))
+        release.set()
+        thread.join(10)
+        self.assertEqual(first, [200])
 
 
 if __name__ == "__main__":

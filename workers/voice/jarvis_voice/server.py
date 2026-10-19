@@ -12,7 +12,7 @@ from typing import Any
 from aiohttp import web
 
 from jarvis_voice.brain import Brain
-from jarvis_voice.stt_gated import Enrollment
+from jarvis_voice.enrollment import Enrollment
 
 
 def create_app(token: str, enrollment: Enrollment) -> web.Application:

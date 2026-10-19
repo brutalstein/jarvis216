@@ -11,8 +11,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from pipecat.frames.frames import TTSSpeakFrame
 
 from jarvis_voice.brain import Brain
+from jarvis_voice.enrollment import Enrollment
 from jarvis_voice.server import create_app
-from jarvis_voice.stt_gated import Enrollment
 
 
 class FakeConnection:
