@@ -52,7 +52,14 @@ export async function streamPlans(
                 typeof value?.text === "string" &&
                 ["tr", "en"].includes(value.lang)
               )
-                receive({ type: "announce", text: value.text.slice(0, 600), lang: value.lang });
+                receive({
+                  type: "announce",
+                  text: value.text.slice(0, 600),
+                  lang: value.lang,
+                  kind: value.kind === "progress" ? "progress" : "outcome",
+                  ...(typeof value.planId === "string" &&
+                    /^[0-9a-f-]{36}$/.test(value.planId) && { planId: value.planId }),
+                });
             } catch {
               /* A bad frame cannot stop later plan updates. */
             }

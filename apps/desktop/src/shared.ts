@@ -9,7 +9,14 @@ export type UiEvent =
   | { type: "display"; blocks: Block[] }
   | { type: "listening"; value: boolean }
   | { type: "plan"; plan: PlanView }
-  | { type: "announce"; text: string; lang: "tr" | "en" }
+  | {
+      type: "announce";
+      text: string;
+      lang: "tr" | "en";
+      // progress: may be dropped or replaced; outcome: always spoken.
+      kind: "progress" | "outcome";
+      planId?: string;
+    }
   | { type: "error"; code: string };
 export type Voice = { url: string; token: string; test?: boolean };
 export type PermissionMode = "ask" | "allow" | "deny";

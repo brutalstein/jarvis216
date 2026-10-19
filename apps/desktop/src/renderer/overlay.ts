@@ -18,5 +18,6 @@ window.jarvis.onEvent((event: UiEvent) => {
     caption(event.role === "user" ? "user" : "jarvis", event.text);
   else if (event.type === "display" && Array.isArray(event.blocks)) show(event.blocks);
   else if (event.type === "plan") showPlan(event.plan);
-  else if (event.type === "announce" && event.text.trim()) caption("jarvis", event.text);
+  else if (event.type === "announce" && event.kind === "outcome" && event.text.trim())
+    caption("jarvis", event.text);
 });

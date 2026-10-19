@@ -15,6 +15,39 @@ const states: Record<string, string> = {
   VERIFIED: "Tamamlandı",
   BLOCKED: "Durduruldu",
 };
+type Progress = NonNullable<PlanView["progress"]>;
+const seconds = (ms: number) => Math.max(0, Math.round(ms / 1000));
+// "bbc.com okunuyor · 2/3 · 12 sn · ~8 sn kaldı": what Core reported, with local time.
+export function liveText(progress: Progress, now: number): string {
+  const position =
+    progress.total !== undefined && progress.total > 1 && progress.index !== undefined
+      ? ` · ${progress.index}/${progress.total}`
+      : "";
+  const what = progress.finishing
+    ? "Sonuçları derliyorum"
+    : progress.detail && progress.stage === "opening"
+      ? `${progress.detail} açılıyor${position}`
+      : progress.detail && progress.stage === "read"
+        ? `${progress.detail} okundu${position}`
+        : progress.detail
+          ? `${progress.detail} okunuyor${position}`
+          : `${progress.step}/${progress.steps}. adım · ${progress.action}`;
+  const left =
+    progress.etaAt === undefined
+      ? ""
+      : progress.etaAt > now
+        ? ` · ~${seconds(progress.etaAt - now)} sn kaldı`
+        : " · beklenenden uzun sürüyor";
+  return `${what} · ${seconds(now - progress.startedAt)} sn${left}`;
+}
+const share = (progress: Progress, now: number) =>
+  progress.etaAt === undefined || progress.etaAt <= progress.startedAt
+    ? undefined
+    : Math.min(
+        95,
+        Math.round(((now - progress.startedAt) / (progress.etaAt - progress.startedAt)) * 100),
+      );
+
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text = "", className = "") {
   const element = document.createElement(tag);
   element.textContent = text;
@@ -70,6 +103,27 @@ export function hud(root: HTMLElement, compact = false) {
       node("p", states[plan.status] ?? plan.status, "plan-status"),
       node("h2", plan.goal),
     );
+    const progress = plan.status === "RUNNING" ? plan.progress : undefined;
+    if (progress) {
+      const live = node("p", liveText(progress, Date.now()), "plan-live");
+      live.dataset.live = plan.id;
+      live.setAttribute("role", "status");
+      card.append(live);
+      const value = share(progress, Date.now());
+      if (value !== undefined) {
+        const meter = node("div", "", "plan-meter");
+        meter.dataset.meter = plan.id;
+        meter.setAttribute("role", "progressbar");
+        meter.setAttribute("aria-label", "Tahmini ilerleme");
+        meter.setAttribute("aria-valuemin", "0");
+        meter.setAttribute("aria-valuemax", "100");
+        meter.setAttribute("aria-valuenow", String(value));
+        const fill = node("span", "", "plan-meter-fill");
+        fill.style.width = `${value}%`;
+        meter.append(fill);
+        card.append(meter);
+      }
+    }
     const steps = node("ol", "", "progress-rail");
     for (const step of plan.steps) {
       const row = node("li");
@@ -200,6 +254,22 @@ export function hud(root: HTMLElement, compact = false) {
     const latest = [...plans.values()].reverse();
     stage.replaceChildren(...(compact ? latest.slice(0, 1) : latest).map(render));
   }
+  // Time spent and left move every second between Core's updates; only the live line changes.
+  setInterval(() => {
+    const now = Date.now();
+    for (const live of stage.querySelectorAll<HTMLElement>("[data-live]")) {
+      const progress = plans.get(live.dataset.live ?? "")?.progress;
+      if (progress) live.textContent = liveText(progress, now);
+    }
+    for (const meter of stage.querySelectorAll<HTMLElement>("[data-meter]")) {
+      const progress = plans.get(meter.dataset.meter ?? "")?.progress;
+      const value = progress && share(progress, now);
+      const fill = meter.firstElementChild as HTMLElement | null;
+      if (value === undefined || !fill) continue;
+      meter.setAttribute("aria-valuenow", String(value));
+      fill.style.width = `${value}%`;
+    }
+  }, 1000);
   if (!compact)
     document.addEventListener("keydown", (event) => {
       if (

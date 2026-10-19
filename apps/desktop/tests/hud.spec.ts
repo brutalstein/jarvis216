@@ -260,3 +260,75 @@ test("authenticated SSE delivers plans; arbitrary external URLs cannot open", as
     await run.close();
   }
 });
+
+test("a running plan shows where it looks, time spent and left; progress is not a caption", async () => {
+  const run = await launch();
+  try {
+    const now = Date.now();
+    const progress: NonNullable<PlanView["progress"]> = {
+      step: 1,
+      steps: 1,
+      action: "browser.read_many",
+      args: {},
+      stage: "reading",
+      detail: "bbc.com",
+      index: 2,
+      total: 3,
+      startedAt: now - 12_000,
+      stepStartedAt: now - 11_000,
+      etaAt: now + 20_000,
+    };
+    const research: PlanView = {
+      ...plan,
+      id: "live-plan",
+      goal: "Haberlere bak",
+      kind: "integration",
+      status: "RUNNING",
+      needsApproval: false,
+      steps: [
+        {
+          action: "browser.read_many",
+          args: { pages: [{ url: "https://bbc.com/", expectedText: "BBC" }] },
+          risk: "LOW",
+          mode: "allow",
+          status: "RUNNING",
+        },
+      ],
+      progress,
+    };
+    await emit(run.app, { type: "plan", plan: research });
+    const live = run.page.locator("[data-live=live-plan]");
+    await expect(live).toHaveText(/^bbc\.com okunuyor · 2\/3 · 1[23] sn · ~(19|20) sn kaldı$/);
+    await expect(run.page.getByRole("progressbar", { name: "Tahmini ilerleme" })).toHaveAttribute(
+      "aria-valuenow",
+      /^(3[5-9]|4[0-2])$/,
+    );
+    // The line keeps counting between Core's updates.
+    await expect(live).toHaveText(/ 1[4-6] sn · /, { timeout: 4000 });
+    await run.page.waitForTimeout(300);
+    await run.page.screenshot({ path: `${shots}/live-progress.png` });
+    await emit(run.app, {
+      type: "announce",
+      text: "Şimdi bbc.com sayfasını okuyorum; 1 sayfa daha var.",
+      lang: "tr",
+      kind: "progress",
+      planId: "live-plan",
+    });
+    await expect(run.page.locator("[data-caption]")).not.toHaveText(/bbc\.com/);
+    await emit(run.app, {
+      type: "plan",
+      plan: {
+        ...research,
+        progress: { ...progress, finishing: true, etaAt: now + 30_000 },
+      },
+    });
+    await expect(live).toHaveText(/^Sonuçları derliyorum · /);
+    await emit(run.app, {
+      type: "plan",
+      plan: { ...research, status: "COMPLETED", progress: undefined },
+    });
+    await expect(run.page.locator("[data-live]")).toHaveCount(0);
+  } finally {
+    await run.close();
+  }
+});

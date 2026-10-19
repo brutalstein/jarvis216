@@ -45,7 +45,12 @@ function receivePlan(event: UiEvent) {
             authorization: `Bearer ${connection.token}`,
             "content-type": "application/json",
           },
-          body: JSON.stringify({ text: event.text, lang: event.lang }),
+          body: JSON.stringify({
+            text: event.text,
+            lang: event.lang,
+            kind: event.kind,
+            ...(event.planId && { planId: event.planId }),
+          }),
           signal: AbortSignal.timeout(5000),
         });
       })

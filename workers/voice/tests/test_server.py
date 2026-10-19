@@ -89,6 +89,9 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
             {"text": 1, "lang": "tr"},
             {"text": "Done.", "lang": "de"},
             {"text": "Done.", "lang": []},
+            {"text": "Done.", "lang": "tr", "kind": "chatter"},
+            {"text": "Done.", "lang": "tr", "planId": 7},
+            {"text": "Done.", "lang": "tr", "planId": "x" * 65},
         ]:
             with self.subTest(data=data):
                 response = await self.client.post(

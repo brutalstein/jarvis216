@@ -53,6 +53,11 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                 or not 1 <= len(data["text"]) <= 600
                 or not data["text"].strip()
                 or data.get("lang") not in ("tr", "en")
+                or data.get("kind", "outcome") not in ("progress", "outcome")
+                or not (
+                    data.get("planId") is None
+                    or (isinstance(data["planId"], str) and 1 <= len(data["planId"]) <= 64)
+                )
             ):
                 raise ValueError("INVALID_ANNOUNCEMENT")
         except (TypeError, ValueError):
@@ -60,7 +65,9 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
         if brain is None:
             return web.json_response({"error": "NO_SESSION"}, status=409)
         try:
-            await brain.announce(data["text"], data["lang"])
+            await brain.announce(
+                data["text"], data["lang"], data.get("kind", "outcome"), data.get("planId")
+            )
         except Exception:
             return web.json_response({"error": "ANNOUNCEMENT_FAILED"}, status=503)
         return web.Response(status=204)
@@ -224,7 +231,12 @@ async def run_session(
             ],
         )
     )
-    brain = Brain(core, rtvi.send_server_message, enrollment.gate.enrolled)
+    brain = Brain(
+        core,
+        rtvi.send_server_message,
+        enrollment.gate.enrolled,
+        filler_s=float(os.environ.get("VOICE_FILLER_SECONDS", "1.2")),
+    )
     pipeline = Pipeline(
         [
             transport.input(),

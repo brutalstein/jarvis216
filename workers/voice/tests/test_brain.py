@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pipecat.frames.frames import (
@@ -52,7 +53,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_announcement_skips_the_operator_turn_then_resumes(self) -> None:
         send = AsyncMock()
-        brain = Brain(FakeCore(), send, lambda: True)
+        brain = Brain(FakeCore(), send, lambda: True, hold_s=0)
         with patch.object(brain, "push_frame", new_callable=AsyncMock) as push:
             await brain.process_frame(UserStartedSpeakingFrame(), FrameDirection.DOWNSTREAM)
             await brain.announce("Done.", "en")
@@ -94,7 +95,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         async def send(message: dict) -> None:
             messages.append(message)
 
-        brain = Brain(core, send, lambda: True)
+        brain = Brain(core, send, lambda: True, filler_s=0)
         frames = []
         for text in texts:
             frames.extend([transcript(text), UserStoppedSpeakingFrame(), SleepFrame(0.02)])
@@ -122,7 +123,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_follow_up_false_address_stays_silent(self) -> None:
         core = FakeCore(addressed=False)
-        brain = Brain(core, self.discard, lambda: True)
+        brain = Brain(core, self.discard, lambda: True, filler_s=0)
         brain.window.open()
         down, _ = await run_test(
             brain,
@@ -133,7 +134,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_follow_up_needs_a_voice_print(self) -> None:
         core = FakeCore()
-        brain = Brain(core, self.discard, lambda: False)
+        brain = Brain(core, self.discard, lambda: False, filler_s=0)
         brain.window.open()
         await run_test(
             brain,
@@ -149,7 +150,7 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([f.text for f in speech], [FALLBACK["tr"]])
 
     async def test_english_core_failure_uses_an_english_apology(self) -> None:
-        brain = Brain(FakeCore(fail=True), self.discard, lambda: True)
+        brain = Brain(FakeCore(fail=True), self.discard, lambda: True, filler_s=0)
         frame = TranscriptionFrame("Jarvis, are you there?", "operator", "now", language="en")
         down, _ = await run_test(brain, frames_to_send=[frame, SleepFrame(0.03)])
         self.assertEqual([f.text for f in down if isinstance(f, TTSSpeakFrame)], [FALLBACK["en"]])
@@ -162,6 +163,97 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
     async def test_unaddressed_speech_does_not_cancel_an_addressed_turn(self) -> None:
         _, speech = await self.exercise(FakeCore(), ["Jarvis ilk", "televizyon konuşması"])
         self.assertEqual([f.text for f in speech], ["Jarvis ilk"])
+
+
+class DuplexTest(unittest.IsolatedAsyncioTestCase):
+    """JARVIS talks between the operator's turns and never over them."""
+
+    def brain(self, core: Any = None, **timing: float) -> tuple[Brain, list[str], AsyncMock]:
+        spoken: list[str] = []
+        brain = Brain(
+            core or FakeCore(), AsyncMock(), lambda: True, **{"hold_s": 0, "gap_s": 0, **timing}
+        )
+        push = AsyncMock(
+            side_effect=lambda frame, *_: (
+                spoken.append(frame.text) if isinstance(frame, TTSSpeakFrame) else None
+            )
+        )
+        brain.push_frame = push  # type: ignore[method-assign]
+        return brain, spoken, push
+
+    async def test_an_announcement_during_a_reply_waits_and_is_spoken_after_it(self) -> None:
+        brain, spoken, _ = self.brain()
+        await brain.reply("Jarvis merhaba", False, 0)
+        await brain.announce("Araştırma bitti, efendim.", "tr", "outcome", "p1")
+        self.assertEqual(spoken, ["Jarvis merhaba"])
+        await brain.process_frame(BotStoppedSpeakingFrame(), FrameDirection.UPSTREAM)
+        await asyncio.sleep(0.02)
+        self.assertEqual(spoken, ["Jarvis merhaba", "Araştırma bitti, efendim."])
+        # After an announcement the operator may answer without the name.
+        await brain.process_frame(BotStoppedSpeakingFrame(), FrameDirection.UPSTREAM)
+        self.assertTrue(brain.window.is_open())
+
+    async def test_only_the_newest_progress_per_plan_and_never_after_its_outcome(self) -> None:
+        brain, spoken, _ = self.brain()
+        brain.user_speaking = True
+        await brain.announce("Şimdi reuters.com sayfasını okuyorum.", "tr", "progress", "p1")
+        await brain.announce("Şimdi bbc.com sayfasını okuyorum.", "tr", "progress", "p1")
+        await brain.announce("Hâlâ ajan çalışıyor, efendim.", "tr", "progress", "p2")
+        await brain.announce("Reuters ve BBC sakin, efendim.", "tr", "outcome", "p1")
+        await brain.announce("Son sayfa, bbc.com.", "tr", "progress", "p1")
+        self.assertEqual(
+            [(a.text, a.kind) for a in brain.queue],
+            [
+                ("Hâlâ ajan çalışıyor, efendim.", "progress"),
+                ("Reuters ve BBC sakin, efendim.", "outcome"),
+            ],
+        )
+        self.assertEqual(spoken, [])
+        brain.user_speaking = False
+        await brain.drain()
+        # Outcomes go first.
+        self.assertEqual(spoken, ["Reuters ve BBC sakin, efendim."])
+
+    async def test_stale_progress_is_dropped(self) -> None:
+        brain, spoken, _ = self.brain()
+        brain.user_speaking = True
+        await brain.announce("Şimdi bbc.com sayfasını okuyorum.", "tr", "progress", "p1")
+        brain.queue[0].at -= 60
+        brain.user_speaking = False
+        await brain.drain()
+        self.assertEqual(spoken, [])
+        self.assertEqual(brain.queue, [])
+
+    async def test_waits_for_the_operator_reply_to_arrive_before_announcing(self) -> None:
+        brain, spoken, _ = self.brain(hold_s=0.05)
+        await brain.process_frame(UserStartedSpeakingFrame(), FrameDirection.DOWNSTREAM)
+        await brain.announce("Araştırma bitti, efendim.", "tr")
+        await brain.process_frame(UserStoppedSpeakingFrame(), FrameDirection.DOWNSTREAM)
+        self.assertEqual(spoken, [])
+        await asyncio.sleep(0.1)
+        self.assertEqual(spoken, ["Araştırma bitti, efendim."])
+
+    async def test_a_slow_answer_gets_a_filler_and_then_the_answer(self) -> None:
+        class SlowCore(FakeCore):
+            async def turn(self, utterance: str, follow_up: bool) -> Turn | None:
+                await asyncio.sleep(0.08)
+                return Turn("t", "k", True, "Haberlere bakıyorum, efendim.", "tr", [], "fake", 1)
+
+        brain, spoken, _ = self.brain(SlowCore(), filler_s=0.02)
+        brain.timing = {"lang": "tr"}
+        reply = asyncio.create_task(brain.reply("Jarvis haberlere bak", False, 0))
+        await asyncio.sleep(0.12)
+        # The answer waits for the filler to finish instead of cutting it off.
+        self.assertEqual(spoken, ["Bir saniye, efendim."])
+        await brain.process_frame(BotStoppedSpeakingFrame(), FrameDirection.UPSTREAM)
+        await reply
+        self.assertEqual(spoken, ["Bir saniye, efendim.", "Haberlere bakıyorum, efendim."])
+
+    async def test_a_quick_answer_needs_no_filler(self) -> None:
+        brain, spoken, _ = self.brain(filler_s=0.2)
+        await brain.reply("Jarvis merhaba", False, 0)
+        await asyncio.sleep(0.25)
+        self.assertEqual(spoken, ["Jarvis merhaba"])
 
 
 if __name__ == "__main__":
