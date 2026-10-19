@@ -561,9 +561,9 @@ export class PlanService extends EventEmitter {
 
   async #cancel(plan: PlanRow, silent: boolean): Promise<void> {
     for (const taskId of plan.task_ids) {
-      this.options.onCancel(taskId);
       // A task already settled or uncertain keeps its state.
       await this.options.tasks.cancel(taskId).catch(() => {});
+      this.options.onCancel(taskId);
     }
     const uncertain = (await this.#stepTasks(plan)).some(
       (task) => task?.status === "RECOVERY_REQUIRED",
