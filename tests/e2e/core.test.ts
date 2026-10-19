@@ -95,7 +95,11 @@ describe("the HTTP surface", () => {
       if (url === "/healthz") continue;
       const path = url.replaceAll(":id", randomUUID());
       const hook = path.startsWith("/v1/hooks/");
-      for (const token of ["", hook ? running.token : running.webhook]) {
+      for (const token of [
+        "",
+        "generated-wrong-credential",
+        hook ? running.token : running.webhook,
+      ]) {
         const response = await running.api(method, path, method === "GET" ? undefined : {}, token);
         expect([method, url, token ? "wrong" : "none", response.status]).toEqual([
           method,
@@ -104,6 +108,19 @@ describe("the HTTP surface", () => {
           401,
         ]);
       }
+      // The credential for this route must reach the handler, including the live stream.
+      const accepted = await fetch(`${running.url}${path}`, {
+        method,
+        headers: {
+          authorization: `Bearer ${hook ? running.webhook : running.token}`,
+          ...(method !== "GET" && { "content-type": "application/json" }),
+        },
+        ...(method !== "GET" && { body: "{}" }),
+        signal: AbortSignal.timeout(5000),
+      });
+      expect(accepted.status, `${method} ${url}`).not.toBe(401);
+      expect(accepted.status, `${method} ${url}`).toBeLessThan(500);
+      await accepted.body?.cancel();
     }
   });
 });
