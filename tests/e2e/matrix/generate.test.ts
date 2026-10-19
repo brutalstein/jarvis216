@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { catalog } from "@jarvis/action-engine";
 import { describe, expect, it } from "vitest";
-import { generateCases, pairwise } from "./generate.js";
+import { generateCases, pairwise, permissionPolicies } from "./generate.js";
 
 describe("reviewable matrix generation", () => {
   it("covers every value pair while reducing the Cartesian product", () => {
@@ -40,6 +40,16 @@ describe("reviewable matrix generation", () => {
       generated.actions.filter((action) => action.risk === "HIGH").map((action) => action.id),
     ).toEqual(["agent.delegate", "automation.invoke"]);
     expect(new Set(generated.topology.map((row) => row.id)).size).toBe(generated.topology.length);
+    expect(new Set(generated.permissions.map((row) => row.id)).size).toBe(
+      generated.permissions.length,
+    );
+    for (const policy of permissionPolicies())
+      expect(
+        generated.permissions
+          .filter((row) => row.policy === policy.id)
+          .map((row) => row.action)
+          .sort(),
+      ).toEqual(Object.keys(catalog).sort());
     expect(
       JSON.parse(await readFile(new URL("./coverage.cases.json", import.meta.url), "utf8")),
     ).toEqual(generated);

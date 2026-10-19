@@ -3,6 +3,47 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { catalog } from "@jarvis/action-engine";
 
+const guarded = { LOW: "allow", MEDIUM: "ask", HIGH: "ask" } as const;
+const presets = {
+  guarded,
+  trusted: { LOW: "allow", MEDIUM: "allow", HIGH: "ask" },
+  autonomous: { LOW: "allow", MEDIUM: "allow", HIGH: "allow" },
+} as const;
+const durations = [3_600_000, 28_800_000, 86_400_000];
+
+export function permissionPolicies() {
+  return [
+    ...(["ask", "allow", "deny"] as const).map((mode) => ({
+      id: `custom-${mode}`,
+      mode,
+      durationMs: 0,
+      expired: false,
+      expected: { LOW: mode, MEDIUM: mode, HIGH: mode },
+    })),
+    ...durations.flatMap((durationMs) =>
+      [false, true].map((expired) => ({
+        id: `allow-${durationMs}-${expired ? "expired" : "active"}`,
+        mode: "allow" as const,
+        durationMs,
+        expired,
+        expected: expired ? guarded : presets.autonomous,
+      })),
+    ),
+    ...(Object.keys(presets) as (keyof typeof presets)[]).flatMap((preset) => [
+      { id: `preset-${preset}`, preset, durationMs: 0, expired: false, expected: presets[preset] },
+      ...durations.flatMap((durationMs) =>
+        [false, true].map((expired) => ({
+          id: `preset-${preset}-${durationMs}-${expired ? "expired" : "active"}`,
+          preset,
+          durationMs,
+          expired,
+          expected: expired ? guarded : presets[preset],
+        })),
+      ),
+    ]),
+  ];
+}
+
 // Greedy all-pairs coverage; stable candidate order makes the committed table reproducible.
 export function pairwise(dimensions: Record<string, readonly string[]>): Record<string, string>[] {
   let candidates: Record<string, string>[] = [{}];
@@ -42,6 +83,15 @@ export function generateCases() {
     actions: Object.values(catalog)
       .map(({ id, risk, kind }) => ({ id, risk, kind }))
       .sort((a, b) => a.id.localeCompare(b.id, "en")),
+    permissions: permissionPolicies().flatMap((policy) =>
+      Object.values(catalog).map((action) => ({
+        id: `${policy.id}/${action.id}`,
+        policy: policy.id,
+        action: action.id,
+        risk: action.risk,
+        expectedMode: policy.expected[action.risk],
+      })),
+    ),
     topology: pairwise({
       desktop: ["off", "on"],
       news: ["off", "on"],

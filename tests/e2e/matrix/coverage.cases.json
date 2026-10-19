@@ -122,6 +122,5048 @@
       "kind": "desktop"
     }
   ],
+  "permissions": [
+    {
+      "id": "custom-ask/app.open",
+      "policy": "custom-ask",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/app.focus",
+      "policy": "custom-ask",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/app.close",
+      "policy": "custom-ask",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/window.list",
+      "policy": "custom-ask",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/screen.describe",
+      "policy": "custom-ask",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/media.key",
+      "policy": "custom-ask",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/ui.click",
+      "policy": "custom-ask",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/ui.type",
+      "policy": "custom-ask",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/key.shortcut",
+      "policy": "custom-ask",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/clipboard.read",
+      "policy": "custom-ask",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/clipboard.write",
+      "policy": "custom-ask",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.list",
+      "policy": "custom-ask",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.move",
+      "policy": "custom-ask",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.copy",
+      "policy": "custom-ask",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.rename",
+      "policy": "custom-ask",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.mkdir",
+      "policy": "custom-ask",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/web.open",
+      "policy": "custom-ask",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/agent.delegate",
+      "policy": "custom-ask",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.read",
+      "policy": "custom-ask",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.read_many",
+      "policy": "custom-ask",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/automation.invoke",
+      "policy": "custom-ask",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/memory.save",
+      "policy": "custom-ask",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/memory.forget",
+      "policy": "custom-ask",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/news.brief",
+      "policy": "custom-ask",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-allow/app.open",
+      "policy": "custom-allow",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/app.focus",
+      "policy": "custom-allow",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/app.close",
+      "policy": "custom-allow",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/window.list",
+      "policy": "custom-allow",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/screen.describe",
+      "policy": "custom-allow",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/media.key",
+      "policy": "custom-allow",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/ui.click",
+      "policy": "custom-allow",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/ui.type",
+      "policy": "custom-allow",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/key.shortcut",
+      "policy": "custom-allow",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/clipboard.read",
+      "policy": "custom-allow",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/clipboard.write",
+      "policy": "custom-allow",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.list",
+      "policy": "custom-allow",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.move",
+      "policy": "custom-allow",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.copy",
+      "policy": "custom-allow",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.rename",
+      "policy": "custom-allow",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.mkdir",
+      "policy": "custom-allow",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/web.open",
+      "policy": "custom-allow",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/agent.delegate",
+      "policy": "custom-allow",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.read",
+      "policy": "custom-allow",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.read_many",
+      "policy": "custom-allow",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/automation.invoke",
+      "policy": "custom-allow",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/memory.save",
+      "policy": "custom-allow",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/memory.forget",
+      "policy": "custom-allow",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/news.brief",
+      "policy": "custom-allow",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-deny/app.open",
+      "policy": "custom-deny",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/app.focus",
+      "policy": "custom-deny",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/app.close",
+      "policy": "custom-deny",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/window.list",
+      "policy": "custom-deny",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/screen.describe",
+      "policy": "custom-deny",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/media.key",
+      "policy": "custom-deny",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/ui.click",
+      "policy": "custom-deny",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/ui.type",
+      "policy": "custom-deny",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/key.shortcut",
+      "policy": "custom-deny",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/clipboard.read",
+      "policy": "custom-deny",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/clipboard.write",
+      "policy": "custom-deny",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.list",
+      "policy": "custom-deny",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.move",
+      "policy": "custom-deny",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.copy",
+      "policy": "custom-deny",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.rename",
+      "policy": "custom-deny",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.mkdir",
+      "policy": "custom-deny",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/web.open",
+      "policy": "custom-deny",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/agent.delegate",
+      "policy": "custom-deny",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.read",
+      "policy": "custom-deny",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.read_many",
+      "policy": "custom-deny",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/automation.invoke",
+      "policy": "custom-deny",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/memory.save",
+      "policy": "custom-deny",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/memory.forget",
+      "policy": "custom-deny",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/news.brief",
+      "policy": "custom-deny",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "allow-3600000-active/app.open",
+      "policy": "allow-3600000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/app.focus",
+      "policy": "allow-3600000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/app.close",
+      "policy": "allow-3600000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/window.list",
+      "policy": "allow-3600000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/screen.describe",
+      "policy": "allow-3600000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/media.key",
+      "policy": "allow-3600000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/ui.click",
+      "policy": "allow-3600000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/ui.type",
+      "policy": "allow-3600000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/key.shortcut",
+      "policy": "allow-3600000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/clipboard.read",
+      "policy": "allow-3600000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/clipboard.write",
+      "policy": "allow-3600000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.list",
+      "policy": "allow-3600000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.move",
+      "policy": "allow-3600000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.copy",
+      "policy": "allow-3600000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.rename",
+      "policy": "allow-3600000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.mkdir",
+      "policy": "allow-3600000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/web.open",
+      "policy": "allow-3600000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/agent.delegate",
+      "policy": "allow-3600000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.read",
+      "policy": "allow-3600000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.read_many",
+      "policy": "allow-3600000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/automation.invoke",
+      "policy": "allow-3600000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/memory.save",
+      "policy": "allow-3600000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/memory.forget",
+      "policy": "allow-3600000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/news.brief",
+      "policy": "allow-3600000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/app.open",
+      "policy": "allow-3600000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/app.focus",
+      "policy": "allow-3600000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/app.close",
+      "policy": "allow-3600000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/window.list",
+      "policy": "allow-3600000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/screen.describe",
+      "policy": "allow-3600000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/media.key",
+      "policy": "allow-3600000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/ui.click",
+      "policy": "allow-3600000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/ui.type",
+      "policy": "allow-3600000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/key.shortcut",
+      "policy": "allow-3600000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/clipboard.read",
+      "policy": "allow-3600000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/clipboard.write",
+      "policy": "allow-3600000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.list",
+      "policy": "allow-3600000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/file.move",
+      "policy": "allow-3600000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.copy",
+      "policy": "allow-3600000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.rename",
+      "policy": "allow-3600000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.mkdir",
+      "policy": "allow-3600000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/web.open",
+      "policy": "allow-3600000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/agent.delegate",
+      "policy": "allow-3600000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/browser.read",
+      "policy": "allow-3600000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/browser.read_many",
+      "policy": "allow-3600000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/automation.invoke",
+      "policy": "allow-3600000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/memory.save",
+      "policy": "allow-3600000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/memory.forget",
+      "policy": "allow-3600000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/news.brief",
+      "policy": "allow-3600000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/app.open",
+      "policy": "allow-28800000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/app.focus",
+      "policy": "allow-28800000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/app.close",
+      "policy": "allow-28800000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/window.list",
+      "policy": "allow-28800000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/screen.describe",
+      "policy": "allow-28800000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/media.key",
+      "policy": "allow-28800000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/ui.click",
+      "policy": "allow-28800000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/ui.type",
+      "policy": "allow-28800000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/key.shortcut",
+      "policy": "allow-28800000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/clipboard.read",
+      "policy": "allow-28800000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/clipboard.write",
+      "policy": "allow-28800000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.list",
+      "policy": "allow-28800000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.move",
+      "policy": "allow-28800000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.copy",
+      "policy": "allow-28800000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.rename",
+      "policy": "allow-28800000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.mkdir",
+      "policy": "allow-28800000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/web.open",
+      "policy": "allow-28800000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/agent.delegate",
+      "policy": "allow-28800000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.read",
+      "policy": "allow-28800000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.read_many",
+      "policy": "allow-28800000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/automation.invoke",
+      "policy": "allow-28800000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/memory.save",
+      "policy": "allow-28800000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/memory.forget",
+      "policy": "allow-28800000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/news.brief",
+      "policy": "allow-28800000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/app.open",
+      "policy": "allow-28800000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/app.focus",
+      "policy": "allow-28800000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/app.close",
+      "policy": "allow-28800000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/window.list",
+      "policy": "allow-28800000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/screen.describe",
+      "policy": "allow-28800000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/media.key",
+      "policy": "allow-28800000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/ui.click",
+      "policy": "allow-28800000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/ui.type",
+      "policy": "allow-28800000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/key.shortcut",
+      "policy": "allow-28800000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/clipboard.read",
+      "policy": "allow-28800000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/clipboard.write",
+      "policy": "allow-28800000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.list",
+      "policy": "allow-28800000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/file.move",
+      "policy": "allow-28800000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.copy",
+      "policy": "allow-28800000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.rename",
+      "policy": "allow-28800000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.mkdir",
+      "policy": "allow-28800000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/web.open",
+      "policy": "allow-28800000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/agent.delegate",
+      "policy": "allow-28800000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/browser.read",
+      "policy": "allow-28800000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/browser.read_many",
+      "policy": "allow-28800000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/automation.invoke",
+      "policy": "allow-28800000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/memory.save",
+      "policy": "allow-28800000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/memory.forget",
+      "policy": "allow-28800000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/news.brief",
+      "policy": "allow-28800000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/app.open",
+      "policy": "allow-86400000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/app.focus",
+      "policy": "allow-86400000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/app.close",
+      "policy": "allow-86400000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/window.list",
+      "policy": "allow-86400000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/screen.describe",
+      "policy": "allow-86400000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/media.key",
+      "policy": "allow-86400000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/ui.click",
+      "policy": "allow-86400000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/ui.type",
+      "policy": "allow-86400000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/key.shortcut",
+      "policy": "allow-86400000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/clipboard.read",
+      "policy": "allow-86400000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/clipboard.write",
+      "policy": "allow-86400000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.list",
+      "policy": "allow-86400000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.move",
+      "policy": "allow-86400000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.copy",
+      "policy": "allow-86400000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.rename",
+      "policy": "allow-86400000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.mkdir",
+      "policy": "allow-86400000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/web.open",
+      "policy": "allow-86400000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/agent.delegate",
+      "policy": "allow-86400000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.read",
+      "policy": "allow-86400000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.read_many",
+      "policy": "allow-86400000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/automation.invoke",
+      "policy": "allow-86400000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/memory.save",
+      "policy": "allow-86400000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/memory.forget",
+      "policy": "allow-86400000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/news.brief",
+      "policy": "allow-86400000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/app.open",
+      "policy": "allow-86400000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/app.focus",
+      "policy": "allow-86400000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/app.close",
+      "policy": "allow-86400000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/window.list",
+      "policy": "allow-86400000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/screen.describe",
+      "policy": "allow-86400000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/media.key",
+      "policy": "allow-86400000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/ui.click",
+      "policy": "allow-86400000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/ui.type",
+      "policy": "allow-86400000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/key.shortcut",
+      "policy": "allow-86400000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/clipboard.read",
+      "policy": "allow-86400000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/clipboard.write",
+      "policy": "allow-86400000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.list",
+      "policy": "allow-86400000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/file.move",
+      "policy": "allow-86400000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.copy",
+      "policy": "allow-86400000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.rename",
+      "policy": "allow-86400000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.mkdir",
+      "policy": "allow-86400000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/web.open",
+      "policy": "allow-86400000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/agent.delegate",
+      "policy": "allow-86400000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/browser.read",
+      "policy": "allow-86400000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/browser.read_many",
+      "policy": "allow-86400000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/automation.invoke",
+      "policy": "allow-86400000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/memory.save",
+      "policy": "allow-86400000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/memory.forget",
+      "policy": "allow-86400000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/news.brief",
+      "policy": "allow-86400000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/app.open",
+      "policy": "preset-guarded",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/app.focus",
+      "policy": "preset-guarded",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/app.close",
+      "policy": "preset-guarded",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/window.list",
+      "policy": "preset-guarded",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/screen.describe",
+      "policy": "preset-guarded",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/media.key",
+      "policy": "preset-guarded",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/ui.click",
+      "policy": "preset-guarded",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/ui.type",
+      "policy": "preset-guarded",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/key.shortcut",
+      "policy": "preset-guarded",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/clipboard.read",
+      "policy": "preset-guarded",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/clipboard.write",
+      "policy": "preset-guarded",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.list",
+      "policy": "preset-guarded",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/file.move",
+      "policy": "preset-guarded",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.copy",
+      "policy": "preset-guarded",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.rename",
+      "policy": "preset-guarded",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.mkdir",
+      "policy": "preset-guarded",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/web.open",
+      "policy": "preset-guarded",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/agent.delegate",
+      "policy": "preset-guarded",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/browser.read",
+      "policy": "preset-guarded",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/browser.read_many",
+      "policy": "preset-guarded",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/automation.invoke",
+      "policy": "preset-guarded",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/memory.save",
+      "policy": "preset-guarded",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/memory.forget",
+      "policy": "preset-guarded",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/news.brief",
+      "policy": "preset-guarded",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/app.open",
+      "policy": "preset-guarded-3600000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/app.focus",
+      "policy": "preset-guarded-3600000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/app.close",
+      "policy": "preset-guarded-3600000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/window.list",
+      "policy": "preset-guarded-3600000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/screen.describe",
+      "policy": "preset-guarded-3600000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/media.key",
+      "policy": "preset-guarded-3600000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/ui.click",
+      "policy": "preset-guarded-3600000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/ui.type",
+      "policy": "preset-guarded-3600000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/key.shortcut",
+      "policy": "preset-guarded-3600000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/clipboard.read",
+      "policy": "preset-guarded-3600000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/clipboard.write",
+      "policy": "preset-guarded-3600000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.list",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.move",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.copy",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.rename",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.mkdir",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/web.open",
+      "policy": "preset-guarded-3600000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/agent.delegate",
+      "policy": "preset-guarded-3600000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.read",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.read_many",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/automation.invoke",
+      "policy": "preset-guarded-3600000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/memory.save",
+      "policy": "preset-guarded-3600000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/memory.forget",
+      "policy": "preset-guarded-3600000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/news.brief",
+      "policy": "preset-guarded-3600000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/app.open",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/app.focus",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/app.close",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/window.list",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/screen.describe",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/media.key",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/ui.click",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/ui.type",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/key.shortcut",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/clipboard.read",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/clipboard.write",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.list",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.move",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.copy",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.rename",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.mkdir",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/web.open",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/agent.delegate",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.read",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.read_many",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/automation.invoke",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/memory.save",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/memory.forget",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/news.brief",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/app.open",
+      "policy": "preset-guarded-28800000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/app.focus",
+      "policy": "preset-guarded-28800000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/app.close",
+      "policy": "preset-guarded-28800000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/window.list",
+      "policy": "preset-guarded-28800000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/screen.describe",
+      "policy": "preset-guarded-28800000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/media.key",
+      "policy": "preset-guarded-28800000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/ui.click",
+      "policy": "preset-guarded-28800000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/ui.type",
+      "policy": "preset-guarded-28800000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/key.shortcut",
+      "policy": "preset-guarded-28800000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/clipboard.read",
+      "policy": "preset-guarded-28800000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/clipboard.write",
+      "policy": "preset-guarded-28800000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.list",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.move",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.copy",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.rename",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.mkdir",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/web.open",
+      "policy": "preset-guarded-28800000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/agent.delegate",
+      "policy": "preset-guarded-28800000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.read",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.read_many",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/automation.invoke",
+      "policy": "preset-guarded-28800000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/memory.save",
+      "policy": "preset-guarded-28800000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/memory.forget",
+      "policy": "preset-guarded-28800000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/news.brief",
+      "policy": "preset-guarded-28800000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/app.open",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/app.focus",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/app.close",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/window.list",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/screen.describe",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/media.key",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/ui.click",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/ui.type",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/key.shortcut",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/clipboard.read",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/clipboard.write",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.list",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.move",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.copy",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.rename",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.mkdir",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/web.open",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/agent.delegate",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.read",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.read_many",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/automation.invoke",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/memory.save",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/memory.forget",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/news.brief",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/app.open",
+      "policy": "preset-guarded-86400000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/app.focus",
+      "policy": "preset-guarded-86400000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/app.close",
+      "policy": "preset-guarded-86400000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/window.list",
+      "policy": "preset-guarded-86400000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/screen.describe",
+      "policy": "preset-guarded-86400000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/media.key",
+      "policy": "preset-guarded-86400000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/ui.click",
+      "policy": "preset-guarded-86400000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/ui.type",
+      "policy": "preset-guarded-86400000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/key.shortcut",
+      "policy": "preset-guarded-86400000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/clipboard.read",
+      "policy": "preset-guarded-86400000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/clipboard.write",
+      "policy": "preset-guarded-86400000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.list",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.move",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.copy",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.rename",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.mkdir",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/web.open",
+      "policy": "preset-guarded-86400000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/agent.delegate",
+      "policy": "preset-guarded-86400000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.read",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.read_many",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/automation.invoke",
+      "policy": "preset-guarded-86400000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/memory.save",
+      "policy": "preset-guarded-86400000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/memory.forget",
+      "policy": "preset-guarded-86400000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/news.brief",
+      "policy": "preset-guarded-86400000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/app.open",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/app.focus",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/app.close",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/window.list",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/screen.describe",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/media.key",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/ui.click",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/ui.type",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/key.shortcut",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/clipboard.read",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/clipboard.write",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.list",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.move",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.copy",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.rename",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.mkdir",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/web.open",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/agent.delegate",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.read",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.read_many",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/automation.invoke",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/memory.save",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/memory.forget",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/news.brief",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/app.open",
+      "policy": "preset-trusted",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/app.focus",
+      "policy": "preset-trusted",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/app.close",
+      "policy": "preset-trusted",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/window.list",
+      "policy": "preset-trusted",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/screen.describe",
+      "policy": "preset-trusted",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/media.key",
+      "policy": "preset-trusted",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/ui.click",
+      "policy": "preset-trusted",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/ui.type",
+      "policy": "preset-trusted",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/key.shortcut",
+      "policy": "preset-trusted",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/clipboard.read",
+      "policy": "preset-trusted",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/clipboard.write",
+      "policy": "preset-trusted",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.list",
+      "policy": "preset-trusted",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.move",
+      "policy": "preset-trusted",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.copy",
+      "policy": "preset-trusted",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.rename",
+      "policy": "preset-trusted",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.mkdir",
+      "policy": "preset-trusted",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/web.open",
+      "policy": "preset-trusted",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/agent.delegate",
+      "policy": "preset-trusted",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted/browser.read",
+      "policy": "preset-trusted",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.read_many",
+      "policy": "preset-trusted",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/automation.invoke",
+      "policy": "preset-trusted",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted/memory.save",
+      "policy": "preset-trusted",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/memory.forget",
+      "policy": "preset-trusted",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/news.brief",
+      "policy": "preset-trusted",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/app.open",
+      "policy": "preset-trusted-3600000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/app.focus",
+      "policy": "preset-trusted-3600000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/app.close",
+      "policy": "preset-trusted-3600000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/window.list",
+      "policy": "preset-trusted-3600000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/screen.describe",
+      "policy": "preset-trusted-3600000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/media.key",
+      "policy": "preset-trusted-3600000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/ui.click",
+      "policy": "preset-trusted-3600000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/ui.type",
+      "policy": "preset-trusted-3600000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/key.shortcut",
+      "policy": "preset-trusted-3600000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/clipboard.read",
+      "policy": "preset-trusted-3600000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/clipboard.write",
+      "policy": "preset-trusted-3600000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.list",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.move",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.copy",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.rename",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.mkdir",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/web.open",
+      "policy": "preset-trusted-3600000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/agent.delegate",
+      "policy": "preset-trusted-3600000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.read",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.read_many",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/automation.invoke",
+      "policy": "preset-trusted-3600000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/memory.save",
+      "policy": "preset-trusted-3600000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/memory.forget",
+      "policy": "preset-trusted-3600000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/news.brief",
+      "policy": "preset-trusted-3600000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/app.open",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/app.focus",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/app.close",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/window.list",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/screen.describe",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/media.key",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/ui.click",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/ui.type",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/key.shortcut",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/clipboard.read",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/clipboard.write",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.list",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.move",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.copy",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.rename",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.mkdir",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/web.open",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/agent.delegate",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.read",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.read_many",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/automation.invoke",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/memory.save",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/memory.forget",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/news.brief",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/app.open",
+      "policy": "preset-trusted-28800000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/app.focus",
+      "policy": "preset-trusted-28800000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/app.close",
+      "policy": "preset-trusted-28800000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/window.list",
+      "policy": "preset-trusted-28800000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/screen.describe",
+      "policy": "preset-trusted-28800000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/media.key",
+      "policy": "preset-trusted-28800000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/ui.click",
+      "policy": "preset-trusted-28800000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/ui.type",
+      "policy": "preset-trusted-28800000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/key.shortcut",
+      "policy": "preset-trusted-28800000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/clipboard.read",
+      "policy": "preset-trusted-28800000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/clipboard.write",
+      "policy": "preset-trusted-28800000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.list",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.move",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.copy",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.rename",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.mkdir",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/web.open",
+      "policy": "preset-trusted-28800000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/agent.delegate",
+      "policy": "preset-trusted-28800000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.read",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.read_many",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/automation.invoke",
+      "policy": "preset-trusted-28800000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/memory.save",
+      "policy": "preset-trusted-28800000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/memory.forget",
+      "policy": "preset-trusted-28800000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/news.brief",
+      "policy": "preset-trusted-28800000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/app.open",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/app.focus",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/app.close",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/window.list",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/screen.describe",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/media.key",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/ui.click",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/ui.type",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/key.shortcut",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/clipboard.read",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/clipboard.write",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.list",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.move",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.copy",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.rename",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.mkdir",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/web.open",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/agent.delegate",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.read",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.read_many",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/automation.invoke",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/memory.save",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/memory.forget",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/news.brief",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/app.open",
+      "policy": "preset-trusted-86400000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/app.focus",
+      "policy": "preset-trusted-86400000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/app.close",
+      "policy": "preset-trusted-86400000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/window.list",
+      "policy": "preset-trusted-86400000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/screen.describe",
+      "policy": "preset-trusted-86400000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/media.key",
+      "policy": "preset-trusted-86400000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/ui.click",
+      "policy": "preset-trusted-86400000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/ui.type",
+      "policy": "preset-trusted-86400000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/key.shortcut",
+      "policy": "preset-trusted-86400000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/clipboard.read",
+      "policy": "preset-trusted-86400000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/clipboard.write",
+      "policy": "preset-trusted-86400000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.list",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.move",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.copy",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.rename",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.mkdir",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/web.open",
+      "policy": "preset-trusted-86400000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/agent.delegate",
+      "policy": "preset-trusted-86400000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.read",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.read_many",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/automation.invoke",
+      "policy": "preset-trusted-86400000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/memory.save",
+      "policy": "preset-trusted-86400000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/memory.forget",
+      "policy": "preset-trusted-86400000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/news.brief",
+      "policy": "preset-trusted-86400000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/app.open",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/app.focus",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/app.close",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/window.list",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/screen.describe",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/media.key",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/ui.click",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/ui.type",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/key.shortcut",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/clipboard.read",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/clipboard.write",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.list",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.move",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.copy",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.rename",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.mkdir",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/web.open",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/agent.delegate",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.read",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.read_many",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/automation.invoke",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/memory.save",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/memory.forget",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/news.brief",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/app.open",
+      "policy": "preset-autonomous",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/app.focus",
+      "policy": "preset-autonomous",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/app.close",
+      "policy": "preset-autonomous",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/window.list",
+      "policy": "preset-autonomous",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/screen.describe",
+      "policy": "preset-autonomous",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/media.key",
+      "policy": "preset-autonomous",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/ui.click",
+      "policy": "preset-autonomous",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/ui.type",
+      "policy": "preset-autonomous",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/key.shortcut",
+      "policy": "preset-autonomous",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/clipboard.read",
+      "policy": "preset-autonomous",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/clipboard.write",
+      "policy": "preset-autonomous",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.list",
+      "policy": "preset-autonomous",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.move",
+      "policy": "preset-autonomous",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.copy",
+      "policy": "preset-autonomous",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.rename",
+      "policy": "preset-autonomous",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.mkdir",
+      "policy": "preset-autonomous",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/web.open",
+      "policy": "preset-autonomous",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/agent.delegate",
+      "policy": "preset-autonomous",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.read",
+      "policy": "preset-autonomous",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.read_many",
+      "policy": "preset-autonomous",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/automation.invoke",
+      "policy": "preset-autonomous",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/memory.save",
+      "policy": "preset-autonomous",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/memory.forget",
+      "policy": "preset-autonomous",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/news.brief",
+      "policy": "preset-autonomous",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/app.open",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/app.focus",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/app.close",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/window.list",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/screen.describe",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/media.key",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/ui.click",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/ui.type",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/key.shortcut",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/clipboard.read",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/clipboard.write",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.list",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.move",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.copy",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.rename",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.mkdir",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/web.open",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/agent.delegate",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.read",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.read_many",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/automation.invoke",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/memory.save",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/memory.forget",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/news.brief",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/app.open",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/app.focus",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/app.close",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/window.list",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/screen.describe",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/media.key",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/ui.click",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/ui.type",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/key.shortcut",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/clipboard.read",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/clipboard.write",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.list",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.move",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.copy",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.rename",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.mkdir",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/web.open",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/agent.delegate",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.read",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.read_many",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/automation.invoke",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/memory.save",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/memory.forget",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/news.brief",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/app.open",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/app.focus",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/app.close",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/window.list",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/screen.describe",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/media.key",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/ui.click",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/ui.type",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/key.shortcut",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/clipboard.read",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/clipboard.write",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.list",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.move",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.copy",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.rename",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.mkdir",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/web.open",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/agent.delegate",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.read",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.read_many",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/automation.invoke",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/memory.save",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/memory.forget",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/news.brief",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/app.open",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/app.focus",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/app.close",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/window.list",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/screen.describe",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/media.key",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/ui.click",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/ui.type",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/key.shortcut",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/clipboard.read",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/clipboard.write",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.list",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.move",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.copy",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.rename",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.mkdir",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/web.open",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/agent.delegate",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.read",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.read_many",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/automation.invoke",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/memory.save",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/memory.forget",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/news.brief",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/app.open",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/app.focus",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/app.close",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/window.list",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/screen.describe",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/media.key",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/ui.click",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/ui.type",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/key.shortcut",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/clipboard.read",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/clipboard.write",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.list",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.move",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.copy",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.rename",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.mkdir",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/web.open",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/agent.delegate",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.read",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.read_many",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/automation.invoke",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/memory.save",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/memory.forget",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/news.brief",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/app.open",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "app.open",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/app.focus",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "app.focus",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/app.close",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "app.close",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/window.list",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "window.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/screen.describe",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "screen.describe",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/media.key",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "media.key",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/ui.click",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "ui.click",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/ui.type",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "ui.type",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/key.shortcut",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "key.shortcut",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/clipboard.read",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "clipboard.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/clipboard.write",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "clipboard.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.list",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.list",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.move",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.move",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.copy",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.copy",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.rename",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.rename",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.mkdir",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.mkdir",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/web.open",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "web.open",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/agent.delegate",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.read",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.read_many",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.read_many",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/automation.invoke",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "automation.invoke",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/memory.save",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "memory.save",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/memory.forget",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "memory.forget",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/news.brief",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "news.brief",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    }
+  ],
   "topology": [
     {
       "id": "topology-001",
