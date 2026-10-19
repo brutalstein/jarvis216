@@ -56,9 +56,13 @@ export class Durations {
     private db?: Sql,
     private keep = 20,
   ) {}
+  // Measurements older than 30 days say little about this computer today.
+  async purge(): Promise<void> {
+    await this.db?.query("DELETE FROM step_durations WHERE at<$1", [Date.now() - 30 * 86_400_000]);
+  }
   async load(): Promise<void> {
     if (!this.db) return;
-    await this.db.query("DELETE FROM step_durations WHERE at<$1", [Date.now() - 30 * 86_400_000]);
+    await this.purge();
     const rows = (
       await this.db.query<{ key: string; ms: number }>(
         "SELECT key, ms FROM (SELECT key, ms, at, id, row_number() OVER (PARTITION BY key ORDER BY at DESC, id DESC) AS n FROM step_durations) recent WHERE n <= $1 ORDER BY at, id",

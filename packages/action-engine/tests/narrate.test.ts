@@ -13,6 +13,8 @@ const events: NarrationEvent[] = [
   { type: "not-understood" },
   { type: "news-fallback", count: 5 },
   { type: "candidates", count: 3 },
+  { type: "unavailable" },
+  { type: "denied" },
 ];
 
 describe("narrate", () => {

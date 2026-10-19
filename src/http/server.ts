@@ -47,7 +47,7 @@ export function buildServer(
     item.count++;
     invariant(item.count <= 120, "RATE_LIMITED", 429);
   }
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error, request, reply) => {
     // Fastify's own client errors (malformed JSON, media type, size) keep their 4xx status.
     const framework =
       typeof error === "object" && error && "statusCode" in error ? Number(error.statusCode) : 0;
@@ -59,6 +59,11 @@ export function buildServer(
           : framework >= 400 && framework < 500
             ? framework
             : 500;
+    // A server fault is logged by route only: messages may carry prompts or results.
+    if (status >= 500)
+      process.stderr.write(
+        `${JSON.stringify({ level: "error", code: "HTTP_INTERNAL_ERROR", method: request.method, route: request.routeOptions.url ?? "unknown", ...(error instanceof CoreError && { error: error.code }) })}\n`,
+      );
     reply.code(status).send({
       error:
         error instanceof CoreError

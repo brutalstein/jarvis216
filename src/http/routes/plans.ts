@@ -76,10 +76,16 @@ export function planRoutes(
     raw.once("close", close);
     raw.once("error", close);
     send(": connected\n\n");
-    // Restore cards after a desktop reconnect without replaying spoken announcements.
-    const recent = await tasks.db.query<{ id: string }>(
-      "SELECT id FROM plans ORDER BY created_at DESC LIMIT 8",
-    );
-    for (const { id } of recent.rows) if (!closed) onPlan(await plans.get(id));
+    // Restore cards after a desktop reconnect without replaying spoken announcements. The
+    // reply is hijacked, so a failure here ends the stream; the desktop reconnects.
+    try {
+      const recent = await tasks.db.query<{ id: string }>(
+        "SELECT id FROM plans ORDER BY created_at DESC LIMIT 8",
+      );
+      for (const { id } of recent.rows) if (!closed) onPlan(await plans.get(id));
+    } catch {
+      process.stderr.write('{"level":"error","code":"STREAM_RESTORE_FAILED"}\n');
+      close();
+    }
   });
 }

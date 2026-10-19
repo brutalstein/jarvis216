@@ -19,6 +19,7 @@ export type NarrationEvent =
         | "news-fallback"
         | "candidates"
         | "denied"
+        | "unavailable"
         | "status-idle";
       count?: number;
     };
@@ -101,6 +102,11 @@ export function narrate(event: NarrationEvent, lang: Lang): string {
       return pick([
         "Bu işlem ayarlarda kapalı, efendim.",
         "That action is turned off in Settings, sir.",
+      ]);
+    case "unavailable":
+      return pick([
+        "Bunu bu kurulumda yapamıyorum, efendim.",
+        "I can't do that with this setup, sir.",
       ]);
     case "candidates":
       return pick([

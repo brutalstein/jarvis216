@@ -41,7 +41,10 @@ export type Core = {
   start(listen: { host: string; port: number }): Promise<{ port: number }>;
   // Stops accepting requests, lets in-flight ones finish, drains the workers. Idempotent.
   stop(): Promise<void>;
+  // Retention: transcripts and their tasks past 30 days, old measurements. Runs every 6 hours.
+  maintain(): Promise<void>;
 };
+const retentionMs = 30 * 86_400_000;
 
 // Composition root: every Core service, wired once, in dependency order.
 export async function createCore(config: Config, options: CoreOptions): Promise<Core> {
@@ -103,7 +106,6 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         ? new Outbox(db, { url: config.N8N_CALLBACK_URL, token: config.N8N_CALLBACK_TOKEN })
         : undefined;
     // Health, usage budgets and open circuits survive a restart: replay the last day.
-    await purgeObservations(db, Date.now() - 30 * 86_400_000);
     registry.hydrate(await loadObservations(db, Date.now() - 86_400_000));
     const tasks = new TaskService(db, {
       concurrency: config.WORKER_CONCURRENCY,
@@ -185,7 +187,12 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       brain,
       settings: () => permissions.settings(),
     });
-    await conversation.purge(30 * 86_400_000);
+    const maintain = async () => {
+      await conversation.purge(retentionMs);
+      await purgeObservations(db, Date.now() - retentionMs);
+      await durations.purge();
+    };
+    await maintain();
     const server = buildServer(tasks, registry, {
       operatorToken: config.JARVIS_TOKEN,
       webhookToken: config.N8N_INGRESS_TOKEN,
@@ -211,6 +218,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       memory,
       durations,
       registry,
+      maintain,
       async start(listen) {
         await server.listen(listen);
         const address = server.server.address();
@@ -227,7 +235,21 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
           });
         }, 30 * 60_000);
         sleep.unref();
-        abort.signal.addEventListener("abort", () => clearInterval(sleep), { once: true });
+        // A Core that runs for weeks keeps the 30-day promise without a restart.
+        const retention = setInterval(() => {
+          void maintain().catch(() => {
+            process.stderr.write('{"level":"error","code":"RETENTION_FAILED"}\n');
+          });
+        }, 6 * 3_600_000);
+        retention.unref();
+        abort.signal.addEventListener(
+          "abort",
+          () => {
+            clearInterval(sleep);
+            clearInterval(retention);
+          },
+          { once: true },
+        );
         plans.start(abort.signal);
         running = Promise.all(workers.map((worker) => worker.run(abort.signal)));
         return { port: typeof address === "object" && address ? address.port : listen.port };

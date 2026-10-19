@@ -217,10 +217,16 @@ export class PlanService extends EventEmitter {
     // Within the plan's approval window the operator's tap still holds; later it asks again.
     const approved =
       plan.approved_at !== null && Date.now() <= Number(plan.approved_at) + planApprovalMs;
-    return this.#create(
-      { turnId: plan.turn_id, goal: plan.goal, lang: plan.lang, steps },
-      { approved, replanned: plan.replanned },
-    );
+    try {
+      return await this.#create(
+        { turnId: plan.turn_id, goal: plan.goal, lang: plan.lang, steps },
+        { approved, replanned: plan.replanned },
+      );
+    } catch (error) {
+      // The pick stays open: the operator can choose again once the cause is gone.
+      await this.options.tasks.db.query("UPDATE plans SET continued=false WHERE id=$1", [id]);
+      throw error;
+    }
   }
 
   // The newest plan, if it just stopped on several on-screen matches the operator may pick

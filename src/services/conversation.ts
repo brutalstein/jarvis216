@@ -129,6 +129,14 @@ export function conversationProviders(ids: string[]): string[] {
 }
 
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
+// Learning is best-effort: a failing brain store never costs the operator a turn.
+async function learned(work: () => Promise<unknown>): Promise<void> {
+  try {
+    await work();
+  } catch {
+    process.stderr.write('{"level":"error","code":"BRAIN_LEARNING_FAILED"}\n');
+  }
+}
 // Plans expected to finish within this are waited for, so the reply can say how they ended.
 const quickPlanMs = 3000;
 const onScreen = { tr: "Ekranda, efendim.", en: "It's on the screen, sir." };
@@ -173,7 +181,7 @@ export class ConversationService {
     const learning = settings.learning ? this.options.brain : undefined;
     const quick = await this.#command(input.utterance);
     if (quick) return this.#answer(id, started, input, quick);
-    if (learning && isCorrection(input.utterance)) await this.#corrected(learning);
+    if (learning && isCorrection(input.utterance)) await learned(() => this.#corrected(learning));
     const reflex = settings.reflexes ? await this.#reflex(id, input.utterance, learning) : null;
     if (reflex) return this.#answer(id, started, input, reflex);
     const { providers, plans, brain } = this.options;
@@ -270,12 +278,25 @@ export class ConversationService {
         reply.intent = { kind: "clarify", goal: decision.goal };
         understood = { kind: "clarify", goal: decision.goal };
       } else if (reply.addressed && decision?.kind === "plan") {
-        const view = await plans.propose({
-          turnId: id,
-          goal: decision.goal,
-          lang: reply.lang,
-          steps: decision.steps,
-        });
+        let view: PlanView;
+        try {
+          view = await plans.propose({
+            turnId: id,
+            goal: decision.goal,
+            lang: reply.lang,
+            steps: decision.steps,
+          });
+        } catch (error) {
+          // The model chose something this setup cannot run (a page outside the allowlist, an
+          // action turned off meanwhile): say so instead of failing the turn.
+          if (!(error instanceof CoreError) || error.httpStatus >= 500) throw error;
+          reply.say = narrate(
+            { type: error.code === "ACTION_DENIED" ? "denied" : "unavailable" },
+            reply.lang,
+          );
+          reply.display = [];
+          return this.#finish(id, started, input, taskId, reply, provider, learning, undefined);
+        }
         planId = view.id;
         // Learn before narrating: a quick plan may finish while the reply waits for it.
         await this.#learnPlan(learning, input.utterance, reply.lang, view.id, "model", {
@@ -287,6 +308,21 @@ export class ConversationService {
         reply.say = await this.#planSay(view, reply.lang);
       } else if (reply.addressed && decision) understood = { kind: decision.kind };
     }
+    return this.#finish(id, started, input, taskId, reply, provider, learning, understood, planId);
+  }
+
+  // Records the turn (or forgets speech not meant for JARVIS) and what was understood.
+  async #finish(
+    id: string,
+    started: number,
+    input: { utterance: string; followUp: boolean },
+    taskId: string | null,
+    reply: Reply,
+    provider: string | null,
+    learning: Brain | undefined,
+    understood: IntentRecord | undefined,
+    planId?: string,
+  ): Promise<TurnResult> {
     // An empty spoken reply would leave the voice service "speaking" with no audio.
     if (reply.addressed && !reply.say) {
       if (!reply.display.length) throw new CoreError("TURN_FAILED", 502);
@@ -299,12 +335,14 @@ export class ConversationService {
         this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
       );
     if (learning && reply.addressed && understood)
-      await learning.experience({
-        utterance: input.utterance,
-        lang: reply.lang,
-        intent: understood,
-        source: "model",
-      });
+      await learned(() =>
+        learning.experience({
+          utterance: input.utterance,
+          lang: reply.lang,
+          intent: understood,
+          source: "model",
+        }),
+      );
     return {
       id,
       taskId,
@@ -417,9 +455,12 @@ export class ConversationService {
     source: "model" | "reflex",
     intent: IntentRecord,
   ): Promise<void> {
-    if (!learning || !this.options.plans) return;
-    await learning.experience({ utterance, lang, intent, source, planId });
-    await this.#planEnded(learning, await this.options.plans.get(planId));
+    const plans = this.options.plans;
+    if (!learning || !plans) return;
+    await learned(async () => {
+      await learning.experience({ utterance, lang, intent, source, planId });
+      await this.#planEnded(learning, await plans.get(planId));
+    });
   }
 
   // "Hayır, onu demedim": the latest request was misunderstood. A learned pick it relied on is
