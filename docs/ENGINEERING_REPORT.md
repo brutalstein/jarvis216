@@ -272,6 +272,30 @@ type check, Biome lint (8 existing CSS warnings), Vitest, build, contract drift,
 check, browser worker unittest/ruff, voice `test_core_client` with ruff and mypy. The full voice
 suite needs the CUDA torch wheels, which this host could not download.
 
+## Follow-up, 2026-10-19: duplex conversation and speed
+
+Debug first: with the default single worker a spoken turn queued behind any running task, so
+during an agent run or page read JARVIS could not answer and the turn timed out; a reply waited
+up to five seconds for a plan; announcements that arrived while JARVIS spoke were dropped; the
+speaker model loaded on the first utterance.
+
+| Change | Evidence | Class |
+| --- | --- | --- |
+| Interactive lane for spoken turns, reserved workers, background concurrency 2, shared recovery pass ([ADR 0016](ADR/0016-duplex-conversation-and-live-progress.md)) | `tests/lanes.test.ts` (priority, own capacity, interactive-only workers, operator-only, a turn answered while an agent holds the only background worker) | tested only |
+| Stable-first conversation prompt, memoised; Claude cache breakpoint at the boundary; cached input counted toward budgets | `tests/conversation.test.ts`, `tests/model-contracts.test.ts` | tested only; provider cache hit rates not live-verified |
+| Executor progress, browser worker NDJSON per page, PlanView.progress, measured durations (migration 10) | `tests/browser-contract.test.ts`, `workers/browser/test_worker.py`, `tests/eta.test.ts`, `tests/live-plans.test.ts` | tested only; real Browser Use not exercised |
+| Immediate acknowledgement for slow plans, narration (pages, heartbeats, composing), status with step/page/time left | `packages/action-engine/tests/live.test.ts`, `tests/narrator.test.ts`, `tests/live-plans.test.ts` | tested only |
+| Duplex voice: announcement queue (priority, coalescing, expiry, natural gaps), follow-up after announcements, slow-answer filler, model warm-up | `workers/voice/tests/test_brain.py` (18 tests, Pipecat 1.12.0) | tested only; warm-up and real audio not exercised (no CUDA wheels here) |
+| Desktop live line and estimated progress bar on running plan cards | `apps/desktop/tests/hud.spec.ts`, `apps/desktop/tests/screenshots/live-progress.png` | tested only (Linux Electron under xvfb) |
+| Plan bookkeeping only on plan step changes, idle poll 2 s, one read per pass; routing event in the intent transaction; plan indexes (migration 11) | full suite; `npm run benchmark` | measured |
+
+`npm run benchmark` on this cloud host (PGlite in memory, instant model fixture; Core overhead
+only, no provider latency): full task lifecycle p50 23–25 ms; a spoken turn end to end through
+Core p50 85 ms / p95 99–110 ms when idle and p50 65 ms / p95 78–91 ms while a background step
+holds the general worker (before the lane, that turn would have waited for the step to finish).
+Before the plan-bookkeeping change the idle turn p95 was 120 ms. This host is slower than the
+one in section 15, so compare within a run, not across.
+
 ## §21 acceptance matrix
 
 | Criterion | Status | Evidence |

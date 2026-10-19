@@ -200,6 +200,15 @@ turns learning or reflexes off, shows learned skills, forgets one or resets ever
 `GET /v1/brain`, `POST /v1/brain/consolidate`, `DELETE /v1/brain/skills/:id` and
 `DELETE /v1/brain` do the same over the operator API.
 
+## Live progress from the browser worker
+
+Core asks the browser worker for `application/x-ndjson`. The worker then streams one line per
+page state (`{"progress":{"index":2,"total":3,"host":"bbc.com","state":"reading"}}`) and ends
+with `{"result":{...}}` or an in-band `{"error":...,"status":400|503}` that Core maps exactly
+like the HTTP status. Only the host and position leave the worker; page text arrives in the
+result as before. A worker built before this change answers plain JSON and Core accepts it, so
+rebuild the browser worker image to get page-by-page narration.
+
 ## Codex SDK
 
 Provision a dedicated container/VM with no personal files, host home, `.env`, Docker socket

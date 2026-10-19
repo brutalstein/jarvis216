@@ -81,6 +81,17 @@ Standing permissions and the learning brain (see
 | Learned data outliving retention | Experiences follow the 30-day transcript retention; conversation deletion and Settings reset forget everything learned | Skills keep normalized trigger phrases until they fade or are forgotten |
 | Utterances sent for embeddings | Off by default; `BRAIN_EMBEDDINGS=gemini` sends only understood utterances, never results, notes or screen text | Gemini receives every understood utterance while enabled |
 
+Duplex conversation and live progress (see
+[ADR 0016](ADR/0016-duplex-conversation-and-live-progress.md)):
+
+| Threat | Controls | Residual |
+| --- | --- | --- |
+| Queue jumping by a submitter | The interactive lane is honoured for the operator principal only; n8n and other principals stay in the background lane | An operator API client can mark its own tasks interactive |
+| Page or agent text spoken in JARVIS's voice through progress | Executors report a stage, a host name and positions only (bounded, whitespace-normalised, in memory); narration is built from templates over plan records; spoken results still come only from the existing finishers | Host names of allowlisted pages are spoken and shown |
+| Narration claiming what did not happen | Every sentence comes from Core's records (running step, reported progress, measured durations); estimates are worded as estimates and overruns are admitted | An estimate can be wrong until a few runs were measured |
+| JARVIS talking over the operator or speech meant for others | Announcements wait while the operator speaks and 1.5 s after; stale progress expires; the follow-up window after an announcement still needs a voice print | Speech inside the follow-up window that was not meant for JARVIS can still reach Core, as after any reply |
+| Progress data outliving the task | Progress lives in memory only and is cleared when the task leaves RUNNING; measured durations store an action name and milliseconds, purged after 30 days | None beyond timing metadata |
+
 Production gates: Docker/WSL isolation, non-bypassable OpenClaw tool policy, browser egress
 controls, image scans, backup restoration, credential rotation, provider entitlement checks,
 least-privilege DB roles and signed release/upgrade procedure. No production-readiness claim.

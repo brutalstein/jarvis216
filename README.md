@@ -14,7 +14,10 @@ usage budgets survive restarts, and every component reacts to committed task cha
 polling. A learning brain turns repeated successes into skills and corrections into lessons
 ([ADR 0015](docs/ADR/0015-learning-brain-and-layered-intent.md)), and the operator decides in
 the desktop Settings which actions a spoken command may run on its own
-([ADR 0014](docs/ADR/0014-operator-standing-permissions.md)).
+([ADR 0014](docs/ADR/0014-operator-standing-permissions.md)). JARVIS keeps talking while it
+works: spoken turns never queue behind background work, long work is acknowledged at once with
+where it looks and roughly how long, and progress is narrated between the operator's turns
+([ADR 0016](docs/ADR/0016-duplex-conversation-and-live-progress.md)).
 
 Status: first foundation release for **one trusted local operator**. It is not a
 multi-tenant system and makes no production-readiness claim. See
@@ -35,8 +38,9 @@ open gates. No frontend is included by design.
 | `src/database.ts` | PostgreSQL pool, transactions, append-only migrations |
 | `src/integrations/` | Claude, Gemini, Codex, OpenClaw, Browser Use and n8n adapters |
 | `packages/integration-hub/` | Pure allowlisted voice-to-provider integration recipes |
-| `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, eval set |
-| `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan |
+| `packages/action-engine/` | Intent parsing, typed action catalog, compiler, guards, Windows-MCP bindings, news, live narration templates, eval set |
+| `src/plans.ts` | Model-proposed plans: compile, hash approval, one task per step, finishers, replan, live progress |
+| `src/eta.ts`, `src/narrator.ts` | Measured step durations (ETAs) and what JARVIS says while long work runs |
 | `src/conversation.ts`, `src/persona.ts` | Layered voice turns: reflexes, corrections, learned skills, working memory, JSON intents, policy |
 | `src/memory.ts` | Operator-approved long-term memory (`memory.save` / `memory.forget`) |
 | `src/permissions.ts` | Operator permissions per catalog action (ask / allow / deny, timed grants, levels, audit) |
@@ -151,7 +155,8 @@ Task, result and event envelope contracts are published in `schemas/`.
 | `DATABASE_URL`, `POSTGRES_PASSWORD`, `POSTGRES_HOST_PORT` | PostgreSQL connection (loopback or `postgres` only) and `compose.dev.yaml` host port (default 55432) |
 | `JARVIS_TOKEN`, `N8N_INGRESS_TOKEN` | Distinct operator and n8n ingress credentials (32+ chars) |
 | `PORT` | Core HTTP port (loopback only), default 2160 |
-| `WORKER_CONCURRENCY`, `MODEL_CONCURRENCY`, `BROWSER_CONCURRENCY`, `WORKFLOW_CONCURRENCY` | Backpressure limits |
+| `WORKER_CONCURRENCY`, `MODEL_CONCURRENCY`, `BROWSER_CONCURRENCY`, `WORKFLOW_CONCURRENCY` | Background backpressure limits (`WORKER_CONCURRENCY` defaults to 2) |
+| `INTERACTIVE_CONCURRENCY` | Workers reserved for spoken turns, so conversation never waits behind work (default 2) |
 | `ENABLE_CLAUDE`, `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_EFFORT`, `CLAUDE_REFUSAL_FALLBACK` | Claude Messages API adapter (`claude` plus low-effort `claude-live` for voice; model defaults to `claude-opus-5-5`) |
 | `ENABLE_CLAUDE_CODE`, `CLAUDE_CODE_PATH`, `CLAUDE_CODE_MODEL`, `JARVIS_PRIVATE_PROVIDERS` | Claude Code subscription harness; providers trusted with private data |
 | `ENABLE_OPENROUTER`, `OPENROUTER_MODELS`, `ENABLE_NVIDIA`, `NVIDIA_MODELS` (+ keys) | Free OpenAI-compatible models |

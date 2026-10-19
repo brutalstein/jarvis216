@@ -49,6 +49,7 @@ All HTTP endpoints require `Authorization: Bearer <VOICE_TOKEN>`:
 | POST | `/enroll/start` | Start collecting speaker embeddings in memory |
 | POST | `/enroll/finish` | Persist the normalized print (at least 3 segments and 25 seconds); otherwise 409 |
 | DELETE | `/enroll` | Delete the print and cancel enrollment |
+| POST | `/announce` | Queue something Core announced: `text`, `lang`, `kind` (`progress` or `outcome`), optional `planId` |
 
 Only opaque-origin Electron requests receive CORS headers; preflight discloses no data and does
 not authorize subsequent requests. The service uses Pipecat's connection directly because its
@@ -58,7 +59,16 @@ Smart Turn decides the semantic end before speaker verification and STT. Raw VAD
 playback. Accepted transcripts are checked for the name/follow-up window, then Core is called once.
 A newer addressed turn cancels the pending request and stale replies are dropped. Core failure
 speaks a fixed apology in the detected Turkish/English language. The follow-up window (only with a voice print) opens after
-bot playback stops. Enrollment never sends its speech to Core.
+bot playback stops, after replies and announcements alike. Enrollment never sends its speech to Core.
+
+JARVIS keeps the conversation going while Core works
+([ADR 0016](../../docs/ADR/0016-duplex-conversation-and-live-progress.md)). Announcements wait
+in a queue for a natural gap: never while the operator speaks, 1.5 seconds after they stop and a
+short pause after JARVIS's own sentence. Outcomes are always spoken; progress keeps the newest
+line per plan, is dropped once that plan's outcome is queued and expires after 12 seconds. A turn
+Core has not answered within `VOICE_FILLER_SECONDS` (default 1.2; 0 turns it off) gets a short
+filler such as "Bir saniye, efendim." and the answer follows it. STT, the speaker model and both
+Piper voices warm up when a session opens, so the first turn does not pay their first-use cost.
 
 The default speaker threshold is `0.7`; `VOICE_SPEAKER_THRESHOLD`, set before launching the
 desktop or a manual voice process, overrides it for calibration. This print filters conversation, not security approvals.

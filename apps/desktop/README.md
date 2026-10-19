@@ -67,7 +67,11 @@ service for calibration with the operator's microphone.
   two minutes, **Esc** rejects it. Saying "dur", "iptal" or "stop" cancels a running plan, and
   "durum ne?" reports it; voice never approves one.
 - When several on-screen elements match, a numbered candidate panel appears; tap one or say its
-  number. JARVIS remembers the pick for the same situation. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the
+  number. JARVIS remembers the pick for the same situation.
+- A running plan's card shows a live line (where the step looks, page i of n, seconds spent and
+  roughly how many are left, or that it is taking longer) and an estimated progress bar. JARVIS
+  keeps talking meanwhile: long work is acknowledged at once and narrated between your turns;
+  progress lines are spoken, not shown as captions. News briefs open as panels with Core-fetched thumbnails; tapping a card opens the
   article in the default browser.
 
 The visual system is recorded in [DESIGN.md](DESIGN.md).

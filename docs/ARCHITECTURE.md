@@ -20,7 +20,8 @@ Decision records live in [ADR/](ADR/); evidence is in [ENGINEERING_REPORT.md](EN
 | Electron desktop | Sandboxed presence, captions, cards, tray/overlay and settings; Core token stays in main |
 | Action engine (`packages/action-engine`) | Intent parsing, typed action catalog, compiler, guards, grounding, Windows-MCP bindings, news fetch, narration; imports nothing from Core |
 | Integration hub (`packages/integration-hub`) | Typed recipes that turn HIGH integration actions into Core tasks for Browser Use, n8n and OpenClaw |
-| Plan service | Model-proposed plans: compile, hash, approval card, one task per step, finishers, replan, voice cancel |
+| Plan service | Model-proposed plans: compile, hash, approval card, one task per step, finishers, replan, voice cancel, live progress and ETAs |
+| Narrator | What JARVIS says while long work runs: the page or step it moved on to, heartbeats with time spent and left, composing ([ADR 0016](ADR/0016-duplex-conversation-and-live-progress.md)) |
 | Windows-MCP | Desktop tools over MCP stdio, child of Core, allowlisted tools only, telemetry off; pre-warmed at boot, restarts age out of a 10-minute crash window |
 | Memory store | Operator-approved long-term notes ([ADR 0012](ADR/0012-operator-approved-memory.md)); written only by approved or allowed `memory.save` / `memory.forget` steps |
 | Permission service | Operator's standing ask/allow/deny per catalog action, presets, timed grants, learning switches, audit trail ([ADR 0014](ADR/0014-operator-standing-permissions.md)) |
@@ -58,7 +59,8 @@ plan ─► engine.compile (catalog Zod schemas) ─► plans row (hash) ─► 
   ├─ info.fetch    ─► NewsExecutor    ─► RSS over HTTPS ─► news panel
   ├─ memory.write  ─► MemoryExecutor  ─► secret guard ─► memories table ─► read back
   └─ integration   ─► IntegrationHub  ─► browser.extract / workflow.invoke / agent.delegate
-GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; announcements ─► voice TTS
+step progress (executor callback, in memory) ─► PlanView.progress + measured ETA ─► Narrator
+GET /v1/stream (SSE) ─► desktop main ─► renderer cards (live line) ; announcements ─► voice queue
 ```
 
 - A plan runs at once when every step is allowed in Settings (by default LOW only). Otherwise it
@@ -67,6 +69,10 @@ GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; annou
   plan, never approve one.
 - One desktop or integration plan runs at a time; a new one cancels the previous one.
 - The model's spoken text is discarded for plans; JARVIS speaks templates and Core outcomes.
+- A reply waits for a plan only when it is expected to finish within three seconds (measured
+  durations). Otherwise JARVIS answers at once with what it does, where it looks and roughly how
+  long, then narrates progress (`kind: "progress"`) and the outcome (`kind: "outcome"`) as
+  announcements. The voice service speaks them between the operator's turns, never over them.
 - Screen text reaches only trusted-private providers (Claude Code), for `screen.describe` and
   for one replan after an observed failure (window and element names from a fresh Snapshot,
   never field values). A replanned plan is compiled and approved again. Once used, the screen
@@ -80,6 +86,16 @@ GET /v1/stream (SSE) ─► desktop main ─► renderer cards and panels; annou
   names, an open question) and learned examples enter the prompt as data.
 - After an agent delegation or page read JARVIS speaks a short summary of what came back,
   written by a private provider.
+
+## Scheduling lanes
+
+Spoken turns are interactive tasks: claimed before background work, on their own capacity
+(`INTERACTIVE_CONCURRENCY`, interactive-only workers) and outside the per-capability limits,
+which count background work only. The lane is honoured for the operator only. Background work
+(plan steps, finishers, agents, API and n8n tasks) shares `WORKER_CONCURRENCY` (default 2), so a
+desktop command does not wait for a running research plan and conversation never waits for
+either. Workers share one recovery pass per second. Plan bookkeeping reacts only to plan step
+tasks and polls every 500 ms while a plan is active, every 2 s otherwise.
 
 ## Risk and approval
 
