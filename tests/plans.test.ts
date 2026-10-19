@@ -2,12 +2,12 @@ import { setTimeout as delay } from "node:timers/promises";
 import type { CompiledStep, Evidence } from "@jarvis/action-engine";
 import { IntegrationHub } from "@jarvis/integration-hub";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Executor, Task } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { PlanService, type PlanView } from "../src/plans.js";
-import { ProviderFailure, ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Executor, Task } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderFailure, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { PlanService, type PlanView } from "../src/services/plans/index.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 type Input = { action: string; args: Record<string, unknown> };

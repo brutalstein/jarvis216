@@ -4,13 +4,13 @@ import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
 import { PGlite } from "@electric-sql/pglite";
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { fingerprint, TaskSpecSchema } from "../src/contracts.js";
-import { type Database, migrate } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
+import { fingerprint, TaskSpecSchema } from "../src/core/contracts.js";
+import { type Database, migrate } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
 import { ClaudeExecutor } from "../src/integrations/models.js";
 import { OpenClawExecutor } from "../src/integrations/services.js";
-import { ProviderFailure } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
 
 let pg: PGlite;
 let db: Database;

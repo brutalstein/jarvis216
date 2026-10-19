@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { z } from "zod";
-import type { ExecutionResult, Executor, Task } from "../contracts.js";
-import { ProviderFailure } from "../routing.js";
+import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import { ProviderFailure } from "../core/routing.js";
 
 // Only what Claude Code needs to find its own subscription login. ANTHROPIC_API_KEY and every
 // other variable stay out, so billing is the operator's subscription, never an API key.

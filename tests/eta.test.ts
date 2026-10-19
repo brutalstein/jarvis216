@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Database } from "../src/database.js";
-import { Durations, durationKey, finisherOf } from "../src/eta.js";
+import type { Database } from "../src/core/database.js";
+import { Durations, durationKey, finisherOf } from "../src/services/eta.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 let db: Database;

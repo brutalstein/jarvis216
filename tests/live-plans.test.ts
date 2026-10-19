@@ -1,14 +1,14 @@
 import { createIntegrationHub } from "@jarvis/integration-hub";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Progress, Task } from "../src/contracts.js";
-import { ConversationService } from "../src/conversation.js";
-import type { Database } from "../src/database.js";
-import { Durations } from "../src/eta.js";
-import { type Announcement, Narrator } from "../src/narrator.js";
-import { PlanService, type PlanView } from "../src/plans.js";
-import { type Provider, ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Progress, Task } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { type Provider, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { ConversationService } from "../src/services/conversation.js";
+import { Durations } from "../src/services/eta.js";
+import { type Announcement, Narrator } from "../src/services/narrator.js";
+import { PlanService, type PlanView } from "../src/services/plans/index.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const urls = ["https://www.reuters.com/", "https://bbc.com/"];

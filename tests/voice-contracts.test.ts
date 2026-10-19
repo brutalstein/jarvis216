@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type Task, TaskSpecSchema, verified } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { type Provider, ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
+import { type Task, TaskSpecSchema, verified } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { type Provider, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const base = {

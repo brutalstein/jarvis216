@@ -1,7 +1,8 @@
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { describe, expect, it } from "vitest";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure, ProviderRegistry } from "../src/core/routing.js";
 import { jsonRequest } from "../src/integrations/http.js";
 import {
   N8nClient,
@@ -9,7 +10,6 @@ import {
   openClawUserKey,
   probeOpenClaw,
 } from "../src/integrations/services.js";
-import { ProviderFailure, ProviderRegistry } from "../src/routing.js";
 
 function task(planId?: string): Task {
   return {

@@ -1,6 +1,6 @@
 import { trace } from "@opentelemetry/api";
 import { expect, it } from "vitest";
-import { initTracing } from "../src/telemetry.js";
+import { initTracing } from "../src/core/telemetry.js";
 
 it("exports correlated timing evidence while excluding arbitrary sensitive span attributes", async () => {
   const lines: string[] = [];

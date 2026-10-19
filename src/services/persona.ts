@@ -1,6 +1,6 @@
 import { intentInstructions } from "@jarvis/action-engine";
 import type { Example } from "@jarvis/brain";
-import type { WorkingMemory } from "./plans.js";
+import type { WorkingMemory } from "./plans/index.js";
 
 // JARVIS's character and the per-turn prompt. Core owns it so every provider speaks alike.
 const PERSONA = `You are JARVIS, the operator's personal assistant running on this computer.

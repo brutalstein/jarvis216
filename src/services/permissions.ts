@@ -1,8 +1,8 @@
 import { EventEmitter } from "node:events";
 import { catalog } from "@jarvis/action-engine";
 import { z } from "zod";
-import { invariant } from "./contracts.js";
-import type { Database } from "./database.js";
+import { invariant } from "../core/contracts.js";
+import type { Database } from "../core/database.js";
 
 // The operator's standing decisions per catalog action, set in the desktop Settings:
 // - ask:   the plan waits for the operator's tap (and a HIGH step for its exact approval);

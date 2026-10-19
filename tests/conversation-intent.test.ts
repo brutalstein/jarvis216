@@ -1,12 +1,12 @@
 import { compile } from "@jarvis/action-engine";
 import { afterEach, beforeEach, expect, it } from "vitest";
-import type { Executor } from "../src/contracts.js";
-import { ConversationService } from "../src/conversation.js";
-import type { Database } from "../src/database.js";
-import { PlanService } from "../src/plans.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Executor } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { ConversationService } from "../src/services/conversation.js";
+import { PlanService } from "../src/services/plans/index.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 let db: Database;

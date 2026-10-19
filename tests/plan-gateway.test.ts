@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type Executor, type Risk, TaskSpecSchema } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { TaskService } from "../src/tasks.js";
+import { type Executor, type Risk, TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { TaskService } from "../src/core/tasks.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 type Step = { action: string; args: Record<string, string>; risk: Risk };

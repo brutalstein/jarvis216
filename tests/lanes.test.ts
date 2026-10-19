@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Task } from "../src/contracts.js";
-import { TaskSpecSchema } from "../src/contracts.js";
-import { ConversationService } from "../src/conversation.js";
-import type { Database } from "../src/database.js";
-import { type Provider, ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Task } from "../src/core/contracts.js";
+import { TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { type Provider, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { ConversationService } from "../src/services/conversation.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const spec = (overrides: Record<string, unknown> = {}) =>

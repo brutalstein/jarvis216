@@ -1,5 +1,5 @@
 import { catalog, type Lang, type LiveEvent, mainStep, narrateLive } from "@jarvis/action-engine";
-import type { PlanService, PlanView } from "./plans.js";
+import type { PlanService, PlanView } from "./plans/index.js";
 
 // Spoken by the voice service between the operator's turns. "progress" may be dropped or
 // replaced by a newer one; "outcome" is always spoken.

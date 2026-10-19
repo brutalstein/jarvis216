@@ -1,9 +1,9 @@
 // Live check of configured free models: one short Turkish turn each.
 // Prints provider id, outcome and latency only; never keys or replies.
-import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
-import { ProviderFailure } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
 
 const { registry } = await configuredProviders(process.env, new EnvSecrets(process.env));
 const ids = registry

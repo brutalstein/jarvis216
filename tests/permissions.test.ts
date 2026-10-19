@@ -1,15 +1,15 @@
 import { type CompiledStep, compile } from "@jarvis/action-engine";
 import { IntegrationHub } from "@jarvis/integration-hub";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Executor, Task } from "../src/contracts.js";
-import { ConversationService } from "../src/conversation.js";
-import type { Database } from "../src/database.js";
-import { PermissionService } from "../src/permissions.js";
-import { PlanService } from "../src/plans.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Executor, Task } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { buildServer } from "../src/http/server.js";
+import { ConversationService } from "../src/services/conversation.js";
+import { PermissionService } from "../src/services/permissions.js";
+import { PlanService } from "../src/services/plans/index.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 let db: Database;

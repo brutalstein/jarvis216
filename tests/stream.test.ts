@@ -2,11 +2,11 @@ import { randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { compile } from "@jarvis/action-engine";
 import { afterEach, beforeEach, expect, it } from "vitest";
-import type { Database } from "../src/database.js";
-import { PlanService } from "../src/plans.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { TaskService } from "../src/tasks.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { buildServer } from "../src/http/server.js";
+import { PlanService } from "../src/services/plans/index.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const token = "operator-fixture-32-characters-minimum";

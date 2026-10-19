@@ -1,19 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
 import {
   loadObservations,
   minReliabilitySamples,
   type Observation,
   ReliabilityTracker,
   wilsonUpper,
-} from "../src/reliability.js";
-import { type Provider, ProviderFailure, ProviderRegistry } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+} from "../src/core/reliability.js";
+import { type Provider, ProviderFailure, ProviderRegistry } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const now = 10_000_000_000;

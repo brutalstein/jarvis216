@@ -3,9 +3,9 @@ import { createServer, type IncomingMessage } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI } from "@google/genai";
 import { describe, expect, it } from "vitest";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
 import { ClaudeExecutor, GeminiExecutor } from "../src/integrations/models.js";
-import { ProviderFailure } from "../src/routing.js";
 
 async function body(req: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];

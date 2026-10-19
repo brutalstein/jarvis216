@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, it } from "vitest";
 import { z } from "zod";
-import { EnvelopeSchema, ResultSchema, TaskSpecSchema } from "../src/contracts.js";
+import { EnvelopeSchema, ResultSchema, TaskSpecSchema } from "../src/core/contracts.js";
 
 it("published JSON Schemas match the runtime contracts (run npm run contracts)", async () => {
   for (const [name, schema] of Object.entries({

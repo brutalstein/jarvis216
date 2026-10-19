@@ -7,8 +7,8 @@ import {
   runStep,
   type ToolPort,
 } from "@jarvis/action-engine";
-import type { ExecutionResult, Executor, Task } from "../contracts.js";
-import { ProviderFailure } from "../routing.js";
+import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import { ProviderFailure } from "../core/routing.js";
 
 function step(task: Task, kind: Kind) {
   const compiled = compile([task.spec.input]);

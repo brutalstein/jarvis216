@@ -90,7 +90,7 @@ declare global {
   }
 }
 
-import type { PermissionView } from "../../../src/permissions";
-import type { PlanView } from "../../../src/plans";
+import type { PermissionView } from "../../../src/services/permissions";
+import type { PlanView } from "../../../src/services/plans/index";
 
 export type { PermissionView, PlanView };

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, it } from "vitest";
-import { migrate, postgres } from "../src/database.js";
-import { TaskService } from "../src/tasks.js";
+import { migrate, postgres } from "../src/core/database.js";
+import { TaskService } from "../src/core/tasks.js";
 
 it.skipIf(process.env.JARVIS_LIVE_POSTGRES_TEST !== "true" || !process.env.TEST_DATABASE_URL)(
   "real PostgreSQL: concurrent bootstrap, separate workers and reconnect",

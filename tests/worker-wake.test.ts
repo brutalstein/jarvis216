@@ -1,12 +1,12 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TaskSpecSchema } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { type TaskChange, TaskService } from "../src/tasks.js";
-import { runText } from "../src/text-task.js";
-import { Worker } from "../src/worker.js";
+import { TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { type TaskChange, TaskService } from "../src/core/tasks.js";
+import { runText } from "../src/core/text-task.js";
+import { Worker } from "../src/core/worker.js";
+import { buildServer } from "../src/http/server.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const spec = () => ({

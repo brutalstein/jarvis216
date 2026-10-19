@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
-import { type Database, migrate, type Sql } from "../../src/database.js";
+import { type Database, migrate, type Sql } from "../../src/core/database.js";
 
 // In-memory PostgreSQL with Core's migrations applied.
 export async function memoryDatabase(): Promise<Database> {

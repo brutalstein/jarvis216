@@ -2,9 +2,9 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
 import { ClaudeCodeExecutor, claudeCodeEnvKeys } from "../src/integrations/claude-code.js";
-import { ProviderFailure } from "../src/routing.js";
 
 const fixture = path.resolve("tests/fixtures/fake-claude.mjs");
 const dir = mkdtempSync(path.join(tmpdir(), "jarvis-claude-code-"));

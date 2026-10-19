@@ -1,6 +1,6 @@
 import { context, propagation } from "@opentelemetry/api";
 import { Agent } from "undici";
-import { ProviderFailure } from "../routing.js";
+import { ProviderFailure } from "../core/routing.js";
 
 // Shared keep-alive pool for loopback OpenClaw / browser / n8n. One dispatcher per process.
 export const serviceDispatcher = new Agent({

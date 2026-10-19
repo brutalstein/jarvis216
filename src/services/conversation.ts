@@ -11,14 +11,14 @@ import {
 } from "@jarvis/action-engine";
 import type { Brain, IntentRecord } from "@jarvis/brain";
 import { z } from "zod";
-import { CoreError } from "./contracts.js";
-import type { Sql } from "./database.js";
+import { CoreError } from "../core/contracts.js";
+import type { Sql } from "../core/database.js";
+import type { TaskService } from "../core/tasks.js";
+import { runText } from "../core/text-task.js";
 import type { MemoryStore } from "./memory.js";
 import type { BrainSettings } from "./permissions.js";
 import { conversationPromptParts } from "./persona.js";
-import type { PlanService, PlanView } from "./plans.js";
-import type { TaskService } from "./tasks.js";
-import { runText } from "./text-task.js";
+import type { PlanService, PlanView } from "./plans/index.js";
 
 export const DisplayBlockSchema = z.discriminatedUnion("type", [
   z.strictObject({

@@ -1,158 +1,32 @@
 import { randomUUID } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { setTimeout as delay } from "node:timers/promises";
-import {
-  briefPrompt,
-  type CompiledStep,
-  catalog,
-  describePrompt,
-  type Evidence,
-  type Lang,
-  narrate,
-  narrateLive,
-  type Panel,
-  readBrief,
-  readIntent,
-  replanPrompt,
-  resultBriefPrompt,
-} from "@jarvis/action-engine";
+import { type CompiledStep, catalog, type Lang, narrate } from "@jarvis/action-engine";
 import { IntegrationError, type IntegrationHub } from "@jarvis/integration-hub";
+import { CoreError, fingerprint, invariant } from "../../core/contracts.js";
+import type { Sql } from "../../core/database.js";
+import { planApprovalMs } from "../../core/gateway.js";
+import type { TaskChange, TaskService } from "../../core/tasks.js";
+import { runText } from "../../core/text-task.js";
+import { type Durations, durationKey, finisherOf } from "../eta.js";
+import type { Announcement } from "../narrator.js";
+import type { PermissionMode, PermissionService } from "../permissions.js";
+import { composeResult, type FinisherContext, failPlan } from "./finishers.js";
 import {
-  CoreError,
-  type ExecutionResult,
-  fingerprint,
-  invariant,
-  type TaskState,
-} from "./contracts.js";
-import type { Sql } from "./database.js";
-import { type Durations, durationKey, finisherOf } from "./eta.js";
-import { planApprovalMs } from "./gateway.js";
-import type { Announcement } from "./narrator.js";
-import type { PermissionMode, PermissionService } from "./permissions.js";
-import type { TaskChange, TaskService } from "./tasks.js";
-import { runText } from "./text-task.js";
-
-export type PlanStatus =
-  | "AWAITING_APPROVAL"
-  | "RUNNING"
-  | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED"
-  | "RECOVERY_REQUIRED";
-export type PlanPanel = Panel | { type: "candidates"; planId: string; items: string[] };
-export type WorkingMemory = {
-  active: {
-    goal: string;
-    status: PlanStatus;
-    actions: string[];
-    // Where a running plan is: its step, what that step reported, time spent and left.
-    progress?: {
-      step: number;
-      steps: number;
-      action: string;
-      args: Record<string, unknown>;
-      detail?: string;
-      elapsedMs: number;
-      remainingMs?: number;
-      finishing?: boolean;
-    };
-  }[];
-  last?: { goal: string; status: PlanStatus; say: string | null; agoMs: number };
-  entities: string[];
-  asked?: string;
-};
-export type PlanView = {
-  id: string;
-  goal: string;
-  lang: Lang;
-  kind: "desktop" | "info" | "integration";
-  status: PlanStatus;
-  hash: string;
-  needsApproval: boolean;
-  expiresAt: number;
-  steps: {
-    action: string;
-    args: Record<string, unknown>;
-    risk: CompiledStep["risk"];
-    // The operator's current Settings decision for this action.
-    mode: PermissionMode;
-    status: TaskState;
-    evidence?: Evidence;
-    approval?: { id: string; target: string };
-  }[];
-  panels: PlanPanel[];
-  say?: string;
-  // A running plan's live state: the step it is on, what that step reported (where it looks),
-  // and when it is expected to end, from measured durations. Timestamps keep the view stable.
-  progress?: PlanProgress;
-};
-export type PlanProgress = {
-  step: number;
-  steps: number;
-  action: string;
-  args: Record<string, unknown>;
-  stage?: string;
-  detail?: string;
-  index?: number;
-  total?: number;
-  startedAt: number;
-  stepStartedAt?: number;
-  etaAt?: number;
-  // Every step is done; JARVIS is composing the spoken result.
-  finishing?: boolean;
-};
-type Outcome = { say: string; candidates?: { index: number; items: string[] } };
-type PlanRow = {
-  id: string;
-  turn_id: string;
-  goal: string;
-  lang: Lang;
-  kind: "desktop" | "info" | "integration";
-  steps: CompiledStep[];
-  hash: string;
-  status: PlanStatus;
-  task_ids: string[];
-  created_at: string | number;
-  expires_at: string | number;
-  approved_at: string | number | null;
-  narrated: boolean;
-  continued: boolean;
-  replanned: boolean;
-  outcome: Outcome | null;
-};
-type StepTask = {
-  id: string;
-  status: TaskState;
-  result: ExecutionResult | null;
-  approval: { id: string; target: string } | null;
-};
-
-// A spoken turn may narrate a quick outcome itself; announcements wait this long for it.
-export const replyWaitMs = 5000;
-const stepWindowMs = 15_000;
-const planWindowMs = 120_000;
-const active = "status IN ('AWAITING_APPROVAL','RUNNING')";
-const ended = new Set<PlanStatus>(["COMPLETED", "FAILED", "CANCELLED", "RECOVERY_REQUIRED"]);
-
-function evidenceOf(task: StepTask | undefined): Evidence | undefined {
-  if (!task?.result) return undefined;
-  try {
-    const value = JSON.parse(task.result.text) as Evidence;
-    return typeof value?.ok === "boolean" ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-// Models wrap JSON in fences or prose.
-function jsonObject(text: string): Record<string, unknown> | undefined {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  try {
-    return start >= 0 && end > start ? JSON.parse(text.slice(start, end + 1)) : undefined;
-  } catch {
-    return undefined;
-  }
-}
+  active,
+  ended,
+  type Outcome,
+  type PlanRow,
+  type PlanStatus,
+  type PlanView,
+  planWindowMs,
+  replyWaitMs,
+  type StepTask,
+  stepWindowMs,
+  type WorkingMemory,
+} from "./model.js";
+import { planView, type ViewContext } from "./view.js";
+import { statusSay, workingMemory } from "./working-memory.js";
 
 // Plans are the operator-facing unit over step tasks: admission, approval, status, narration.
 export class PlanService extends EventEmitter {
@@ -167,6 +41,8 @@ export class PlanService extends EventEmitter {
   // Any plan running or awaiting approval at the last refresh (sets the poll cadence).
   #active = true;
   #creating = Promise.resolve();
+  #viewContext: ViewContext;
+  #finisher: FinisherContext;
   constructor(
     private options: {
       tasks: TaskService;
@@ -192,6 +68,25 @@ export class PlanService extends EventEmitter {
     super();
     // Up to 8 desktop streams, the conversation's learning hook and each waiting turn listen.
     this.setMaxListeners(50);
+    this.#viewContext = {
+      modeOf: (step) => this.modeOf(step),
+      progressOf: (id) => options.tasks.progressOf(id),
+      stepStartedAt: (id) => this.#stepStarted.get(id),
+      finishStartedAt: (id) => this.#finishStarted.get(id),
+      ...(options.durations && { durations: options.durations }),
+    };
+    this.#finisher = {
+      tasks: options.tasks,
+      privateProviders: options.privateProviders,
+      ...(options.screen && { screen: options.screen }),
+      text: (plan, label, prompt, privacy, json) => this.#text(plan, label, prompt, privacy, json),
+      settle: (plan, status, outcome, flags) => this.#settle(plan, status, outcome, flags),
+      create: (input, flags) => this.#create(input, flags),
+      outcome: (text, lang, planId) => this.#outcome(text, lang, planId),
+      optionalActions: () => this.optionalActions(),
+      browserUrls: () => this.browserUrls(),
+      deniedActions: () => this.deniedActions(),
+    };
   }
 
   integrationCapabilities(): string[] {
@@ -222,104 +117,14 @@ export class PlanService extends EventEmitter {
     return this.options.available ? this.options.available().has(action) : true;
   }
 
-  // What Core knows right now, for the model's working memory: active plans, the last outcome,
-  // things recently referred to, and a question JARVIS just asked.
-  async workingMemory(): Promise<WorkingMemory> {
-    const now = Date.now();
-    const { db } = this.options.tasks;
-    const recent = (
-      await db.query<PlanRow>(
-        "SELECT * FROM plans WHERE created_at>$1 ORDER BY created_at DESC LIMIT 6",
-        [now - 15 * 60_000],
-      )
-    ).rows;
-    const active = await Promise.all(
-      recent
-        .filter((plan) => !ended.has(plan.status))
-        .map(async (plan) => {
-          const progress =
-            plan.status === "RUNNING"
-              ? (await this.get(plan.id).catch(() => undefined))?.progress
-              : undefined;
-          return {
-            goal: plan.goal,
-            status: plan.status,
-            actions: plan.steps.map((step) => step.action),
-            ...(progress && {
-              progress: {
-                step: progress.step,
-                steps: progress.steps,
-                action: progress.action,
-                args: progress.args,
-                ...(progress.detail && { detail: progress.detail }),
-                elapsedMs: now - progress.startedAt,
-                ...(progress.etaAt !== undefined && { remainingMs: progress.etaAt - now }),
-                ...(progress.finishing && { finishing: true }),
-              },
-            }),
-          };
-        }),
-    );
-    const last = recent.find((plan) => ended.has(plan.status) && plan.goal !== "[deleted]");
-    const entities = [
-      ...new Set(
-        recent.flatMap((plan) =>
-          plan.steps.flatMap((step) =>
-            ["name", "target", "folder", "path", "source", "destination", "url", "topic"]
-              .map((key) => step.args[key])
-              .filter((value): value is string => typeof value === "string" && value.length <= 200),
-          ),
-        ),
-      ),
-    ].slice(0, 8);
-    const asked = (
-      await db.query<{ say: string; kind: string | null }>(
-        "SELECT reply->>'say' AS say, reply->'intent'->>'kind' AS kind FROM conversation_turns WHERE created_at>$1 ORDER BY created_at DESC LIMIT 1",
-        [now - 120_000],
-      )
-    ).rows[0];
-    return {
-      active,
-      ...(last && {
-        last: {
-          goal: last.goal,
-          status: last.status,
-          say: last.outcome?.say ?? null,
-          agoMs: now - Number(last.created_at),
-        },
-      }),
-      entities,
-      ...(asked?.kind === "clarify" && asked.say ? { asked: asked.say } : {}),
-    };
+  // What Core knows right now, for the model's working memory.
+  workingMemory(): Promise<WorkingMemory> {
+    return workingMemory(this.options.tasks.db, (id) => this.get(id));
   }
 
   // "Ne yapıyorsun?" answered from plan records.
   async statusSay(lang: Lang): Promise<string> {
-    const memory = await this.workingMemory();
-    const [current] = memory.active;
-    const progress = current?.progress;
-    if (current && progress && !progress.finishing)
-      return narrateLive(
-        {
-          type: "status",
-          goal: current.goal,
-          step: { action: progress.action, args: progress.args },
-          ...(progress.detail && { detail: progress.detail }),
-          ...(progress.remainingMs !== undefined && { remainingMs: progress.remainingMs }),
-        },
-        lang,
-      );
-    if (current && progress?.finishing) return narrateLive({ type: "composing" }, lang);
-    if (current)
-      return narrate(
-        {
-          type: current.status === "AWAITING_APPROVAL" ? "status-waiting" : "status-running",
-          goal: current.goal,
-        },
-        lang,
-      );
-    if (memory.last?.say && memory.last.agoMs < 5 * 60_000) return memory.last.say;
-    return narrate({ type: "status-idle" }, lang);
+    return statusSay(await this.workingMemory(), lang);
   }
 
   // ask: the plan waits for a tap; allow: it runs; deny: it is refused.
@@ -440,7 +245,7 @@ export class PlanService extends EventEmitter {
 
   async get(id: string): Promise<PlanView> {
     const plan = await this.#row(id);
-    return this.#view(plan, await this.#stepTasks(plan));
+    return planView(plan, await this.#stepTasks(plan), this.#viewContext);
   }
 
   // Waits until the plan ends or needs the operator, or until `ms` passes. Task transitions
@@ -678,101 +483,6 @@ export class PlanService extends EventEmitter {
     return plan.task_ids.map((id) => rows.find((row) => row.id === id));
   }
 
-  #view(plan: PlanRow, tasks: (StepTask | undefined)[]): PlanView {
-    const steps = plan.steps.map((step, index) => {
-      const task = tasks[index];
-      const evidence = evidenceOf(task);
-      const status: TaskState =
-        task?.status ??
-        (plan.status === "AWAITING_APPROVAL" ? "WAITING_FOR_APPROVAL" : "CANCELLED");
-      return {
-        action: step.action,
-        args: step.args,
-        risk: step.risk,
-        mode: this.modeOf(step),
-        status,
-        ...(evidence && { evidence }),
-        ...(task?.status === "WAITING_FOR_APPROVAL" && task.approval
-          ? { approval: task.approval }
-          : {}),
-      };
-    });
-    const panels: PlanPanel[] = steps.flatMap((step) =>
-      step.evidence?.panel ? [step.evidence.panel] : [],
-    );
-    if (plan.kind === "integration")
-      tasks.forEach((task, index) => {
-        const body = task?.result?.text?.trim();
-        if (body)
-          panels.push({
-            type: "text",
-            title: steps[index]?.action ?? "Result",
-            body: body.slice(0, 4000),
-          });
-      });
-    const candidates = plan.outcome?.candidates;
-    if (candidates) panels.push({ type: "candidates", planId: plan.id, items: candidates.items });
-    const progress = plan.status === "RUNNING" ? this.#progress(plan, tasks) : undefined;
-    return {
-      id: plan.id,
-      goal: plan.goal,
-      lang: plan.lang,
-      kind: plan.kind,
-      status: plan.status,
-      hash: plan.hash,
-      needsApproval: plan.status === "AWAITING_APPROVAL",
-      expiresAt: Number(plan.expires_at),
-      steps,
-      panels,
-      ...(plan.outcome?.say && { say: plan.outcome.say }),
-      ...(progress && { progress }),
-    };
-  }
-
-  #progress(plan: PlanRow, tasks: (StepTask | undefined)[]): PlanProgress | undefined {
-    const durations = this.options.durations;
-    const states = tasks.map((task) => task?.status);
-    const finishing = states.length > 0 && states.every((state) => state === "COMPLETED");
-    let index = states.findIndex((state) => state === "RUNNING" || state === "VERIFYING");
-    if (index < 0) index = states.findIndex((state) => state !== "COMPLETED");
-    if (index < 0) index = plan.steps.length - 1;
-    const step = plan.steps[index];
-    if (!step) return undefined;
-    const task = tasks[index];
-    const reported = task && !finishing ? this.options.tasks.progressOf(task.id) : undefined;
-    const stepStartedAt = task ? this.#stepStarted.get(task.id) : undefined;
-    const finishStartedAt = this.#finishStarted.get(plan.id);
-    const finisher = durations?.finisher(finisherOf(plan.steps)) ?? 0;
-    const later = plan.steps
-      .slice(index + 1)
-      .reduce((sum, s) => sum + (durations?.step(s) ?? 0), 0);
-    const etaAt = !durations
-      ? undefined
-      : finishing
-        ? finishStartedAt !== undefined
-          ? finishStartedAt + finisher
-          : undefined
-        : stepStartedAt !== undefined
-          ? stepStartedAt + durations.step(step) + later + finisher
-          : undefined;
-    return {
-      step: index + 1,
-      steps: plan.steps.length,
-      action: step.action,
-      args: step.args,
-      ...(reported && {
-        stage: reported.stage,
-        ...(reported.detail && { detail: reported.detail }),
-        ...(reported.index !== undefined && { index: reported.index }),
-        ...(reported.total !== undefined && { total: reported.total }),
-      }),
-      startedAt: Number(plan.approved_at ?? plan.created_at),
-      ...(stepStartedAt !== undefined && !finishing && { stepStartedAt }),
-      ...(etaAt !== undefined && { etaAt: Math.round(etaAt) }),
-      ...(finishing && { finishing: true }),
-    };
-  }
-
   // Step durations as Core observes them: first seen running to completed.
   #time(plan: PlanRow, tasks: (StepTask | undefined)[]): void {
     const now = Date.now();
@@ -896,9 +606,9 @@ export class PlanService extends EventEmitter {
         ) &&
         !states.some((state) => state === "RUNNING" || state === "VERIFYING")
       )
-        this.#detach(plan, () => this.#fail(plan, tasks));
+        this.#detach(plan, () => failPlan(this.#finisher, plan, tasks));
       // Steady state: the rows just read are current, no second read.
-      else this.#emitChanged(this.#view(plan, tasks));
+      else this.#emitChanged(planView(plan, tasks, this.#viewContext));
     }
     await this.#announce();
     return plans.length > 0;
@@ -948,175 +658,15 @@ export class PlanService extends EventEmitter {
   async #finish(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<void> {
     const finisher = finisherOf(plan.steps);
     if (!finisher) {
-      await this.#compose(plan, tasks);
+      await composeResult(this.#finisher, plan, tasks);
       return;
     }
     const started = Date.now();
     this.#finishStarted.set(plan.id, started);
     await this.#publish(plan.id);
     // Only a spoken result a model composed is a finisher run worth learning from.
-    if (await this.#compose(plan, tasks))
+    if (await composeResult(this.#finisher, plan, tasks))
       this.options.durations?.record(`finish:${finisher}`, Date.now() - started);
-  }
-
-  async #compose(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<boolean> {
-    const { lang, steps } = plan;
-    const news = steps.findIndex((step) => step.action === "news.brief");
-    const describe = steps.findIndex((step) => step.action === "screen.describe");
-    if (news >= 0) {
-      const panel = evidenceOf(tasks[news])?.panel;
-      const items = panel?.type === "news" ? panel.items : [];
-      const brief = await this.#text(plan, "brief", briefPrompt(items, lang), "personal");
-      const say =
-        (brief === null ? null : readBrief(brief)) ??
-        narrate({ type: "news-fallback", count: items.length }, lang);
-      await this.#settle(plan, "COMPLETED", { say });
-      return true;
-    }
-    if (describe >= 0) {
-      const question = steps[describe]?.args.question;
-      const screen = evidenceOf(tasks[describe])?.observation ?? "";
-      const answer = await this.#text(
-        plan,
-        "describe",
-        describePrompt(typeof question === "string" ? question : undefined, screen, lang),
-        "private",
-      );
-      const say = answer === null ? null : readBrief(answer);
-      await this.#forgetScreen(plan, "describe", tasks[describe]?.id);
-      await this.#settle(plan, say === null ? "FAILED" : "COMPLETED", {
-        say: say ?? narrate({ type: "plan-failed" }, lang),
-      });
-      return true;
-    }
-    // An agent or page read came back with text: say what it found, not just "done".
-    const results = tasks.flatMap((task, index) =>
-      plan.steps[index]?.kind === "integration" && task?.result?.text?.trim()
-        ? [task.result.text.trim()]
-        : [],
-    );
-    if (results.length) {
-      const confidential = steps.some(
-        (step) =>
-          step.kind === "integration" &&
-          step.action !== "browser.read" &&
-          step.action !== "browser.read_many",
-      );
-      const brief = await this.#text(
-        plan,
-        "result",
-        resultBriefPrompt(plan.goal, results, lang),
-        confidential ? "private" : "personal",
-      );
-      const say =
-        (brief === null ? null : readBrief(brief)) ?? narrate({ type: "plan-done" }, lang);
-      await this.#settle(plan, "COMPLETED", { say });
-      return true;
-    }
-    const [only] = steps;
-    const say =
-      steps.length === 1 && only
-        ? narrate({ type: "step-done", action: only.action, args: only.args }, lang)
-        : narrate({ type: "plan-done" }, lang);
-    await this.#settle(plan, "COMPLETED", { say });
-    return false;
-  }
-
-  async #fail(plan: PlanRow, tasks: (StepTask | undefined)[]): Promise<void> {
-    const failedSay = narrate({ type: "plan-failed" }, plan.lang);
-    const index = tasks.findIndex((task) =>
-      ["FAILED", "CANCELLED", "BLOCKED"].includes(task?.status ?? ""),
-    );
-    const evidence = evidenceOf(tasks[index]);
-    if (evidence?.candidates?.length) {
-      await this.#settle(plan, "FAILED", {
-        say: narrate({ type: "candidates", count: evidence.candidates.length }, plan.lang),
-        candidates: { index, items: evidence.candidates },
-      });
-      return;
-    }
-    const step = plan.steps[index];
-    if (
-      evidence?.evidence !== "observed-failure" ||
-      plan.replanned ||
-      !this.options.privateProviders.length ||
-      !step
-    ) {
-      await this.#settle(plan, "FAILED", { say: failedSay });
-      return;
-    }
-    // One replan: the failed plan ends silently and the operator hears what follows instead.
-    if (
-      !(await this.#settle(plan, "FAILED", { say: failedSay }, { narrated: true, replanned: true }))
-    )
-      return;
-    const screen = await this.options.screen?.().catch(() => undefined);
-    const text = await this.#text(
-      plan,
-      "replan",
-      replanPrompt({
-        goal: plan.goal,
-        step: { action: step.action, args: step.args },
-        observation: evidence.observation,
-        ...(screen ? { screen } : {}),
-        enabledIntegrations: this.optionalActions(),
-        browserUrls: this.browserUrls(),
-        denied: this.deniedActions(),
-      }),
-      "private",
-      true,
-    );
-    if (screen) await this.#forgetScreen(plan, "replan");
-    const read = text === null ? undefined : readIntent(jsonObject(text)?.intent);
-    if (read && "decision" in read && read.decision.kind === "plan") {
-      try {
-        const next = await this.#create(
-          {
-            turnId: plan.turn_id,
-            goal: read.decision.goal,
-            lang: plan.lang,
-            steps: read.decision.steps,
-          },
-          { approved: false, replanned: true, originCreatedAt: Number(plan.created_at) },
-        );
-        if (next.needsApproval)
-          this.#outcome(
-            narrate({ type: "proposed", goal: next.goal, needsApproval: true }, plan.lang),
-            plan.lang,
-            next.id,
-          );
-      } catch {
-        this.#outcome(failedSay, plan.lang, plan.id);
-      }
-    } else this.#outcome(failedSay, plan.lang, plan.id);
-  }
-
-  // Screen text served its one question or replan: drop it from the prompt and step records,
-  // keep the outcome. The spoken answer itself stays in the plan outcome.
-  async #forgetScreen(plan: PlanRow, label: "describe" | "replan", stepTaskId?: string) {
-    const key = `plan:${plan.id}:${label}`;
-    const marker = '"[screen text discarded]"';
-    await this.options.tasks.db.transaction(async (tx) => {
-      await tx.query(
-        `UPDATE actions SET parameters = jsonb_set(parameters, '{objective}', '${marker}') WHERE task_id IN (SELECT id FROM tasks WHERE principal='operator' AND idempotency_key=$1)`,
-        [key],
-      );
-      await tx.query(
-        `UPDATE tasks SET spec = jsonb_set(spec, '{objective}', '${marker}') WHERE principal='operator' AND idempotency_key=$1`,
-        [key],
-      );
-      if (!stepTaskId) return;
-      const evidence = JSON.stringify({
-        ok: true,
-        evidence: "postcondition",
-        observation: "[screen text discarded]",
-      });
-      for (const table of ["tasks", "actions"] as const)
-        await tx.query(
-          `UPDATE ${table} SET result = jsonb_set(result, '{text}', to_jsonb($2::text)) WHERE ${table === "tasks" ? "id" : "task_id"}=$1 AND result IS NOT NULL`,
-          [stepTaskId, evidence],
-        );
-    });
   }
 
   // Each ended plan is spoken once, after the turn had its chance to narrate it.

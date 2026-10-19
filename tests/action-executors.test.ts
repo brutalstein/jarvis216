@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { ResultSchema, type Task, TaskSpecSchema } from "../src/contracts.js";
+import { ResultSchema, type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
 import { DesktopExecutor, NewsExecutor } from "../src/integrations/actions.js";
-import { ProviderFailure } from "../src/routing.js";
 
 const signal = () => new AbortController().signal;
 function task(action: string, args: Record<string, unknown> = {}, risk = "LOW"): Task {

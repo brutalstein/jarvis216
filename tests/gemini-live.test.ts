@@ -3,12 +3,12 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { describe, expect, it } from "vitest";
-import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
-import { conversationProviders } from "../src/conversation.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
 import { GeminiExecutor } from "../src/integrations/models.js";
-import { ProviderFailure } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
+import { conversationProviders } from "../src/services/conversation.js";
 
 const task = {
   spec: TaskSpecSchema.parse({

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { configuredProviders } from "../src/config.js";
-import { type Executor, type Task, TaskSpecSchema } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { EnvSecrets } from "../src/security.js";
-import { TaskService } from "../src/tasks.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Executor, type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { EnvSecrets } from "../src/core/security.js";
+import { TaskService } from "../src/core/tasks.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const spec = (privacy: string) =>

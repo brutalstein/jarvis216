@@ -5,12 +5,12 @@ import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { catalog, readIntent } from "@jarvis/action-engine";
 import { EvalCommandSchema, scoreIntent } from "../packages/action-engine/src/eval-score.js";
-import { configuredProviders } from "../src/config.js";
-import { CoreError, type Task, TaskSpecSchema } from "../src/contracts.js";
-import { conversationProviders, parseReply } from "../src/conversation.js";
-import { conversationPrompt } from "../src/persona.js";
-import { ProviderFailure } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
+import { configuredProviders } from "../src/app/config.js";
+import { CoreError, type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
+import { conversationProviders, parseReply } from "../src/services/conversation.js";
+import { conversationPrompt } from "../src/services/persona.js";
 
 const { values } = parseArgs({
   options: { providers: { type: "string" }, limit: { type: "string" }, pace: { type: "string" } },

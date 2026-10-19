@@ -2,11 +2,11 @@ import { once } from "node:events";
 import { createServer, type IncomingHttpHeaders } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TaskSpecSchema } from "../src/contracts.js";
-import type { Database } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { Outbox } from "../src/outbox.js";
-import { TaskService } from "../src/tasks.js";
+import { TaskSpecSchema } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Outbox } from "../src/services/outbox.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const token = "callback-token-fixture-32-characters-min";
@@ -157,7 +157,7 @@ describe("callback configuration", () => {
     N8N_INGRESS_TOKEN: "ingress-token-fixture-32-characters-x",
   };
   it("needs the URL and a strong token together", async () => {
-    const { ConfigSchema } = await import("../src/config.js");
+    const { ConfigSchema } = await import("../src/app/config.js");
     expect(ConfigSchema.safeParse(base).success).toBe(true);
     expect(
       ConfigSchema.safeParse({ ...base, N8N_CALLBACK_URL: "", N8N_CALLBACK_TOKEN: "" }).success,

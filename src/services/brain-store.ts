@@ -1,5 +1,5 @@
 import type { BrainStore, Experience, Preference, Skill } from "@jarvis/brain";
-import type { Sql } from "./database.js";
+import type { Sql } from "../core/database.js";
 
 // The brain's durable memory in PostgreSQL; each record is one JSON document.
 export class PostgresBrainStore implements BrainStore {

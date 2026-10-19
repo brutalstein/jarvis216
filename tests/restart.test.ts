@@ -3,8 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { expect, it } from "vitest";
-import { type Database, migrate } from "../src/database.js";
-import { TaskService } from "../src/tasks.js";
+import { type Database, migrate } from "../src/core/database.js";
+import { TaskService } from "../src/core/tasks.js";
 
 it("persists an intent across database restart and requires reconciliation instead of replay", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "jarvis-restart-"));

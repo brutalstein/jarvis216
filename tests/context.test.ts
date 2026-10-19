@@ -1,8 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
 import { expect, it } from "vitest";
-import { ContextStore } from "../src/context.js";
-import { type Database, migrate } from "../src/database.js";
-import { TaskService } from "../src/tasks.js";
+import { ContextStore } from "../src/core/context.js";
+import { type Database, migrate } from "../src/core/database.js";
+import { TaskService } from "../src/core/tasks.js";
 
 it("compacts only the owning task's bounded, unexpired, redacted context with provenance", async () => {
   const pg = new PGlite();

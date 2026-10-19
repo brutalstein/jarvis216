@@ -1,8 +1,8 @@
 import type { EventEmitter } from "node:events";
 import { setTimeout as delay } from "node:timers/promises";
-import type { ExecutionResult } from "./contracts.js";
-import type { Database } from "./database.js";
-import { serviceDispatcher, serviceUrl } from "./integrations/http.js";
+import type { ExecutionResult } from "../core/contracts.js";
+import type { Database } from "../core/database.js";
+import { serviceDispatcher, serviceUrl } from "../integrations/http.js";
 
 type Due = {
   id: string;

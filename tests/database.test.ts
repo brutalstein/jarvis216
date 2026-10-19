@@ -1,6 +1,6 @@
 import type { Pool } from "pg";
 import { expect, it } from "vitest";
-import { postgres } from "../src/database.js";
+import { postgres } from "../src/core/database.js";
 
 it("destroys a broken connection and keeps the original error when ROLLBACK fails", async () => {
   const released: unknown[] = [];

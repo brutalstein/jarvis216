@@ -4,14 +4,14 @@ import Anthropic from "@anthropic-ai/sdk";
 import { PGlite } from "@electric-sql/pglite";
 import { GoogleGenAI } from "@google/genai";
 import { expect, it } from "vitest";
-import type { Executor } from "../src/contracts.js";
-import { type Database, migrate } from "../src/database.js";
+import type { Executor } from "../src/core/contracts.js";
+import { type Database, migrate } from "../src/core/database.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { buildServer } from "../src/http/server.js";
 import { ClaudeExecutor, GeminiExecutor } from "../src/integrations/models.js";
 import { OpenClawExecutor } from "../src/integrations/services.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
 
 it("local contract E2E: n8n-scoped ingress, OpenClaw request, operator approval and result consumption", async () => {
   let calls = 0;

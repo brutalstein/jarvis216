@@ -1,5 +1,5 @@
 import { catalog } from "@jarvis/action-engine";
-import type { Sql } from "./database.js";
+import type { Sql } from "../core/database.js";
 
 // How long work takes on this computer, learned from what Core measured: per catalog action
 // (per page for page reads) and per spoken-result finisher. Estimates for narration and

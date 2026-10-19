@@ -4,20 +4,20 @@ import { ThinkingLevel } from "@google/genai";
 import { McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
 import { createIntegrationHub } from "@jarvis/integration-hub";
 import { z } from "zod";
-import type { Executor } from "./contracts.js";
-import { DesktopExecutor, NewsExecutor } from "./integrations/actions.js";
-import { ClaudeCodeExecutor } from "./integrations/claude-code.js";
+import type { Executor } from "../core/contracts.js";
+import { type Provider, ProviderRegistry } from "../core/routing.js";
+import { containedPath, type EnvSecrets } from "../core/security.js";
+import { DesktopExecutor, NewsExecutor } from "../integrations/actions.js";
+import { ClaudeCodeExecutor } from "../integrations/claude-code.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
   GeminiExecutor,
   supportsRefusalFallback,
-} from "./integrations/models.js";
-import { OpenAICompatibleExecutor, providerId } from "./integrations/openai-compatible.js";
-import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "./integrations/services.js";
-import { MemoryExecutor, type MemoryStore } from "./memory.js";
-import { type Provider, ProviderRegistry } from "./routing.js";
-import { containedPath, type EnvSecrets } from "./security.js";
+} from "../integrations/models.js";
+import { OpenAICompatibleExecutor, providerId } from "../integrations/openai-compatible.js";
+import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "../integrations/services.js";
+import { MemoryExecutor, type MemoryStore } from "../services/memory.js";
 
 // .env.example placeholders are long enough to pass length checks; never accept them.
 const generated = (value: string) => !value.includes("REPLACE_");

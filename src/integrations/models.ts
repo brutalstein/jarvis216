@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI, type ThinkingLevel } from "@google/genai";
 import { Codex, type CodexOptions } from "@openai/codex-sdk";
-import type { ExecutionResult, Executor, Task } from "../contracts.js";
-import { ProviderFailure } from "../routing.js";
+import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import { ProviderFailure } from "../core/routing.js";
 import { networkCode, neverDispatched } from "./http.js";
 
 async function classify<T>(fn: () => Promise<T>): Promise<T> {

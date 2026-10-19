@@ -1,12 +1,12 @@
 import { PGlite } from "@electric-sql/pglite";
 import fc from "fast-check";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { canTransition, fingerprint, TaskSpecSchema } from "../src/contracts.js";
-import { type Database, migrate, type Sql } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { ProviderFailure } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
-import { TaskService } from "../src/tasks.js";
+import { canTransition, fingerprint, TaskSpecSchema } from "../src/core/contracts.js";
+import { type Database, migrate, type Sql } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
+import { TaskService } from "../src/core/tasks.js";
 
 function spec(overrides: Record<string, unknown> = {}) {
   return TaskSpecSchema.parse({

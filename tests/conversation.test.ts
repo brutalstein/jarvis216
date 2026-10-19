@@ -1,14 +1,18 @@
 import type { AddressInfo } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Executor } from "../src/contracts.js";
-import { ConversationService, conversationProviders, parseReply } from "../src/conversation.js";
-import type { Database } from "../src/database.js";
-import { conversationPrompt, conversationPromptParts } from "../src/persona.js";
-import { ProviderFailure, ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import type { Executor } from "../src/core/contracts.js";
+import type { Database } from "../src/core/database.js";
+import { ProviderFailure, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { buildServer } from "../src/http/server.js";
+import {
+  ConversationService,
+  conversationProviders,
+  parseReply,
+} from "../src/services/conversation.js";
+import { conversationPrompt, conversationPromptParts } from "../src/services/persona.js";
 import { memoryDatabase } from "./fixtures/pglite.js";
 
 const operatorToken = "operator-fixture-32-characters-minimum";

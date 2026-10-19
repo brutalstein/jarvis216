@@ -1,10 +1,10 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterAll, expect, it } from "vitest";
-import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { EnvSecrets } from "../src/core/security.js";
 import { codexOptions } from "../src/integrations/models.js";
-import { EnvSecrets } from "../src/security.js";
 
 const paths: string[] = [];
 afterAll(async () => {

@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { PGlite } from "@electric-sql/pglite";
-import { ConversationService } from "../src/conversation.js";
-import { type Database, migrate, postgres } from "../src/database.js";
-import { Durations } from "../src/eta.js";
-import { ActionGateway } from "../src/gateway.js";
-import { PlanService } from "../src/plans.js";
-import { type Provider, ProviderRegistry } from "../src/routing.js";
-import { TaskService } from "../src/tasks.js";
-import { Worker } from "../src/worker.js";
+import { type Database, migrate, postgres } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { type Provider, ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { Worker } from "../src/core/worker.js";
+import { ConversationService } from "../src/services/conversation.js";
+import { Durations } from "../src/services/eta.js";
+import { PlanService } from "../src/services/plans/index.js";
 
 // Default: in-memory PGlite. BENCHMARK_DATABASE_URL: a local disposable PostgreSQL; the run
 // uses a fresh schema and drops it afterwards.

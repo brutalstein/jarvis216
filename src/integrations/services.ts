@@ -9,8 +9,8 @@ import {
   ResultSchema,
   type Task,
   WorkflowInputSchema,
-} from "../contracts.js";
-import { ProviderFailure } from "../routing.js";
+} from "../core/contracts.js";
+import { ProviderFailure } from "../core/routing.js";
 import { jsonRequest, serviceUrl } from "./http.js";
 
 const OpenResponse = z.object({

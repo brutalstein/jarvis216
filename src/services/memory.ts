@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { compile, type Evidence, normalize, secretNote } from "@jarvis/action-engine";
-import type { ExecutionResult, Executor, Task } from "./contracts.js";
-import type { Database } from "./database.js";
-import { ProviderFailure } from "./routing.js";
+import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import type { Database } from "../core/database.js";
+import { ProviderFailure } from "../core/routing.js";
 
 export type Memory = { id: string; note: string; createdAt: number };
 export const maxMemories = 200;

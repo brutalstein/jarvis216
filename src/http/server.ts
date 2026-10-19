@@ -2,13 +2,13 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import type { Brain } from "@jarvis/brain";
 import Fastify, { type FastifyRequest } from "fastify";
 import { z } from "zod";
-import { CoreError, invariant, states, TaskSpecSchema } from "./contracts.js";
-import type { ConversationService } from "./conversation.js";
-import type { MemoryStore } from "./memory.js";
-import { maxGrantMs, type PermissionService } from "./permissions.js";
-import type { PlanService, PlanView } from "./plans.js";
-import type { ProviderRegistry } from "./routing.js";
-import type { TaskService } from "./tasks.js";
+import { CoreError, invariant, states, TaskSpecSchema } from "../core/contracts.js";
+import type { ProviderRegistry } from "../core/routing.js";
+import type { TaskService } from "../core/tasks.js";
+import type { ConversationService } from "../services/conversation.js";
+import type { MemoryStore } from "../services/memory.js";
+import { maxGrantMs, type PermissionService } from "../services/permissions.js";
+import type { PlanService, PlanView } from "../services/plans/index.js";
 
 export interface ServerOptions {
   operatorToken: string;

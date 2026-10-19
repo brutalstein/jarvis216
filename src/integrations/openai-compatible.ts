@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { ExecutionResult, Executor, Task } from "../contracts.js";
-import { ProviderFailure } from "../routing.js";
+import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import { ProviderFailure } from "../core/routing.js";
 import { jsonRequest, serviceUrl } from "./http.js";
 
 // "vendor/model-name:free" -> "<prefix>-model-name", within the 40-character provider id limit.

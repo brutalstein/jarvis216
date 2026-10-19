@@ -2,9 +2,9 @@ import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
-import { TaskSpecSchema } from "../src/contracts.js";
+import { TaskSpecSchema } from "../src/core/contracts.js";
+import { containedPath, EnvSecrets } from "../src/core/security.js";
 import { serviceUrl } from "../src/integrations/http.js";
-import { containedPath, EnvSecrets } from "../src/security.js";
 
 it("resolves secret references and redacts credentials before result persistence", () => {
   const secrets = new EnvSecrets({ ANTHROPIC_API_KEY: 'key-with-"special-character', EMPTY: "" });
@@ -58,7 +58,7 @@ it("validates capability-specific parameters before a task can be admitted", () 
 });
 
 it("refuses to start with copied example placeholders instead of generated secrets", async () => {
-  const { ConfigSchema } = await import("../src/config.js");
+  const { ConfigSchema } = await import("../src/app/config.js");
   const valid = {
     DATABASE_URL: "postgresql://jarvis:generated@127.0.0.1:5432/jarvis",
     JARVIS_TOKEN: "a".repeat(64),
@@ -74,7 +74,7 @@ it("refuses to start with copied example placeholders instead of generated secre
 });
 
 it("refuses a database outside this host, such as a DATABASE_URL inherited from the shell", async () => {
-  const { ConfigSchema } = await import("../src/config.js");
+  const { ConfigSchema } = await import("../src/app/config.js");
   const base = { JARVIS_TOKEN: "a".repeat(64), N8N_INGRESS_TOKEN: "b".repeat(64) };
   for (const host of ["127.0.0.1:55432", "localhost", "[::1]", "postgres:5432"])
     expect(

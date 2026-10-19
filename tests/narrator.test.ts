@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { describe, expect, it } from "vitest";
-import { type Announcement, Narrator } from "../src/narrator.js";
-import type { PlanProgress, PlanService, PlanView } from "../src/plans.js";
+import { type Announcement, Narrator } from "../src/services/narrator.js";
+import type { PlanProgress, PlanService, PlanView } from "../src/services/plans/index.js";
 
 const pages = [
   { url: "https://www.reuters.com/", expectedText: "Reuters" },

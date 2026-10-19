@@ -2,11 +2,11 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { describe, expect, it } from "vitest";
-import { configuredProviders } from "../src/config.js";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { configuredProviders } from "../src/app/config.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
+import { ProviderFailure } from "../src/core/routing.js";
+import { EnvSecrets } from "../src/core/security.js";
 import { OpenAICompatibleExecutor, providerId } from "../src/integrations/openai-compatible.js";
-import { ProviderFailure } from "../src/routing.js";
-import { EnvSecrets } from "../src/security.js";
 
 const task = {
   spec: TaskSpecSchema.parse({

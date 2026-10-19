@@ -2,7 +2,7 @@ import { once } from "node:events";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { expect, it } from "vitest";
-import { type Task, TaskSpecSchema } from "../src/contracts.js";
+import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
 import { BrowserExecutor } from "../src/integrations/services.js";
 
 // Shared with workers/browser/test_worker.py: both sides must accept the same wire shapes.

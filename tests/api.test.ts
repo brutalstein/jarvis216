@@ -1,10 +1,10 @@
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { type Database, migrate } from "../src/database.js";
-import { ActionGateway } from "../src/gateway.js";
-import { ProviderRegistry } from "../src/routing.js";
-import { buildServer } from "../src/server.js";
-import { TaskService } from "../src/tasks.js";
+import { type Database, migrate } from "../src/core/database.js";
+import { ActionGateway } from "../src/core/gateway.js";
+import { ProviderRegistry } from "../src/core/routing.js";
+import { TaskService } from "../src/core/tasks.js";
+import { buildServer } from "../src/http/server.js";
 
 const operatorToken = "test-operator-token-with-32-characters";
 const webhookToken = "test-webhook-token-with-32-characters";
