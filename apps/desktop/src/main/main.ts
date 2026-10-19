@@ -213,6 +213,8 @@ app.whenReady().then(async () => {
     show: false,
     focusable: false,
   });
+  // Windows can ignore the default floating level for a non-focusable overlay.
+  overlay.setAlwaysOnTop(true, "pop-up-menu");
   overlay.setIgnoreMouseEvents(true, { forward: true });
   main.once("ready-to-show", () => main.show());
   main.on("hide", () => overlay.showInactive());
