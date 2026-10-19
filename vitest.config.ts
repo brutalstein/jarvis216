@@ -17,6 +17,8 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
     setupFiles: ["./tests/network-guard.ts"],
+    // PGlite initialization times out when Vitest fans out across this 32-thread Windows host.
+    maxWorkers: 4,
     testTimeout: 15_000,
     // npm run coverage; CI fails when coverage drops below these floors.
     coverage: {
