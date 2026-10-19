@@ -84,6 +84,10 @@ export class ProviderRegistry {
       if (circuit.failures) this.circuits.set(id, circuit);
     }
   }
+  // Whether an interrupted call of this provider is harmless (idempotent, no side effects).
+  retrySafe(id: string): boolean {
+    return this.providers.find((provider) => provider.id === id)?.retrySafe === true;
+  }
   list(): object[] {
     const now = this.now();
     return this.providers.map(

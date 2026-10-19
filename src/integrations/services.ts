@@ -113,7 +113,9 @@ export class BrowserExecutor implements Executor {
   readonly id = "browser-use";
   readonly capability = "browser.extract";
   readonly external = true;
-  readonly retrySafe = false;
+  // A readback of exact allowlisted public pages changes nothing, like the news fetch: a failed
+  // or timed-out read is a definite failure, never an outcome to reconcile.
+  readonly retrySafe = true;
   private base: string;
   constructor(
     base: string,

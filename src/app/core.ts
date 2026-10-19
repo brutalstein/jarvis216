@@ -119,6 +119,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         "memory.write": 1,
       },
       redact: (text) => secrets.redact(text),
+      retrySafe: (target) => registry.retrySafe(target),
       ...(outbox && { outbox: { principals: ["n8n"] } }),
     });
     await tasks.recover();

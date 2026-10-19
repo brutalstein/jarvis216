@@ -253,3 +253,52 @@ describe("HTTP faults", () => {
     }
   });
 });
+
+describe("interrupted calls", () => {
+  const spec = (provider: string) => ({
+    objective: "Read",
+    capability: "text.generate",
+    providers: [provider],
+    deadline: new Date(Date.now() + 60_000).toISOString(),
+    verification: { kind: "non-empty" },
+  });
+  async function executing(service: TaskService, provider: string, leaseMs = 10_000) {
+    const task = await service.create(spec(provider), `t-${provider}-${leaseMs}`, "operator");
+    const claimed = await service.claim("w", leaseMs);
+    if (!claimed) throw new Error("claim");
+    await db.query(
+      "INSERT INTO actions(id,task_id,hash,target,risk,parameters,status) VALUES($1,$2,'h',$3,'LOW','{}','EXECUTING')",
+      [crypto.randomUUID(), task.id, provider],
+    );
+    return task.id;
+  }
+  const status = async (id: string) =>
+    (await db.query<{ status: string }>("SELECT status FROM actions WHERE task_id=$1", [id]))
+      .rows[0]?.status;
+
+  it("cancelling a retry-safe call is a clean cancel; an unsafe one still needs reconciling", async () => {
+    const service = new TaskService(db, {
+      concurrency: 4,
+      retrySafe: (target) => target === "reader",
+    });
+    const safe = await executing(service, "reader");
+    expect((await service.cancel(safe)).status).toBe("CANCELLED");
+    expect(await status(safe)).toBe("FAILED");
+    const unsafe = await executing(service, "agent");
+    expect((await service.cancel(unsafe)).status).toBe("RECOVERY_REQUIRED");
+    expect(await status(unsafe)).toBe("UNCERTAIN");
+  });
+
+  it("a lost lease on a retry-safe call queues it again instead of quarantining it", async () => {
+    const service = new TaskService(db, {
+      concurrency: 4,
+      retrySafe: (target) => target === "reader",
+    });
+    const safe = await executing(service, "reader", 1);
+    const unsafe = await executing(service, "agent", 1);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await service.recover();
+    expect((await service.get(safe)).status).toBe("READY");
+    expect((await service.get(unsafe)).status).toBe("RECOVERY_REQUIRED");
+  });
+});

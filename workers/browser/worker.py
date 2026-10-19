@@ -244,7 +244,7 @@ def main() -> None:
             except (WorkerError, ValueError):
                 self.respond(400, {"error": "REQUEST_OR_VERIFICATION_FAILED"})
             except Exception:
-                # Core treats transport/browser failures as uncertain. No retries here.
+                # A read-only page read: Core treats this as a definite failure. No retries here.
                 self.respond(503, {"error": "BROWSER_EXECUTION_FAILED"})
             finally:
                 slot.release()

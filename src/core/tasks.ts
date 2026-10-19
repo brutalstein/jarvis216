@@ -62,6 +62,9 @@ export class TaskService {
       limits?: Partial<Record<Capability, number>>;
       // Principals whose tasks' notable transitions are queued for push delivery (n8n).
       outbox?: { principals: readonly string[] };
+      // Providers whose interrupted calls are harmless: cancelling or losing such a call is a
+      // definite outcome, not one to reconcile.
+      retrySafe?: (target: string) => boolean;
     } = {
       concurrency: 2,
     },
@@ -383,9 +386,7 @@ export class TaskService {
       if (terminal.has(task.status)) return task;
       invariant(task.status !== "RECOVERY_REQUIRED", "RECONCILIATION_REQUIRED");
       await this.event(tx, task, "cancellation.requested", { principal: "operator" });
-      const pending =
-        (await tx.query("SELECT id FROM actions WHERE task_id=$1 AND status='EXECUTING'", [id]))
-          .rows.length > 0;
+      const pending = await this.#unsafeInFlight(tx, id);
       await tx.query("UPDATE tasks SET fence=fence+1 WHERE id=$1", [id]);
       if (pending) await this.quarantine(tx, task, "operator cancellation during external action");
       else {
@@ -394,6 +395,21 @@ export class TaskService {
       }
       return task;
     });
+  }
+  // In-flight actions whose interruption leaves the outside world unknown. Interrupted calls of
+  // retry-safe providers are marked failed: nothing happened that needs reconciling.
+  async #unsafeInFlight(tx: Sql, id: string): Promise<boolean> {
+    const executing = (
+      await tx.query<{ id: string; target: string }>(
+        "SELECT id,target FROM actions WHERE task_id=$1 AND status='EXECUTING'",
+        [id],
+      )
+    ).rows;
+    const safe = this.options.retrySafe;
+    if (executing.some((action) => !safe?.(action.target))) return true;
+    for (const action of executing)
+      await tx.query("UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
+    return false;
   }
   #recovered = 0;
   #recovering: Promise<void> | undefined;
@@ -418,12 +434,7 @@ export class TaskService {
         )
       ).rows;
       for (const task of stale) {
-        const intents = (
-          await tx.query("SELECT id FROM actions WHERE task_id=$1 AND status='EXECUTING'", [
-            task.id,
-          ])
-        ).rows;
-        if (intents.length || task.status === "VERIFYING")
+        if (task.status === "VERIFYING" || (await this.#unsafeInFlight(tx, task.id)))
           await this.quarantine(tx, task, "expired worker lease");
         else {
           await this.move(tx, task, "READY", "expired worker lease");
