@@ -319,6 +319,9 @@ function Validate-Config($Config) {
   if (Enabled $Config 'ENABLE_BROWSER') {
     Require-Command uv 'Install uv or disable the legacy Browser worker; Claude Playwright MCP is separate.'
   }
+  if (Enabled $Config 'ENABLE_DESKTOP') {
+    Require-Command uvx 'Windows-MCP desktop actions need uvx on PATH; install uv first.'
+  }
 }
 function Report($State,$Config) {
   $port=2160
