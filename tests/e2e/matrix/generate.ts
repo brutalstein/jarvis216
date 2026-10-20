@@ -102,7 +102,10 @@ export function generateCases() {
       language: ["tr", "en", "mixed"],
       load: ["idle", "busy"],
       provider: ["none", "gemini-live", "claude-live", "claude-code", "or-fixture", "nv-fixture"],
-    }).map((row, index) => ({ id: `topology-${String(index + 1).padStart(3, "0")}`, ...row })),
+    }).map((row, index): Record<string, string> & { id: string } => ({
+      id: `topology-${String(index + 1).padStart(3, "0")}`,
+      ...row,
+    })),
   };
 }
 

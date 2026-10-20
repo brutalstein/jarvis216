@@ -132,20 +132,20 @@
     "semantic_hash": ""
   },
   "schemas/envelope.schema.json": {
-    "mtime": 1792448436.8515499,
-    "seen": 1792449220.302846,
+    "mtime": 1792484003.7996128,
+    "seen": 1792484016.4340715,
     "ast_hash": "f696a275dbc856c3533ba01eee22892f",
     "semantic_hash": ""
   },
   "schemas/result.schema.json": {
-    "mtime": 1792448436.8515499,
-    "seen": 1792449220.302846,
+    "mtime": 1792484003.7986739,
+    "seen": 1792484016.4340715,
     "ast_hash": "6ab9af6bfbda77b3a2938d5eb46d923f",
     "semantic_hash": ""
   },
   "schemas/task.schema.json": {
-    "mtime": 1792448436.8505518,
-    "seen": 1792449220.302846,
+    "mtime": 1792484003.797633,
+    "seen": 1792484016.4340715,
     "ast_hash": "9f8d3f46ba74f8a2061deb3b7e7246d2",
     "semantic_hash": ""
   },
@@ -1302,9 +1302,9 @@
     "semantic_hash": ""
   },
   "src/services/conversation.ts": {
-    "mtime": 1792483533.2032816,
-    "seen": 1792483685.0439365,
-    "ast_hash": "8cbce541f728993e8319a84e6858d930",
+    "mtime": 1792484192.8156369,
+    "seen": 1792484255.0810256,
+    "ast_hash": "6b2c0b834168f7d2592febd18f62747a",
     "semantic_hash": ""
   },
   "src/services/eta.ts": {
@@ -1512,9 +1512,9 @@
     "semantic_hash": ""
   },
   "docs/release/v1/PROGRESS.md": {
-    "mtime": 1792483259.6795752,
-    "seen": 1792483685.0439365,
-    "ast_hash": "768c638fdb38b0f142f4917e20ce4814",
+    "mtime": 1792484135.7329836,
+    "seen": 1792484255.0810256,
+    "ast_hash": "442925b75ca00c07de04ed00846f755b",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-19-v1-e2e-matrix.md": {
@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "tests/e2e/matrix/generate.ts": {
-    "mtime": 1792448916.9014254,
-    "seen": 1792449220.302846,
-    "ast_hash": "856649f050f43e8658ac01f6e0b6737d",
+    "mtime": 1792483882.360891,
+    "seen": 1792484016.4340715,
+    "ast_hash": "0e0112818af20e0e6ae69a81402462c3",
     "semantic_hash": ""
   },
   "tests/e2e/permissions-matrix.test.ts": {
@@ -1572,15 +1572,21 @@
     "semantic_hash": ""
   },
   "tests/e2e/providers-matrix.test.ts": {
-    "mtime": 1792483651.8640187,
-    "seen": 1792483685.0439365,
-    "ast_hash": "4d2866a58ba928236b3e1a240a265b1a",
+    "mtime": 1792484178.9981182,
+    "seen": 1792484255.0810256,
+    "ast_hash": "d5be71220c071f9c9265e7c86edd2fc8",
     "semantic_hash": ""
   },
   "tests/e2e/matrix/README.md": {
-    "mtime": 1792449406.920114,
-    "seen": 1792449419.1490705,
-    "ast_hash": "f84ca2c758620c3a8a782a1cc53dc82b",
+    "mtime": 1792484135.7329836,
+    "seen": 1792484255.0810256,
+    "ast_hash": "cbb14d9c7c5b2fa6c336405241dba712",
+    "semantic_hash": ""
+  },
+  "tests/e2e/topology-matrix.test.ts": {
+    "mtime": 1792483959.2587206,
+    "seen": 1792484016.4340715,
+    "ast_hash": "5205823b10a0565858e246bffd9a3ec2",
     "semantic_hash": ""
   }
 }

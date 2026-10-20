@@ -34,10 +34,10 @@ No secret values, transcript text, memory text or OAuth files belong in this led
 | P0.4 | Backups and restore drill | Done | Git bundle, PostgreSQL custom dump, n8n archive, DPAPI-protected environment backup and SHA-256 manifest under `C:\JARVIS-Backups\v1.0.0-2026-10-19\phase0`; scratch restore matched 8 tables / 142 rows | Preserve backup set through release acceptance |
 | P0.5 | Local baseline gates | Done | Fresh local checks passed on 2026-10-20; [CI 39334125299](https://github.com/brutalstein/jarvis216/actions/runs/39334125299) passed all six jobs on `f1759b6` | Gate 0 complete; implement Phase 1 |
 | P0.6 | Fix red baseline findings | Done | Cancellation race: 6/20 failed before, 20/20 passed after; full PostgreSQL E2E 11/11; all baseline fixes passed remote CI | Keep regression checks in the matrix |
-| P1.A | Platform × database matrix | Done for current suites | [CI 39335924095](https://github.com/brutalstein/jarvis216/actions/runs/39335924095) passed all seven jobs on `9051d87`, including Linux/Windows desktop and the expanded Core suites; Windows/PostgreSQL also passed locally | Keep new suites in the same platform/database gates |
-| P1.0 | Reviewable generated inputs | Done | 24 actions, 19 pairwise topology rows, 720 action × policy rows; deterministic generation and drift tests | Execute the topology rows; generated inputs alone are not coverage |
-| P1.B | Provider topology matrix | Partial | `providers-matrix.test.ts`: 14 cases passed on both databases (single providers, no provider, classified fallback/final refusal, budget restart) | Transport-specific variants, token/circuit/adaptive restarts, flags and misconfiguration matrix remain |
-| P1.C | Privacy × trust matrix | Done locally | `privacy-matrix.test.ts`: 12 combinations plus a restart/trust-change case; old hash is superseded, no call occurs before the replacement approval, only that approval is consumed; both databases passed | Require remote CI on the final test commit |
+| P1.A | Platform × database matrix | Done for current suites | [CI 39391491053](https://github.com/brutalstein/jarvis216/actions/runs/39391491053) passed all seven jobs on `2714d7a`, including Linux/Windows desktop and the unavailable-action fix; Windows/PostgreSQL also passed locally | Require CI on each new test commit |
+| P1.0 | Reviewable generated inputs | Done | 24 actions, 19 pairwise topology rows, 720 action × policy rows; deterministic generation and drift tests; topology rows now consumed by Core smoke tests | Generated inputs alone are not coverage |
+| P1.B | Provider topology matrix | Partial | 27 provider/fallback/configuration cases and all 19 topology smoke rows passed on both databases; unavailable actions now hidden and rejected before clarification or plan creation | Transport-specific variants and token/circuit/adaptive restarts remain; topology smoke does not prove every dispatch permutation |
+| P1.C | Privacy × trust matrix | Done | `privacy-matrix.test.ts`: 12 combinations plus a restart/trust-change case; old hash is superseded, no call occurs before the replacement approval, only that approval is consumed; both databases and [CI 39390397841](https://github.com/brutalstein/jarvis216/actions/runs/39390397841) on `ff38dec` passed | Keep regression tests in all platform/database cells |
 | P1.D | Exhaustive permissions matrix | Partial | `permissions-matrix.test.ts`: 30 API scenarios cover 720 action × policy rows, exact durations, active/expired grants, presets, audit and service reload; both databases passed | Still needs every action across voice/card/HIGH/CLI/API dispatch paths and mid-plan revocation |
 | P1.E | Plan lifecycle matrix | Not run | Release prompt §5.2E | Implement only after Gate 0 |
 | P1.F | Conversation matrix | Not run | Release prompt §5.2F | Implement only after Gate 0 |
@@ -103,9 +103,10 @@ Satisfied by the operator's delegated local authority on 2026-10-19. Conservativ
 
 ## Latest local verification (2026-10-20)
 
-- `npm run check:ci`: 651 passed, 1 opt-in PostgreSQL test skipped; 59 files passed, 1 skipped;
-  typecheck/lint/build passed. Coverage: statements 94.41%, branches 85.78%, functions 94.11%, lines 96.42%.
-- `E2E_DATABASE_URL=<disposable loopback 55433> npm run test:e2e`: 71/71 passed across five files, including trust-change approval binding.
+- `npm run check:ci`: 685 passed, 1 opt-in PostgreSQL test skipped; 60 files passed, 1 skipped;
+  typecheck/lint/build passed. Coverage: statements 94.47%, branches 85.89%, functions 94.14%, lines 96.43%.
+- `E2E_DATABASE_URL=<disposable loopback 55433> npm run test:e2e`: 103/103 passed across six files,
+  including all topology inputs, invalid configurations and trust-change approval binding.
 - Desktop on Windows: 19 passed, 1 opt-in microphone test skipped. New Linux/Windows desktop CI jobs passed.
 - `npm run matrix:check`, both audits (zero vulnerabilities), and contract regeneration/schema drift passed.
 - Backups: seven SHA-256 entries rechecked successfully. Production data and `.env` were not modified.
@@ -121,4 +122,21 @@ Satisfied by the operator's delegated local authority on 2026-10-19. Conservativ
   Prompt-cache keys include availability. Existing integration/memory error codes remain unchanged.
 - New prompt/replan regressions failed before the fix and passed after it. The full root gate passed
   654 tests with one opt-in skip; PostgreSQL E2E passed 72/72 before adding the additional news-proposal
-  case. The final provider suite has 16 cases; later gate totals supersede this intermediate snapshot.
+  case. That intermediate provider suite had 16 cases; later gate totals supersede this snapshot.
+- Independent read-only review found low-confidence unavailable proposals still prompted clarification.
+  Both desktop/news cases failed before the follow-up fix and passed after; availability is now checked
+  before confidence, while explicit denial keeps its existing narration. Reviewer confirmed the fix.
+
+## Configuration smoke matrix (2026-10-20)
+
+- Executed all 19 generated rows through real Core startup, readiness, permission availability and
+  conversation HTTP. Checked all catalog entries in each model prompt and persisted action outcomes.
+- Busy rows hold two real background tasks at the executor boundary while the interactive request
+  completes or returns `NO_PROVIDER`; the background tasks remain running until test teardown.
+- Codex registration uses newly generated empty homes/workspaces, removed after the suite. No
+  operator OAuth files are read or copied, and no Codex task, live RSS fetch or paid API call runs.
+- Nine malformed/unsafe configurations are refused before work is created. PostgreSQL initially
+  exposed a test-setup mismatch (unmigrated schema versus PGlite's migrated fixture); preparation now
+  explicitly migrates only the disposable schema. The final PostgreSQL E2E gate passed 103/103.
+- This closes generated-input execution, not the remaining provider transport/adaptive matrix or
+  bilingual live-model quality gates. Phase 1 and the overall release remain incomplete.

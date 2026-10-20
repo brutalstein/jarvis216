@@ -1,5 +1,6 @@
+import { narrate } from "@jarvis/action-engine";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Database } from "../../src/core/database.js";
+import { type Database, migrate } from "../../src/core/database.js";
 import { ProviderFailure } from "../../src/core/routing.js";
 import { boot, database, FakeModel, type Running, type Services, services } from "./harness.js";
 
@@ -33,39 +34,107 @@ const env = () => ({
 });
 
 describe("conversation provider topology through Core", () => {
-  it.each([
-    { action: "app.open", args: { name: "Not Defteri" } },
-    { action: "news.brief", args: {} },
-  ])("hides unavailable actions and refuses a proposal for $action", async (step) => {
-    model.turns.push({
-      intent: {
-        kind: "plan",
-        goal: "Open Notepad",
-        steps: [step],
+  it.each<{ name: string; overrides: Record<string, string>; error: RegExp }>([
+    {
+      name: "operator placeholder",
+      overrides: { JARVIS_TOKEN: "REPLACE_OPERATOR_TOKEN_WITH_RANDOM_SECRET" },
+      error: /bootstrap/,
+    },
+    {
+      name: "ingress placeholder",
+      overrides: { N8N_INGRESS_TOKEN: "REPLACE_N8N_TOKEN_WITH_DIFFERENT_RANDOM_SECRET" },
+      error: /bootstrap/,
+    },
+    {
+      name: "database placeholder",
+      overrides: { DATABASE_URL: "postgresql://j:REPLACE_PASSWORD@127.0.0.1:5432/jarvis" },
+      error: /bootstrap/,
+    },
+    {
+      name: "non-local database",
+      overrides: { DATABASE_URL: "postgresql://j:p@db.example/jarvis" },
+      error: /must be this host/,
+    },
+    {
+      name: "unverified OpenClaw policy",
+      overrides: { ENABLE_OPENCLAW: "true", OPENCLAW_POLICY_VERIFIED: "false" },
+      error: /true/,
+    },
+    {
+      name: "unverified Codex isolation",
+      overrides: { ENABLE_CODEX: "true", CODEX_ISOLATION_VERIFIED: "false" },
+      error: /true/,
+    },
+    {
+      name: "malformed workflow JSON",
+      overrides: { ENABLE_N8N: "true", N8N_WORKFLOWS_JSON: "{" },
+      error: /JSON/,
+    },
+    {
+      name: "wrong workflow shape",
+      overrides: { ENABLE_N8N: "true", N8N_WORKFLOWS_JSON: "[]" },
+      error: /record/,
+    },
+    {
+      name: "credential-bearing browser allowlist",
+      overrides: {
+        ENABLE_BROWSER: "true",
+        BROWSER_ALLOWED_URLS: '["https://user:password@example.com/"]',
       },
-    });
-    running = await boot(db, env(), model);
-    const response = await running.api<{ say: string; planId?: string }>(
-      "POST",
-      "/v1/conversation/turns",
-      { utterance: "Jarvis, not defterini aç" },
-    );
-    expect(response.status).toBe(200);
-    expect(response.body.planId).toBeUndefined();
-    const prompt = model.prompts[0]!.prompt;
-    for (const action of [
-      "app.open",
-      "screen.describe",
-      "news.brief",
-      "browser.read",
-      "agent.delegate",
-      "automation.invoke",
-    ])
-      expect(prompt, action).not.toContain(`${action}(`);
-    expect(prompt).toContain("memory.save(");
+      error: /INVALID_BROWSER_ALLOWLIST/,
+    },
+  ])("refuses startup with $name before creating work", async ({ overrides, error }) => {
+    await migrate(db);
+    await expect(boot(db, { ...env(), ...overrides }, model)).rejects.toThrow(error);
+    expect((await db.query("SELECT id FROM tasks")).rows).toEqual([]);
     expect((await db.query("SELECT id FROM plans")).rows).toEqual([]);
-    expect((await db.query("SELECT id FROM actions WHERE target='windows-mcp'")).rows).toEqual([]);
+    expect(fakes!.browser.calls).toEqual([]);
+    expect(fakes!.openclaw.calls).toEqual([]);
+    expect(fakes!.workflow.calls).toEqual([]);
   });
+
+  it.each(
+    [
+      { action: "app.open", args: { name: "Not Defteri" } },
+      { action: "news.brief", args: {} },
+    ].flatMap((step) => [undefined, 0.1].map((confidence) => ({ step, confidence }))),
+  )(
+    "refuses unavailable $step.action even with confidence=$confidence",
+    async ({ step, confidence }) => {
+      model.turns.push({
+        intent: {
+          kind: "plan",
+          goal: "Open Notepad",
+          steps: [step],
+          confidence,
+        },
+      });
+      running = await boot(db, env(), model);
+      const response = await running.api<{ say: string; planId?: string }>(
+        "POST",
+        "/v1/conversation/turns",
+        { utterance: "Jarvis, not defterini aç" },
+      );
+      expect(response.status).toBe(200);
+      expect(response.body.planId).toBeUndefined();
+      expect(response.body.say).toBe(narrate({ type: "unavailable" }, "tr"));
+      const prompt = model.prompts[0]!.prompt;
+      for (const action of [
+        "app.open",
+        "screen.describe",
+        "news.brief",
+        "browser.read",
+        "agent.delegate",
+        "automation.invoke",
+      ])
+        expect(prompt, action).not.toContain(`${action}(`);
+      expect(prompt).toContain("memory.save(");
+      expect((await db.query("SELECT id FROM plans")).rows).toEqual([]);
+      expect((await db.query("SELECT id FROM actions WHERE target='windows-mcp'")).rows).toEqual(
+        [],
+      );
+    },
+  );
 
   it.each(providerIds)("answers with %s alone and persists the actual execution", async (id) => {
     running = await boot(db, env(), model, [model.executor(id)]);

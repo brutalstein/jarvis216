@@ -262,10 +262,17 @@ export class ConversationService {
       } else if (
         reply.addressed &&
         decision?.kind === "plan" &&
-        decision.steps.some((step) => plans.modeOf(step) === "deny")
+        decision.steps.some((step) => !plans.offers(step.action))
       ) {
-        // The model proposed something the operator turned off: say so, propose nothing.
-        reply.say = narrate({ type: "denied" }, reply.lang);
+        // Refuse unavailable proposals before asking the operator to clarify them.
+        reply.say = narrate(
+          {
+            type: decision.steps.some((step) => plans.modeOf(step) === "deny")
+              ? "denied"
+              : "unavailable",
+          },
+          reply.lang,
+        );
         reply.display = [];
       } else if (
         reply.addressed &&
