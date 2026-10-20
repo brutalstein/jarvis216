@@ -9,7 +9,7 @@ fails on drift; CI runs it before the root gates. No credentials or live endpoin
 | `permissions` / `permissions-matrix.test.ts` | 720 action × policy rows, executed as 30 batched HTTP scenarios; permanent/1h/8h/1d grants, presets, expiry, audit and reload | tested only |
 | `topology` | 19 deterministic all-pairs rows covering six integration flags, language, load and provider family; these rows are not yet executed as a configuration matrix | not run |
 | `providers-matrix.test.ts` | Five provider families alone, no provider, seven classified failures and restart after daily budget exhaustion | tested only |
-| `privacy-matrix.test.ts` | All 12 privacy × provider-trust combinations, actual task/action records and exact HIGH approval | tested only |
+| `privacy-matrix.test.ts` | All 12 privacy × provider-trust combinations plus trust-change/restart invalidation of an old approval hash; task/action/approval records checked | tested only |
 | `core.test.ts` auth sweep | Every registered route with operator/n8n/missing/wrong credentials, including a bounded real SSE connection | tested only |
 
 `npm run test:e2e` uses PGlite. Set `E2E_DATABASE_URL` to the disposable PostgreSQL

@@ -1512,9 +1512,9 @@
     "semantic_hash": ""
   },
   "docs/release/v1/PROGRESS.md": {
-    "mtime": 1792448735.486082,
-    "seen": 1792449220.302846,
-    "ast_hash": "d6e917e8365d138d871d47b4015e74a5",
+    "mtime": 1792449406.9191153,
+    "seen": 1792449419.1490705,
+    "ast_hash": "86c1601ab8084dde284ef197401b63fc",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-19-v1-e2e-matrix.md": {
@@ -1566,9 +1566,9 @@
     "semantic_hash": ""
   },
   "tests/e2e/privacy-matrix.test.ts": {
-    "mtime": 1792449070.0490365,
-    "seen": 1792449220.302846,
-    "ast_hash": "f205a3b841523a997f6a613bb0146a73",
+    "mtime": 1792449339.291544,
+    "seen": 1792449419.1490705,
+    "ast_hash": "e713145d6534119f1571e1fc995bfa17",
     "semantic_hash": ""
   },
   "tests/e2e/providers-matrix.test.ts": {
@@ -1578,9 +1578,9 @@
     "semantic_hash": ""
   },
   "tests/e2e/matrix/README.md": {
-    "mtime": 1792449206.9694738,
-    "seen": 1792449220.302846,
-    "ast_hash": "ba2b542994c1beff607af7ed3247a595",
+    "mtime": 1792449406.920114,
+    "seen": 1792449419.1490705,
+    "ast_hash": "f84ca2c758620c3a8a782a1cc53dc82b",
     "semantic_hash": ""
   }
 }

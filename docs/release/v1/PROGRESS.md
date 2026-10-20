@@ -34,10 +34,10 @@ No secret values, transcript text, memory text or OAuth files belong in this led
 | P0.4 | Backups and restore drill | Done | Git bundle, PostgreSQL custom dump, n8n archive, DPAPI-protected environment backup and SHA-256 manifest under `C:\JARVIS-Backups\v1.0.0-2026-10-19\phase0`; scratch restore matched 8 tables / 142 rows | Preserve backup set through release acceptance |
 | P0.5 | Local baseline gates | Done | Fresh local checks passed on 2026-10-20; [CI 39334125299](https://github.com/brutalstein/jarvis216/actions/runs/39334125299) passed all six jobs on `f1759b6` | Gate 0 complete; implement Phase 1 |
 | P0.6 | Fix red baseline findings | Done | Cancellation race: 6/20 failed before, 20/20 passed after; full PostgreSQL E2E 11/11; all baseline fixes passed remote CI | Keep regression checks in the matrix |
-| P1.A | Platform × database matrix | CI wiring done; expanded suites pending remote rerun | [CI 39335027196](https://github.com/brutalstein/jarvis216/actions/runs/39335027196) passed all seven jobs, including desktop Linux/Windows; Windows/PGlite and PostgreSQL locally green | Recheck remote CI after committing the new suites |
+| P1.A | Platform × database matrix | Done for current suites | [CI 39335924095](https://github.com/brutalstein/jarvis216/actions/runs/39335924095) passed all seven jobs on `9051d87`, including Linux/Windows desktop and the expanded Core suites; Windows/PostgreSQL also passed locally | Keep new suites in the same platform/database gates |
 | P1.0 | Reviewable generated inputs | Done | 24 actions, 19 pairwise topology rows, 720 action × policy rows; deterministic generation and drift tests | Execute the topology rows; generated inputs alone are not coverage |
 | P1.B | Provider topology matrix | Partial | `providers-matrix.test.ts`: 14 cases passed on both databases (single providers, no provider, classified fallback/final refusal, budget restart) | Transport-specific variants, token/circuit/adaptive restarts, flags and misconfiguration matrix remain |
-| P1.C | Privacy × trust matrix | Partial | `privacy-matrix.test.ts`: all 12 privacy × trust combinations, task/action records and exact HIGH approval passed on both databases | Add end-to-end proof that changing the trust list invalidates an old approval hash |
+| P1.C | Privacy × trust matrix | Done locally | `privacy-matrix.test.ts`: 12 combinations plus a restart/trust-change case; old hash is superseded, no call occurs before the replacement approval, only that approval is consumed; both databases passed | Require remote CI on the final test commit |
 | P1.D | Exhaustive permissions matrix | Partial | `permissions-matrix.test.ts`: 30 API scenarios cover 720 action × policy rows, exact durations, active/expired grants, presets, audit and service reload; both databases passed | Still needs every action across voice/card/HIGH/CLI/API dispatch paths and mid-plan revocation |
 | P1.E | Plan lifecycle matrix | Not run | Release prompt §5.2E | Implement only after Gate 0 |
 | P1.F | Conversation matrix | Not run | Release prompt §5.2F | Implement only after Gate 0 |
@@ -103,9 +103,9 @@ Satisfied by the operator's delegated local authority on 2026-10-19. Conservativ
 
 ## Latest local verification (2026-10-20)
 
-- `npm run check:ci`: 650 passed, 1 opt-in PostgreSQL test skipped; 59 files passed, 1 skipped;
+- `npm run check:ci`: 651 passed, 1 opt-in PostgreSQL test skipped; 59 files passed, 1 skipped;
   typecheck/lint/build passed. Coverage: statements 94.41%, branches 85.78%, functions 94.11%, lines 96.42%.
-- `E2E_DATABASE_URL=<disposable loopback 55433> npm run test:e2e`: 70/70 passed across five files.
+- `E2E_DATABASE_URL=<disposable loopback 55433> npm run test:e2e`: 71/71 passed across five files, including trust-change approval binding.
 - Desktop on Windows: 19 passed, 1 opt-in microphone test skipped. New Linux/Windows desktop CI jobs passed.
 - `npm run matrix:check`, both audits (zero vulnerabilities), and contract regeneration/schema drift passed.
 - Backups: seven SHA-256 entries rechecked successfully. Production data and `.env` were not modified.
