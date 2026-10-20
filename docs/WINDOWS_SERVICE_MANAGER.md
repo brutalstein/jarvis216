@@ -63,10 +63,11 @@ fails, previous phases are kept for diagnosis; use Stop to clean them up.
 
 - ENV_MISSING / ENV_SYNTAX / ENV_DUPLICATE: Fix .env; bootstrap preserves it.
 - DEPENDENCY_MISSING / NPM_NOT_INSTALLED: Check Node 24, npm, Docker and enabled uv dependencies.
-- OPENCLAW_CLI_UNAVAILABLE: The manager tests `scripts/openclaw-native.ps1 --version`,
-  not `Get-Command openclaw` in the parent terminal. The native wrapper adds the
-  project's portable Node runtime to PATH. Confirm that this wrapper can execute
-  the installed CLI; no environment variable changes are required.
+- OPENCLAW_CLI_UNAVAILABLE: The manager checks for the OpenClaw executable
+  using the same portable Node PATH as `scripts/openclaw-native.ps1`; it no longer
+  requires the CLI to be on the parent terminal's PATH. This is a non-executing
+  preflight; subsequent Gateway readiness checks validate the running service.
+  No environment variable changes are required.
 - DOCKER_NOT_READY / DOCKER_COMPOSE_FAILED: Docker Desktop launches automatically when installed; otherwise start it manually. Inspect
   the Compose configuration.
 - BUILD_FAILED / DIST_MISSING: Run npm ci --ignore-scripts then npm run build.
