@@ -17,19 +17,33 @@ CLAUDE_AGENT_WORKSPACE=C:\\your\\project
 CLAUDE_AGENT_PERMISSION_MODE=auto
 CLAUDE_AGENT_MAX_TURNS=12
 CLAUDE_AGENT_MCP_CONFIG=C:\\private\\mcp.json
+CLAUDE_AGENT_PLAYWRIGHT=true
+CLAUDE_AGENT_PLAYWRIGHT_HEADLESS=false
 ```
 
-The MCP config is **optional**. Without it, the CLI can discover the already
-installed user/project MCP integrations. If set it must be an absolute path to a private
-Claude-compatible JSON file, for example:
+The MCP config is **optional**. The CLI can discover already installed user/project
+MCP integrations. If set without built-in Playwright, it is an exclusive absolute
+path to a private Claude-compatible JSON file. If Playwright is enabled, its
+credential-free inline configuration and the private file are additive, alongside
+user/project MCP servers. Do not put secrets in the Playwright inline configuration.
+Example of a separate private MCP JSON file:
 
 ```json
 {"mcpServers":{"my-tools":{"command":"node","args":["C:\\tools\\server.js"]}}}
 ```
 
-Browser Use, OpenClaw and n8n can each be supplied by compatible existing MCP
-servers in that file, subject to their own installed services and credentials.
-There is no hardwired MCP adapter for them in this increment. Alternatively
+When `CLAUDE_AGENT_PLAYWRIGHT=true`, the system adds Microsoft's official
+`@playwright/mcp@0.0.83` (pinned) automatically to the Claude agent. Unlike the
+separate JARVIS `browser.read` worker, Playwright MCP provides navigation,
+clicking, typing and form submission. It launches Chrome in an isolated browser
+profile; a browser executable and a first-run npm download are required. In
+headed mode, the operator can observe the browser. The separate read-only
+`ENABLE_BROWSER` flag is not required for this MCP integration.
+
+OpenClaw and n8n may also be exposed to Claude by **separately configured,
+compatible MCP servers**, installed in Claude's user/project settings or your
+private JSON file. This change does not install or verify those servers.
+Alternatively
 JARVIS can compose `agent.execute`, `browser.read`, `agent.delegate` and
 `automation.invoke` in one typed Core plan. Those catalog actions use the
 existing IntegrationHub connectors and exact Core approvals.
@@ -44,9 +58,19 @@ existing IntegrationHub connectors and exact Core approvals.
 - The CLI receives the objective over stdin, with `--tools default`,
   configured native permission mode, `--max-turns` and standard
   user/project/local settings, skills and CLAUDE.md enabled.
-  When an explicit MCP file is specified, `--strict-mcp-config` selects
-  only that file's MCP servers; otherwise the native CLI settings govern
-  the user's already installed MCP integrations.
+  Playwright opt-in loads an additive inline MCP source instead of disabling
+  other operator-installed integrations.
+- When Settings → İzinler is set to **Tam yetki** (autonomous), the Core's
+  permission callback reads the current grants at **dispatch time**.
+  Only then, `agent.execute` runs with Claude `--allowedTools` including
+  native tools and `mcp__*`; it does not use `bypassPermissions`.
+  Switching away or expiring grants removes this allowance on the next run.
+  This grants broad code execution and web interaction to a model running with
+  the operator's OS privileges. Use only in a dedicated, limited Windows account
+  or isolated VM/container with no unrelated credentials/data. Claude-managed
+  deny rules and user-interaction requirements can still prevent some operations.
+  The JARVIS catalog/gateway audit records the top-level delegated task but not
+  every individual MCP action.
 - The CLI runs in the configured workspace; the Core token and API keys
   do not enter its environment. Vendor login remains vendor-owned.
 - Brain uses existing plan outcome learning; no second context memory or
@@ -60,3 +84,38 @@ The unit tests use a fake CLI process to check exact flags, process isolation,
 failure classification and result handling. Live Claude tools, Windows file edits,
 MCP interoperability, and end-to-end multi-service execution still require
 physical-host smoke tests. No production-readiness claim is made.
+
+## Local verification
+
+First run `npm run check:ci` and `npm run matrix:check`; these do **not**
+contact the Claude subscription. Set `ENABLE_CLAUDE_AGENT=true`,
+`CLAUDE_AGENT_PLAYWRIGHT=true`, and use a dedicated
+`CLAUDE_AGENT_WORKSPACE`. Restart native Core, then confirm `claude-agent`
+in `npm run cli -- ready`. For a live smoke test, when quota is available,
+run a task on a local test form you own, check the form's saved result and Core's
+task record. A passing fake CLI test does not demonstrate browser installation,
+Chrome/Playwright availability or live MCP interoperability.
+
+The operator's **Tam yetki** setting bypasses JARVIS action approval for
+catalogued tasks, not all restrictions enforced by external apps, operating
+systems, accounts or Claude-managed policies. Never automate CAPTCHA bypass,
+external account actions against site terms, or other unavailable capabilities.
+
+## Official OpenClaw and n8n MCP connectors
+
+- `CLAUDE_AGENT_OPENCLAW_MCP=true` adds OpenClaw's official
+  `openclaw mcp serve --claude-channel-mode off` stdio bridge. It needs
+  `ENABLE_OPENCLAW=true`, the OpenClaw CLI on PATH, a running Gateway,
+  and a configured local Gateway connection. **This bridge exposes routed
+  conversations and messaging**, not arbitrary OpenClaw internal agent tools.
+  Core's existing `agent.delegate` remains the delegated task integration.
+- `CLAUDE_AGENT_N8N_MCP_URL=http://127.0.0.1:5678/mcp-server/http`
+  enables an additive HTTP MCP connection to n8n's *instance-level*
+  official MCP server. Enable MCP in n8n Settings, select which workflows
+  are exposed, and perform the one-time OAuth authorization in Claude.
+  Local HTTP or remote HTTPS endpoints only; never embed credentials in the URL.
+  It is separate from Core's existing `automation.invoke` workflow executor.
+
+All three MCP integrations are **opt-in** and have independent installation,
+authentication and live checks. A registered MCP config alone does not prove
+that a server is reachable, authorized or capable of completing the request.

@@ -68,7 +68,9 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
     ...(embeddings && { embed: embeddings }),
   });
   let brainSettings: () => BrainSettings = () => ({ learning: true, reflexes: true });
+  let agentAutonomous = () => false;
   const { registry, tools, integrations } = await configuredProviders(env, secrets, {
+    agentAutonomous: () => agentAutonomous(),
     memory,
     // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
     prefer: (target, candidates) =>
@@ -95,6 +97,9 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         ),
     });
     await permissions.load();
+    // Read the live, possibly expiring Full Access preset on each delegated run.
+    agentAutonomous = () =>
+      permissions.view().preset === "autonomous" && permissions.allows("agent.execute");
     brainSettings = () => permissions.settings();
     await brain.load();
     await brain.consolidate();

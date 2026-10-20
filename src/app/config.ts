@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
@@ -9,6 +10,11 @@ import { type Provider, ProviderRegistry } from "../core/routing.js";
 import { containedPath, type EnvSecrets } from "../core/security.js";
 import { DesktopExecutor, NewsExecutor } from "../integrations/actions.js";
 import { ClaudeCodeExecutor } from "../integrations/claude-code.js";
+import {
+  n8nMcpConfig,
+  openClawMcpConfig,
+  playwrightMcpConfig,
+} from "../integrations/claude-mcp.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
@@ -62,6 +68,7 @@ export async function configuredProviders(
     prefer?: (target: string, candidates: string[]) => string | undefined;
     // Registered like configured executors, after them (fake models in end-to-end tests).
     executors?: Executor[];
+    agentAutonomous?: () => boolean;
   } = {},
 ): Promise<{
   registry: ProviderRegistry;
@@ -228,19 +235,45 @@ export async function configuredProviders(
       .default(12)
       .parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
     const mcpConfig = env.CLAUDE_AGENT_MCP_CONFIG?.trim() || undefined;
+    let mcpFileContent = "";
     if (mcpConfig) {
       z.string().refine(path.isAbsolute).parse(mcpConfig);
-      const raw = JSON.parse(await readFile(mcpConfig, "utf8"));
+      mcpFileContent = await readFile(mcpConfig, "utf8");
+      const raw = JSON.parse(mcpFileContent);
       z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(raw);
     }
+    const browserMcp = env.CLAUDE_AGENT_PLAYWRIGHT === "true";
+    const openClawMcp = env.CLAUDE_AGENT_OPENCLAW_MCP === "true";
+    if (openClawMcp && env.ENABLE_OPENCLAW !== "true")
+      throw new Error("CLAUDE_AGENT_OPENCLAW_MCP requires ENABLE_OPENCLAW=true");
+    const n8nMcpUrl = env.CLAUDE_AGENT_N8N_MCP_URL?.trim() ?? "";
+    const mcpConfigs = [
+      ...(mcpConfig ? [mcpConfig] : []),
+      ...(browserMcp
+        ? [playwrightMcpConfig({ headless: env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true" })]
+        : []),
+      ...(openClawMcp ? [openClawMcpConfig()] : []),
+      ...(n8nMcpUrl ? [n8nMcpConfig(n8nMcpUrl)] : []),
+    ];
+    const additiveMcp = browserMcp || openClawMcp || Boolean(n8nMcpUrl);
+    // Changes to an MCP tool surface invalidate any previously approved action hash.
+    const mcpFingerprint = createHash("sha256")
+      .update(JSON.stringify(mcpConfigs))
+      .update(mcpFileContent)
+      .digest("hex");
     register(
       new ClaudeCodeExecutor({
         command: [binary],
         model,
         workdir: workspace,
-        agent: { permissionMode, maxTurns, ...(mcpConfig && { mcpConfig }) },
+        agent: {
+          permissionMode,
+          maxTurns,
+          ...(additiveMcp ? { mcpConfigs } : mcpConfig ? { mcpConfig } : {}),
+          ...(local.agentAutonomous && { autonomous: local.agentAutonomous }),
+        },
       }),
-      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}`,
+      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}:playwright-${browserMcp}:headless-${env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true"}:mcp-fingerprint-${mcpFingerprint}`,
       70,
     );
   }
