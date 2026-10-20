@@ -9,7 +9,11 @@ import { type Provider, ProviderRegistry } from "../core/routing.js";
 import { containedPath, type EnvSecrets } from "../core/security.js";
 import { DesktopExecutor, NewsExecutor } from "../integrations/actions.js";
 import { ClaudeCodeExecutor } from "../integrations/claude-code.js";
-import { playwrightMcpConfig } from "../integrations/claude-mcp.js";
+import {
+  n8nMcpConfig,
+  openClawMcpConfig,
+  playwrightMcpConfig,
+} from "../integrations/claude-mcp.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
@@ -236,12 +240,19 @@ export async function configuredProviders(
       z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(raw);
     }
     const browserMcp = env.CLAUDE_AGENT_PLAYWRIGHT === "true";
+    const openClawMcp = env.CLAUDE_AGENT_OPENCLAW_MCP === "true";
+    if (openClawMcp && env.ENABLE_OPENCLAW !== "true")
+      throw new Error("CLAUDE_AGENT_OPENCLAW_MCP requires ENABLE_OPENCLAW=true");
+    const n8nMcpUrl = env.CLAUDE_AGENT_N8N_MCP_URL?.trim() ?? "";
     const mcpConfigs = [
       ...(mcpConfig ? [mcpConfig] : []),
       ...(browserMcp
         ? [playwrightMcpConfig({ headless: env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true" })]
         : []),
+      ...(openClawMcp ? [openClawMcpConfig()] : []),
+      ...(n8nMcpUrl ? [n8nMcpConfig(n8nMcpUrl)] : []),
     ];
+    const additiveMcp = browserMcp || openClawMcp || Boolean(n8nMcpUrl);
     register(
       new ClaudeCodeExecutor({
         command: [binary],
@@ -250,7 +261,7 @@ export async function configuredProviders(
         agent: {
           permissionMode,
           maxTurns,
-          ...(browserMcp ? { mcpConfigs } : mcpConfig ? { mcpConfig } : {}),
+          ...(additiveMcp ? { mcpConfigs } : mcpConfig ? { mcpConfig } : {}),
           ...(local.agentAutonomous && { autonomous: local.agentAutonomous }),
         },
       }),

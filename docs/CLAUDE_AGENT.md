@@ -100,3 +100,22 @@ The operator's **Tam yetki** setting bypasses JARVIS action approval for
 catalogued tasks, not all restrictions enforced by external apps, operating
 systems, accounts or Claude-managed policies. Never automate CAPTCHA bypass,
 external account actions against site terms, or other unavailable capabilities.
+
+## Official OpenClaw and n8n MCP connectors
+
+- `CLAUDE_AGENT_OPENCLAW_MCP=true` adds OpenClaw's official
+  `openclaw mcp serve --claude-channel-mode off` stdio bridge. It needs
+  `ENABLE_OPENCLAW=true`, the OpenClaw CLI on PATH, a running Gateway,
+  and a configured local Gateway connection. **This bridge exposes routed
+  conversations and messaging**, not arbitrary OpenClaw internal agent tools.
+  Core's existing `agent.delegate` remains the delegated task integration.
+- `CLAUDE_AGENT_N8N_MCP_URL=http://127.0.0.1:5678/mcp-server/http`
+  enables an additive HTTP MCP connection to n8n's *instance-level*
+  official MCP server. Enable MCP in n8n Settings, select which workflows
+  are exposed, and perform the one-time OAuth authorization in Claude.
+  Local HTTP or remote HTTPS endpoints only; never embed credentials in the URL.
+  It is separate from Core's existing `automation.invoke` workflow executor.
+
+All three MCP integrations are **opt-in** and have independent installation,
+authentication and live checks. A registered MCP config alone does not prove
+that a server is reachable, authorized or capable of completing the request.
