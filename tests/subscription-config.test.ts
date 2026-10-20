@@ -169,3 +169,33 @@ it("Claude agent refuses missing explicit MCP configuration", async () => {
     ),
   ).rejects.toThrow();
 });
+
+it("Claude agent fingerprints its enabled MCP tools into provider configuration", async () => {
+  const env = { ...claude, ENABLE_CLAUDE_AGENT: "true" };
+  const plain = await configuredProviders(env, secrets);
+  const browser = await configuredProviders(
+    { ...env, CLAUDE_AGENT_PLAYWRIGHT: "true" },
+    secrets,
+  );
+  const spec = TaskSpecSchema.parse({
+    objective: "create a local file",
+    capability: "text.generate",
+    providers: ["claude-agent"],
+    deadline: new Date(Date.now() + 60_000).toISOString(),
+    verification: { kind: "non-empty" },
+  });
+  const baseline = plain.registry.select({ spec } as Task, []);
+  const modified = browser.registry.select({ spec } as Task, []);
+  expect(baseline.configuration).not.toBe(modified.configuration);
+  expect(modified.riskFloor).toBe("HIGH");
+});
+
+it("Claude agent refuses an unsafe n8n MCP URL and an unconfigured OpenClaw bridge", async () => {
+  const env = { ...claude, ENABLE_CLAUDE_AGENT: "true" };
+  await expect(
+    configuredProviders({ ...env, CLAUDE_AGENT_N8N_MCP_URL: "http://example.com/mcp" }, secrets),
+  ).rejects.toThrow("N8N_MCP_ENDPOINT_INVALID");
+  await expect(
+    configuredProviders({ ...env, CLAUDE_AGENT_OPENCLAW_MCP: "true" }, secrets),
+  ).rejects.toThrow("ENABLE_OPENCLAW=true");
+});
