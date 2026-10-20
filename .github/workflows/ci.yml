@@ -27,8 +27,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Status is not safe without a configured instance.' }
           .\scripts\jarvis-services.ps1 -Action Logs -Service core -Tail 2
           if ($LASTEXITCODE -ne 0) { throw 'Logs is not safe without a managed instance.' }
+          $oldPreference = $ErrorActionPreference
+          $ErrorActionPreference = 'Continue'
           $diagnostic = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action Doctor 2>&1
-          if ($LASTEXITCODE -eq 0) { throw 'Doctor must refuse a missing .env.' }
+          $doctorExitCode = $LASTEXITCODE
+          $ErrorActionPreference = $oldPreference
+          if ($doctorExitCode -eq 0) { throw 'Doctor must refuse a missing .env.' }
           if (($diagnostic -join ' ') -notmatch 'ENV_MISSING') { throw 'Doctor did not report ENV_MISSING.' }
   typescript:
     strategy:
