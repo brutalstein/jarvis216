@@ -34,6 +34,9 @@ jobs:
           $ErrorActionPreference = $oldPreference
           if ($doctorExitCode -eq 0) { throw 'Doctor must refuse a missing .env.' }
           if (($diagnostic -join ' ') -notmatch 'ENV_MISSING') { throw 'Doctor did not report ENV_MISSING.' }
+          # GitHub's powershell runner propagates the most recent native exit code.
+          # Doctor's nonzero result was the expected/verified behavior.
+          $global:LASTEXITCODE = 0
   typescript:
     strategy:
       matrix: { os: [ubuntu-latest, windows-latest] }
