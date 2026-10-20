@@ -238,8 +238,25 @@ function Compose-Running([string]$Name,$Config) {
 }
 function Start-Docker($State,[string]$Name,$Config) {
   Require-Command docker 'Install and launch Docker Desktop.'
-  $null=& docker info --format '{{.ServerVersion}}' 2>$null
-  if ($LASTEXITCODE -ne 0) { Die 'DOCKER_NOT_READY' 'Start Docker Desktop, then try again.' }
+  $dockerReady=$false
+  try {
+    $null=& docker info --format '{{.ServerVersion}}' 2>$null
+    $dockerReady=$LASTEXITCODE -eq 0
+  } catch { $dockerReady=$false }
+  if (-not $dockerReady) {
+    $desktop=Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'
+    if (-not (Test-Path -LiteralPath $desktop -PathType Leaf)) {
+      Die 'DOCKER_NOT_READY' 'Docker Engine is down and Docker Desktop executable was not found. Start Docker Desktop manually.'
+    }
+    Say 'WARN' 'Docker Engine is not running; launching Docker Desktop...'
+    Start-Process -FilePath $desktop -WindowStyle Minimized | Out-Null
+    Wait-For {
+      try {
+        $null=& docker info --format '{{.ServerVersion}}' 2>$null
+        $LASTEXITCODE -eq 0
+      } catch { $false }
+    } 180 'Docker Engine' $null
+  }
   if (Compose-Running $Name $Config) {
     Say 'OK' "Docker $Name was already running; not taking lifecycle ownership."; return
   }
