@@ -227,7 +227,7 @@ function Compose([string[]]$DockerArgs,$Config) {
     $argsForDocker=@('compose','--env-file',$envPath,'-f',(Join-Path $root 'compose.yaml'),'-f',(Join-Path $root 'compose.dev.yaml')) + $DockerArgs
     $output=& docker @argsForDocker 2>&1
     if ($LASTEXITCODE -ne 0) { Die 'DOCKER_COMPOSE_FAILED' 'Docker Compose failed. Inspect Docker Desktop and Compose files; secrets suppressed.' }
-    return ,@($output)
+    return $output
   } finally {
     foreach ($key in $keys) { [Environment]::SetEnvironmentVariable($key,$previous[$key],'Process') }
   }
@@ -310,8 +310,8 @@ function Report($State,$Config) {
   )
   foreach ($item in $rows) {
     $owned=Process-Alive $State $item.name
-    $state=if ($item.ready -and $owned) {'managed/online'} elseif ($item.ready) {'external/online'} elseif ($owned) {'managed/unhealthy'} else {'stopped'}
-    Say 'INFO' "$($item.name): $state; $($item.note)"
+    $label=if ($item.ready -and $owned) {'managed/online'} elseif ($item.ready) {'external/online'} elseif ($owned) {'managed/unhealthy'} else {'stopped'}
+    Say 'INFO' "$($item.name): $label; $($item.note)"
   }
   Say 'INFO' "desktop UI: $(if (Process-Alive $State 'desktop') {'managed/running'} else {'not managed'}) (Electron starts the voice worker)"
   if ($null -ne $Config -and (Enabled $Config 'CLAUDE_AGENT_PLAYWRIGHT')) {
