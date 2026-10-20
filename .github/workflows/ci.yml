@@ -2,6 +2,34 @@ name: backend-verification
 on: [push, pull_request]
 permissions: { contents: read }
 jobs:
+  windows-service-manager:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell 5.1 service manager
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/jarvis-services.ps1').Path,
+            [ref]$tokens,
+            [ref]$parseErrors
+          ) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Error $_.Message }
+            throw 'PowerShell parser failed.'
+          }
+      - name: Test service manager status and expected missing-env diagnostic
+        shell: powershell
+        run: |
+          .\scripts\jarvis-services.ps1 -Action Status
+          if ($LASTEXITCODE -ne 0) { throw 'Status is not safe without a configured instance.' }
+          .\scripts\jarvis-services.ps1 -Action Logs -Service core -Tail 2
+          if ($LASTEXITCODE -ne 0) { throw 'Logs is not safe without a managed instance.' }
+          $diagnostic = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action Doctor 2>&1
+          if ($LASTEXITCODE -eq 0) { throw 'Doctor must refuse a missing .env.' }
+          if (($diagnostic -join ' ') -notmatch 'ENV_MISSING') { throw 'Doctor did not report ENV_MISSING.' }
   typescript:
     strategy:
       matrix: { os: [ubuntu-latest, windows-latest] }
