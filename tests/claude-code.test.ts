@@ -241,6 +241,10 @@ describe("tool-using Claude Code agent", () => {
     expect(sent.argv).not.toContain("--safe-mode");
     expect(sent.argv).not.toContain("--dangerously-skip-permissions");
     expect(sent.argv).not.toContain("--mcp-config");
+    expect(sent.argv).not.toContain("--strict-mcp-config");
+    expect(sent.argv).not.toContain("--disable-slash-commands");
+    expect(sent.argv).toContain("user,project,local");
+    expect(sent.argv).not.toContain("--safe-mode");
   });
 
   it("accepts an explicit MCP configuration path only", async () => {

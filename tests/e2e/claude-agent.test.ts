@@ -109,7 +109,8 @@ describe("Claude Code tool-agent lifecycle", () => {
     };
     expect(call.stdin).toBe("Create the requested project");
     expect(call.argv).toContain("--max-turns");
-    expect(call.argv).toContain("--strict-mcp-config");
+    expect(call.argv).toContain("user,project,local");
+    expect(call.argv).not.toContain("--disable-slash-commands");
     const actions = await db.query<{ target: string; status: string }>(
       "SELECT target, status FROM actions WHERE target='claude-agent'",
     );

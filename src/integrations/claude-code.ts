@@ -72,9 +72,14 @@ export class ClaudeCodeExecutor implements Executor {
       ...Object.fromEntries(
         claudeCodeEnvKeys.flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
       ),
-      // Workdir sits inside this repo: keep its git status and any CLAUDE.md out of the prompt.
-      CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
-      CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+      // Lightweight conversational Claude remains free of workspace context.
+      // The tool-using agent intentionally loads project guidance and skills.
+      ...(!this.options.agent
+        ? {
+            CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
+            CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+          }
+        : {}),
     };
     const flags = this.options.agent
       ? [
@@ -89,11 +94,11 @@ export class ClaudeCodeExecutor implements Executor {
           this.options.agent.permissionMode,
           "--max-turns",
           String(this.options.agent.maxTurns),
-          "--strict-mcp-config",
-          ...(this.options.agent.mcpConfig ? ["--mcp-config", this.options.agent.mcpConfig] : []),
+          ...(this.options.agent.mcpConfig
+            ? ["--strict-mcp-config", "--mcp-config", this.options.agent.mcpConfig]
+            : []),
           "--setting-sources",
-          "",
-          "--disable-slash-commands",
+          "user,project,local",
           "--no-session-persistence",
         ]
       : [

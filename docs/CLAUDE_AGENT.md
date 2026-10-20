@@ -19,7 +19,8 @@ CLAUDE_AGENT_MAX_TURNS=12
 CLAUDE_AGENT_MCP_CONFIG=C:\\private\\mcp.json
 ```
 
-The MCP config is **optional**. If set it must be an absolute path to a private
+The MCP config is **optional**. Without it, the CLI can discover the already
+installed user/project MCP integrations. If set it must be an absolute path to a private
 Claude-compatible JSON file, for example:
 
 ```json
@@ -41,8 +42,11 @@ existing IntegrationHub connectors and exact Core approvals.
 - The separate `claude-agent` executor is non-retryable: an uncertain tool
   action must not be replayed automatically.
 - The CLI receives the objective over stdin, with `--tools default`,
-  configured native permission mode, `--max-turns`, and
-  `--strict-mcp-config` (no inherited MCP servers).
+  configured native permission mode, `--max-turns` and standard
+  user/project/local settings, skills and CLAUDE.md enabled.
+  When an explicit MCP file is specified, `--strict-mcp-config` selects
+  only that file's MCP servers; otherwise the native CLI settings govern
+  the user's already installed MCP integrations.
 - The CLI runs in the configured workspace; the Core token and API keys
   do not enter its environment. Vendor login remains vendor-owned.
 - Brain uses existing plan outcome learning; no second context memory or
