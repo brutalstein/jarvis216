@@ -111,3 +111,14 @@ Satisfied by the operator's delegated local authority on 2026-10-19. Conservativ
 - Backups: seven SHA-256 entries rechecked successfully. Production data and `.env` were not modified.
 - These matrix results use fake model/service/stdio boundaries and are **tested only**. CUDA/microphone,
   paid providers, the real Windows desktop, packaged binaries and installer acceptance are not implied.
+
+## Disabled-action admission regression (2026-10-20)
+
+- The flags matrix exposed a real bug: disabled desktop/news actions remained in the model catalog,
+  and a model proposal could create a plan before the worker rejected it.
+- Conversation and replan catalogs now derive availability from the existing `PlanService.offers`
+  authority; admission rejects unavailable actions before cancelling older plans or writing new ones.
+  Prompt-cache keys include availability. Existing integration/memory error codes remain unchanged.
+- New prompt/replan regressions failed before the fix and passed after it. The full root gate passed
+  654 tests with one opt-in skip; PostgreSQL E2E passed 72/72 before adding the additional news-proposal
+  case. The final provider suite has 16 cases; later gate totals supersede this intermediate snapshot.

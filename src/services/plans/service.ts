@@ -84,6 +84,7 @@ export class PlanService extends EventEmitter {
       create: (input, flags) => this.#create(input, flags),
       outcome: (text, lang, planId) => this.#outcome(text, lang, planId),
       optionalActions: () => this.optionalActions(),
+      availableActions: () => this.availableActions(),
       browserUrls: () => this.browserUrls(),
       deniedActions: () => this.deniedActions(),
     };
@@ -106,6 +107,9 @@ export class PlanService extends EventEmitter {
   }
   deniedActions(): string[] {
     return [...(this.options.permissions?.denied() ?? [])].sort();
+  }
+  availableActions(): string[] {
+    return Object.keys(catalog).filter((action) => this.offers(action));
   }
   // Could a plan with this action run here and now: known, configured and not turned off.
   offers(action: string): boolean {
@@ -382,9 +386,11 @@ export class PlanService extends EventEmitter {
     for (const step of input.steps) {
       invariant(this.modeOf(step) !== "deny", "ACTION_DENIED", 403);
       invariant(step.kind !== "memory" || this.options.memory, "MEMORY_DISABLED", 400);
-      if (step.kind !== "integration") continue;
-      invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
-      this.options.integrations.compile(step.action, step.args);
+      if (step.kind === "integration") {
+        invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
+        this.options.integrations.compile(step.action, step.args);
+      }
+      invariant(this.offers(step.action), "ACTION_UNAVAILABLE", 400);
     }
     // Admission is serialized within this Core; multiple Core hosts need a shared plan lock.
     if (kind === "desktop" && flags.originCreatedAt !== undefined) {

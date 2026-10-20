@@ -225,14 +225,20 @@ function signature(args: z.ZodObject): string {
 }
 
 /**
- * Desktop/info always listed; integration and memory actions only when `enabled` has their id.
+ * Integration and memory actions only when `enabled` has their id.
  * `hidden` (actions the operator turned off) are never listed.
+ * When supplied, `available` also limits desktop/info to configured actions.
  */
-export function catalogLines(enabled?: ReadonlySet<string>, hidden?: ReadonlySet<string>): string {
+export function catalogLines(
+  enabled?: ReadonlySet<string>,
+  hidden?: ReadonlySet<string>,
+  available?: ReadonlySet<string>,
+): string {
   return definitions
     .filter(
       (d) =>
         !hidden?.has(d.id) &&
+        (!available || available.has(d.id)) &&
         ((d.kind !== "integration" && d.kind !== "memory") || !enabled || enabled.has(d.id)),
     )
     .map((d) => `${d.id}(${signature(d.args)}) — ${d.description.tr} / ${d.description.en}`)

@@ -45,6 +45,7 @@ export type FinisherContext = {
   ): Promise<PlanView>;
   outcome(text: string, lang: Lang, planId: string): void;
   optionalActions(): string[];
+  availableActions(): string[];
   browserUrls(): readonly string[];
   deniedActions(): string[];
 };
@@ -155,6 +156,7 @@ export async function failPlan(
       observation: evidence.observation,
       ...(screen ? { screen } : {}),
       enabledIntegrations: ctx.optionalActions(),
+      availableActions: ctx.availableActions(),
       browserUrls: ctx.browserUrls(),
       denied: ctx.deniedActions(),
     }),

@@ -203,6 +203,7 @@ export class ConversationService {
       now: new Date(started),
       enabledIntegrations: plans?.integrationCapabilities(),
       optionalActions: plans?.optionalActions(),
+      availableActions: plans?.availableActions(),
       browserUrls: plans?.browserUrls(),
       memories,
       denied: plans?.deniedActions(),

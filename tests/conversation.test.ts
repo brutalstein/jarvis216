@@ -119,6 +119,15 @@ describe("conversation prompt and providers", () => {
     ).toEqual(["gemini-live", "claude-live", "or-b", "nv-a", "claude-code"]);
     expect(conversationProviders(["claude", "gemini"])).toEqual([]);
   });
+  it("changes the cached catalog when configured actions change", () => {
+    const input = { utterance: "Jarvis", followUp: false, history: [], now: new Date() };
+    const enabled = conversationPromptParts({ ...input, availableActions: ["app.open"] });
+    const disabled = conversationPromptParts({ ...input, availableActions: [] });
+    expect(enabled.stable).toContain("app.open(");
+    expect(disabled.stable).not.toContain("app.open(");
+    expect(disabled.stable).not.toContain("news.brief(");
+    expect(disabled.stable).not.toContain("off in Settings");
+  });
 });
 
 describe("conversation turns", () => {

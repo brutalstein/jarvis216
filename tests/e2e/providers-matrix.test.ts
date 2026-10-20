@@ -33,6 +33,40 @@ const env = () => ({
 });
 
 describe("conversation provider topology through Core", () => {
+  it.each([
+    { action: "app.open", args: { name: "Not Defteri" } },
+    { action: "news.brief", args: {} },
+  ])("hides unavailable actions and refuses a proposal for $action", async (step) => {
+    model.turns.push({
+      intent: {
+        kind: "plan",
+        goal: "Open Notepad",
+        steps: [step],
+      },
+    });
+    running = await boot(db, env(), model);
+    const response = await running.api<{ say: string; planId?: string }>(
+      "POST",
+      "/v1/conversation/turns",
+      { utterance: "Jarvis, not defterini aç" },
+    );
+    expect(response.status).toBe(200);
+    expect(response.body.planId).toBeUndefined();
+    const prompt = model.prompts[0]!.prompt;
+    for (const action of [
+      "app.open",
+      "screen.describe",
+      "news.brief",
+      "browser.read",
+      "agent.delegate",
+      "automation.invoke",
+    ])
+      expect(prompt, action).not.toContain(`${action}(`);
+    expect(prompt).toContain("memory.save(");
+    expect((await db.query("SELECT id FROM plans")).rows).toEqual([]);
+    expect((await db.query("SELECT id FROM actions WHERE target='windows-mcp'")).rows).toEqual([]);
+  });
+
   it.each(providerIds)("answers with %s alone and persists the actual execution", async (id) => {
     running = await boot(db, env(), model, [model.executor(id)]);
     const response = await running.api<{ taskId: string; provider: string; say: string }>(

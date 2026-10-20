@@ -38,6 +38,7 @@ export type ConversationInput = {
   enabledIntegrations?: string[];
   // Integration and memory actions the catalog may offer (defaults to the integrations).
   optionalActions?: string[];
+  availableActions?: string[];
   browserUrls?: readonly string[];
   // Operator-approved long-term memory, newest first.
   memories?: string[];
@@ -95,13 +96,18 @@ function stablePart(input: ConversationInput): string {
     input.enabledIntegrations ?? null,
     input.denied ?? null,
     input.browserUrls ?? null,
+    input.availableActions ?? null,
   ]);
   const cached = stableParts.get(key);
   if (cached) return cached;
   const stable = `${[
     PERSONA,
     FORMAT,
-    intentInstructions(input.optionalActions ?? input.enabledIntegrations, input.denied),
+    intentInstructions(
+      input.optionalActions ?? input.enabledIntegrations,
+      input.denied,
+      input.availableActions,
+    ),
     `Enabled external actions: ${input.enabledIntegrations?.join(", ") || "none"}. Never propose disabled integrations. HIGH actions require separate exact approval.`,
     ...(input.browserUrls?.length
       ? [
