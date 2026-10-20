@@ -149,10 +149,12 @@ it("Claude agent registers independently of conversation, with HIGH risk", async
     { ...claude, ENABLE_CLAUDE_AGENT: "true", CLAUDE_AGENT_PERMISSION_MODE: "auto" },
     secrets,
   );
-  expect(registry.list()).toEqual([
-    expect.objectContaining({ id: "claude-code", retrySafe: true }),
-    expect.objectContaining({ id: "claude-agent", retrySafe: false, riskFloor: "HIGH" }),
+  expect(registry.list()).toMatchObject([
+    { id: "claude-code", riskFloor: "LOW" },
+    { id: "claude-agent", riskFloor: "HIGH" },
   ]);
+  expect(registry.retrySafe("claude-code")).toBe(true);
+  expect(registry.retrySafe("claude-agent")).toBe(false);
   expect(integrations.available()).toContain("agent.execute");
 });
 it("Claude agent refuses missing explicit MCP configuration", async () => {
