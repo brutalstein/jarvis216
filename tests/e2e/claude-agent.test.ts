@@ -4,7 +4,15 @@ import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Database } from "../../src/core/database.js";
 import { ClaudeCodeExecutor } from "../../src/integrations/claude-code.js";
-import { boot, database, FakeModel, type Running, type Services, services, until } from "./harness.js";
+import {
+  boot,
+  database,
+  FakeModel,
+  type Running,
+  type Services,
+  services,
+  until,
+} from "./harness.js";
 
 // End-to-end through Core -> plan -> exact approval -> Gateway -> native CLI protocol.
 // Only the real vendor executable and its external subscription are substituted.
@@ -69,12 +77,12 @@ describe("Claude Code tool-agent lifecycle", () => {
     expect(plan.status).toBe("AWAITING_APPROVAL");
     expect(plan.steps[0]).toMatchObject({ action: "agent.execute", risk: "HIGH" });
     await expect(readFile(record, "utf8")).rejects.toThrow();
-    expect((await running.api("POST", `/v1/plans/${planId}/approve`, { hash: "forged" })).status).toBe(
-      409,
-    );
-    expect((await running.api("POST", `/v1/plans/${planId}/approve`, { hash: plan.hash })).status).toBe(
-      204,
-    );
+    expect(
+      (await running.api("POST", `/v1/plans/${planId}/approve`, { hash: "forged" })).status,
+    ).toBe(409);
+    expect(
+      (await running.api("POST", `/v1/plans/${planId}/approve`, { hash: plan.hash })).status,
+    ).toBe(204);
     const pending = await until(
       () => running.core.plans.get(planId!),
       (current) => Boolean(current.steps[0]?.approval),
@@ -83,9 +91,11 @@ describe("Claude Code tool-agent lifecycle", () => {
     expect(approvalId).toBeTruthy();
     await expect(readFile(record, "utf8")).rejects.toThrow();
     expect(
-      (await running.api("POST", `/v1/actions/${approvalId}/approve`, {
-        expiresAt: new Date(Date.now() + 60_000).toISOString(),
-      })).status,
+      (
+        await running.api("POST", `/v1/actions/${approvalId}/approve`, {
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        })
+      ).status,
     ).toBe(204);
     const completed = await until(
       () => running.core.plans.get(planId!),

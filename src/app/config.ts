@@ -204,7 +204,10 @@ export async function configuredProviders(
       15,
     );
   }
-  if (env.ENABLE_CLAUDE_AGENT === "true") {
+  if (
+    env.ENABLE_CLAUDE_AGENT === "true" &&
+    !local.executors?.some((executor) => executor.id === "claude-agent")
+  ) {
     // Kept separate from conversational Claude; operator chooses a delegated workspace.
     const binary = z.string().refine(path.isAbsolute).parse(env.CLAUDE_CODE_PATH);
     await access(binary);
