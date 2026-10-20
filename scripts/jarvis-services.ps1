@@ -72,6 +72,29 @@ function Command-Exists([string]$Name) { return $null -ne (Get-Command $Name -Er
 function Require-Command([string]$Name,[string]$Help) {
   if (-not (Command-Exists $Name)) { Die 'DEPENDENCY_MISSING' "Missing $Name. $Help" }
 }
+function Assert-OpenClawNative {
+  # openclaw-native.ps1 prepends this portable Node runtime before resolving CLI.
+  # The interactive PowerShell PATH alone is not authoritative.
+  $launcher=Join-Path $PSScriptRoot 'openclaw-native.ps1'
+  if (-not (Test-Path -LiteralPath $launcher -PathType Leaf)) {
+    Die 'OPENCLAW_LAUNCHER_MISSING' 'scripts/openclaw-native.ps1 is missing from this checkout.'
+  }
+  $portable=Join-Path $root '.tools\node-v24.22.0-win-x64'
+  $priorPath=$env:PATH
+  $found=$false
+  try {
+    if (Test-Path -LiteralPath (Join-Path $portable 'node.exe') -PathType Leaf) {
+      $env:PATH="$portable;$priorPath"
+    }
+    # A non-executing check: no network, subscriptions, Gateway state or .env edits.
+    $found=Command-Exists 'openclaw'
+  } finally {
+    $env:PATH=$priorPath
+  }
+  if (-not $found) {
+    Die 'OPENCLAW_CLI_UNAVAILABLE' 'The OpenClaw CLI was not found with the native wrapper PATH. Check the project portable .tools runtime and its OpenClaw installation; no .env change is needed.'
+  }
+}
 function Test-Port([int]$Port) {
   $tcp=New-Object System.Net.Sockets.TcpClient
   try {
@@ -323,7 +346,7 @@ function Validate-Config($Config) {
     Die 'NPX_MISSING' 'Playwright MCP needs npx on PATH.'
   }
   if (Enabled $Config 'ENABLE_OPENCLAW') {
-    Require-Command openclaw 'Install the OpenClaw CLI or fix PATH.'
+    Assert-OpenClawNative
   }
   if (Enabled $Config 'ENABLE_BROWSER') {
     Require-Command uv 'Install uv or disable the legacy Browser worker; Claude Playwright MCP is separate.'
