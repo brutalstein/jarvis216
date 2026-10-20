@@ -53,6 +53,7 @@ jobs:
             'CLAUDE_AGENT_PLAYWRIGHT=true'
             'CLAUDE_AGENT_PLAYWRIGHT_HEADLESS=false'
             'CLAUDE_AGENT_OPENCLAW_MCP=true'
+            'ENABLE_OPENCLAW=true'
             'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits'
             'BROWSER_ALLOWED_URLS=["https://example.com/"]'
             'CLAUDE_AGENT_WORKSPACE=C:\Users\fixture\OneDrive\Desktop\jarvis216\data\claude-agent'
@@ -68,6 +69,34 @@ jobs:
             if ($result -notmatch 'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits') { throw 'Last assignment must win.' }
             if ($result -match 'fixture-do-not-log-this-token' -or $result -match 'fixture-not-a-real-password') {
               throw 'Secret value was printed to stdout.'
+            }
+            # The portable CLI is deliberately absent from the parent PATH:
+            # only openclaw-native.ps1 must be able to find the executable.
+            $portable = Join-Path $PWD '.tools\node-v24.22.0-win-x64'
+            New-Item -ItemType Directory -Force -Path $portable | Out-Null
+            New-Item -ItemType File -Force -Path (Join-Path $portable 'node.exe') | Out-Null
+            Set-Content -LiteralPath (Join-Path $portable 'openclaw.cmd') -Encoding ASCII -Value @(
+              '@echo off'
+              'if "%~1"=="--version" exit /b 0'
+              'exit /b 1'
+            )
+            $originalPath = $env:PATH
+            $bin = Join-Path $PWD 'data\ci-bin'
+            New-Item -ItemType Directory -Force -Path $bin | Out-Null
+            Set-Content -LiteralPath (Join-Path $bin 'docker.cmd') -Encoding ASCII -Value '@echo off'
+            $env:PATH = "$bin;$originalPath"
+            try {
+              if (Get-Command openclaw -ErrorAction SilentlyContinue) {
+                throw 'OpenClaw unexpectedly appeared on the parent PATH.'
+              }
+              $doctorOutput = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action Doctor 2>&1
+              $doctorCode = $LASTEXITCODE
+              if ($doctorCode -ne 0) { throw "Doctor rejected a working portable OpenClaw wrapper: $($doctorOutput -join ' ')" }
+              if (($doctorOutput -join ' ') -notmatch 'Local .env and prerequisites checked') {
+                throw 'Doctor did not confirm local prerequisites.'
+              }
+            } finally {
+              $env:PATH = $originalPath
             }
           } finally {
             Remove-Item -LiteralPath .env -Force -ErrorAction SilentlyContinue
