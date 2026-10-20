@@ -247,6 +247,38 @@ describe("tool-using Claude Code agent", () => {
     expect(sent.argv).not.toContain("--safe-mode");
   });
 
+  it("passes the live Full Access grant into native and MCP tool approvals", async () => {
+    const record = path.join(dir, `agent-permission-${n++}.json`);
+    let autonomous = false;
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: {
+        maxTurns: 5,
+        permissionMode: "acceptEdits",
+        autonomous: () => autonomous,
+        mcpConfigs: [
+          path.resolve("operator-mcp.json"),
+          JSON.stringify({ mcpServers: { playwright: { command: "npx", args: ["-y"] } } }),
+        ],
+      },
+    });
+    await executor.execute(task("first run"), new AbortController().signal);
+    const restricted = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    expect(restricted.argv).not.toContain("--allowedTools");
+    expect(restricted.argv).not.toContain("--strict-mcp-config");
+    expect(restricted.argv).toContain(path.resolve("operator-mcp.json"));
+    autonomous = true;
+    await executor.execute(task("second run"), new AbortController().signal);
+    const allowed = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    expect(allowed.argv).toContain("--allowedTools");
+    expect(allowed.argv).toContain("mcp__*");
+    expect(allowed.argv).toContain("Bash");
+    expect(allowed.argv).not.toContain("bypassPermissions");
+    expect(allowed.argv).toContain("acceptEdits");
+  });
+
   it("accepts an explicit MCP configuration path only", async () => {
     const record = path.join(dir, `agent-mcp-${n++}.json`);
     const cfg = path.join(dir, "private-mcp.json");
