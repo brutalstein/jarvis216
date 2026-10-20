@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
@@ -234,9 +235,11 @@ export async function configuredProviders(
       .default(12)
       .parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
     const mcpConfig = env.CLAUDE_AGENT_MCP_CONFIG?.trim() || undefined;
+    let mcpFileContent = "";
     if (mcpConfig) {
       z.string().refine(path.isAbsolute).parse(mcpConfig);
-      const raw = JSON.parse(await readFile(mcpConfig, "utf8"));
+      mcpFileContent = await readFile(mcpConfig, "utf8");
+      const raw = JSON.parse(mcpFileContent);
       z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(raw);
     }
     const browserMcp = env.CLAUDE_AGENT_PLAYWRIGHT === "true";
@@ -253,6 +256,11 @@ export async function configuredProviders(
       ...(n8nMcpUrl ? [n8nMcpConfig(n8nMcpUrl)] : []),
     ];
     const additiveMcp = browserMcp || openClawMcp || Boolean(n8nMcpUrl);
+    // Changes to an MCP tool surface invalidate any previously approved action hash.
+    const mcpFingerprint = createHash("sha256")
+      .update(JSON.stringify(mcpConfigs))
+      .update(mcpFileContent)
+      .digest("hex");
     register(
       new ClaudeCodeExecutor({
         command: [binary],
@@ -265,7 +273,7 @@ export async function configuredProviders(
           ...(local.agentAutonomous && { autonomous: local.agentAutonomous }),
         },
       }),
-      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}:playwright-${browserMcp}:headless-${env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true"}`,
+      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}:playwright-${browserMcp}:headless-${env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true"}:mcp-fingerprint-${mcpFingerprint}`,
       70,
     );
   }
