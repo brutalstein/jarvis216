@@ -175,7 +175,10 @@ function Start-Managed($State,[string]$Name,[scriptblock]$Probe,[int]$Seconds,[s
   }
   if ($null -ne $Probe -and (& $Probe)) {
     Say 'WARN' "$Name responds at $Address but was started outside this manager; leaving untouched."
-    if ($State.processes.ContainsKey($Name)) { [void]$State.processes.Remove($Name) }
+    if ($State.processes.ContainsKey($Name)) {
+      [void]$State.processes.Remove($Name)
+      Write-State $State
+    }
     return
   }
   if ($Name -eq 'browser' -and (Test-Port 8765)) {
@@ -205,7 +208,9 @@ function Stop-Managed($State,[string]$Name) {
   if (-not $State.processes.ContainsKey($Name)) { return }
   if (-not (Process-Alive $State $Name)) {
     Say 'WARN' "$Name has no verified managed process; refusing to kill an unknown PID."
-    [void]$State.processes.Remove($Name); return
+    [void]$State.processes.Remove($Name)
+    Write-State $State
+    return
   }
   $id=[int]$State.processes[$Name].pid
   Say 'INFO' "Stopping managed $Name process tree $id."
@@ -258,7 +263,12 @@ function Start-Docker($State,[string]$Name,$Config) {
     } 180 'Docker Engine' $null
   }
   if (Compose-Running $Name $Config) {
-    Say 'OK' "Docker $Name was already running; not taking lifecycle ownership."; return
+    if ($State.docker.ContainsKey($Name) -and [bool]$State.docker[$Name]) {
+      Say 'OK' "Docker $Name already running and owned by this manager."
+    } else {
+      Say 'OK' "Docker $Name was already running externally; leaving ownership unchanged."
+    }
+    return
   }
   Say 'INFO' "Starting Docker $Name..."
   $null=Compose @('up','-d',$Name) $Config
