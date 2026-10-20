@@ -45,6 +45,10 @@ export type ClaudeAgentOptions = {
   maxTurns: number;
   permissionMode: "auto" | "acceptEdits" | "plan" | "dontAsk";
   mcpConfig?: string;
+  // Additional MCP sources are additive; preserve the operator's installed servers.
+  mcpConfigs?: readonly string[];
+  // Core supplies the *current* Settings grant, not a startup snapshot.
+  autonomous?: () => boolean;
 };
 export class ClaudeCodeExecutor implements Executor {
   readonly id: "claude-code" | "claude-agent";
@@ -81,6 +85,7 @@ export class ClaudeCodeExecutor implements Executor {
           }
         : {}),
     };
+    const autonomous = this.options.agent?.autonomous?.() === true;
     const flags = this.options.agent
       ? [
           "-p",
@@ -94,8 +99,26 @@ export class ClaudeCodeExecutor implements Executor {
           this.options.agent.permissionMode,
           "--max-turns",
           String(this.options.agent.maxTurns),
-          ...(this.options.agent.mcpConfig
-            ? ["--strict-mcp-config", "--mcp-config", this.options.agent.mcpConfig]
+          ...(this.options.agent.mcpConfigs?.length
+            ? ["--mcp-config", ...this.options.agent.mcpConfigs]
+            : this.options.agent.mcpConfig
+              ? ["--strict-mcp-config", "--mcp-config", this.options.agent.mcpConfig]
+              : []),
+          // The operator's Full Access preset preauthorizes native and installed MCP tools.
+          // Still honors Claude-managed deny rules and the Core's per-action admission.
+          ...(autonomous
+            ? [
+                "--allowedTools",
+                "Bash",
+                "Read",
+                "Write",
+                "Edit",
+                "Glob",
+                "Grep",
+                "WebFetch",
+                "WebSearch",
+                "mcp__*",
+              ]
             : []),
           "--setting-sources",
           "user,project,local",

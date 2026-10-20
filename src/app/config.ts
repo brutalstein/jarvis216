@@ -9,6 +9,7 @@ import { type Provider, ProviderRegistry } from "../core/routing.js";
 import { containedPath, type EnvSecrets } from "../core/security.js";
 import { DesktopExecutor, NewsExecutor } from "../integrations/actions.js";
 import { ClaudeCodeExecutor } from "../integrations/claude-code.js";
+import { playwrightMcpConfig } from "../integrations/claude-mcp.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
@@ -62,6 +63,7 @@ export async function configuredProviders(
     prefer?: (target: string, candidates: string[]) => string | undefined;
     // Registered like configured executors, after them (fake models in end-to-end tests).
     executors?: Executor[];
+    agentAutonomous?: () => boolean;
   } = {},
 ): Promise<{
   registry: ProviderRegistry;
@@ -233,14 +235,26 @@ export async function configuredProviders(
       const raw = JSON.parse(await readFile(mcpConfig, "utf8"));
       z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(raw);
     }
+    const browserMcp = env.CLAUDE_AGENT_PLAYWRIGHT === "true";
+    const mcpConfigs = [
+      ...(mcpConfig ? [mcpConfig] : []),
+      ...(browserMcp
+        ? [playwrightMcpConfig({ headless: env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true" })]
+        : []),
+    ];
     register(
       new ClaudeCodeExecutor({
         command: [binary],
         model,
         workdir: workspace,
-        agent: { permissionMode, maxTurns, ...(mcpConfig && { mcpConfig }) },
+        agent: {
+          permissionMode,
+          maxTurns,
+          ...(browserMcp ? { mcpConfigs } : mcpConfig ? { mcpConfig } : {}),
+          ...(local.agentAutonomous && { autonomous: local.agentAutonomous }),
+        },
       }),
-      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}`,
+      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}:playwright-${browserMcp}:headless-${env.CLAUDE_AGENT_PLAYWRIGHT_HEADLESS === "true"}`,
       70,
     );
   }
