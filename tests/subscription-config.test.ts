@@ -173,10 +173,7 @@ it("Claude agent refuses missing explicit MCP configuration", async () => {
 it("Claude agent fingerprints its enabled MCP tools into provider configuration", async () => {
   const env = { ...claude, ENABLE_CLAUDE_AGENT: "true" };
   const plain = await configuredProviders(env, secrets);
-  const browser = await configuredProviders(
-    { ...env, CLAUDE_AGENT_PLAYWRIGHT: "true" },
-    secrets,
-  );
+  const browser = await configuredProviders({ ...env, CLAUDE_AGENT_PLAYWRIGHT: "true" }, secrets);
   const spec = TaskSpecSchema.parse({
     objective: "create a local file",
     capability: "text.generate",
