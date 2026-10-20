@@ -92,3 +92,26 @@ later override) are accepted: the **last occurrence wins**, with a warning that
 contains the setting name and line number but no value. Leading BOM/zero-width
 characters before a key are tolerated. Malformed lines still report their
 location, without disclosing any secret from that line.
+
+## Desktop says "Ayar dosyası bulunamadı"
+
+Electron expects the **absolute** operator dotenv path in `JARVIS_ENV_FILE`,
+even when native Core is healthy. The service manager supplies
+`JARVIS_ENV_FILE=<repo-root>/.env` to the Electron **child process only**,
+restores any previous caller environment value, and never passes tokens as
+command-line arguments. The file itself is never changed.
+
+To apply an updated manager to an already-open desktop without restarting
+PostgreSQL, Core, or OpenClaw:
+
+```powershell
+git pull --ff-only origin release/v1.0.0
+.\scripts\jarvis-services.ps1 -Action Restart -Service desktop
+.\scripts\jarvis-services.ps1 -Action Status
+```
+
+This desktop-only restart is supported for already-managed Electron processes.
+The UI starts its own voice service; a healthy Core status alone does not verify
+voice/microphone/audio startup. If the UI still shows an error, check the newest
+desktop stderr/stdout log with `-Action Logs -Service desktop`, without sharing
+any token-bearing contents.
