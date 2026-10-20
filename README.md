@@ -62,8 +62,8 @@ without keeping PowerShell tabs open. The optional desktop UI owns the voice wor
 .\scripts\jarvis-services.ps1 -Action Stop
 ```
 
-This is not a Windows boot service; Docker Desktop and required dependencies must
-already be installed. The manager follows .env flags, never changes them or grants
+This is not a Windows boot service; Docker Desktop and required dependencies must already be installed. The manager
+attempts to launch Docker Desktop if the engine is not running. The manager follows .env flags, never changes them or grants
 additional permissions. See the linked guide for troubleshooting and isolation limits.
 
 ## Windows quick start
