@@ -106,7 +106,7 @@ export function createIntegrationHub(settings: {
         capability: "text.generate",
         providers: ["claude-agent"],
         objective: instruction,
-        input: { action: "agent.execute", args: { instruction } },
+        input: {},
         risk: "HIGH",
         privacy: "private",
         budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 2500 },

@@ -29,7 +29,7 @@ describe("allowlisted integration recipes", () => {
       providers: ["claude-agent"],
       risk: "HIGH",
       privacy: "private",
-      input: { action: "agent.execute" },
+      input: {},
     });
     expect(task.objective).toBe("Analyze and implement");
     expect(() => createIntegrationHub({}).compile("agent.execute", { instruction: "x" })).toThrow();
