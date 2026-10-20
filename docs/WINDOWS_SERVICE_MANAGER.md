@@ -8,7 +8,7 @@ It does **not** provide auto-start at login, crash-restart or production supervi
 Run from the repository with Windows PowerShell 5.1+:
 
 ```powershell
-# Once: install dependencies, start Docker Desktop and configure .env
+# Once: install dependencies and configure .env
 npm ci --ignore-scripts
 .\scripts\jarvis-services.ps1 -Action Doctor
 
@@ -64,7 +64,7 @@ fails, previous phases are kept for diagnosis; use Stop to clean them up.
 - ENV_MISSING / ENV_SYNTAX / ENV_DUPLICATE: Fix .env; bootstrap preserves it.
 - DEPENDENCY_MISSING / NPM_NOT_INSTALLED: Check Node 24, npm, Docker and any
   enabled OpenClaw/uv dependencies.
-- DOCKER_NOT_READY / DOCKER_COMPOSE_FAILED: Start Docker Desktop and inspect
+- DOCKER_NOT_READY / DOCKER_COMPOSE_FAILED: Docker Desktop launches automatically when installed; otherwise start it manually. Inspect
   the Compose configuration.
 - BUILD_FAILED / DIST_MISSING: Run npm ci --ignore-scripts then npm run build.
 - CORE_PORT_BUSY / BROWSER_PORT_BUSY: Unknown listener. No destructive killing.
