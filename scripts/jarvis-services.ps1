@@ -438,6 +438,18 @@ try {
   }
   $config=Env-Map
   $state=Read-State
+  # Desktop-only restart repairs the Electron/voice connection without
+  # interrupting the already healthy Core, Gateway or Docker database.
+  if ($Service -eq 'desktop' -and $Action -in @('Stop','Restart')) {
+    Stop-Managed $state 'desktop'
+    if ($Action -eq 'Restart') {
+      Start-Managed $state 'desktop' $null 0 'desktop'
+      Say 'OK' 'Desktop restarted with JARVIS_ENV_FILE inherited from the operator .env path.'
+    } else {
+      Say 'OK' 'Managed desktop stopped; Core, OpenClaw and PostgreSQL were not touched.'
+    }
+    exit 0
+  }
   if ($Action -in @('Stop','Restart')) {
     Do-Stop $state $config
     if ($Action -eq 'Stop') { exit 0 }
