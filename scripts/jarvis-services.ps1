@@ -225,7 +225,18 @@ function Start-Managed($State,[string]$Name,[scriptblock]$Probe,[int]$Seconds,[s
     if (-not (Test-Path -LiteralPath $exe)) {
       Die 'DESKTOP_NOT_INSTALLED' 'Electron missing. Run npm ci --prefix apps/desktop --ignore-scripts and download Electron.'
     }
-    $proc=Start-Process -FilePath $exe -ArgumentList '.' -WorkingDirectory (Join-Path $root 'apps\desktop') -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    # Electron deliberately requires an absolute JARVIS_ENV_FILE path. The
+    # service manager reads .env but the Electron main process must read it
+    # independently; never copy any token into a CLI argument or log.
+    # Windows PowerShell 5.1 has no Start-Process -Environment parameter:
+    # set this single variable only for the process launch and restore it.
+    $previousEnvFile=[Environment]::GetEnvironmentVariable('JARVIS_ENV_FILE','Process')
+    try {
+      $env:JARVIS_ENV_FILE=$envPath
+      $proc=Start-Process -FilePath $exe -ArgumentList '.' -WorkingDirectory (Join-Path $root 'apps\desktop') -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    } finally {
+      [Environment]::SetEnvironmentVariable('JARVIS_ENV_FILE',$previousEnvFile,'Process')
+    }
   } else {
     $shell=(Get-Process -Id $PID).Path
     $arguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',('"{0}"' -f $scriptPath),'-InternalService','-InternalName',$Name)
