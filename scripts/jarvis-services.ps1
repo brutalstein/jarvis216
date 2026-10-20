@@ -7,7 +7,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('Start','Stop','Restart','Status','Logs','Doctor')][string]$Action='Start',
+  [ValidateSet('Start','Stop','Restart','Status','Logs','Doctor','EnvCheck')][string]$Action='Start',
   [ValidateSet('All','core','openclaw','browser','desktop')][string]$Service='All',
   [ValidateRange(1,500)][int]$Tail=50,
   [switch]$WithDesktop,
@@ -36,15 +36,24 @@ function Env-Map {
   }
   $items=@{}; $number=0
   foreach ($line in [IO.File]::ReadAllLines($envPath)) {
-    $number++; $s=$line.Trim()
+    $number++
+    # A Windows editor or pasted text can add invisible prefix characters.
+    # The actual on-disk .env and credential values are never modified.
+    $s=$line.Trim().TrimStart([char]0xFEFF,[char]0x200B,[char]0x2060)
     if (-not $s -or $s.StartsWith('#')) { continue }
-    if ($s -notmatch '^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
-      Die 'ENV_SYNTAX' "Invalid .env assignment at line $number (contents withheld)."
+    # Explicit Match captures avoid depending on PowerShell's stateful $Matches variable.
+    $match=[regex]::Match($s,'^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$')
+    if (-not $match.Success) {
+      Die 'ENV_SYNTAX' "Invalid .env assignment at line $number. Expected KEY=VALUE; contents withheld. Check for pasted prompts or invisible characters."
     }
-    $key=$Matches[1]; $value=$Matches[2].Trim()
-    if ($items.ContainsKey($key)) { Die 'ENV_DUPLICATE' "Duplicate setting $key at line $number." }
+    $key=$match.Groups[1].Value
+    $value=$match.Groups[2].Value.Trim()
     if ($value.Length -ge 2 -and (($value[0] -eq '"' -and $value[-1] -eq '"') -or ($value[0] -eq "'" -and $value[-1] -eq "'"))) {
       $value=$value.Substring(1,$value.Length-2)
+    }
+    if ($items.ContainsKey($key)) {
+      # Node dotenv supports duplicate assignments: the last one is effective.
+      Say 'WARN' "ENV_DUPLICATE_OVERRIDE: $key appears again at line $number. Keeping the last value, leaving .env untouched."
     }
     $items[$key]=$value
   }
@@ -366,6 +375,17 @@ try {
       $settings=$null
       if (Test-Path -LiteralPath $envPath) { try { $settings=Env-Map } catch { Say 'WARN' 'Could not parse .env; using defaults.' } }
       Report $state $settings
+    }
+    exit 0
+  }
+  if ($Action -eq 'EnvCheck') {
+    $config=Env-Map
+    Say 'OK' "ENV_PARSED: $($config.Count) effective keys. No values or files changed."
+    # Print only non-secret, explicit allowlisted switches; never expose credentials.
+    foreach ($key in @('ENABLE_CLAUDE_AGENT','CLAUDE_AGENT_PERMISSION_MODE',
+       'CLAUDE_AGENT_PLAYWRIGHT','CLAUDE_AGENT_OPENCLAW_MCP',
+       'ENABLE_OPENCLAW','ENABLE_BROWSER','ENABLE_N8N','ENABLE_CODEX','ENABLE_CLAUDE_CODE')) {
+      if ($config.ContainsKey($key)) { Say 'INFO' "$key=$($config[$key])" }
     }
     exit 0
   }

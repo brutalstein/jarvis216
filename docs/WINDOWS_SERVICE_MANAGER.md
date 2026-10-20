@@ -77,3 +77,14 @@ n8n or a legacy browser profile at the same time can weaken network isolation.
 Do not use this combined topology with valued data; see compose.dev.yaml.
 The script does not bypass web authentication, model quotas or other app policy.
 Rotate any credentials that were previously shared in a chat.
+
+## Existing .env values are preserved
+
+The manager only reads the operator's `.env` and **never rewrites it**.
+Run `.\scripts\jarvis-services.ps1 -Action EnvCheck` to validate assignments
+and display only explicitly non-secret feature flags, without starting services.
+Repeated assignments (for example an early Claude permission setting and a
+later override) are accepted: the **last occurrence wins**, with a warning that
+contains the setting name and line number but no value. Leading BOM/zero-width
+characters before a key are tolerated. Malformed lines still report their
+location, without disclosing any secret from that line.

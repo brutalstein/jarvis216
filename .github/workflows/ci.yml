@@ -37,6 +37,42 @@ jobs:
           # GitHub's powershell runner propagates the most recent native exit code.
           # Doctor's nonzero result was the expected/verified behavior.
           $global:LASTEXITCODE = 0
+      - name: Check unchanged dotenv syntax with duplicate keys, hidden prefix and safe output
+        shell: powershell
+        run: |
+          # All credentials below are deliberately synthetic and never sent to a service.
+          $lines = @(
+            '# Example operator configuration'
+            'POSTGRES_PASSWORD=fixture-not-a-real-password'
+            'DATABASE_URL=postgresql://jarvis:fixture@127.0.0.1:55432/jarvis'
+            "$([char]0x200B)JARVIS_TOKEN=fixture-do-not-log-this-token"
+            'ENABLE_CLAUDE_AGENT=true'
+            'CLAUDE_AGENT_PERMISSION_MODE=auto'
+            'CLAUDE_AGENT_MAX_TURNS=12'
+            '# Browser tools'
+            'CLAUDE_AGENT_PLAYWRIGHT=true'
+            'CLAUDE_AGENT_PLAYWRIGHT_HEADLESS=false'
+            'CLAUDE_AGENT_OPENCLAW_MCP=true'
+            'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits'
+            'BROWSER_ALLOWED_URLS=["https://example.com/"]'
+            'CLAUDE_AGENT_WORKSPACE=C:\Users\fixture\OneDrive\Desktop\jarvis216\data\claude-agent'
+          )
+          try {
+            Set-Content -LiteralPath .env -Value $lines -Encoding UTF8
+            $output = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action EnvCheck 2>&1
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw "EnvCheck failed; expected success: $($output -join ' ')" }
+            $result = $output -join ' '
+            if ($result -notmatch 'ENV_PARSED') { throw 'dotenv fixture did not parse.' }
+            if ($result -notmatch 'ENV_DUPLICATE_OVERRIDE: CLAUDE_AGENT_PERMISSION_MODE') { throw 'Duplicate override not detected.' }
+            if ($result -notmatch 'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits') { throw 'Last assignment must win.' }
+            if ($result -match 'fixture-do-not-log-this-token' -or $result -match 'fixture-not-a-real-password') {
+              throw 'Secret value was printed to stdout.'
+            }
+          } finally {
+            Remove-Item -LiteralPath .env -Force -ErrorAction SilentlyContinue
+            $global:LASTEXITCODE = 0
+          }
   typescript:
     strategy:
       matrix: { os: [ubuntu-latest, windows-latest] }
