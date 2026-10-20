@@ -156,8 +156,14 @@ it("Claude agent registers independently of conversation, with HIGH risk", async
   expect(integrations.available()).toContain("agent.execute");
 });
 it("Claude agent refuses missing explicit MCP configuration", async () => {
-  await expect(configuredProviders(
-    { ...claude, ENABLE_CLAUDE_AGENT: "true", CLAUDE_AGENT_MCP_CONFIG: path.resolve("nonexistent-mcp.json") },
-    secrets,
-  )).rejects.toThrow();
+  await expect(
+    configuredProviders(
+      {
+        ...claude,
+        ENABLE_CLAUDE_AGENT: "true",
+        CLAUDE_AGENT_MCP_CONFIG: path.resolve("nonexistent-mcp.json"),
+      },
+      secrets,
+    ),
+  ).rejects.toThrow();
 });

@@ -229,7 +229,10 @@ describe("tool-using Claude Code agent", () => {
     });
     expect(executor).toMatchObject({ id: "claude-agent", retrySafe: false, riskFloor: "HIGH" });
     const output = await executor.execute(task("Analyze and edit"), new AbortController().signal);
-    expect(output).toMatchObject({ text: "verified", source: "claude-agent:test-model:subscription" });
+    expect(output).toMatchObject({
+      text: "verified",
+      source: "claude-agent:test-model:subscription",
+    });
     const sent = JSON.parse(readFileSync(record, "utf8")) as { argv: string[]; stdin: string };
     expect(sent.stdin).toBe("Analyze and edit");
     expect(sent.argv).toContain("default");

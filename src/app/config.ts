@@ -217,8 +217,13 @@ export async function configuredProviders(
       .enum(["auto", "acceptEdits", "plan", "dontAsk"])
       .default("auto")
       .parse(env.CLAUDE_AGENT_PERMISSION_MODE || undefined);
-    const maxTurns = z.coerce.number().int().min(1).max(80)
-      .default(12).parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
+    const maxTurns = z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(80)
+      .default(12)
+      .parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
     const mcpConfig = env.CLAUDE_AGENT_MCP_CONFIG?.trim() || undefined;
     if (mcpConfig) {
       z.string().refine(path.isAbsolute).parse(mcpConfig);
@@ -227,7 +232,9 @@ export async function configuredProviders(
     }
     register(
       new ClaudeCodeExecutor({
-        command: [binary], model, workdir: workspace,
+        command: [binary],
+        model,
+        workdir: workspace,
         agent: { permissionMode, maxTurns, ...(mcpConfig && { mcpConfig }) },
       }),
       `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}`,

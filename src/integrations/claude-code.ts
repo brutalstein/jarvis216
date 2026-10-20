@@ -90,9 +90,7 @@ export class ClaudeCodeExecutor implements Executor {
           "--max-turns",
           String(this.options.agent.maxTurns),
           "--strict-mcp-config",
-          ...(this.options.agent.mcpConfig
-            ? ["--mcp-config", this.options.agent.mcpConfig]
-            : []),
+          ...(this.options.agent.mcpConfig ? ["--mcp-config", this.options.agent.mcpConfig] : []),
           "--setting-sources",
           "",
           "--disable-slash-commands",
@@ -114,11 +112,13 @@ export class ClaudeCodeExecutor implements Executor {
           "--safe-mode",
         ];
     return new Promise((resolve, reject) => {
-      const child = spawn(
-        command[0],
-        [...command.slice(1), ...flags],
-        { cwd: workdir, env, shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
-      );
+      const child = spawn(command[0], [...command.slice(1), ...flags], {
+        cwd: workdir,
+        env,
+        shell: false,
+        windowsHide: true,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       let stdout = "";
       let stderr = "";
       let oversized = false;
