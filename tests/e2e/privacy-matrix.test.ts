@@ -60,6 +60,75 @@ afterEach(async () => {
 });
 
 describe("privacy × provider trust through the real Core", () => {
+  it("requires a new exact approval when provider trust changes across a restart", async () => {
+    const model = new FakeModel();
+    const executor = { ...model.executor("gemini-live"), external: true };
+    const configured = {
+      ...fakes!.env,
+      ENABLE_DESKTOP: "false",
+      ENABLE_BROWSER: "false",
+      ENABLE_OPENCLAW: "false",
+      ENABLE_N8N: "false",
+      JARVIS_PRIVATE_PROVIDERS: "",
+    };
+    running = await boot(db, configured, model, [executor]);
+    const task = await running.core.tasks.create(
+      {
+        objective: "Synthetic approval-binding check",
+        capability: "text.generate",
+        providers: ["gemini-live"],
+        privacy: "private",
+        risk: "HIGH",
+        deadline: new Date(Date.now() + 60_000).toISOString(),
+        verification: { kind: "non-empty" },
+      },
+      "trust-change",
+      "operator",
+    );
+    await until(
+      () => running!.core.tasks.get(task.id),
+      (current) => current.status === "WAITING_FOR_APPROVAL",
+    );
+    const original = (await running.core.tasks.actions(task.id))[0]!;
+    await running.stop();
+    running = await boot(db, { ...configured, JARVIS_PRIVATE_PROVIDERS: "gemini-live" }, model, [
+      executor,
+    ]);
+    const approve = (id: string) =>
+      running!.api("POST", `/v1/actions/${id}/approve`, {
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      });
+    expect((await approve(original.id)).status).toBe(204);
+    const changed = await until(
+      () => running!.core.tasks.actions(task.id),
+      (actions) => actions.length === 2,
+    );
+    expect(changed.find((action) => action.id === original.id)?.status).toBe("SUPERSEDED");
+    const replacement = changed.find((action) => action.id !== original.id)!;
+    expect(replacement).toMatchObject({ risk: "HIGH", status: "AWAITING_APPROVAL" });
+    expect(replacement.hash).not.toBe(original.hash);
+    expect(model.prompts).toEqual([]);
+    expect((await approve(replacement.id)).status).toBe(204);
+    await until(
+      () => running!.core.tasks.get(task.id),
+      (current) => current.status === "COMPLETED",
+    );
+    expect(model.prompts).toHaveLength(1);
+    expect((await approve(original.id)).status).toBe(409);
+    const approvals = await db.query<{ action_id: string; consumed_at: string | null }>(
+      "SELECT action_id,consumed_at FROM approvals WHERE action_id=ANY($1::uuid[])",
+      [[original.id, replacement.id]],
+    );
+    expect(approvals.rows).toHaveLength(2);
+    expect(
+      approvals.rows.find((approval) => approval.action_id === original.id)?.consumed_at,
+    ).toBeNull();
+    expect(approvals.rows.find((approval) => approval.action_id === replacement.id)).toMatchObject({
+      action_id: replacement.id,
+      consumed_at: expect.anything(),
+    });
+  });
+
   it.each(cases)("$privacy / $provider → $expected", async (row) => {
     const model = new FakeModel();
     running = await boot(
