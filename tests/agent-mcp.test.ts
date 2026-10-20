@@ -34,9 +34,9 @@ describe("official agent MCP service bridges", () => {
     const config = JSON.parse(openClawMcpConfig()) as {
       mcpServers: { openclaw: { command: string; args: string[] } };
     };
-    expect([config.mcpServers.openclaw.command, ...config.mcpServers.openclaw.args].join(" ")).toContain(
-      "openclaw mcp serve",
-    );
+    expect(
+      [config.mcpServers.openclaw.command, ...config.mcpServers.openclaw.args].join(" "),
+    ).toContain("openclaw mcp serve");
     expect(config.mcpServers.openclaw.args.join(" ")).toContain("--claude-channel-mode");
   });
 
