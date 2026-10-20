@@ -217,3 +217,42 @@ describe("Claude Code subscription executor", () => {
     );
   });
 });
+
+describe("tool-using Claude Code agent", () => {
+  it("runs native tools through a separate non-retryable HIGH provider", async () => {
+    const record = path.join(dir, `agent-${n++}.json`);
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: { maxTurns: 9, permissionMode: "auto" },
+    });
+    expect(executor).toMatchObject({ id: "claude-agent", retrySafe: false, riskFloor: "HIGH" });
+    const output = await executor.execute(task("Analyze and edit"), new AbortController().signal);
+    expect(output).toMatchObject({ text: "verified", source: "claude-agent:test-model:subscription" });
+    const sent = JSON.parse(readFileSync(record, "utf8")) as { argv: string[]; stdin: string };
+    expect(sent.stdin).toBe("Analyze and edit");
+    expect(sent.argv).toContain("default");
+    expect(sent.argv).toContain("auto");
+    expect(sent.argv).toContain("--max-turns");
+    expect(sent.argv).not.toContain("--safe-mode");
+    expect(sent.argv).not.toContain("--dangerously-skip-permissions");
+    expect(sent.argv).not.toContain("--mcp-config");
+  });
+
+  it("accepts an explicit MCP configuration path only", async () => {
+    const record = path.join(dir, `agent-mcp-${n++}.json`);
+    const cfg = path.join(dir, "private-mcp.json");
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: { maxTurns: 3, permissionMode: "acceptEdits", mcpConfig: cfg },
+    });
+    await executor.execute(task(), new AbortController().signal);
+    const sent = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    expect(sent.argv).toContain("--strict-mcp-config");
+    expect(sent.argv).toContain(cfg);
+    expect(sent.argv).toContain("acceptEdits");
+  });
+});

@@ -34,6 +34,7 @@ export class IntegrationHub {
   }
 }
 const agent = z.strictObject({ instruction: z.string().trim().min(1).max(2000) });
+const claudeAgent = z.strictObject({ instruction: z.string().trim().min(1).max(8000) });
 const browser = z.strictObject({
   url: z.url({ protocol: /^https$/ }).max(2000),
   expectedText: z.string().trim().min(1).max(4096),
@@ -78,6 +79,7 @@ function exactUrl(value: string): string {
 }
 export function createIntegrationHub(settings: {
   openclaw?: boolean;
+  claudeAgent?: boolean;
   browserUrls?: readonly string[];
   workflows?: readonly string[];
 }): IntegrationHub {
@@ -94,6 +96,20 @@ export function createIntegrationHub(settings: {
         risk: "HIGH",
         privacy: "private",
         budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1200 },
+        verification: { kind: "non-empty" },
+      };
+    });
+  if (settings.claudeAgent)
+    hub.register("agent.execute", (args) => {
+      const { instruction } = read(claudeAgent, args);
+      return {
+        capability: "text.generate",
+        providers: ["claude-agent"],
+        objective: instruction,
+        input: { action: "agent.execute", args: { instruction } },
+        risk: "HIGH",
+        privacy: "private",
+        budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 2500 },
         verification: { kind: "non-empty" },
       };
     });

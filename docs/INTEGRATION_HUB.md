@@ -9,6 +9,7 @@ intents, lease fencing, verification, uncertainty and reconciliation.
 | --- | --- | --- | --- |
 | browser.read(url, expectedText) | Browser Use | Exact configured public HTTPS URL and DOM readback | LOW |
 | browser.read_many(pages) | Browser Use | Up to 4 exact allowlisted HTTPS URLs in one ephemeral session | LOW |
+| agent.execute(instruction) | Claude Code agent | Native tools and optional explicitly configured MCP servers; dedicated workspace | HIGH |
 | agent.delegate(instruction) | OpenClaw | Dedicated configured agent, tool-denied OpenResponses | HIGH |
 | automation.invoke(workflow,payload) | n8n | Named, registered published workflow; ≤ 8 KiB JSON | HIGH |
 

@@ -1,4 +1,4 @@
-import { access, mkdir } from "node:fs/promises";
+import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
 import { McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
@@ -204,6 +204,36 @@ export async function configuredProviders(
       15,
     );
   }
+  if (env.ENABLE_CLAUDE_AGENT === "true") {
+    // Kept separate from conversational Claude; operator chooses a delegated workspace.
+    const binary = z.string().refine(path.isAbsolute).parse(env.CLAUDE_CODE_PATH);
+    await access(binary);
+    const model = z.string().trim().min(1).parse(env.CLAUDE_CODE_MODEL);
+    const workspace = env.CLAUDE_AGENT_WORKSPACE
+      ? z.string().refine(path.isAbsolute).parse(env.CLAUDE_AGENT_WORKSPACE)
+      : path.resolve("data/claude-agent");
+    await mkdir(workspace, { recursive: true });
+    const permissionMode = z
+      .enum(["auto", "acceptEdits", "plan", "dontAsk"])
+      .default("auto")
+      .parse(env.CLAUDE_AGENT_PERMISSION_MODE || undefined);
+    const maxTurns = z.coerce.number().int().min(1).max(80)
+      .default(12).parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
+    const mcpConfig = env.CLAUDE_AGENT_MCP_CONFIG?.trim() || undefined;
+    if (mcpConfig) {
+      z.string().refine(path.isAbsolute).parse(mcpConfig);
+      const raw = JSON.parse(await readFile(mcpConfig, "utf8"));
+      z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(raw);
+    }
+    register(
+      new ClaudeCodeExecutor({
+        command: [binary], model, workdir: workspace,
+        agent: { permissionMode, maxTurns, ...(mcpConfig && { mcpConfig }) },
+      }),
+      `claude-agent:${model}:${workspace}:${permissionMode}:turns-${maxTurns}:mcp-${mcpConfig ?? "none"}`,
+      70,
+    );
+  }
   if (env.ENABLE_OPENCLAW === "true") {
     z.literal("true").parse(env.OPENCLAW_POLICY_VERIFIED);
     const base = z.url().parse(env.OPENCLAW_URL);
@@ -322,6 +352,7 @@ export async function configuredProviders(
           .parse(JSON.parse(env.BROWSER_ALLOWED_URLS ?? "[]"))
       : [];
   const integrations = createIntegrationHub({
+    claudeAgent: env.ENABLE_CLAUDE_AGENT === "true",
     openclaw: env.ENABLE_OPENCLAW === "true",
     browserUrls,
     workflows: workflowNames,

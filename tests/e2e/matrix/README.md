@@ -5,9 +5,9 @@ fails on drift; CI runs it before the root gates. No credentials or live endpoin
 
 | Input / suite | Current coverage | Evidence class |
 | --- | --- | --- |
-| `actions` | All 24 catalog actions; drift fails the generator test | tested only |
-| `permissions` / `permissions-matrix.test.ts` | 720 action × policy rows, executed as 30 batched HTTP scenarios; permanent/1h/8h/1d grants, presets, expiry, audit and reload | tested only |
-| `topology` / `topology-matrix.test.ts` | All 19 deterministic all-pairs rows executed: six flags, three language inputs, idle/busy and provider family; readiness, all 24 actions' availability, model catalog and persisted conversation execution checked | tested only |
+| `actions` | All 25 catalog actions; drift fails the generator test | tested only |
+| `permissions` / `permissions-matrix.test.ts` | 750 action × policy rows, executed as 30 batched HTTP scenarios; permanent/1h/8h/1d grants, presets, expiry, audit and reload | tested only |
+| `topology` / `topology-matrix.test.ts` | All 19 deterministic all-pairs rows executed: six flags, three language inputs, idle/busy and provider family; readiness, all 25 actions' availability, model catalog and persisted conversation execution checked | tested only |
 | `providers-matrix.test.ts` | 27 cases: five provider families alone, no provider, seven classified failures, daily-budget restart, four unavailable-action/confidence cases and nine invalid startup configurations | tested only |
 | `privacy-matrix.test.ts` | All 12 privacy × provider-trust combinations plus trust-change/restart invalidation of an old approval hash; task/action/approval records checked | tested only |
 | `core.test.ts` auth sweep | Every registered route with operator/n8n/missing/wrong credentials, including a bounded real SSE connection | tested only |

@@ -143,3 +143,21 @@ it("news can be enabled independently of desktop tools", async () => {
   expect(registry.list()).toMatchObject([{ id: "news", capability: "info.fetch" }]);
   expect(tools).toBeUndefined();
 });
+
+it("Claude agent registers independently of conversation, with HIGH risk", async () => {
+  const { registry, integrations } = await configuredProviders(
+    { ...claude, ENABLE_CLAUDE_AGENT: "true", CLAUDE_AGENT_PERMISSION_MODE: "auto" },
+    secrets,
+  );
+  expect(registry.list()).toEqual([
+    expect.objectContaining({ id: "claude-code", retrySafe: true }),
+    expect.objectContaining({ id: "claude-agent", retrySafe: false, riskFloor: "HIGH" }),
+  ]);
+  expect(integrations.available()).toContain("agent.execute");
+});
+it("Claude agent refuses missing explicit MCP configuration", async () => {
+  await expect(configuredProviders(
+    { ...claude, ENABLE_CLAUDE_AGENT: "true", CLAUDE_AGENT_MCP_CONFIG: path.resolve("nonexistent-mcp.json") },
+    secrets,
+  )).rejects.toThrow();
+});

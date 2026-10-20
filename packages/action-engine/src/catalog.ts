@@ -104,6 +104,14 @@ const definitions: ActionDef[] = [
     { instruction: label(2000) },
   ],
   [
+    "agent.execute",
+    "integration",
+    "HIGH",
+    "Karmaşık bir görevi Claude Code ajanıyla yürüt",
+    "Execute an open-ended task with the Claude Code agent and optional MCP tools",
+    { instruction: label(8000) },
+  ],
+  [
     "browser.read",
     "integration",
     "LOW",

@@ -41,15 +41,30 @@ function failure(text: string): ProviderFailure {
 
 // Runs the unmodified official binary headless: no tools, no MCP, no user settings or hooks.
 // The OAuth login stays inside Claude Code; Core never sees the token.
+export type ClaudeAgentOptions = {
+  maxTurns: number;
+  permissionMode: "auto" | "acceptEdits" | "plan" | "dontAsk";
+  mcpConfig?: string;
+};
 export class ClaudeCodeExecutor implements Executor {
-  readonly id = "claude-code";
+  readonly id: "claude-code" | "claude-agent";
   readonly capability = "text.generate";
   readonly external = true;
-  readonly retrySafe = true;
+  readonly retrySafe: boolean;
+  readonly riskFloor?: "HIGH";
   readonly outputTokenLimitEnforced = false;
   constructor(
-    private options: { command: readonly [string, ...string[]]; model: string; workdir: string },
-  ) {}
+    private options: {
+      command: readonly [string, ...string[]];
+      model: string;
+      workdir: string;
+      agent?: ClaudeAgentOptions;
+    },
+  ) {
+    this.id = options.agent ? "claude-agent" : "claude-code";
+    this.retrySafe = !options.agent;
+    if (options.agent) this.riskFloor = "HIGH";
+  }
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     if (signal.aborted) return Promise.reject(signal.reason ?? new Error("aborted"));
     const { command, model, workdir } = this.options;
@@ -61,11 +76,29 @@ export class ClaudeCodeExecutor implements Executor {
       CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
       CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
     };
-    return new Promise((resolve, reject) => {
-      const child = spawn(
-        command[0],
-        [
-          ...command.slice(1),
+    const flags = this.options.agent
+      ? [
+          "-p",
+          "--output-format",
+          "json",
+          "--model",
+          model,
+          "--tools",
+          "default",
+          "--permission-mode",
+          this.options.agent.permissionMode,
+          "--max-turns",
+          String(this.options.agent.maxTurns),
+          "--strict-mcp-config",
+          ...(this.options.agent.mcpConfig
+            ? ["--mcp-config", this.options.agent.mcpConfig]
+            : []),
+          "--setting-sources",
+          "",
+          "--disable-slash-commands",
+          "--no-session-persistence",
+        ]
+      : [
           "-p",
           "--output-format",
           "json",
@@ -79,7 +112,11 @@ export class ClaudeCodeExecutor implements Executor {
           "--disable-slash-commands",
           "--no-session-persistence",
           "--safe-mode",
-        ],
+        ];
+    return new Promise((resolve, reject) => {
+      const child = spawn(
+        command[0],
+        [...command.slice(1), ...flags],
         { cwd: workdir, env, shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
       );
       let stdout = "";
@@ -119,7 +156,7 @@ export class ClaudeCodeExecutor implements Executor {
           return reject(failure(`${parsed.result ?? ""} ${stderr}`));
         resolve({
           text: parsed.result ?? "",
-          source: `claude-code:${model}:subscription`,
+          source: `${this.id}:${model}:subscription`,
           ...(parsed.session_id ? { externalId: parsed.session_id } : {}),
           ...(parsed.usage && {
             usage: {

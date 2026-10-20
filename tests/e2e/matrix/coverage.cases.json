@@ -7,6 +7,11 @@
       "kind": "integration"
     },
     {
+      "id": "agent.execute",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
       "id": "app.close",
       "risk": "MEDIUM",
       "kind": "desktop"
@@ -250,6 +255,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "custom-ask/agent.execute",
+      "policy": "custom-ask",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "custom-ask/browser.read",
       "policy": "custom-ask",
       "action": "browser.read",
@@ -414,6 +426,13 @@
       "id": "custom-allow/agent.delegate",
       "policy": "custom-allow",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/agent.execute",
+      "policy": "custom-allow",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "allow"
     },
@@ -586,6 +605,13 @@
       "expectedMode": "deny"
     },
     {
+      "id": "custom-deny/agent.execute",
+      "policy": "custom-deny",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
       "id": "custom-deny/browser.read",
       "policy": "custom-deny",
       "action": "browser.read",
@@ -750,6 +776,13 @@
       "id": "allow-3600000-active/agent.delegate",
       "policy": "allow-3600000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/agent.execute",
+      "policy": "allow-3600000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "allow"
     },
@@ -922,6 +955,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-3600000-expired/agent.execute",
+      "policy": "allow-3600000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-3600000-expired/browser.read",
       "policy": "allow-3600000-expired",
       "action": "browser.read",
@@ -1086,6 +1126,13 @@
       "id": "allow-28800000-active/agent.delegate",
       "policy": "allow-28800000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/agent.execute",
+      "policy": "allow-28800000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "allow"
     },
@@ -1258,6 +1305,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-28800000-expired/agent.execute",
+      "policy": "allow-28800000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-28800000-expired/browser.read",
       "policy": "allow-28800000-expired",
       "action": "browser.read",
@@ -1422,6 +1476,13 @@
       "id": "allow-86400000-active/agent.delegate",
       "policy": "allow-86400000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/agent.execute",
+      "policy": "allow-86400000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "allow"
     },
@@ -1594,6 +1655,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-86400000-expired/agent.execute",
+      "policy": "allow-86400000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-86400000-expired/browser.read",
       "policy": "allow-86400000-expired",
       "action": "browser.read",
@@ -1758,6 +1826,13 @@
       "id": "preset-guarded/agent.delegate",
       "policy": "preset-guarded",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/agent.execute",
+      "policy": "preset-guarded",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -1930,6 +2005,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-3600000-active/agent.execute",
+      "policy": "preset-guarded-3600000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-3600000-active/browser.read",
       "policy": "preset-guarded-3600000-active",
       "action": "browser.read",
@@ -2094,6 +2176,13 @@
       "id": "preset-guarded-3600000-expired/agent.delegate",
       "policy": "preset-guarded-3600000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/agent.execute",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -2266,6 +2355,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-28800000-active/agent.execute",
+      "policy": "preset-guarded-28800000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-28800000-active/browser.read",
       "policy": "preset-guarded-28800000-active",
       "action": "browser.read",
@@ -2430,6 +2526,13 @@
       "id": "preset-guarded-28800000-expired/agent.delegate",
       "policy": "preset-guarded-28800000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/agent.execute",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -2602,6 +2705,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-86400000-active/agent.execute",
+      "policy": "preset-guarded-86400000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-active/browser.read",
       "policy": "preset-guarded-86400000-active",
       "action": "browser.read",
@@ -2766,6 +2876,13 @@
       "id": "preset-guarded-86400000-expired/agent.delegate",
       "policy": "preset-guarded-86400000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/agent.execute",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -2938,6 +3055,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted/agent.execute",
+      "policy": "preset-trusted",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted/browser.read",
       "policy": "preset-trusted",
       "action": "browser.read",
@@ -3102,6 +3226,13 @@
       "id": "preset-trusted-3600000-active/agent.delegate",
       "policy": "preset-trusted-3600000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/agent.execute",
+      "policy": "preset-trusted-3600000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -3274,6 +3405,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-3600000-expired/agent.execute",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-3600000-expired/browser.read",
       "policy": "preset-trusted-3600000-expired",
       "action": "browser.read",
@@ -3438,6 +3576,13 @@
       "id": "preset-trusted-28800000-active/agent.delegate",
       "policy": "preset-trusted-28800000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/agent.execute",
+      "policy": "preset-trusted-28800000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -3610,6 +3755,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-28800000-expired/agent.execute",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-28800000-expired/browser.read",
       "policy": "preset-trusted-28800000-expired",
       "action": "browser.read",
@@ -3774,6 +3926,13 @@
       "id": "preset-trusted-86400000-active/agent.delegate",
       "policy": "preset-trusted-86400000-active",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/agent.execute",
+      "policy": "preset-trusted-86400000-active",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -3946,6 +4105,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-86400000-expired/agent.execute",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-86400000-expired/browser.read",
       "policy": "preset-trusted-86400000-expired",
       "action": "browser.read",
@@ -4110,6 +4276,13 @@
       "id": "preset-autonomous/agent.delegate",
       "policy": "preset-autonomous",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/agent.execute",
+      "policy": "preset-autonomous",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "allow"
     },
@@ -4282,6 +4455,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/agent.execute",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/browser.read",
       "policy": "preset-autonomous-3600000-active",
       "action": "browser.read",
@@ -4446,6 +4626,13 @@
       "id": "preset-autonomous-3600000-expired/agent.delegate",
       "policy": "preset-autonomous-3600000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/agent.execute",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -4618,6 +4805,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-28800000-active/agent.execute",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-28800000-active/browser.read",
       "policy": "preset-autonomous-28800000-active",
       "action": "browser.read",
@@ -4782,6 +4976,13 @@
       "id": "preset-autonomous-28800000-expired/agent.delegate",
       "policy": "preset-autonomous-28800000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/agent.execute",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
@@ -4954,6 +5155,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-86400000-active/agent.execute",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "agent.execute",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-86400000-active/browser.read",
       "policy": "preset-autonomous-86400000-active",
       "action": "browser.read",
@@ -5118,6 +5326,13 @@
       "id": "preset-autonomous-86400000-expired/agent.delegate",
       "policy": "preset-autonomous-86400000-expired",
       "action": "agent.delegate",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/agent.execute",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "agent.execute",
       "risk": "HIGH",
       "expectedMode": "ask"
     },
