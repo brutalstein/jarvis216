@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /** Pure task recipes; Core retains policy, scheduling, credentials, execution and recovery. */
 export type HubTask = {
-  capability: "text.generate" | "browser.extract" | "workflow.invoke";
+  capability: "text.generate" | "browser.extract" | "workflow.invoke" | "info.fetch";
   providers: string[];
   objective: string;
   input: Record<string, unknown>;
@@ -77,12 +77,27 @@ function exactUrl(value: string): string {
   return value;
 }
 export function createIntegrationHub(settings: {
+  github?: boolean;
   openclaw?: boolean;
   browserUrls?: readonly string[];
   workflows?: readonly string[];
 }): IntegrationHub {
   const urls = new Set((settings.browserUrls ?? []).map(exactUrl));
   const hub = new IntegrationHub([...urls]);
+  if (settings.github)
+    hub.register("github.profile", (args) => {
+      read(z.strictObject({}), args);
+      return {
+        capability: "info.fetch",
+        providers: ["github-cli"],
+        objective: "Verify the authenticated GitHub account's public identity (read-only).",
+        input: { action: "github.profile", args: {} },
+        risk: "LOW",
+        privacy: "public",
+        budget: { maxCalls: 1, maxDurationMs: 30_000, maxOutputTokens: 512 },
+        verification: { kind: "contains", value: '"authenticated":true' },
+      };
+    });
   if (settings.openclaw)
     hub.register("agent.delegate", (args) => {
       const { instruction } = read(agent, args);

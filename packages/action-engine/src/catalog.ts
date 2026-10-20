@@ -104,6 +104,14 @@ const definitions: ActionDef[] = [
     { instruction: label(2000) },
   ],
   [
+    "github.profile",
+    "integration",
+    "LOW",
+    "GitHub hesap bağlantısını doğrula",
+    "Verify the authenticated GitHub account",
+    {},
+  ],
+  [
     "browser.read",
     "integration",
     "LOW",

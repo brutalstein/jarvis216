@@ -72,6 +72,11 @@
       "kind": "desktop"
     },
     {
+      "id": "github.profile",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
       "id": "key.shortcut",
       "risk": "MEDIUM",
       "kind": "desktop"
@@ -250,6 +255,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "custom-ask/github.profile",
+      "policy": "custom-ask",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
       "id": "custom-ask/browser.read",
       "policy": "custom-ask",
       "action": "browser.read",
@@ -415,6 +427,13 @@
       "policy": "custom-allow",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.profile",
+      "policy": "custom-allow",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -586,6 +605,13 @@
       "expectedMode": "deny"
     },
     {
+      "id": "custom-deny/github.profile",
+      "policy": "custom-deny",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
       "id": "custom-deny/browser.read",
       "policy": "custom-deny",
       "action": "browser.read",
@@ -751,6 +777,13 @@
       "policy": "allow-3600000-active",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.profile",
+      "policy": "allow-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -922,6 +955,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-3600000-expired/github.profile",
+      "policy": "allow-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-3600000-expired/browser.read",
       "policy": "allow-3600000-expired",
       "action": "browser.read",
@@ -1087,6 +1127,13 @@
       "policy": "allow-28800000-active",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.profile",
+      "policy": "allow-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -1258,6 +1305,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-28800000-expired/github.profile",
+      "policy": "allow-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-28800000-expired/browser.read",
       "policy": "allow-28800000-expired",
       "action": "browser.read",
@@ -1423,6 +1477,13 @@
       "policy": "allow-86400000-active",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.profile",
+      "policy": "allow-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -1594,6 +1655,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-86400000-expired/github.profile",
+      "policy": "allow-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-86400000-expired/browser.read",
       "policy": "allow-86400000-expired",
       "action": "browser.read",
@@ -1760,6 +1828,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/github.profile",
+      "policy": "preset-guarded",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded/browser.read",
@@ -1930,6 +2005,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-3600000-active/github.profile",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-3600000-active/browser.read",
       "policy": "preset-guarded-3600000-active",
       "action": "browser.read",
@@ -2096,6 +2178,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.profile",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-3600000-expired/browser.read",
@@ -2266,6 +2355,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-28800000-active/github.profile",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-28800000-active/browser.read",
       "policy": "preset-guarded-28800000-active",
       "action": "browser.read",
@@ -2432,6 +2528,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.profile",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-28800000-expired/browser.read",
@@ -2602,6 +2705,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-86400000-active/github.profile",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-86400000-active/browser.read",
       "policy": "preset-guarded-86400000-active",
       "action": "browser.read",
@@ -2768,6 +2878,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.profile",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-86400000-expired/browser.read",
@@ -2938,6 +3055,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted/github.profile",
+      "policy": "preset-trusted",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted/browser.read",
       "policy": "preset-trusted",
       "action": "browser.read",
@@ -3104,6 +3228,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.profile",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-3600000-active/browser.read",
@@ -3274,6 +3405,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-3600000-expired/github.profile",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-3600000-expired/browser.read",
       "policy": "preset-trusted-3600000-expired",
       "action": "browser.read",
@@ -3440,6 +3578,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.profile",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-28800000-active/browser.read",
@@ -3610,6 +3755,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-28800000-expired/github.profile",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-28800000-expired/browser.read",
       "policy": "preset-trusted-28800000-expired",
       "action": "browser.read",
@@ -3776,6 +3928,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.profile",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-86400000-active/browser.read",
@@ -3946,6 +4105,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-86400000-expired/github.profile",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-86400000-expired/browser.read",
       "policy": "preset-trusted-86400000-expired",
       "action": "browser.read",
@@ -4111,6 +4277,13 @@
       "policy": "preset-autonomous",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.profile",
+      "policy": "preset-autonomous",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -4282,6 +4455,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/github.profile",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/browser.read",
       "policy": "preset-autonomous-3600000-active",
       "action": "browser.read",
@@ -4450,6 +4630,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-3600000-expired/github.profile",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-expired/browser.read",
       "policy": "preset-autonomous-3600000-expired",
       "action": "browser.read",
@@ -4615,6 +4802,13 @@
       "policy": "preset-autonomous-28800000-active",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.profile",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -4786,6 +4980,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-28800000-expired/github.profile",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-28800000-expired/browser.read",
       "policy": "preset-autonomous-28800000-expired",
       "action": "browser.read",
@@ -4951,6 +5152,13 @@
       "policy": "preset-autonomous-86400000-active",
       "action": "agent.delegate",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.profile",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -5120,6 +5328,13 @@
       "action": "agent.delegate",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.profile",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-autonomous-86400000-expired/browser.read",

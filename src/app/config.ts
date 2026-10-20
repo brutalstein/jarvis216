@@ -9,6 +9,7 @@ import { type Provider, ProviderRegistry } from "../core/routing.js";
 import { containedPath, type EnvSecrets } from "../core/security.js";
 import { DesktopExecutor, NewsExecutor } from "../integrations/actions.js";
 import { ClaudeCodeExecutor } from "../integrations/claude-code.js";
+import { GitHubExecutor } from "../integrations/github.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
@@ -225,6 +226,18 @@ export async function configuredProviders(
       10,
     );
   }
+  if (env.ENABLE_GITHUB === "true") {
+    const binary = z
+      .string()
+      .refine(path.isAbsolute, "GITHUB_CLI_PATH must be absolute")
+      .parse(env.GITHUB_CLI_PATH);
+    await access(binary);
+    register(
+      new GitHubExecutor({ command: [binary] }),
+      `github-cli:${binary}:profile-read-only`,
+      10,
+    );
+  }
   if (env.ENABLE_CODEX === "true") {
     z.literal("true").parse(env.CODEX_ISOLATION_VERIFIED);
     const model = z.string().min(1).parse(env.CODEX_MODEL);
@@ -322,6 +335,7 @@ export async function configuredProviders(
           .parse(JSON.parse(env.BROWSER_ALLOWED_URLS ?? "[]"))
       : [];
   const integrations = createIntegrationHub({
+    github: env.ENABLE_GITHUB === "true",
     openclaw: env.ENABLE_OPENCLAW === "true",
     browserUrls,
     workflows: workflowNames,

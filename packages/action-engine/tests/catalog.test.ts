@@ -47,7 +47,7 @@ describe("catalog", () => {
 
   it("keeps HIGH actions constrained to external integrations", () => {
     const ids = Object.keys(catalog);
-    expect(ids).toHaveLength(24);
+    expect(ids).toHaveLength(25);
     expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual([
       "agent.delegate",
       "automation.invoke",
@@ -59,7 +59,7 @@ describe("catalog", () => {
     const lines = catalogLines();
     expect(lines).toContain("app.open(");
     expect(lines).toContain("name");
-    expect(lines.split("\n")).toHaveLength(24);
+    expect(lines.split("\n")).toHaveLength(25);
   });
 
   it("omits disabled integration actions from catalog lines", () => {

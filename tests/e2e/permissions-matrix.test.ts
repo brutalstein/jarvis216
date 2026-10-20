@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { catalog } from "@jarvis/action-engine";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "../../src/core/database.js";
 import { PermissionService, type PermissionView } from "../../src/services/permissions.js";
@@ -38,7 +39,7 @@ afterAll(async () => {
 describe("every action through the permission API and persistent audit", () => {
   it.each(permissionPolicies())("$id", async (policy) => {
     const rows = cases.permissions.filter((row) => row.policy === policy.id);
-    expect(rows).toHaveLength(24);
+    expect(rows).toHaveLength(Object.keys(catalog).length);
     const change =
       "preset" in policy
         ? {
