@@ -26,6 +26,20 @@ describe("McpToolPort", () => {
   it("lists the server's tools", async () => {
     expect(await port.list()).toEqual(expect.arrayContaining(["echo", "fail", "crash"]));
   });
+  it("discovers schemas only for tools this port permits", async () => {
+    const narrow = new McpToolPort(options(["echo"]));
+    try {
+      expect(await narrow.list()).toEqual(["echo"]);
+      expect(await narrow.describe()).toEqual([
+        expect.objectContaining({
+          name: "echo",
+          inputSchema: expect.objectContaining({ type: "object" }),
+        }),
+      ]);
+    } finally {
+      await narrow.close();
+    }
+  });
 
   it("joins text content and maps isError to ok: false", async () => {
     expect(await port.call("echo", { text: "merhaba" }, signal)).toEqual({

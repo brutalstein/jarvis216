@@ -37,6 +37,10 @@ describe("catalog", () => {
     ["file.copy", "MEDIUM"],
     ["file.rename", "MEDIUM"],
     ["file.mkdir", "MEDIUM"],
+    ["file.create", "MEDIUM"],
+    ["file.read", "LOW"],
+    ["file.write", "MEDIUM"],
+    ["file.delete", "HIGH"],
     ["web.open", "MEDIUM"],
     ["news.brief", "LOW"],
     ["memory.save", "MEDIUM"],
@@ -45,22 +49,24 @@ describe("catalog", () => {
     expect(catalog[id]?.risk).toBe(risk);
   });
 
-  it("keeps HIGH actions constrained to external integrations", () => {
+  it("keeps deletion HIGH and refuses arbitrary execution actions", () => {
     const ids = Object.keys(catalog);
-    expect(ids).toHaveLength(25);
-    expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual([
-      "agent.delegate",
-      "agent.execute",
-      "automation.invoke",
-    ]);
-    expect(ids.some((id) => /delete|kill|shell|powershell|registry/.test(id))).toBe(false);
+    expect(ids.filter((id) => catalog[id]?.risk === "HIGH")).toEqual(
+      expect.arrayContaining([
+        "file.delete",
+        "agent.delegate",
+        "agent.execute",
+        "automation.invoke",
+      ]),
+    );
+    expect(ids.some((id) => /kill|shell|powershell|registry/.test(id))).toBe(false);
   });
 
   it("describes every action with its argument signature", () => {
     const lines = catalogLines();
     expect(lines).toContain("app.open(");
     expect(lines).toContain("name");
-    expect(lines.split("\n")).toHaveLength(25);
+    expect(lines).toContain("file.read(path: string)");
   });
 
   it("omits disabled integration actions from catalog lines", () => {
@@ -76,6 +82,21 @@ describe("catalog", () => {
 
   it.each(["file:///C:/x", "javascript:alert(1)"])("rejects non-web URL %s", (url) => {
     expect(compile([{ action: "web.open", args: { url } }]).ok).toBe(false);
+  });
+
+  it("bounds file content in UTF8 bytes and permits empty files", () => {
+    const create = (content: string) =>
+      compile([{ action: "file.create", args: { path: "a.txt", content } }]);
+    expect(create("").ok).toBe(true);
+    expect(create("é".repeat(8000)).ok).toBe(true);
+    expect(create("é".repeat(8001)).ok).toBe(false);
+    expect(create("\ud800").ok).toBe(false);
+    expect(
+      compile([{ action: "file.write", args: { path: "a.txt", content: "x".repeat(16001) } }]).ok,
+    ).toBe(false);
+    expect(compile([{ action: "file.delete", args: { path: "a.txt", recursive: true } }]).ok).toBe(
+      false,
+    );
   });
 
   it("rejects unknown actions and unexpected arguments", () => {

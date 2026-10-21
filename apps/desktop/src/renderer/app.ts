@@ -29,6 +29,11 @@ const showPlan = hud(el("[data-stage]"));
 const toggle = el<HTMLButtonElement>("#listen-toggle");
 let listening = true;
 let link: Link | undefined;
+let micId = "";
+let speakerId = "";
+let reconnects = 0;
+let retryTimer: ReturnType<typeof setTimeout> | undefined;
+let starting: Promise<void> | undefined;
 
 /** Mirrors renderer-side events to the edge overlay through the main process. */
 function relay(event: UiEvent) {
@@ -57,6 +62,19 @@ function fail(code: string) {
   el("[data-notice]").textContent = NOTICES[code] ?? NOTICES.VOICE_UNAVAILABLE;
   el<HTMLButtonElement>("#retry").hidden = code === "ENV_MISSING";
   notice.hidden = false;
+  if (
+    ["VOICE_DISCONNECTED", "VOICE_PIPELINE_FAILED"].includes(code) &&
+    reconnects < 3 &&
+    !retryTimer
+  ) {
+    retryTimer = setTimeout(
+      () => {
+        retryTimer = undefined;
+        void restart();
+      },
+      500 * 2 ** reconnects++,
+    );
+  }
 }
 
 function receive(event: UiEvent) {
@@ -73,7 +91,7 @@ function receive(event: UiEvent) {
   else if (event.type === "error") fail(typeof event.code === "string" ? event.code : "");
 }
 
-async function start() {
+async function startSession() {
   notice.hidden = true;
   try {
     const voice = await window.jarvis.voice();
@@ -89,25 +107,46 @@ async function start() {
       input: (level) => presence.setInput(level),
       output: (level) => presence.setOutput(level),
     });
+    if (micId) await link.changeMic(micId);
+    if (speakerId) await link.changeSpeaker(speakerId);
     link.setMic(listening);
+    notice.hidden = true;
     setState("listening");
   } catch (error) {
     fail(String(error).includes("ENV_MISSING") ? "ENV_MISSING" : "VOICE_UNAVAILABLE");
   }
 }
-
-window.jarvis.onEvent(receive);
-toggle.addEventListener("click", () => window.jarvis.setListening(!listening));
-el("#retry").addEventListener("click", async () => {
+function start(): Promise<void> {
+  starting ??= startSession().finally(() => {
+    starting = undefined;
+  });
+  return starting;
+}
+async function restart() {
   const previous = link;
   link = undefined;
   await previous?.disconnect().catch(() => {});
   await start();
+}
+
+window.jarvis.onEvent(receive);
+toggle.addEventListener("click", () => window.jarvis.setListening(!listening));
+el("#retry").addEventListener("click", async () => {
+  clearTimeout(retryTimer);
+  retryTimer = undefined;
+  reconnects = 0;
+  await restart();
 });
 settings({
   changeMic: async (id) => {
     if (!link) throw new Error("VOICE_UNAVAILABLE");
     await link.changeMic(id);
+    micId = id;
+  },
+  changeSpeaker: async (id) => {
+    if (!link) throw new Error("VOICE_UNAVAILABLE");
+    await link.changeSpeaker(id);
+    speakerId = id;
   },
   listen: () => {
     if (!listening) window.jarvis.setListening(true);

@@ -43,6 +43,11 @@ it("codex chatgpt mode registers without OPENAI_API_KEY when auth.json exists", 
   const { registry } = await configuredProviders(await codexEnv(true), secrets);
   expect(registry.list()).toEqual([
     expect.objectContaining({ id: "codex", riskFloor: "HIGH", outputTokenLimitEnforced: false }),
+    expect.objectContaining({
+      id: "codex-live",
+      riskFloor: "LOW",
+      outputTokenLimitEnforced: false,
+    }),
   ]);
 });
 it("codex chatgpt mode refuses startup without auth.json", async () => {

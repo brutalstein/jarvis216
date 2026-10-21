@@ -41,6 +41,50 @@ class FakeConnection:
 
 
 class ServerTest(unittest.IsolatedAsyncioTestCase):
+    async def test_failed_pipeline_releases_peer_for_retry(self) -> None:
+        async def fail(*args: Any) -> None:
+            raise RuntimeError("test pipeline failure")
+
+        with (
+            patch("jarvis_voice.server.run_session", fail),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", FakeConnection
+            ),
+        ):
+            headers = {"authorization": "Bearer secret"}
+            for _ in range(2):
+                response = await self.client.post(
+                    "/offer", json={"sdp": "offer", "type": "offer"}, headers=headers
+                )
+                self.assertEqual(response.status, 200)
+                await asyncio.sleep(0.03)
+
+    async def test_concurrent_offers_do_not_create_two_sessions(self) -> None:
+        class SlowConnection(FakeConnection):
+            async def initialize(self, sdp: str, kind: str) -> None:
+                await asyncio.sleep(0.03)
+
+        async def session(*args: Any) -> None:
+            await asyncio.Event().wait()
+
+        with (
+            patch("jarvis_voice.server.run_session", session),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", SlowConnection
+            ),
+        ):
+            responses = await asyncio.gather(
+                *[
+                    self.client.post(
+                        "/offer",
+                        json={"sdp": "offer", "type": "offer"},
+                        headers={"authorization": "Bearer secret"},
+                    )
+                    for _ in range(2)
+                ]
+            )
+            self.assertEqual(sorted(response.status for response in responses), [200, 409])
+
     async def asyncSetUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.enrollment = Enrollment(Path(self.temp.name), 0.7)

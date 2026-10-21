@@ -22,7 +22,11 @@ function message(error: unknown) {
     : "Ses servisine ulaşılamadı. Tekrar deneyin.";
 }
 
-export function settings(options: { changeMic(id: string): Promise<void>; listen(): void }) {
+export function settings(options: {
+  changeMic(id: string): Promise<void>;
+  changeSpeaker(id: string): Promise<void>;
+  listen(): void;
+}) {
   const sheet = el<HTMLDialogElement>("dialog.sheet");
   const status = el("[data-settings-status]");
   const voice = el("[data-enroll]");
@@ -32,6 +36,7 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
   const meter = el("[data-meter]");
   const meterValue = el("[data-meter-value]");
   const microphone = el<HTMLSelectElement>("#microphone");
+  const speaker = el<HTMLSelectElement>("#speaker");
   const confirm = el("[data-confirm]");
   const voiceConfirm = el("[data-voice-confirm]");
   const start = el<HTMLButtonElement>("#enroll-start");
@@ -41,6 +46,7 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
   let poll: ReturnType<typeof setInterval> | undefined;
   let seconds = 0;
   let chosenMic = "";
+  let chosenSpeaker = "";
   const panels = controls((text) => {
     status.textContent = text;
   });
@@ -88,6 +94,12 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
         if (device.deviceId !== "default")
           microphone.add(new Option(device.label || "Mikrofon", device.deviceId));
       microphone.value = chosenMic;
+      speaker.replaceChildren(new Option("Varsayılan ses çıkışı", ""));
+      for (const device of devices.filter(
+        (d) => d.kind === "audiooutput" && d.deviceId && d.deviceId !== "default",
+      ))
+        speaker.add(new Option(device.label || "Hoparlör", device.deviceId));
+      speaker.value = chosenSpeaker;
     } catch {
       status.textContent = "Mikrofon listesi alınamadı.";
     }
@@ -115,6 +127,9 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
     void refresh();
     void listMicrophones();
   });
+  navigator.mediaDevices.addEventListener("devicechange", () => {
+    if (sheet.open) void listMicrophones();
+  });
   // A click that lands on the dialog itself is a click on its backdrop.
   sheet.addEventListener("click", (event) => {
     if (event.target === sheet) sheet.close();
@@ -137,6 +152,16 @@ export function settings(options: { changeMic(id: string): Promise<void>; listen
     } catch {
       microphone.value = chosenMic;
       status.textContent = "Mikrofon değiştirilemedi. Aygıt bağlantısını kontrol edin.";
+    }
+  });
+  speaker.addEventListener("change", async () => {
+    try {
+      await options.changeSpeaker(speaker.value);
+      chosenSpeaker = speaker.value;
+      status.textContent = "Ses çıkışı değiştirildi.";
+    } catch {
+      speaker.value = chosenSpeaker;
+      status.textContent = "Ses çıkışı değiştirilemedi. Aygıt bağlantısını kontrol edin.";
     }
   });
 

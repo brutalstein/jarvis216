@@ -2,14 +2,14 @@ import { z } from "zod";
 
 /** Pure task recipes; Core retains policy, scheduling, credentials, execution and recovery. */
 export type HubTask = {
-  capability: "text.generate" | "browser.extract" | "workflow.invoke";
+  capability: "text.generate" | "browser.extract" | "workflow.invoke" | "tool.execute";
   providers: string[];
   objective: string;
   input: Record<string, unknown>;
   risk: "LOW" | "MEDIUM" | "HIGH";
   privacy: "public" | "private";
   budget: { maxCalls: 1; maxDurationMs: number; maxOutputTokens: number };
-  verification: { kind: "non-empty" } | { kind: "contains"; value: string };
+  verification: { kind: "non-empty" | "postcondition" } | { kind: "contains"; value: string };
 };
 export class IntegrationError extends Error {
   constructor(readonly code: "INTEGRATION_DISABLED" | "INTEGRATION_DENIED") {
@@ -96,7 +96,7 @@ export function createIntegrationHub(settings: {
         risk: "HIGH",
         privacy: "private",
         budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1200 },
-        verification: { kind: "non-empty" },
+        verification: { kind: "postcondition" },
       };
     });
   if (settings.claudeAgent)
@@ -110,7 +110,7 @@ export function createIntegrationHub(settings: {
         risk: "HIGH",
         privacy: "private",
         budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 2500 },
-        verification: { kind: "non-empty" },
+        verification: { kind: "postcondition" },
       };
     });
   if (urls.size) {

@@ -16,6 +16,28 @@
       "type": "string",
       "maxLength": 256
     },
+    "outcome": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "blocked",
+            "failed",
+            "incomplete"
+          ]
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "verified"
+      ],
+      "additionalProperties": false
+    },
     "usage": {
       "type": "object",
       "properties": {

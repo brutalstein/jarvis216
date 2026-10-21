@@ -1,7 +1,24 @@
 import { readFile } from "node:fs/promises";
 import { expect, it } from "vitest";
 import { z } from "zod";
-import { EnvelopeSchema, ResultSchema, TaskSpecSchema } from "../src/core/contracts.js";
+import { EnvelopeSchema, ResultSchema, TaskSpecSchema, verified } from "../src/core/contracts.js";
+
+it("requires independently verified outcomes for integration postconditions", () => {
+  const spec = TaskSpecSchema.parse({
+    objective: "Register on the local fixture",
+    capability: "tool.execute",
+    input: { action: "browser.verify", args: { text: "Registered" } },
+    providers: ["playwright-mcp"],
+    deadline: new Date(Date.now() + 60000).toISOString(),
+    verification: { kind: "postcondition" },
+  });
+  expect(verified(spec, "BLOCKED: no browser")).toBe(false);
+  expect(verified(spec, "Completed successfully")).toBe(false);
+  expect(verified(spec, "Registered", { status: "incomplete", verified: false })).toBe(false);
+  expect(verified(spec, "Registered", { status: "completed", verified: true })).toBe(true);
+  const legacy = { ...spec, verification: { kind: "non-empty" as const } };
+  expect(verified(legacy, "BLOCKED", { status: "blocked", verified: false })).toBe(false);
+});
 
 it("published JSON Schemas match the runtime contracts (run npm run contracts)", async () => {
   for (const [name, schema] of Object.entries({

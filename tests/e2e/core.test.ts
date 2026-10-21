@@ -263,7 +263,7 @@ describe("desktop actions and approvals", () => {
 });
 
 describe("high-risk integrations", () => {
-  it("delegates to the agent only after the plan tap and the exact action approval", async () => {
+  it("requires both approvals and keeps an agent's unverified report in recovery", async () => {
     model.turns.push(
       plan("Tedarikçileri karşılaştır", [
         { action: "agent.delegate", args: { instruction: "Üç tedarikçiyi karşılaştır" } },
@@ -283,8 +283,8 @@ describe("high-risk integrations", () => {
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     });
     expect(approved.status).toBe(204);
-    const done = await settled(card?.id as string);
-    expect(done?.say).toBe("Ajan üç tedarikçiyi karşılaştırdı, efendim.");
+    const done = await settled(card?.id as string, "RECOVERY_REQUIRED");
+    expect(done?.say).not.toBe("Ajan üç tedarikçiyi karşılaştırdı, efendim.");
     expect(fakes.openclaw.calls[0]).toMatchObject({
       agent: "jarvis-e2e",
       body: { tools: [], tool_choice: "none", input: "Üç tedarikçiyi karşılaştır" },

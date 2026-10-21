@@ -3,6 +3,7 @@
 import asyncio
 import json
 import time
+from collections import deque
 from collections.abc import AsyncGenerator
 from contextlib import suppress
 from typing import Any
@@ -32,6 +33,13 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
         )
         self.enrollment = enrollment
         self.speech_end = time.monotonic()
+        self.segment_timing: deque[tuple[float, float]] = deque()
+
+    async def _handle_user_stopped_speaking(self, frame: VADUserStoppedSpeakingFrame) -> None:
+        # Pipecat queues audio separately from inference; keep provenance in the same FIFO order.
+        if self.is_usable:
+            self.segment_timing.append((self.speech_end, time.monotonic()))
+        await super()._handle_user_stopped_speaking(frame)
 
     async def warm_up(self) -> None:
         """Pay first-use costs (CUDA kernels, the speaker model) before the operator speaks."""
@@ -61,9 +69,14 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
 
     async def run_stt(self, audio: bytes) -> AsyncGenerator[Frame, None]:
         started = time.monotonic()
+        speech_end, queued = (
+            self.segment_timing.popleft() if self.segment_timing else (self.speech_end, started)
+        )
+        speaker_ms = 0
         enrollment = self.enrollment
         if enrollment.active or enrollment.gate.enrolled():
             vector = await asyncio.to_thread(embed, audio, self.sample_rate)
+            speaker_ms = round((time.monotonic() - started) * 1000)
             if enrollment.active:
                 # Bound enrollment in memory even if its UI is left open.
                 if enrollment.seconds < 40:
@@ -84,10 +97,17 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
             text = " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6)
             return text, info
 
+        decoding = time.monotonic()
         text, info = await asyncio.to_thread(transcribe)
+        completed = time.monotonic()
         if text:
             frame = TranscriptionFrame(text, "operator", "", language=info.language, finalized=True)
             frame.metadata.update(
-                speechEnd=self.speech_end, sttMs=round((time.monotonic() - started) * 1000)
+                speechEnd=speech_end,
+                turnEndMs=round(max(0, queued - speech_end) * 1000),
+                segmentQueueMs=round(max(0, started - queued) * 1000),
+                speakerMs=speaker_ms,
+                transcribeMs=round((completed - decoding) * 1000),
+                sttMs=round((completed - started) * 1000),
             )
             yield frame

@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
-import { McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
-import { createIntegrationHub } from "@jarvis/integration-hub";
+import { catalog, McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
+import { createIntegrationHub, IntegrationError } from "@jarvis/integration-hub";
 import { z } from "zod";
 import type { Executor } from "../core/contracts.js";
 import { type Provider, ProviderRegistry } from "../core/routing.js";
@@ -15,6 +15,11 @@ import {
   openClawMcpConfig,
   playwrightMcpConfig,
 } from "../integrations/claude-mcp.js";
+import { GitHubExecutor, githubActionSchemas } from "../integrations/github.js";
+import {
+  InteractiveBrowserExecutor,
+  interactiveBrowserActionSchemas,
+} from "../integrations/interactive-browser.js";
 import {
   ClaudeExecutor,
   CodexExecutor,
@@ -74,10 +79,13 @@ export async function configuredProviders(
   registry: ProviderRegistry;
   tools?: McpToolPort;
   integrations: ReturnType<typeof createIntegrationHub>;
+  close(): Promise<void>;
+  discover(): Promise<unknown>;
 }> {
   const providers: Provider[] = [];
   let tools: McpToolPort | undefined;
   let workflowNames: string[] = [];
+  let interactiveBrowser: InteractiveBrowserExecutor | undefined;
   const trusted = z
     .string()
     .default("")
@@ -298,6 +306,39 @@ export async function configuredProviders(
       10,
     );
   }
+  if (env.ENABLE_PLAYWRIGHT === "true") {
+    const origins = z
+      .array(z.url())
+      .min(1)
+      .max(16)
+      .parse(JSON.parse(env.PLAYWRIGHT_ALLOWED_ORIGINS ?? "[]"));
+    interactiveBrowser = new InteractiveBrowserExecutor({
+      origins,
+      headless: env.PLAYWRIGHT_HEADLESS === "true",
+      egressVerified: env.PLAYWRIGHT_EGRESS_VERIFIED === "true",
+    });
+    register(
+      interactiveBrowser,
+      JSON.stringify({
+        origins,
+        headless: env.PLAYWRIGHT_HEADLESS === "true",
+        egressVerified: env.PLAYWRIGHT_EGRESS_VERIFIED === "true",
+        version: "0.0.83",
+      }),
+      10,
+    );
+  }
+  if (env.ENABLE_GITHUB === "true") {
+    const command = z
+      .tuple([z.string().min(1)])
+      .rest(z.string())
+      .parse(JSON.parse(env.GITHUB_COMMAND_JSON || '["gh"]'));
+    register(
+      new GitHubExecutor({ command }),
+      `github-cli:${JSON.stringify(command)}:native-auth:v1`,
+      10,
+    );
+  }
   if (env.ENABLE_CODEX === "true") {
     z.literal("true").parse(env.CODEX_ISOLATION_VERIFIED);
     const model = z.string().min(1).parse(env.CODEX_MODEL);
@@ -305,18 +346,33 @@ export async function configuredProviders(
     const home = await containedPath("data/codex-homes", z.string().parse(env.CODEX_ISOLATED_HOME));
     const auth = z.enum(["api-key", "chatgpt"]).default("api-key").parse(env.CODEX_AUTH);
     if (auth === "chatgpt") await access(path.join(home, "auth.json"));
-    register(
-      new CodexExecutor(
-        auth === "chatgpt"
-          ? { kind: auth }
-          : { kind: auth, key: secrets.resolve("OPENAI_API_KEY") },
-        model,
-        workspace,
-        home,
-      ),
-      `codex-sdk:${model}:${workspace}:${home}:isolated:${auth}`,
-      40,
-    );
+    if (!local.executors?.some((executor) => executor.id === "codex"))
+      register(
+        new CodexExecutor(
+          auth === "chatgpt"
+            ? { kind: auth }
+            : { kind: auth, key: secrets.resolve("OPENAI_API_KEY") },
+          model,
+          workspace,
+          home,
+        ),
+        `codex-sdk:${model}:${workspace}:${home}:isolated:${auth}`,
+        40,
+      );
+    if (!local.executors?.some((executor) => executor.id === "codex-live"))
+      register(
+        new CodexExecutor(
+          auth === "chatgpt"
+            ? { kind: auth }
+            : { kind: auth, key: secrets.resolve("OPENAI_API_KEY") },
+          model,
+          workspace,
+          home,
+          { conversation: true },
+        ),
+        `codex-sdk:${model}:${workspace}:${home}:conversation-tools-disabled-v1:${auth}`,
+        40,
+      );
   }
   if (env.ENABLE_N8N === "true") {
     const workflows = z
@@ -400,6 +456,30 @@ export async function configuredProviders(
     browserUrls,
     workflows: workflowNames,
   });
+  for (const [enabled, provider, schemas] of [
+    [env.ENABLE_PLAYWRIGHT === "true", "playwright-mcp", interactiveBrowserActionSchemas],
+    [env.ENABLE_GITHUB === "true", "github-cli", githubActionSchemas],
+  ] as const) {
+    if (!enabled) continue;
+    for (const [action, schema] of Object.entries(schemas)) {
+      const definition = catalog[action];
+      if (!definition) throw new Error("TOOL_ACTION_NOT_IN_CATALOG");
+      integrations.register(action, (args) => {
+        const parsed = schema.safeParse(args);
+        if (!parsed.success) throw new IntegrationError("INTEGRATION_DENIED");
+        return {
+          capability: "tool.execute",
+          providers: [provider],
+          objective: `Execute ${action} and verify its postcondition`,
+          input: { action, args: parsed.data },
+          risk: definition.risk,
+          privacy: "private",
+          budget: { maxCalls: 1, maxDurationMs: 60000, maxOutputTokens: 2000 },
+          verification: { kind: "postcondition" },
+        };
+      });
+    }
+  }
   // Daily call or token ceilings per provider (e.g. a free tier's request quota). A spent budget
   // skips the provider until its rolling 24-hour usage drops; it never raises another's.
   const budgets = z
@@ -417,5 +497,24 @@ export async function configuredProviders(
     registry: new ProviderRegistry(providers, Date.now, { budgets }),
     ...(tools && { tools }),
     integrations,
+    async close() {
+      await interactiveBrowser?.close();
+      await tools?.close();
+    },
+    async discover() {
+      const probe = async (id: string, fn: () => Promise<unknown>) => {
+        try {
+          return { id, status: "connected", tools: await fn() };
+        } catch {
+          return { id, status: "unavailable", tools: [] };
+        }
+      };
+      const desktopPort = tools;
+      const browserPort = interactiveBrowser;
+      return Promise.all([
+        ...(desktopPort ? [probe("windows-mcp", () => desktopPort.describe())] : []),
+        ...(browserPort ? [probe("playwright-mcp", () => browserPort.discover())] : []),
+      ]);
+    },
   };
 }

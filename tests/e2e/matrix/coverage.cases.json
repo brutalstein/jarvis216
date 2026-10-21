@@ -32,12 +32,37 @@
       "kind": "integration"
     },
     {
+      "id": "browser.click",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.fill",
+      "risk": "MEDIUM",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.navigate",
+      "risk": "MEDIUM",
+      "kind": "integration"
+    },
+    {
       "id": "browser.read",
       "risk": "LOW",
       "kind": "integration"
     },
     {
       "id": "browser.read_many",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.snapshot",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.verify",
       "risk": "LOW",
       "kind": "integration"
     },
@@ -57,6 +82,16 @@
       "kind": "desktop"
     },
     {
+      "id": "file.create",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "file.delete",
+      "risk": "HIGH",
+      "kind": "desktop"
+    },
+    {
       "id": "file.list",
       "risk": "LOW",
       "kind": "desktop"
@@ -72,9 +107,54 @@
       "kind": "desktop"
     },
     {
+      "id": "file.read",
+      "risk": "LOW",
+      "kind": "desktop"
+    },
+    {
       "id": "file.rename",
       "risk": "MEDIUM",
       "kind": "desktop"
+    },
+    {
+      "id": "file.write",
+      "risk": "MEDIUM",
+      "kind": "desktop"
+    },
+    {
+      "id": "github.file",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "github.issue",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "github.issue_create",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
+      "id": "github.issues",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "github.profile",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "github.repositories",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "github.repository",
+      "risk": "LOW",
+      "kind": "integration"
     },
     {
       "id": "key.shortcut",
@@ -128,6 +208,90 @@
     }
   ],
   "permissions": [
+    {
+      "id": "custom-ask/browser.navigate",
+      "policy": "custom-ask",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.snapshot",
+      "policy": "custom-ask",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.fill",
+      "policy": "custom-ask",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.click",
+      "policy": "custom-ask",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.verify",
+      "policy": "custom-ask",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.profile",
+      "policy": "custom-ask",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.repositories",
+      "policy": "custom-ask",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.repository",
+      "policy": "custom-ask",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.file",
+      "policy": "custom-ask",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.issues",
+      "policy": "custom-ask",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.issue",
+      "policy": "custom-ask",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/github.issue_create",
+      "policy": "custom-ask",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
     {
       "id": "custom-ask/app.open",
       "policy": "custom-ask",
@@ -241,6 +405,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "custom-ask/file.create",
+      "policy": "custom-ask",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.read",
+      "policy": "custom-ask",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.write",
+      "policy": "custom-ask",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/file.delete",
+      "policy": "custom-ask",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "custom-ask/web.open",
       "policy": "custom-ask",
       "action": "web.open",
@@ -302,6 +494,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "ask"
+    },
+    {
+      "id": "custom-allow/browser.navigate",
+      "policy": "custom-allow",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.snapshot",
+      "policy": "custom-allow",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.fill",
+      "policy": "custom-allow",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.click",
+      "policy": "custom-allow",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.verify",
+      "policy": "custom-allow",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.profile",
+      "policy": "custom-allow",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.repositories",
+      "policy": "custom-allow",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.repository",
+      "policy": "custom-allow",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.file",
+      "policy": "custom-allow",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.issues",
+      "policy": "custom-allow",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.issue",
+      "policy": "custom-allow",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/github.issue_create",
+      "policy": "custom-allow",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "allow"
     },
     {
       "id": "custom-allow/app.open",
@@ -416,6 +692,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "custom-allow/file.create",
+      "policy": "custom-allow",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.read",
+      "policy": "custom-allow",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.write",
+      "policy": "custom-allow",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/file.delete",
+      "policy": "custom-allow",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "custom-allow/web.open",
       "policy": "custom-allow",
       "action": "web.open",
@@ -477,6 +781,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "custom-deny/browser.navigate",
+      "policy": "custom-deny",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.snapshot",
+      "policy": "custom-deny",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.fill",
+      "policy": "custom-deny",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.click",
+      "policy": "custom-deny",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.verify",
+      "policy": "custom-deny",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.profile",
+      "policy": "custom-deny",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.repositories",
+      "policy": "custom-deny",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.repository",
+      "policy": "custom-deny",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.file",
+      "policy": "custom-deny",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.issues",
+      "policy": "custom-deny",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.issue",
+      "policy": "custom-deny",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/github.issue_create",
+      "policy": "custom-deny",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "deny"
     },
     {
       "id": "custom-deny/app.open",
@@ -591,6 +979,34 @@
       "expectedMode": "deny"
     },
     {
+      "id": "custom-deny/file.create",
+      "policy": "custom-deny",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.read",
+      "policy": "custom-deny",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.write",
+      "policy": "custom-deny",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/file.delete",
+      "policy": "custom-deny",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
       "id": "custom-deny/web.open",
       "policy": "custom-deny",
       "action": "web.open",
@@ -652,6 +1068,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "deny"
+    },
+    {
+      "id": "allow-3600000-active/browser.navigate",
+      "policy": "allow-3600000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.snapshot",
+      "policy": "allow-3600000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.fill",
+      "policy": "allow-3600000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.click",
+      "policy": "allow-3600000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.verify",
+      "policy": "allow-3600000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.profile",
+      "policy": "allow-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.repositories",
+      "policy": "allow-3600000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.repository",
+      "policy": "allow-3600000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.file",
+      "policy": "allow-3600000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.issues",
+      "policy": "allow-3600000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.issue",
+      "policy": "allow-3600000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/github.issue_create",
+      "policy": "allow-3600000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "allow"
     },
     {
       "id": "allow-3600000-active/app.open",
@@ -766,6 +1266,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-3600000-active/file.create",
+      "policy": "allow-3600000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.read",
+      "policy": "allow-3600000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.write",
+      "policy": "allow-3600000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/file.delete",
+      "policy": "allow-3600000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-3600000-active/web.open",
       "policy": "allow-3600000-active",
       "action": "web.open",
@@ -827,6 +1355,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/browser.navigate",
+      "policy": "allow-3600000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/browser.snapshot",
+      "policy": "allow-3600000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/browser.fill",
+      "policy": "allow-3600000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/browser.click",
+      "policy": "allow-3600000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/browser.verify",
+      "policy": "allow-3600000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.profile",
+      "policy": "allow-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.repositories",
+      "policy": "allow-3600000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.repository",
+      "policy": "allow-3600000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.file",
+      "policy": "allow-3600000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.issues",
+      "policy": "allow-3600000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.issue",
+      "policy": "allow-3600000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/github.issue_create",
+      "policy": "allow-3600000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "allow-3600000-expired/app.open",
@@ -941,6 +1553,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-3600000-expired/file.create",
+      "policy": "allow-3600000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.read",
+      "policy": "allow-3600000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-expired/file.write",
+      "policy": "allow-3600000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/file.delete",
+      "policy": "allow-3600000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-3600000-expired/web.open",
       "policy": "allow-3600000-expired",
       "action": "web.open",
@@ -1001,6 +1641,90 @@
       "policy": "allow-3600000-expired",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.navigate",
+      "policy": "allow-28800000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.snapshot",
+      "policy": "allow-28800000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.fill",
+      "policy": "allow-28800000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.click",
+      "policy": "allow-28800000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.verify",
+      "policy": "allow-28800000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.profile",
+      "policy": "allow-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.repositories",
+      "policy": "allow-28800000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.repository",
+      "policy": "allow-28800000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.file",
+      "policy": "allow-28800000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.issues",
+      "policy": "allow-28800000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.issue",
+      "policy": "allow-28800000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/github.issue_create",
+      "policy": "allow-28800000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -1116,6 +1840,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-28800000-active/file.create",
+      "policy": "allow-28800000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.read",
+      "policy": "allow-28800000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.write",
+      "policy": "allow-28800000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/file.delete",
+      "policy": "allow-28800000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-28800000-active/web.open",
       "policy": "allow-28800000-active",
       "action": "web.open",
@@ -1177,6 +1929,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/browser.navigate",
+      "policy": "allow-28800000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/browser.snapshot",
+      "policy": "allow-28800000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/browser.fill",
+      "policy": "allow-28800000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/browser.click",
+      "policy": "allow-28800000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/browser.verify",
+      "policy": "allow-28800000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.profile",
+      "policy": "allow-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.repositories",
+      "policy": "allow-28800000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.repository",
+      "policy": "allow-28800000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.file",
+      "policy": "allow-28800000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.issues",
+      "policy": "allow-28800000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.issue",
+      "policy": "allow-28800000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/github.issue_create",
+      "policy": "allow-28800000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "allow-28800000-expired/app.open",
@@ -1291,6 +2127,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-28800000-expired/file.create",
+      "policy": "allow-28800000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.read",
+      "policy": "allow-28800000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-expired/file.write",
+      "policy": "allow-28800000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/file.delete",
+      "policy": "allow-28800000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-28800000-expired/web.open",
       "policy": "allow-28800000-expired",
       "action": "web.open",
@@ -1351,6 +2215,90 @@
       "policy": "allow-28800000-expired",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.navigate",
+      "policy": "allow-86400000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.snapshot",
+      "policy": "allow-86400000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.fill",
+      "policy": "allow-86400000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.click",
+      "policy": "allow-86400000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.verify",
+      "policy": "allow-86400000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.profile",
+      "policy": "allow-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.repositories",
+      "policy": "allow-86400000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.repository",
+      "policy": "allow-86400000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.file",
+      "policy": "allow-86400000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.issues",
+      "policy": "allow-86400000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.issue",
+      "policy": "allow-86400000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/github.issue_create",
+      "policy": "allow-86400000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -1466,6 +2414,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-86400000-active/file.create",
+      "policy": "allow-86400000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.read",
+      "policy": "allow-86400000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.write",
+      "policy": "allow-86400000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/file.delete",
+      "policy": "allow-86400000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-86400000-active/web.open",
       "policy": "allow-86400000-active",
       "action": "web.open",
@@ -1527,6 +2503,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/browser.navigate",
+      "policy": "allow-86400000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/browser.snapshot",
+      "policy": "allow-86400000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/browser.fill",
+      "policy": "allow-86400000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/browser.click",
+      "policy": "allow-86400000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/browser.verify",
+      "policy": "allow-86400000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.profile",
+      "policy": "allow-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.repositories",
+      "policy": "allow-86400000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.repository",
+      "policy": "allow-86400000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.file",
+      "policy": "allow-86400000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.issues",
+      "policy": "allow-86400000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.issue",
+      "policy": "allow-86400000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/github.issue_create",
+      "policy": "allow-86400000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "allow-86400000-expired/app.open",
@@ -1641,6 +2701,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-86400000-expired/file.create",
+      "policy": "allow-86400000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.read",
+      "policy": "allow-86400000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-expired/file.write",
+      "policy": "allow-86400000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/file.delete",
+      "policy": "allow-86400000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-86400000-expired/web.open",
       "policy": "allow-86400000-expired",
       "action": "web.open",
@@ -1702,6 +2790,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/browser.navigate",
+      "policy": "preset-guarded",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/browser.snapshot",
+      "policy": "preset-guarded",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/browser.fill",
+      "policy": "preset-guarded",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/browser.click",
+      "policy": "preset-guarded",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/browser.verify",
+      "policy": "preset-guarded",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.profile",
+      "policy": "preset-guarded",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.repositories",
+      "policy": "preset-guarded",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.repository",
+      "policy": "preset-guarded",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.file",
+      "policy": "preset-guarded",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.issues",
+      "policy": "preset-guarded",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.issue",
+      "policy": "preset-guarded",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/github.issue_create",
+      "policy": "preset-guarded",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded/app.open",
@@ -1816,6 +2988,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded/file.create",
+      "policy": "preset-guarded",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.read",
+      "policy": "preset-guarded",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/file.write",
+      "policy": "preset-guarded",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/file.delete",
+      "policy": "preset-guarded",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded/web.open",
       "policy": "preset-guarded",
       "action": "web.open",
@@ -1877,6 +3077,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.navigate",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.snapshot",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.fill",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.click",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.verify",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.profile",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.repositories",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.repository",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.file",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.issues",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.issue",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/github.issue_create",
+      "policy": "preset-guarded-3600000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-3600000-active/app.open",
@@ -1991,6 +3275,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-3600000-active/file.create",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.read",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.write",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/file.delete",
+      "policy": "preset-guarded-3600000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-3600000-active/web.open",
       "policy": "preset-guarded-3600000-active",
       "action": "web.open",
@@ -2052,6 +3364,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.navigate",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.snapshot",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.fill",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.click",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.verify",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.profile",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.repositories",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.repository",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.file",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.issues",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.issue",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/github.issue_create",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-3600000-expired/app.open",
@@ -2166,6 +3562,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-3600000-expired/file.create",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.read",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.write",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/file.delete",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-3600000-expired/web.open",
       "policy": "preset-guarded-3600000-expired",
       "action": "web.open",
@@ -2227,6 +3651,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.navigate",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.snapshot",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.fill",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.click",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.verify",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.profile",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.repositories",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.repository",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.file",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.issues",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.issue",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/github.issue_create",
+      "policy": "preset-guarded-28800000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-28800000-active/app.open",
@@ -2341,6 +3849,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-28800000-active/file.create",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.read",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.write",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/file.delete",
+      "policy": "preset-guarded-28800000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-28800000-active/web.open",
       "policy": "preset-guarded-28800000-active",
       "action": "web.open",
@@ -2402,6 +3938,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.navigate",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.snapshot",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.fill",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.click",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.verify",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.profile",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.repositories",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.repository",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.file",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.issues",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.issue",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/github.issue_create",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-28800000-expired/app.open",
@@ -2516,6 +4136,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-28800000-expired/file.create",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.read",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.write",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/file.delete",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-28800000-expired/web.open",
       "policy": "preset-guarded-28800000-expired",
       "action": "web.open",
@@ -2577,6 +4225,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.navigate",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.snapshot",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.fill",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.click",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.verify",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.profile",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.repositories",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.repository",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.file",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.issues",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.issue",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/github.issue_create",
+      "policy": "preset-guarded-86400000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-86400000-active/app.open",
@@ -2691,6 +4423,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-86400000-active/file.create",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.read",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.write",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/file.delete",
+      "policy": "preset-guarded-86400000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-active/web.open",
       "policy": "preset-guarded-86400000-active",
       "action": "web.open",
@@ -2752,6 +4512,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.navigate",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.snapshot",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.fill",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.click",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.verify",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.profile",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.repositories",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.repository",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.file",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.issues",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.issue",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/github.issue_create",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-86400000-expired/app.open",
@@ -2866,6 +4710,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-86400000-expired/file.create",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.read",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.write",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/file.delete",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-expired/web.open",
       "policy": "preset-guarded-86400000-expired",
       "action": "web.open",
@@ -2927,6 +4799,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.navigate",
+      "policy": "preset-trusted",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.snapshot",
+      "policy": "preset-trusted",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.fill",
+      "policy": "preset-trusted",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.click",
+      "policy": "preset-trusted",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted/browser.verify",
+      "policy": "preset-trusted",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.profile",
+      "policy": "preset-trusted",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.repositories",
+      "policy": "preset-trusted",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.repository",
+      "policy": "preset-trusted",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.file",
+      "policy": "preset-trusted",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.issues",
+      "policy": "preset-trusted",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.issue",
+      "policy": "preset-trusted",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/github.issue_create",
+      "policy": "preset-trusted",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted/app.open",
@@ -3041,6 +4997,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted/file.create",
+      "policy": "preset-trusted",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.read",
+      "policy": "preset-trusted",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.write",
+      "policy": "preset-trusted",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/file.delete",
+      "policy": "preset-trusted",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted/web.open",
       "policy": "preset-trusted",
       "action": "web.open",
@@ -3102,6 +5086,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.navigate",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.snapshot",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.fill",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.click",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.verify",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.profile",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.repositories",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.repository",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.file",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.issues",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.issue",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/github.issue_create",
+      "policy": "preset-trusted-3600000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-3600000-active/app.open",
@@ -3216,6 +5284,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-3600000-active/file.create",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.read",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.write",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/file.delete",
+      "policy": "preset-trusted-3600000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-3600000-active/web.open",
       "policy": "preset-trusted-3600000-active",
       "action": "web.open",
@@ -3277,6 +5373,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.navigate",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.snapshot",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.fill",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.click",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.verify",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.profile",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.repositories",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.repository",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.file",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.issues",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.issue",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/github.issue_create",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-3600000-expired/app.open",
@@ -3391,6 +5571,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-3600000-expired/file.create",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.read",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.write",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/file.delete",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-3600000-expired/web.open",
       "policy": "preset-trusted-3600000-expired",
       "action": "web.open",
@@ -3452,6 +5660,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.navigate",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.snapshot",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.fill",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.click",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.verify",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.profile",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.repositories",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.repository",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.file",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.issues",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.issue",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/github.issue_create",
+      "policy": "preset-trusted-28800000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-28800000-active/app.open",
@@ -3566,6 +5858,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-28800000-active/file.create",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.read",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.write",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/file.delete",
+      "policy": "preset-trusted-28800000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-28800000-active/web.open",
       "policy": "preset-trusted-28800000-active",
       "action": "web.open",
@@ -3627,6 +5947,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.navigate",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.snapshot",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.fill",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.click",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.verify",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.profile",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.repositories",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.repository",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.file",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.issues",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.issue",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/github.issue_create",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-28800000-expired/app.open",
@@ -3741,6 +6145,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-28800000-expired/file.create",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.read",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.write",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/file.delete",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-28800000-expired/web.open",
       "policy": "preset-trusted-28800000-expired",
       "action": "web.open",
@@ -3802,6 +6234,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.navigate",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.snapshot",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.fill",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.click",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.verify",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.profile",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.repositories",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.repository",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.file",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.issues",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.issue",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/github.issue_create",
+      "policy": "preset-trusted-86400000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-86400000-active/app.open",
@@ -3916,6 +6432,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-86400000-active/file.create",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.read",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.write",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/file.delete",
+      "policy": "preset-trusted-86400000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-86400000-active/web.open",
       "policy": "preset-trusted-86400000-active",
       "action": "web.open",
@@ -3977,6 +6521,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.navigate",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.snapshot",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.fill",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.click",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.verify",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.profile",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.repositories",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.repository",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.file",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.issues",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.issue",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/github.issue_create",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-86400000-expired/app.open",
@@ -4091,6 +6719,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-86400000-expired/file.create",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.read",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.write",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/file.delete",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-86400000-expired/web.open",
       "policy": "preset-trusted-86400000-expired",
       "action": "web.open",
@@ -4151,6 +6807,90 @@
       "policy": "preset-trusted-86400000-expired",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.navigate",
+      "policy": "preset-autonomous",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.snapshot",
+      "policy": "preset-autonomous",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.fill",
+      "policy": "preset-autonomous",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.click",
+      "policy": "preset-autonomous",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.verify",
+      "policy": "preset-autonomous",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.profile",
+      "policy": "preset-autonomous",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.repositories",
+      "policy": "preset-autonomous",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.repository",
+      "policy": "preset-autonomous",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.file",
+      "policy": "preset-autonomous",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.issues",
+      "policy": "preset-autonomous",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.issue",
+      "policy": "preset-autonomous",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/github.issue_create",
+      "policy": "preset-autonomous",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -4266,6 +7006,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous/file.create",
+      "policy": "preset-autonomous",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.read",
+      "policy": "preset-autonomous",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.write",
+      "policy": "preset-autonomous",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/file.delete",
+      "policy": "preset-autonomous",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous/web.open",
       "policy": "preset-autonomous",
       "action": "web.open",
@@ -4326,6 +7094,90 @@
       "policy": "preset-autonomous",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.navigate",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.snapshot",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.fill",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.click",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.verify",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.profile",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.repositories",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.repository",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.file",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.issues",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.issue",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/github.issue_create",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -4441,6 +7293,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/file.create",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.read",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.write",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/file.delete",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/web.open",
       "policy": "preset-autonomous-3600000-active",
       "action": "web.open",
@@ -4502,6 +7382,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.navigate",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.snapshot",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.fill",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.click",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.verify",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.profile",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.repositories",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.repository",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.file",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.issues",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.issue",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/github.issue_create",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-autonomous-3600000-expired/app.open",
@@ -4616,6 +7580,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-3600000-expired/file.create",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.read",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.write",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/file.delete",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-3600000-expired/web.open",
       "policy": "preset-autonomous-3600000-expired",
       "action": "web.open",
@@ -4676,6 +7668,90 @@
       "policy": "preset-autonomous-3600000-expired",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.navigate",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.snapshot",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.fill",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.click",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.verify",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.profile",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.repositories",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.repository",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.file",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.issues",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.issue",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/github.issue_create",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -4791,6 +7867,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-28800000-active/file.create",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.read",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.write",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/file.delete",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-28800000-active/web.open",
       "policy": "preset-autonomous-28800000-active",
       "action": "web.open",
@@ -4852,6 +7956,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.navigate",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.snapshot",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.fill",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.click",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.verify",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.profile",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.repositories",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.repository",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.file",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.issues",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.issue",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/github.issue_create",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-autonomous-28800000-expired/app.open",
@@ -4966,6 +8154,34 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-28800000-expired/file.create",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.read",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.write",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/file.delete",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-28800000-expired/web.open",
       "policy": "preset-autonomous-28800000-expired",
       "action": "web.open",
@@ -5026,6 +8242,90 @@
       "policy": "preset-autonomous-28800000-expired",
       "action": "news.brief",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.navigate",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.snapshot",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.fill",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.click",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.verify",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.profile",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.repositories",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.repository",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.file",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.issues",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.issue",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/github.issue_create",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "github.issue_create",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -5141,6 +8441,34 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-86400000-active/file.create",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.read",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.write",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/file.delete",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "file.delete",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-86400000-active/web.open",
       "policy": "preset-autonomous-86400000-active",
       "action": "web.open",
@@ -5202,6 +8530,90 @@
       "action": "news.brief",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.navigate",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.navigate",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.snapshot",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.snapshot",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.fill",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.fill",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.click",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.click",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.verify",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.verify",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.profile",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.profile",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.repositories",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.repositories",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.repository",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.repository",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.file",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.file",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.issues",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.issues",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.issue",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.issue",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/github.issue_create",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "github.issue_create",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-autonomous-86400000-expired/app.open",
@@ -5313,6 +8725,34 @@
       "policy": "preset-autonomous-86400000-expired",
       "action": "file.mkdir",
       "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.create",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.create",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.read",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.read",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.write",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.write",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/file.delete",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "file.delete",
+      "risk": "HIGH",
       "expectedMode": "ask"
     },
     {

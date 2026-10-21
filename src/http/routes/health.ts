@@ -4,11 +4,17 @@ import type { HttpContext } from "../context.js";
 
 // Liveness (unauthenticated), readiness and operational metrics (operator).
 export function healthRoutes(
-  { app, authenticate }: HttpContext,
+  { app, authenticate, options }: HttpContext,
   tasks: TaskService,
   registry: ProviderRegistry,
 ): void {
   app.get("/healthz", async () => ({ status: "alive" }));
+  app.get("/v1/capabilities", async (request) => {
+    authenticate(request, "operator");
+    return options.capabilities
+      ? options.capabilities()
+      : { providers: registry.list(), liveConnectivity: "not-checked" };
+  });
   app.get("/v1/metrics", async (request) => {
     authenticate(request, "operator");
     // Sequential on purpose: metrics must never hold the whole pool and starve heartbeats.

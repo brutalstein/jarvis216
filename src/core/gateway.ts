@@ -237,7 +237,7 @@ export class ActionGateway {
               "VERIFYING",
               "executor returned; response is untrusted",
             );
-            const verified = meetsVerification(task.spec, result.text);
+            const verified = meetsVerification(task.spec, result.text, result.outcome);
             // An unmet postcondition the executor observed is the environment's state, not a
             // provider fault; unverified model output is.
             observed = {

@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +44,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
     sessions: set[asyncio.Task[None]] = set()
     peer: Any = None
     brain: Brain | None = None
+    offer_lock = asyncio.Lock()
 
     async def announce(request: web.Request) -> web.Response:
         try:
@@ -95,7 +97,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
         enrollment.gate.delete()
         return web.Response(status=204)
 
-    async def offer(request: web.Request) -> web.Response:
+    async def handle_offer(request: web.Request) -> web.Response:
         nonlocal peer
         try:
             data = await request.json()
@@ -144,7 +146,27 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                     if peer is connection and (current is None or session_open):
                         brain = current
 
-                task = asyncio.create_task(run_session(connection, enrollment, set_brain))
+                async def session() -> None:
+                    nonlocal peer
+                    try:
+                        await run_session(connection, enrollment, set_brain)
+                    except Exception:
+                        connection.send_app_message(
+                            {
+                                "label": "rtvi-ai",
+                                "type": "server-message",
+                                "data": {"type": "error", "code": "VOICE_PIPELINE_FAILED"},
+                            }
+                        )
+                        raise
+                    finally:
+                        set_brain(None)
+                        if peer is connection:
+                            peer = None
+                        with suppress(Exception):
+                            await asyncio.wait_for(connection.disconnect(), 5)
+
+                task = asyncio.create_task(session())
                 sessions.add(task)
 
                 def finished(done: asyncio.Task[None]) -> None:
@@ -155,13 +177,6 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                             f"VOICE_PIPELINE_FAILED: {type(error).__name__}: {error}",
                             file=sys.stderr,
                         )
-                        connection.send_app_message(
-                            {
-                                "label": "rtvi-ai",
-                                "type": "server-message",
-                                "data": {"type": "error", "code": "VOICE_PIPELINE_FAILED"},
-                            }
-                        )
 
                 task.add_done_callback(finished)
 
@@ -169,12 +184,18 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
         except (KeyError, TypeError, ValueError):
             return web.json_response({"error": "INVALID_OFFER"}, status=400)
 
+    async def offer(request: web.Request) -> web.Response:
+        async with offer_lock:
+            return await handle_offer(request)
+
     async def cleanup(app: web.Application) -> None:
+        pending = list(sessions)
         if peer:
-            await peer.disconnect()
-        for task in sessions:
+            with suppress(Exception):
+                await asyncio.wait_for(peer.disconnect(), 5)
+        for task in pending:
             task.cancel()
-        await asyncio.gather(*sessions, return_exceptions=True)
+        await asyncio.gather(*pending, return_exceptions=True)
 
     app.router.add_get("/health", health)
     app.router.add_post("/enroll/start", start)
@@ -275,6 +296,7 @@ async def run_session(
         set_brain(None)
         for task in warming:
             task.cancel()
+        await asyncio.gather(*warming, return_exceptions=True)
         await core.http.aclose()
 
 

@@ -58,7 +58,7 @@ afterEach(async () => {
 }, 60_000);
 
 describe("Claude Code tool-agent lifecycle", () => {
-  it("keeps the actual CLI behind plan and action approvals and persists the outcome", async () => {
+  it("keeps the fixture CLI behind both approvals and preserves unverified outcomes", async () => {
     model.turns.push({
       intent: {
         kind: "plan",
@@ -99,10 +99,10 @@ describe("Claude Code tool-agent lifecycle", () => {
     ).toBe(204);
     const completed = await until(
       () => running.core.plans.get(planId!),
-      (current) => current.status === "COMPLETED",
+      (current) => current.status === "RECOVERY_REQUIRED",
       20_000,
     );
-    expect(completed.steps[0]?.status).toBe("COMPLETED");
+    expect(completed.steps[0]?.status).toBe("RECOVERY_REQUIRED");
     const call = JSON.parse(await readFile(record, "utf8")) as {
       argv: string[];
       stdin: string;
@@ -115,7 +115,7 @@ describe("Claude Code tool-agent lifecycle", () => {
       "SELECT target, status FROM actions WHERE target='claude-agent'",
     );
     expect(actions.rows).toEqual([
-      expect.objectContaining({ target: "claude-agent", status: "SUCCEEDED" }),
+      expect.objectContaining({ target: "claude-agent", status: "UNCERTAIN" }),
     ]);
   });
 });

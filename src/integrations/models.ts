@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI, type ThinkingLevel } from "@google/genai";
-import { Codex, type CodexOptions } from "@openai/codex-sdk";
+import { Codex, type CodexOptions, type RunResult, type Thread } from "@openai/codex-sdk";
 import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
 import { ProviderFailure } from "../core/routing.js";
 import { networkCode, neverDispatched } from "./http.js";
@@ -214,23 +214,104 @@ export function codexOptions(auth: CodexAuth, codexHome: string): CodexOptions {
   };
 }
 
+const conversationalItems = new Set(["agent_message", "reasoning", "todo_list", "error"]);
+async function conversationTurn(
+  thread: Thread,
+  task: Task,
+  signal: AbortSignal,
+): Promise<RunResult> {
+  const abort = new AbortController();
+  const result: RunResult = { items: [], finalResponse: "", usage: null };
+  try {
+    const { events } = await thread.runStreamed(task.spec.objective, {
+      signal: AbortSignal.any([signal, abort.signal]),
+    });
+    for await (const event of events) {
+      if (event.type === "error" || event.type === "turn.failed")
+        throw new ProviderFailure("invalid-response", false);
+      if (
+        event.type === "item.started" ||
+        event.type === "item.completed" ||
+        event.type === "item.updated"
+      ) {
+        if (!conversationalItems.has(event.item.type))
+          throw new ProviderFailure("invalid-response", false);
+        if (event.type === "item.completed") {
+          result.items.push(event.item);
+          if (event.item.type === "agent_message") result.finalResponse = event.item.text;
+          if (event.item.type === "error")
+            console.info(
+              JSON.stringify({
+                event: "codex.runtime_notice",
+                taskId: task.id,
+                kind: /reconnect|retry|stream|connection/i.test(event.item.message)
+                  ? "connection-retry"
+                  : /401|403|auth/i.test(event.item.message)
+                    ? "authentication"
+                    : "runtime-notice",
+              }),
+            );
+        }
+      }
+      if (event.type === "turn.completed") result.usage = event.usage;
+    }
+    return result;
+  } finally {
+    abort.abort();
+  }
+}
+
 // Read-only sandbox is not a host-read boundary on native Windows. Use an isolated
 // CODEX_HOME, explicit operator attestation and per-run HIGH approval.
 export class CodexExecutor implements Executor {
   readonly outputTokenLimitEnforced = false;
-  readonly id = "codex";
+  readonly id: string;
   readonly capability = "text.generate";
   readonly external = true;
   readonly retrySafe = false;
-  readonly riskFloor = "HIGH" as const;
+  readonly riskFloor: "LOW" | "HIGH";
   private client: Codex;
   constructor(
     auth: CodexAuth,
     private model: string,
     private workspace: string,
     codexHome: string,
+    private options: { conversation?: boolean } = {},
   ) {
-    this.client = new Codex(codexOptions(auth, codexHome));
+    this.id = options.conversation ? "codex-live" : "codex";
+    this.riskFloor = options.conversation ? "LOW" : "HIGH";
+    const base = codexOptions(auth, codexHome);
+    this.client = new Codex({
+      ...base,
+      ...(options.conversation && {
+        config: {
+          features: {
+            shell_tool: false,
+            unified_exec: false,
+            apps: false,
+            plugins: false,
+            remote_plugin: false,
+            hooks: false,
+            multi_agent: false,
+            multi_agent_v2: false,
+            browser_use: false,
+            browser_use_external: false,
+            computer_use: false,
+            code_mode: false,
+            code_mode_host: false,
+            image_generation: false,
+            view_image: false,
+            skill_search: false,
+            skill_mcp_dependency_install: false,
+          },
+          mcp_servers: {},
+          project_doc_max_bytes: 0,
+          skills: { bundled: { enabled: false }, include_instructions: false },
+        },
+        // Empty tables otherwise disappear when the SDK flattens config.
+        configOverrides: ["mcp_servers={}", "plugins={}"],
+      }),
+    });
   }
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     const thread = this.client.startThread({
@@ -240,12 +321,36 @@ export class CodexExecutor implements Executor {
       approvalPolicy: "never",
       networkAccessEnabled: false,
       webSearchMode: "disabled",
+      ...(this.options.conversation && { modelReasoningEffort: "low" as const }),
     });
-    const result = await thread.run(task.spec.objective, { signal });
+    const result = this.options.conversation
+      ? await conversationTurn(thread, task, signal)
+      : await thread.run(task.spec.objective, { signal });
+    console.info(
+      JSON.stringify({
+        event: "codex.turn",
+        taskId: task.id,
+        provider: this.id,
+        itemTypes: result.items.map((item) => item.type),
+        usage: result.usage,
+      }),
+    );
+    if (
+      !result.finalResponse.trim() ||
+      (this.options.conversation &&
+        result.items.some((item) => !conversationalItems.has(item.type)))
+    )
+      throw new ProviderFailure("invalid-response", false);
     return {
       text: result.finalResponse,
       source: `codex:${this.model}:model-output`,
       ...(thread.id ? { externalId: thread.id } : {}),
+      ...(result.usage && {
+        usage: {
+          inputTokens: result.usage.input_tokens,
+          outputTokens: result.usage.output_tokens,
+        },
+      }),
     };
   }
 }

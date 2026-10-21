@@ -56,6 +56,16 @@ export async function composeResult(
   tasks: (StepTask | undefined)[],
 ): Promise<boolean> {
   const { lang, steps } = plan;
+  const skipped = tasks.filter((task) => task?.status === "SKIPPED").length;
+  if (skipped) {
+    await ctx.settle(plan, "COMPLETED", {
+      say:
+        lang === "tr"
+          ? `Koşula uymayan ${skipped} adım atlandı; diğer adımlar doğrulandı, efendim.`
+          : `${skipped} conditional steps were skipped; the remaining steps were verified, sir.`,
+    });
+    return true;
+  }
   const news = steps.findIndex((step) => step.action === "news.brief");
   const describe = steps.findIndex((step) => step.action === "screen.describe");
   if (news >= 0) {

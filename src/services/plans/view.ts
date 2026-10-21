@@ -50,7 +50,7 @@ export function planView(
   if (plan.kind === "integration")
     tasks.forEach((task, index) => {
       const body = task?.result?.text?.trim();
-      if (body)
+      if (body && !steps[index]?.evidence?.panel)
         panels.push({
           type: "text",
           title: steps[index]?.action ?? "Result",
@@ -83,9 +83,10 @@ export function planProgress(
 ): PlanProgress | undefined {
   const durations = ctx.durations;
   const states = tasks.map((task) => task?.status);
-  const finishing = states.length > 0 && states.every((state) => state === "COMPLETED");
+  const finishing =
+    states.length > 0 && states.every((state) => state === "COMPLETED" || state === "SKIPPED");
   let index = states.findIndex((state) => state === "RUNNING" || state === "VERIFYING");
-  if (index < 0) index = states.findIndex((state) => state !== "COMPLETED");
+  if (index < 0) index = states.findIndex((state) => state !== "COMPLETED" && state !== "SKIPPED");
   if (index < 0) index = plan.steps.length - 1;
   const step = plan.steps[index];
   if (!step) return undefined;

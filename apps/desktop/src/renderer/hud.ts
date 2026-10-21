@@ -4,6 +4,7 @@ const states: Record<string, string> = {
   AWAITING_APPROVAL: "Onayınızı bekliyorum",
   RUNNING: "İşlem sürüyor",
   COMPLETED: "Tamamlandı",
+  SKIPPED: "Koşul sağlanmadığı için atlandı",
   FAILED: "Tamamlanamadı",
   CANCELLED: "İptal edildi",
   RECOVERY_REQUIRED: "Sonuç doğrulanamadı",

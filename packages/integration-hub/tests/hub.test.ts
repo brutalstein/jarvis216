@@ -30,6 +30,7 @@ describe("allowlisted integration recipes", () => {
       risk: "HIGH",
       privacy: "private",
       input: {},
+      verification: { kind: "postcondition" },
     });
     expect(task.objective).toBe("Analyze and implement");
     expect(() => createIntegrationHub({}).compile("agent.execute", { instruction: "x" })).toThrow();

@@ -69,14 +69,18 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
   });
   let brainSettings: () => BrainSettings = () => ({ learning: true, reflexes: true });
   let agentAutonomous = () => false;
-  const { registry, tools, integrations } = await configuredProviders(env, secrets, {
-    agentAutonomous: () => agentAutonomous(),
-    memory,
-    // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
-    prefer: (target, candidates) =>
-      brainSettings().reflexes ? brain.preferredChoice(target, candidates) : undefined,
-    ...(options.executors && { executors: options.executors }),
-  });
+  const { registry, tools, integrations, close, discover } = await configuredProviders(
+    env,
+    secrets,
+    {
+      agentAutonomous: () => agentAutonomous(),
+      memory,
+      // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
+      prefer: (target, candidates) =>
+        brainSettings().reflexes ? brain.preferredChoice(target, candidates) : undefined,
+      ...(options.executors && { executors: options.executors }),
+    },
+  );
   try {
     await migrate(db);
     // Which catalog actions this configuration can run at all, for the Settings view.
@@ -122,6 +126,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         "desktop.act": 1,
         "info.fetch": 2,
         "memory.write": 1,
+        "tool.execute": 1,
       },
       redact: (text) => secrets.redact(text),
       retrySafe: (target) => registry.retrySafe(target),
@@ -153,7 +158,18 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       wake,
       onCancel,
       conversationProviders: providers,
-      privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
+      privateProviders: providers.filter(
+        (id) =>
+          id === "claude-code" ||
+          id === "codex-live" ||
+          registry
+            .list()
+            .some(
+              (p) =>
+                (p as { id: string; trustedForPrivate?: boolean }).id === id &&
+                (p as { trustedForPrivate?: boolean }).trustedForPrivate,
+            ),
+      ),
       integrations,
       memory: true,
       permissions,
@@ -204,6 +220,14 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       webhookToken: config.N8N_INGRESS_TOKEN,
       onCancel,
       onAdmit: wake,
+      capabilities: async () => ({
+        actions: permissions
+          .view()
+          .actions.filter((action) => action.available && action.mode !== "deny"),
+        providers: registry.list(),
+        mcp: await discover(),
+        authentication: "configured credentials are not proof of a live authenticated call",
+      }),
       conversation,
       plans,
       memory,
@@ -267,13 +291,13 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
           abort.abort();
           await running;
           tasks.changes.off("change", onChange);
-          await tools?.close();
+          await close();
         })();
         return stopping;
       },
     };
   } catch (error) {
-    await tools?.close();
+    await close();
     throw error;
   }
 }

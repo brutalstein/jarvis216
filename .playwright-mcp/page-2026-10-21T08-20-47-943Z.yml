@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - heading "Local registration" [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - text: Name
+      - textbox "Name" [ref=e5]
+    - generic [ref=e6]:
+      - text: Email
+      - textbox "Email" [ref=e7]
+    - button "Register" [ref=e8]

@@ -107,8 +107,7 @@ export function parseReply(text: string): Reply {
 }
 
 // Realtime order: Gemini with minimal thinking first, Claude at low effort next, free models,
-// then the subscription CLI last. Codex is excluded: its HIGH floor would need an approval per
-// turn. Adaptive routing may still demote a provider measured as failing or too slow.
+// then constrained subscription profiles. General Codex keeps its HIGH approval floor.
 export function conversationProviders(ids: string[]): string[] {
   const rank = (id: string) =>
     id === "gemini-live"
@@ -121,7 +120,9 @@ export function conversationProviders(ids: string[]): string[] {
             ? 3
             : id === "claude-code"
               ? 4
-              : -1;
+              : id === "codex-live"
+                ? 4
+                : -1;
   return ids
     .filter((id) => rank(id) >= 0)
     .sort((a, b) => rank(a) - rank(b))
@@ -310,7 +311,11 @@ export class ConversationService {
         await this.#learnPlan(learning, input.utterance, reply.lang, view.id, "model", {
           kind: "plan",
           goal: decision.goal,
-          steps: decision.steps.map(({ action, args }) => ({ action, args })),
+          steps: decision.steps.map(({ action, args, when }) => ({
+            action,
+            args,
+            ...(when && { when }),
+          })),
         });
         reply.display = [];
         reply.say = await this.#planSay(view, reply.lang);
@@ -613,11 +618,11 @@ export class ConversationService {
       const planTasks =
         "principal='operator' AND EXISTS (SELECT 1 FROM plans p LEFT JOIN conversation_turns c ON c.id=p.turn_id WHERE (c.created_at<$1 OR p.created_at<$1) AND idempotency_key LIKE 'plan:' || p.id::text || ':%')";
       await tx.query(
-        `UPDATE actions SET parameters = jsonb_set(jsonb_set(parameters, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${planTasks})`,
+        `UPDATE actions SET parameters = jsonb_set(jsonb_set(parameters-'condition', '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${planTasks})`,
         [cutoff],
       );
       await tx.query(
-        `UPDATE tasks SET spec = jsonb_set(jsonb_set(spec, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE ${planTasks}`,
+        `UPDATE tasks SET spec = jsonb_set(jsonb_set(spec-'condition', '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE ${planTasks}`,
         [cutoff],
       );
       await tx.query(
