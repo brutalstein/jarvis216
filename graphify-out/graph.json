@@ -19753,7 +19753,7 @@
       "node_kind": "heading",
       "norm_label": "actual outputs and sanitized traces",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L170"
+      "source_location": "L172"
     },
     {
       "id": "e2e_report_authenticated_github_evidence_and_the_codex_host_distinction",
@@ -19765,7 +19765,7 @@
       "node_kind": "heading",
       "norm_label": "authenticated github evidence and the codex host distinction",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L188"
+      "source_location": "L190"
     },
     {
       "id": "e2e_report_ci_continuation_2026_10_22",
@@ -19789,7 +19789,7 @@
       "node_kind": "heading",
       "norm_label": "codex and openclaw",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L172"
+      "source_location": "L174"
     },
     {
       "id": "e2e_report_defect_fixed_and_validation",
@@ -19801,7 +19801,7 @@
       "node_kind": "heading",
       "norm_label": "defect fixed and validation",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L280"
+      "source_location": "L282"
     },
     {
       "id": "e2e_report_historical_baseline_2026_10_20",
@@ -19813,7 +19813,7 @@
       "node_kind": "heading",
       "norm_label": "historical baseline \u2014 2026-10-20",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L109"
+      "source_location": "L111"
     },
     {
       "id": "e2e_report_jarvis216_verified_windows_e2e_2026_10_21",
@@ -19837,7 +19837,7 @@
       "node_kind": "heading",
       "norm_label": "local registration and filesystem",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L210"
+      "source_location": "L212"
     },
     {
       "id": "e2e_report_multi_step_autonomy_and_permission_controls",
@@ -19849,7 +19849,7 @@
       "node_kind": "heading",
       "norm_label": "multi-step autonomy and permission controls",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L258"
+      "source_location": "L260"
     },
     {
       "id": "e2e_report_original_local_windows_e2e_report",
@@ -19861,7 +19861,7 @@
       "node_kind": "heading",
       "norm_label": "original local windows e2e report",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L113"
+      "source_location": "L115"
     },
     {
       "id": "e2e_report_pass_fail_blocked_matrix",
@@ -19876,7 +19876,7 @@
       "source_location": "L13"
     },
     {
-      "id": "e2e_report_pass_fail_blocked_matrix_132",
+      "id": "e2e_report_pass_fail_blocked_matrix_134",
       "label": "PASS / FAIL / BLOCKED matrix",
       "_origin": "ast",
       "community": 176,
@@ -19885,7 +19885,7 @@
       "node_kind": "heading",
       "norm_label": "pass / fail / blocked matrix",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L132"
+      "source_location": "L134"
     },
     {
       "id": "e2e_report_quality_gates_and_release",
@@ -19909,7 +19909,7 @@
       "node_kind": "heading",
       "norm_label": "remaining limits and evidence location",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L317"
+      "source_location": "L319"
     },
     {
       "id": "e2e_report_reproduced_defects_and_retests",
@@ -19933,7 +19933,7 @@
       "node_kind": "heading",
       "norm_label": "root causes, missing integrations and prioritized fixes",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L305"
+      "source_location": "L307"
     },
     {
       "id": "e2e_report_test_boundary",
@@ -19957,7 +19957,7 @@
       "node_kind": "heading",
       "norm_label": "test boundary and preservation",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L119"
+      "source_location": "L121"
     },
     {
       "id": "e2e_report_voice_observations",
@@ -19969,7 +19969,7 @@
       "node_kind": "heading",
       "norm_label": "voice observations",
       "source_file": "E2E_REPORT.md",
-      "source_location": "L227"
+      "source_location": "L229"
     },
     {
       "id": "implementation_report",
@@ -68834,7 +68834,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L172",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -68845,7 +68845,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L188",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -68856,7 +68856,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L210",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -68867,7 +68867,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L227",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -68878,7 +68878,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L258",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -68889,7 +68889,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -68900,7 +68900,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L109",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -68911,7 +68911,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L119",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -68927,13 +68927,13 @@
     },
     {
       "source": "e2e_report_jarvis216_verified_windows_e2e_2026_10_21",
-      "target": "e2e_report_pass_fail_blocked_matrix_132",
+      "target": "e2e_report_pass_fail_blocked_matrix_134",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L132",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -68944,7 +68944,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L170",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -68955,7 +68955,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L280",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -68966,7 +68966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L305",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -68977,7 +68977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "E2E_REPORT.md",
-      "source_location": "L317",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -89748,5 +89748,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c0b38ddfad6d0ff4770c95ab057391fec08a14cc"
+  "built_at_commit": "dc4db562627a3c45665357e75b953dc81653265e"
 }

@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "tests/openclaw-native.test.ts": {
-    "mtime": 1792232582.5459116,
-    "seen": 1792322591.447521,
-    "ast_hash": "243528aab4c773b8937a2a9713c67d9a",
+    "mtime": 1792621227.1721408,
+    "seen": 1792621286.304937,
+    "ast_hash": "2d571649a81de8dd1b8e660c03c19525",
     "semantic_hash": ""
   },
   "tests/plan-gateway.test.ts": {
@@ -1716,15 +1716,15 @@
     "semantic_hash": ""
   },
   "ARCHITECTURE_AUDIT.md": {
-    "mtime": 1792620877.7825308,
-    "seen": 1792620888.5621996,
-    "ast_hash": "ebfcad4ede7f2d6889fa411ee0a695dc",
+    "mtime": 1792621276.3356848,
+    "seen": 1792621286.304937,
+    "ast_hash": "cb1b8c171b3840f09fa81ed6f098e135",
     "semantic_hash": ""
   },
   "E2E_REPORT.md": {
-    "mtime": 1792620877.7815309,
-    "seen": 1792620888.5621996,
-    "ast_hash": "bd6ec6697b0ee9f8dea5f78713b7d221",
+    "mtime": 1792621276.3346856,
+    "seen": 1792621286.304937,
+    "ast_hash": "4c7f078927aa8649f420bb549dcf5cbb",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-21-autonomous-agent-hardening.md": {
@@ -1746,9 +1746,9 @@
     "semantic_hash": ""
   },
   "IMPLEMENTATION_REPORT.md": {
-    "mtime": 1792620877.7825308,
-    "seen": 1792620888.5621996,
-    "ast_hash": "ed2e55ffcef1d1a98d5aaf5d307a1f3a",
+    "mtime": 1792621276.3356848,
+    "seen": 1792621286.304937,
+    "ast_hash": "baa8f18446c178650e705c02a3e96ac7",
     "semantic_hash": ""
   },
   "REMAINING_LIMITATIONS.md": {

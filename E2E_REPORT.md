@@ -106,6 +106,8 @@ The complete [push run for c0b38dd](https://github.com/brutalstein/jarvis216/act
 
 The test now sends only the rejected headers and reads the response directly; it still requires HTTP 400 and the exact denial payload. No browser-worker production behavior was relaxed and no exception was suppressed. All 15 browser Python tests, 20 consecutive repetitions of the affected case, Ruff, format and mypy passed locally. New-head CI is independently verified through the linked checks and completion receipt; the earlier failed run remains evidence.
 
+The next PR run passed Python but exposed a separate Windows fixture deadline: `spawnSync` killed a cold PowerShell startup at exactly 10 seconds (`status:null`), before the fake OpenClaw script returned. Only this fixture's process allowance is now 30 seconds, with a 65-second budget for its two launches and an explicit spawn-error assertion. The launcher, credential stripping, lock-preservation assertions and all production/Codex deadlines are unchanged. Five consecutive local runs plus typecheck/lint passed; hosted CI remains the independent check of the revised fixture allowance.
+
 ## Historical baseline — 2026-10-20
 
 The following original report describes the earlier build and is retained for comparison. Its failures are superseded only where the newer matrix gives explicit retest evidence.
