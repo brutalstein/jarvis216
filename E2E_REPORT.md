@@ -100,6 +100,12 @@ The earlier remote run for `ba81c58` failed TypeScript because of the missing de
 
 Remote CI status and exact tested head are available at [PR #6 checks](https://github.com/brutalstein/jarvis216/pull/6/checks). The local completion receipt is `artifacts/hardening-20261021/ci-final.json`; earlier failures are retained in that directory. **No release merge while failed live reliability acceptance remains open, even if CI is green.**
 
+### CI continuation — 2026-10-22
+
+The complete [push run for c0b38dd](https://github.com/brutalstein/jarvis216/actions/runs/39638428313) passed all eight jobs, including voice timing and both operating systems. Ubuntu reported 769 passing tests / two platform or opt-in skips, with coverage floors passed. The same commit's PR run passed seven jobs but hit a Python HTTP-test race: urllib kept sending a chunked body after the server had correctly rejected its headers and closed the connection, producing BrokenPipe before the client read the 400 response.
+
+The test now sends only the rejected headers and reads the response directly; it still requires HTTP 400 and the exact denial payload. No browser-worker production behavior was relaxed and no exception was suppressed. All 15 browser Python tests, 20 consecutive repetitions of the affected case, Ruff, format and mypy passed locally. New-head CI is independently verified through the linked checks and completion receipt; the earlier failed run remains evidence.
+
 ## Historical baseline — 2026-10-20
 
 The following original report describes the earlier build and is retained for comparison. Its failures are superseded only where the newer matrix gives explicit retest evidence.

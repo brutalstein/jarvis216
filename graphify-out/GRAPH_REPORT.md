@@ -1,17 +1,17 @@
-# Graph Report - jarvis216  (2026-10-21)
+# Graph Report - jarvis216  (2026-10-22)
 
 ## Corpus Check
-- 275 files · ~296,470 words
+- 275 files · ~296,945 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 12 file(s) not represented in the graph (top: (none) 5, .xml 2, .lock 2)
 
 ## Summary
-- 2520 nodes · 5202 edges · 170 communities (149 shown, 12 thin omitted)
+- 2521 nodes · 5202 edges · 175 communities (152 shown, 14 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 201 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d1f5fd90`
+- Built from commit: `c0b38ddf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -66,10 +66,10 @@
 - taskId
 - timestamp
 - deadline
-- src/main.ts
+- telemetry.ts
 - devDependencies
 - ADR 0008 — Subscription CLI harnesses on native Windows
-- action-engine/src/types.ts
+- narrate.ts
 - 6. DECISION ENGINE AND MODEL ROUTING
 - recipient
 - sender
@@ -77,7 +77,7 @@
 - jarvis-browser-worker
 - TaskService
 - contracts.ts
-- brain-integration.test.ts
+- core/tasks.ts
 - fake-claude.mjs
 - JARVIS desktop design
 - core.ts
@@ -102,10 +102,12 @@
 - Task
 - Enrollment
 - Turn
-- guards.ts
+- src/voice.ts
+- persona.ts
 - snapshot.ts
 - settings
 - FollowUpWindow
+- devDependencies
 - compilerOptions
 - news.test.ts
 - integration-hub/src/index.ts
@@ -122,12 +124,14 @@
 - GatedSTT
 - run_session
 - Integration setup
+- http/context.ts
 - smoke.py
 - textOf
 - JARVIS Core architecture
 - dependencies
 - services/conversation.ts
 - catalog.ts
+- N8nClient
 - github.ts
 - risk
 - ADR 0010: Models propose typed plans; a compiler and the operator admit them
@@ -148,6 +152,7 @@
 - brain.test.ts
 - compilerOptions
 - MemoryStore
+- ServerOptions
 - MemoryBrainStore
 - .brain
 - JARVIS v1.0.0 release progress
@@ -171,7 +176,7 @@
 - matrix/README.md
 - JARVIS216 verified Windows E2E — 2026-10-21
 - ServerTest
-- permissions-matrix.test.ts
+- generate.ts
 - JARVIS216 autonomous-agent hardening design
 - maxOutputTokens
 - typed-github.mjs
@@ -191,33 +196,33 @@
 10. `ConversationService` - 36 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `github()` --calls--> `GitHubExecutor`  [EXTRACTED]
-  tests/typed-tools.test.ts → src/integrations/github.ts
+- `Bridge` --references--> `PermissionView`  [EXTRACTED]
+  apps/desktop/src/shared.ts → src/services/permissions.ts
 - `Bridge` --references--> `PlanView`  [EXTRACTED]
   apps/desktop/src/shared.ts → src/services/plans/model.ts
 - `evaluate()` --calls--> `scoreIntent()`  [EXTRACTED]
   scripts/eval-intents.ts → packages/action-engine/src/eval-score.ts
-- `evaluate()` --calls--> `conversationPrompt()`  [EXTRACTED]
-  scripts/eval-intents.ts → src/services/persona.ts
 - `boot()` --calls--> `createCore()`  [EXTRACTED]
   tests/e2e/harness.ts → src/app/core.ts
+- `database()` --calls--> `postgres()`  [EXTRACTED]
+  tests/e2e/harness.ts → src/core/database.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (170 total, 12 thin omitted)
+## Communities (175 total, 14 thin omitted)
 
 ### Community 0 - "vitest"
-Cohesion: 0.08
-Nodes (30): @electric-sql/pglite, pg, vitest, ConfigSchema, Core, canTransition(), Database, migrate() (+22 more)
+Cohesion: 0.10
+Nodes (16): pg, vitest, ConfigSchema, Core, Database, migrate(), postgres(), serviceDispatcher (+8 more)
 
 ### Community 1 - "ConversationService"
-Cohesion: 0.11
-Nodes (18): conversationRoutes(), ConversationService, learned(), clip(), ConversationInput, conversationPrompt(), conversationPromptParts(), minutes() (+10 more)
+Cohesion: 0.19
+Nodes (5): conversationRoutes(), ConversationService, learned(), conversation(), say()
 
 ### Community 2 - "package.json"
 Cohesion: 0.10
-Nodes (19): engines, node, @types/node, typescript, zod, name, private, type (+11 more)
+Nodes (20): engines, node, @types/node, typescript, zod, name, private, type (+12 more)
 
 ### Community 3 - "Request"
 Cohesion: 0.06
@@ -225,7 +230,7 @@ Nodes (30): Exception, Progress, ThreadingHTTPServer, Explicit opt-in public-pag
 
 ### Community 4 - "PlanService"
 Cohesion: 0.05
-Nodes (47): planApprovalMs, TaskProgress, defaults, durationKey(), Durations, Finisher, finisherOf(), kindOf() (+39 more)
+Nodes (45): planApprovalMs, TaskProgress, planRoutes(), defaults, durationKey(), Durations, Finisher, finisherOf() (+37 more)
 
 ### Community 5 - "budget"
 Cohesion: 0.11
@@ -264,8 +269,8 @@ Cohesion: 0.14
 Nodes (13): compilerOptions, customConditions, esModuleInterop, module, moduleResolution, noUncheckedIndexedAccess, outDir, rootDir (+5 more)
 
 ### Community 14 - "desktop/package.json"
-Cohesion: 0.07
-Nodes (28): dependencies, @pipecat-ai/client-js, @pipecat-ai/small-webrtc-transport, description, devDependencies, electron, esbuild, @fontsource-variable/eb-garamond (+20 more)
+Cohesion: 0.08
+Nodes (23): dependencies, @pipecat-ai/client-js, @pipecat-ai/small-webrtc-transport, description, @types/node, typescript, main, name (+15 more)
 
 ### Community 15 - "properties"
 Cohesion: 0.18
@@ -407,9 +412,9 @@ Nodes (4): timestamp, format, pattern, type
 Cohesion: 0.50
 Nodes (4): format, pattern, type, deadline
 
-### Community 50 - "src/main.ts"
-Cohesion: 0.24
-Nodes (6): @opentelemetry/sdk-trace-base, @opentelemetry/sdk-trace-node, postgres(), initTracing(), JsonSpanExporter, main()
+### Community 50 - "telemetry.ts"
+Cohesion: 0.31
+Nodes (4): @opentelemetry/sdk-trace-base, @opentelemetry/sdk-trace-node, initTracing(), JsonSpanExporter
 
 ### Community 51 - "devDependencies"
 Cohesion: 0.20
@@ -419,9 +424,9 @@ Nodes (10): devDependencies, @biomejs/biome, @electric-sql/pglite, fast-check, t
 Cohesion: 0.50
 Nodes (3): ADR 0008 — Subscription CLI harnesses on native Windows, Alternatives, Consequences and implementation rulings
 
-### Community 53 - "action-engine/src/types.ts"
-Cohesion: 0.22
-Nodes (10): ActionDef, done, narrate(), NarrationEvent, Pair, Kind, Lang, Risk (+2 more)
+### Community 53 - "narrate.ts"
+Cohesion: 0.38
+Nodes (5): done, narrate(), NarrationEvent, Pair, events
 
 ### Community 54 - "6. DECISION ENGINE AND MODEL ROUTING"
 Cohesion: 0.67
@@ -440,28 +445,28 @@ Cohesion: 0.67
 Nodes (3): type, enum, type
 
 ### Community 64 - "TaskService"
-Cohesion: 0.07
-Nodes (26): fastify, ContextStore, insertContext(), ContextEntrySchema, fingerprint(), invariant(), states, taskDeadline() (+18 more)
+Cohesion: 0.09
+Nodes (20): ContextStore, insertContext(), ContextEntrySchema, EventType, fingerprint(), invariant(), taskDeadline(), TaskState (+12 more)
 
 ### Community 65 - "contracts.ts"
-Cohesion: 0.09
-Nodes (25): @opentelemetry/api, Action, attemptedStatuses, BrowserPageSchema, CapabilitySchema, EnvelopeSchema, EventType, EventTypeSchema (+17 more)
+Cohesion: 0.07
+Nodes (29): Action, attemptedStatuses, BrowserPageSchema, canTransition(), CapabilitySchema, EnvelopeSchema, EventTypeSchema, OutcomeSchema (+21 more)
 
-### Community 66 - "brain-integration.test.ts"
-Cohesion: 0.24
-Nodes (5): BrainSettings, provider(), reply(), start(), provider()
+### Community 66 - "core/tasks.ts"
+Cohesion: 0.08
+Nodes (29): @electric-sql/pglite, CoreError, Progress, Budget, outageKinds, Provider, ProviderRegistry, rounded() (+21 more)
 
 ### Community 68 - "JARVIS desktop design"
 Cohesion: 0.10
 Nodes (17): JARVIS desktop design, Layout and motion, Source, Tokens, Type, shape and icons, JARVIS desktop (M1, M3 plan cards), Run on this Windows checkout, Use (+9 more)
 
 ### Community 69 - "core.ts"
-Cohesion: 0.06
-Nodes (25): Config, CoreOptions, Capability, terminal, StandingGrants, Budget, Health, loadObservations() (+17 more)
+Cohesion: 0.07
+Nodes (21): Config, CoreOptions, Capability, terminal, StandingGrants, Health, loadObservations(), minLatencySamples (+13 more)
 
 ### Community 70 - "run.ts"
-Cohesion: 0.14
-Nodes (21): Args, bad(), bindings, bringToFront(), Evidence, exists(), failed(), frontTitle() (+13 more)
+Cohesion: 0.11
+Nodes (30): containedPath(), GuardError, inside(), realNearest(), Args, bad(), bindings, bringToFront() (+22 more)
 
 ### Community 71 - "plans.test.ts"
 Cohesion: 0.14
@@ -476,12 +481,12 @@ Cohesion: 0.10
 Nodes (19): Architecture, Character, Constraints and evidence, Core changes, Desktop application (`apps/desktop`, Electron, TypeScript), Intent, JARVIS voice desktop experience — design, M2 Memory (interface) (+11 more)
 
 ### Community 74 - "config.ts"
-Cohesion: 0.06
-Nodes (40): @anthropic-ai/sdk, @google/genai, ids, configuredProviders(), Executor, containedPath(), EnvSecrets, DesktopExecutor (+32 more)
+Cohesion: 0.07
+Nodes (30): @google/genai, ids, configuredProviders(), Executor, containedPath(), EnvSecrets, DesktopExecutor, NewsExecutor (+22 more)
 
 ### Community 75 - "Microphone"
-Cohesion: 0.10
-Nodes (8): connect(), CONSTRAINTS, Link, Microphone, @pipecat-ai/client-js, @pipecat-ai/small-webrtc-transport, Options, sdk
+Cohesion: 0.12
+Nodes (4): connect(), Microphone, Options, sdk
 
 ### Community 76 - "Review Focus"
 Cohesion: 0.11
@@ -516,24 +521,24 @@ Cohesion: 0.14
 Nodes (13): description, devDependencies, @modelcontextprotocol/server, exports, zod, name, private, scripts (+5 more)
 
 ### Community 84 - "run.test.ts"
-Cohesion: 0.13
-Nodes (12): text(), CompiledStep, behind, Call, closed, dialog, notepad, notepadText (+4 more)
+Cohesion: 0.14
+Nodes (11): text(), behind, Call, closed, dialog, notepad, notepadText, retitled() (+3 more)
 
 ### Community 85 - "jarvis-services.ps1"
 Cohesion: 0.22
 Nodes (27): Assert-OpenClawNative(), Command-Exists(), Compose(), Compose-Running(), Die(), Do-Stop(), Enabled(), Ensure-Dirs() (+19 more)
 
 ### Community 86 - "createCore"
-Cohesion: 0.22
-Nodes (3): createCore(), defaultMode(), PermissionService
+Cohesion: 0.20
+Nodes (4): createCore(), geminiEmbedder(), defaultMode(), PermissionService
 
 ### Community 87 - "Review Focus"
 Cohesion: 0.12
 Nodes (15): Global Constraints, JARVIS Voice Desktop M1 Implementation Plan, Review Focus, Task 10: Presence, stage, captions, overlay and settings, Task 11: End-to-end voice turn, Task 12: Documentation and final verification, Task 1: Contract additions: `personal` privacy, `non-empty` verification, listed provider order, Task 2: Trusted providers for private data (+7 more)
 
 ### Community 88 - "Task"
-Cohesion: 0.06
-Nodes (33): BrowserInputSchema, ExecutionResult, Progress, Task, WorkflowInputSchema, ProviderFailure, step(), ClaudeAgentOptions (+25 more)
+Cohesion: 0.07
+Nodes (39): @anthropic-ai/sdk, @opentelemetry/api, BrowserInputSchema, ExecutionResult, Task, WorkflowInputSchema, ProviderFailure, step() (+31 more)
 
 ### Community 89 - "Enrollment"
 Cohesion: 0.12
@@ -543,13 +548,17 @@ Nodes (7): Application, Enrollment, Voice-print enrollment state: collected in m
 Cohesion: 0.12
 Nodes (9): AsyncBaseTransport, Protocol, Core, Addressed speech goes through Core. A newer turn supersedes an unfinished…, CoreClient, Client for Core's conversation endpoint. Failures become None so JARVIS can…, Turn, CoreClientTest (+1 more)
 
-### Community 91 - "guards.ts"
-Cohesion: 0.17
-Nodes (17): blockedApp(), blockedShortcut(), containedPath(), distance(), escapeTitles, GuardError, inside(), keyAliases (+9 more)
+### Community 91 - "src/voice.ts"
+Cohesion: 0.16
+Nodes (12): cancelPhrases, cardinals, caseSuffixes, Choice, corrections, fillers, isCorrection(), ordinals (+4 more)
+
+### Community 92 - "persona.ts"
+Cohesion: 0.36
+Nodes (9): clip(), ConversationInput, conversationPromptParts(), minutes(), progressLine(), seconds(), stablePart(), stableParts (+1 more)
 
 ### Community 93 - "snapshot.ts"
-Cohesion: 0.23
-Nodes (11): secretNote(), describePrompt(), elements(), parseSnapshot(), redactSecrets(), screenSummary(), secrets, section() (+3 more)
+Cohesion: 0.25
+Nodes (10): describePrompt(), elements(), parseSnapshot(), redactSecrets(), screenSummary(), secrets, section(), Snapshot (+2 more)
 
 ### Community 94 - "settings"
 Cohesion: 0.23
@@ -558,6 +567,10 @@ Nodes (9): message(), Mode, NOTES, PHRASES, settings(), action(), progress(), re
 ### Community 95 - "FollowUpWindow"
 Cohesion: 0.20
 Nodes (6): FollowUpWindow, is_named(), Decides whether speech is meant for JARVIS: its name, or the follow-up window…, Any, FollowUpWindowTest, IsNamedTest
+
+### Community 96 - "devDependencies"
+Cohesion: 0.22
+Nodes (9): devDependencies, electron, esbuild, @fontsource-variable/eb-garamond, @fontsource-variable/inter, @phosphor-icons/core, @playwright/test, @types/node (+1 more)
 
 ### Community 97 - "compilerOptions"
 Cohesion: 0.17
@@ -589,7 +602,7 @@ Nodes (8): compilerOptions, customConditions, declaration, outDir, rootDir, exte
 
 ### Community 104 - "shared.ts"
 Cohesion: 0.05
-Nodes (22): readOperatorEnv(), broadcast(), plans, receivePlan(), setListening(), streamStop, updateTray(), streamPlans() (+14 more)
+Nodes (21): readOperatorEnv(), broadcast(), plans, receivePlan(), setListening(), streamStop, updateTray(), streamPlans() (+13 more)
 
 ### Community 105 - "BilingualTTS"
 Cohesion: 0.21
@@ -619,6 +632,10 @@ Nodes (10): handle_offer(), finished(), session(), set_brain(), offer(), Any, Br
 Cohesion: 0.15
 Nodes (13): Browser Use, Claude and Gemini APIs, Claude Code subscription, Codex SDK, Integration setup, Learning brain, Live progress from the browser worker, Long-term memory (+5 more)
 
+### Community 113 - "http/context.ts"
+Cohesion: 0.47
+Nodes (3): states, HttpContext, TaskId
+
 ### Community 114 - "smoke.py"
 Cohesion: 0.48
 Nodes (6): gpu_used_mib(), main(), Any, GPU smoke test: CUDA, Piper TTS voices, faster-whisper STT and ECAPA speaker…, report(), timed()
@@ -636,16 +653,16 @@ Cohesion: 0.50
 Nodes (4): dependencies, fast-xml-parser, @modelcontextprotocol/client, zod
 
 ### Community 118 - "services/conversation.ts"
-Cohesion: 0.09
-Nodes (20): evaluate(), integrations, paceMs, percentile(), registered, rows, { values }, CoreError (+12 more)
+Cohesion: 0.10
+Nodes (20): evaluate(), integrations, paceMs, percentile(), registered, rows, { values }, conversationProviders() (+12 more)
 
 ### Community 119 - "catalog.ts"
-Cohesion: 0.10
-Nodes (29): catalog, catalogLines(), compile(), content, definitions, files, JsonProperty, limit (+21 more)
+Cohesion: 0.09
+Nodes (35): ActionDef, catalog, catalogLines(), compile(), content, definitions, files, JsonProperty (+27 more)
 
 ### Community 121 - "github.ts"
 Cohesion: 0.06
-Nodes (29): n8nMcpConfig(), openClawMcpConfig(), playwrightMcpConfig(), playwrightMcpVersion, evidence(), File, githubActionSchemas, inherited (+21 more)
+Nodes (30): n8nMcpConfig(), openClawMcpConfig(), playwrightMcpConfig(), playwrightMcpVersion, evidence(), File, githubActionSchemas, GitHubExecutor (+22 more)
 
 ### Community 122 - "risk"
 Cohesion: 0.50
@@ -656,8 +673,8 @@ Cohesion: 0.50
 Nodes (4): ADR 0010: Models propose typed plans; a compiler and the operator admit them, Consequences, Context, Decision
 
 ### Community 124 - "harness.ts"
-Cohesion: 0.14
-Nodes (19): fixture, plan(), planOf(), read(), settled(), body(), boot(), database() (+11 more)
+Cohesion: 0.12
+Nodes (23): PermissionView, fixture, plan(), planOf(), read(), settled(), body(), boot() (+15 more)
 
 ### Community 129 - "Voice integration hub"
 Cohesion: 0.50
@@ -708,8 +725,8 @@ Cohesion: 0.17
 Nodes (11): compilerOptions, declaration, module, moduleResolution, outDir, rootDir, skipLibCheck, strict (+3 more)
 
 ### Community 144 - "MemoryStore"
-Cohesion: 0.15
-Nodes (5): ServerOptions, failed(), MemoryStore, refused(), seen()
+Cohesion: 0.21
+Nodes (4): failed(), MemoryStore, refused(), seen()
 
 ### Community 147 - ".brain"
 Cohesion: 0.29
@@ -760,8 +777,8 @@ Cohesion: 0.50
 Nodes (4): maximum, minimum, type, cachePrefix
 
 ### Community 169 - "normalize"
-Cohesion: 0.11
-Nodes (22): appNames(), groups, spoken, ground(), Grounding, normalize(), UiElement, escapeTarget() (+14 more)
+Cohesion: 0.14
+Nodes (19): appNames(), groups, spoken, ground(), Grounding, normalize(), UiElement, blockedApp() (+11 more)
 
 ### Community 171 - "Claude Code agent: extensible JARVIS execution"
 Cohesion: 0.33
@@ -773,15 +790,15 @@ Nodes (5): Desktop says "Ayar dosyası bulunamadı", Diagnostic codes, Existing 
 
 ### Community 176 - "JARVIS216 verified Windows E2E — 2026-10-21"
 Cohesion: 0.06
-Nodes (30): Evidence limits and pending gates, Existing execution authority, Findings and implementation boundary, Follow-up verified findings, JARVIS216 architecture audit — 2026-10-21, Scope and preservation, Actual outputs and evidence identifiers, Actual outputs and sanitized traces (+22 more)
+Nodes (31): Evidence limits and pending gates, Existing execution authority, Findings and implementation boundary, Follow-up verified findings, JARVIS216 architecture audit — 2026-10-21, Scope and preservation, Actual outputs and evidence identifiers, Actual outputs and sanitized traces (+23 more)
 
 ### Community 177 - "ServerTest"
 Cohesion: 0.12
 Nodes (3): ServerTest, session(), session()
 
-### Community 178 - "permissions-matrix.test.ts"
-Cohesion: 0.31
-Nodes (8): durations, generateCases(), guarded, pairwise(), permissionPolicies(), presets, auditIds, cases
+### Community 178 - "generate.ts"
+Cohesion: 0.43
+Nodes (6): durations, generateCases(), guarded, pairwise(), permissionPolicies(), presets
 
 ### Community 180 - "JARVIS216 autonomous-agent hardening design"
 Cohesion: 0.40
@@ -806,22 +823,22 @@ Nodes (4): default, enum, type, privacy
 ## Knowledge Gaps
 - **904 isolated node(s):** `name`, `version`, `private`, `description`, `main` (+899 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1205 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vitest` connect `vitest` to `package.json`, `PlanService`, `live.ts`, `brain.test.ts`, `architecture.test.ts`, `normalize`, `permissions-matrix.test.ts`, `action-engine/src/types.ts`, `contracts.ts`, `brain-integration.test.ts`, `core.ts`, `plans.test.ts`, `config.ts`, `Microphone`, `McpToolPort`, `run.test.ts`, `Task`, `guards.ts`, `snapshot.ts`, `news.test.ts`, `integration-hub/src/index.ts`, `services/conversation.ts`, `catalog.ts`, `github.ts`, `harness.ts`?**
+- **Why does `vitest` connect `vitest` to `package.json`, `PlanService`, `live.ts`, `brain.test.ts`, `architecture.test.ts`, `normalize`, `generate.ts`, `telemetry.ts`, `narrate.ts`, `contracts.ts`, `core/tasks.ts`, `core.ts`, `plans.test.ts`, `config.ts`, `Microphone`, `McpToolPort`, `run.test.ts`, `Task`, `src/voice.ts`, `snapshot.ts`, `news.test.ts`, `integration-hub/src/index.ts`, `services/conversation.ts`, `catalog.ts`, `github.ts`, `harness.ts`?**
   _High betweenness centrality (0.165) - this node is a cross-community bridge._
-- **Why does `PlanView` connect `PlanService` to `TaskService`, `ConversationService`, `vitest`, `hud.ts`, `plans.test.ts`, `shared.ts`, `settings.spec.ts`, `services/conversation.ts`?**
+- **Why does `PlanView` connect `PlanService` to `ConversationService`, `core/tasks.ts`, `hud.ts`, `plans.test.ts`, `shared.ts`, `settings.spec.ts`, `http/context.ts`, `services/conversation.ts`?**
   _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Why does `PlanService` connect `PlanService` to `vitest`, `TaskService`, `ConversationService`, `brain-integration.test.ts`, `core.ts`, `plans.test.ts`, `MemoryStore`, `createCore`, `services/conversation.ts`?**
+- **Why does `PlanService` connect `PlanService` to `vitest`, `ConversationService`, `core/tasks.ts`, `core.ts`, `plans.test.ts`, `http/context.ts`, `ServerOptions`, `createCore`, `services/conversation.ts`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
   _904 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `vitest` be split into smaller, more focused modules?**
-  _Cohesion score 0.07888697647733792 - nodes in this community are weakly interconnected._
-- **Should `ConversationService` be split into smaller, more focused modules?**
-  _Cohesion score 0.10793650793650794 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0966183574879227 - nodes in this community are weakly interconnected._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
+- **Should `Request` be split into smaller, more focused modules?**
+  _Cohesion score 0.05794556628621598 - nodes in this community are weakly interconnected._
