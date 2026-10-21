@@ -175,7 +175,11 @@ export class ConversationService {
   // 4. deliberation: one JSON-mode model call with working memory, long-term notes and learned
   //    examples, one repair, then policy (turned-off actions, low confidence) and the plan;
   // 5. learning: the request and, later, its plan's outcome become experience.
-  async turn(input: { utterance: string; followUp: boolean }): Promise<TurnResult> {
+  async turn(
+    input: { utterance: string; followUp: boolean },
+    signal?: AbortSignal,
+  ): Promise<TurnResult> {
+    signal?.throwIfAborted();
     const started = Date.now();
     const id = randomUUID();
     const settings = this.options.settings?.() ?? { learning: true, reflexes: true };
@@ -224,6 +228,7 @@ export class ConversationService {
         json: true,
         lane: "interactive",
         cachePrefix: stable.length,
+        signal,
       },
       `conversation:${id}`,
     );
@@ -245,6 +250,7 @@ export class ConversationService {
             json: true,
             lane: "interactive",
             cachePrefix: stable.length,
+            signal,
           },
           `conversation:${id}:repair`,
         );
@@ -287,6 +293,7 @@ export class ConversationService {
         reply.intent = { kind: "clarify", goal: decision.goal };
         understood = { kind: "clarify", goal: decision.goal };
       } else if (reply.addressed && decision?.kind === "plan") {
+        signal?.throwIfAborted();
         let view: PlanView;
         try {
           view = await plans.propose({

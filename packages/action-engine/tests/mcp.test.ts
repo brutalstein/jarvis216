@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { McpToolPort } from "../src/mcp.js";
@@ -23,6 +26,41 @@ afterAll(async () => {
 });
 
 describe("McpToolPort", () => {
+  it("bounds an unresponsive initialize and reaps the child", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jarvis-mcp-timeout-"));
+    const pidFile = join(directory, "pid");
+    const stalled = new McpToolPort({
+      command: process.execPath,
+      args: [
+        "--input-type=module",
+        "-e",
+        "import{writeFileSync}from'node:fs';writeFileSync(process.env.PID_FILE,String(process.pid));setInterval(()=>{},1000)",
+      ],
+      env: { PID_FILE: pidFile },
+      allow: [],
+    });
+    try {
+      await expect(stalled.start()).rejects.toThrow();
+      const pid = Number(await readFile(pidFile, "utf8"));
+      await expect
+        .poll(
+          () => {
+            try {
+              process.kill(pid, 0);
+              return false;
+            } catch {
+              return true;
+            }
+          },
+          { timeout: 5000 },
+        )
+        .toBe(true);
+    } finally {
+      await stalled.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 25000);
+
   it("lists the server's tools", async () => {
     expect(await port.list()).toEqual(expect.arrayContaining(["echo", "fail", "crash"]));
   });

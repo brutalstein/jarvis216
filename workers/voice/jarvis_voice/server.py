@@ -108,11 +108,36 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
 
                 if peer is None or data.get("pc_id") != peer.pc_id:
                     return web.json_response({"error": "NO_SESSION"}, status=404)
-                for item in data["candidates"][:32]:
-                    candidate = candidate_from_sdp(item["candidate"]) if item["candidate"] else None
+                items = data.get("candidates")
+                if not isinstance(items, list) or len(items) > 32:
+                    raise ValueError("INVALID_OFFER")
+                candidates = []
+                for item in items:
+                    if (
+                        not isinstance(item, dict)
+                        or not isinstance(item.get("candidate"), str)
+                        or len(item["candidate"]) > 8192
+                    ):
+                        raise ValueError("INVALID_OFFER")
+                    try:
+                        candidate = (
+                            candidate_from_sdp(item["candidate"]) if item["candidate"] else None
+                        )
+                    except AssertionError as error:
+                        raise ValueError("INVALID_OFFER") from error
                     if candidate is not None:
-                        candidate.sdpMid = item["sdp_mid"]
-                        candidate.sdpMLineIndex = item["sdp_mline_index"]
+                        mid, index = item.get("sdp_mid"), item.get("sdp_mline_index")
+                        if (
+                            not (mid is None or isinstance(mid, str) and len(mid) <= 256)
+                            or not (index is None or type(index) is int and 0 <= index <= 65535)
+                            or mid is None
+                            and index is None
+                        ):
+                            raise ValueError("INVALID_OFFER")
+                        candidate.sdpMid = mid
+                        candidate.sdpMLineIndex = index
+                    candidates.append(candidate)
+                for candidate in candidates:
                     await peer.add_ice_candidate(candidate)
                 return web.Response(status=200)
             if data.get("type") != "offer" or not isinstance(data.get("sdp"), str):

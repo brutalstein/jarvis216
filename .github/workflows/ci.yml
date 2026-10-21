@@ -173,6 +173,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.22.0, cache: npm }
       - run: npm ci --ignore-scripts
+      # Root media regression tests import the desktop's separately locked dependencies.
+      - run: npm ci --prefix apps/desktop --ignore-scripts
       - run: npm run matrix:check
       # Linux also enforces the coverage floors; Windows runs the same suite without them.
       - run: npm run check:ci

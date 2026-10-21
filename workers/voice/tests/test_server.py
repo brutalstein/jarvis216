@@ -41,6 +41,49 @@ class FakeConnection:
 
 
 class ServerTest(unittest.IsolatedAsyncioTestCase):
+    async def test_invalid_ice_candidates_never_reach_peer(self) -> None:
+        async def session(*args: Any) -> None:
+            await asyncio.Event().wait()
+
+        add = AsyncMock()
+        with (
+            patch("jarvis_voice.server.run_session", session),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", FakeConnection
+            ),
+            patch.object(FakeConnection, "add_ice_candidate", add, create=True),
+        ):
+            headers = {"authorization": "Bearer secret"}
+            await self.client.post(
+                "/offer", json={"sdp": "offer", "type": "offer"}, headers=headers
+            )
+            for candidates in [
+                None,
+                {},
+                [None],
+                [7],
+                [{"candidate": 1}],
+                [{"candidate": "bad"}],
+                [{"candidate": "1 1 udp 1 127.0.0.1 9 typ host", "sdp_mid": []}],
+                [{"candidate": "1 1 udp 1 127.0.0.1 9 typ host", "sdp_mline_index": True}],
+                [{"candidate": ""}] * 33,
+            ]:
+                with self.subTest(candidates=candidates):
+                    response = await self.client.patch(
+                        "/offer",
+                        json={"pc_id": "connection", "candidates": candidates},
+                        headers=headers,
+                    )
+                    self.assertEqual(response.status, 400)
+            add.assert_not_awaited()
+            response = await self.client.patch(
+                "/offer",
+                json={"pc_id": "connection", "candidates": [{"candidate": ""}]},
+                headers=headers,
+            )
+            self.assertEqual(response.status, 200)
+            add.assert_awaited_once_with(None)
+
     async def test_failed_pipeline_releases_peer_for_retry(self) -> None:
         async def fail(*args: Any) -> None:
             raise RuntimeError("test pipeline failure")

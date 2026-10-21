@@ -148,7 +148,8 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
     };
     // A task that became claimable (admitted, approved, resumed) or settled (unblocking its
     // dependents) wakes idle workers at once.
-    const onChange = ({ status }: TaskChange) => {
+    const onChange = ({ id, status }: TaskChange) => {
+      if (status === "CANCELLED" || status === "RECOVERY_REQUIRED") onCancel(id);
       if (status === "READY" || terminal.has(status)) wake();
     };
     tasks.changes.on("change", onChange);

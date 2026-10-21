@@ -92,6 +92,18 @@ function browser(snapshots: string[]) {
   };
 }
 describe("standalone GitHub", () => {
+  it("projects repository metadata before bounded subprocess capture", async () => {
+    const fixture = github("repository-noise");
+    const result = await fixture.executor.execute(
+      task("github.repositories", { limit: 30 }),
+      signal(),
+    );
+    expect(result.outcome).toEqual({ status: "completed", verified: true });
+    expect(JSON.parse(result.text).data.repositories).toHaveLength(1);
+    expect(fixture.records()[0].argv).toEqual(
+      expect.arrayContaining(["--jq", "map({id,name,full_name,private,html_url,default_branch})"]),
+    );
+  });
   it("uses native authentication and drops parent secrets and unexpected fields", async () => {
     vi.stubEnv("GH_TOKEN", "parent-secret");
     vi.stubEnv("GEMINI_API_KEY", "parent-model-secret");

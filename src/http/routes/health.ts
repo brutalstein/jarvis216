@@ -11,6 +11,7 @@ export function healthRoutes(
   app.get("/healthz", async () => ({ status: "alive" }));
   app.get("/v1/capabilities", async (request) => {
     authenticate(request, "operator");
+    request.raw.socket.setTimeout?.(20000);
     return options.capabilities
       ? options.capabilities()
       : { providers: registry.list(), liveConnectivity: "not-checked" };

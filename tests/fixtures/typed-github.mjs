@@ -52,4 +52,5 @@ else if (endpoint?.includes("/repos?")) result = [repo];
 else if (endpoint?.startsWith("repos/")) result = repo;
 if (mode === "invalid") result = { arbitrary: "secret-child-value" };
 if (mode === "foreign") result.html_url = "https://evil.example/";
+if (mode === "repository-noise" && !argv.includes("--jq")) result[0].unused = "x".repeat(200000);
 process.stdout.write(JSON.stringify(result));

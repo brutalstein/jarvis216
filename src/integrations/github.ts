@@ -305,6 +305,10 @@ export class GitHubExecutor implements Executor {
         "--method",
         method,
         endpoint,
+        // Bound the needed metadata before capturing GitHub's much larger repository objects.
+        ...(/^(?:user|users\/[^/]+)\/repos\?/.test(endpoint)
+          ? ["--jq", "map({id,name,full_name,private,html_url,default_branch})"]
+          : []),
         ...(body !== undefined ? ["--input", "-"] : []),
       ];
       const child = spawn(this.options.command[0], argv, {
