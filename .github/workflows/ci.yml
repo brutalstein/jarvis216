@@ -246,7 +246,7 @@ jobs:
     defaults: { run: { working-directory: workers/voice } }
     env:
       DEPS: >-
-        --with pipecat-ai[webrtc]==1.12.0 --with httpx==0.28.1 --with aiohttp==3.14.5
+        --with pipecat-ai[webrtc,whisper,piper]==1.12.0 --with httpx==0.28.1 --with aiohttp==3.14.5
         --with numpy==1.26.4
     steps:
       - uses: actions/checkout@v4
@@ -257,4 +257,4 @@ jobs:
       - run: uv run --no-project --python 3.12 $DEPS --with mypy==2.4.0 mypy jarvis_voice
       - run: >-
           uv run --no-project --python 3.12 $DEPS python -m unittest -v
-          tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker
+          tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker tests.test_voice_timing
