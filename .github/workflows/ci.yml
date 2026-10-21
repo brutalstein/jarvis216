@@ -256,5 +256,7 @@ jobs:
       - run: uv run --no-project --python 3.12 --with ruff==0.17.1 ruff format --check jarvis_voice tests
       - run: uv run --no-project --python 3.12 $DEPS --with mypy==2.4.0 mypy jarvis_voice
       - run: >-
-          uv run --no-project --python 3.12 $DEPS python -m unittest -v
+          uv run --no-project --python 3.12 $DEPS
+          --with 'torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.11.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=f82e2ae20c1545bb03997d1cc3143d94e14b800038669ee1aca45808a9acc338'
+          python -m unittest -v
           tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker tests.test_voice_timing

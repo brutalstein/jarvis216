@@ -17,7 +17,8 @@
 - [x] Execute available real JARVIS acceptance and record every failed/blocked gate: complex planning/voice repeat FAIL; physical speech/Bluetooth/live fault recovery BLOCKED. Learned-plan reuse PASS.
 - [x] Refresh graphify and sanitize evidence; protected hashes unchanged. Owned service cleanup is recorded in the final report.
 - [x] Four reports and source review; evidence bundle contains observed outputs, not mock successes.
-- [ ] Commit/push related implementation and reports, create PR, inspect required CI. Merge to release only if all applicable required gates pass.
+- [x] Commit/push related implementation and reports; open draft PR #6 and inspect CI. Repair missing desktop/Torch CI dependencies exposed by fresh jobs.
+- [ ] Release merge: intentionally withheld while live Codex reliability acceptance remains failed and physical gates are blocked, regardless of CI results.
 
 ## Ledger
 

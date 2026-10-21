@@ -1,6 +1,6 @@
 # JARVIS216 implementation report — 2026-10-21
 
-Release base: `3886783227328920f65876dee3536234ed69b263` (`release/v1.0.0`). Feature branch: `codex/autonomous-agent-hardening`. The existing hardening work was already committed/pushed as `ba81c58830544278ed2c249b9e0e596937700027` when this continuation resumed. Follow-up repairs are in `c3c76832d85f425c39c38f894f9ab57b70738d4c`; `d1f5fd9` adds the voice timing suite and pinned extras to CI. Reporting commits follow. No user commit was reset or rewritten.
+Release base: `3886783227328920f65876dee3536234ed69b263` (`release/v1.0.0`). Feature branch: `codex/autonomous-agent-hardening`, [draft PR #6](https://github.com/brutalstein/jarvis216/pull/6). The existing hardening work was already committed/pushed as `ba81c58830544278ed2c249b9e0e596937700027` when this continuation resumed. Follow-up repairs are in `c3c76832d85f425c39c38f894f9ab57b70738d4c`; later commits include voice timing regressions, pinned CPU-only CI dependencies and reports. No user commit was reset or rewritten.
 
 ## Changes and authority
 

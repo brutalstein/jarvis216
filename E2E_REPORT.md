@@ -2,7 +2,7 @@
 
 **Result: supported real tasks work; overall reliability acceptance remains incomplete.** Tests were driven through JARVIS HTTP APIs/Electron. Codex supplied fixtures, repaired code and independently observed results. No direct Codex filesystem/browser/account action is counted as JARVIS execution. No real Claude or Claude Code was invoked.
 
-Code: existing hardening commit `ba81c58830544278ed2c249b9e0e596937700027`, follow-up `c3c76832d85f425c39c38f894f9ab57b70738d4c`, branch `codex/autonomous-agent-hardening`, release base `3886783227328920f65876dee3536234ed69b263`. Remote CI/release status is recorded below after dispatch. The earlier report is retained as a historical baseline at the end.
+Code: existing hardening commit `ba81c58830544278ed2c249b9e0e596937700027`, follow-up `c3c76832d85f425c39c38f894f9ab57b70738d4c`, branch `codex/autonomous-agent-hardening`, release base `3886783227328920f65876dee3536234ed69b263`. [Draft PR #6](https://github.com/brutalstein/jarvis216/pull/6) targets `release/v1.0.0`. The earlier report is retained as a historical baseline at the end.
 
 ## Test boundary
 
@@ -96,7 +96,9 @@ Last full local coverage: **769 PASS / 1 SKIP**, existing coverage floors passed
 
 Cleanup: JARVIS deleted the remaining isolated `condition.txt` and `mixed.txt` fixtures; independent checks confirm all CRUD/conditional fixture files absent. Owned Core/site ports 2168/2188 closed; disposable Electron/voice sessions closed. PostgreSQL remains healthy/available. Isolated schemas and sanitized evidence are retained for investigation. Final protected-file comparisons remained unchanged.
 
-The earlier remote run for `ba81c58` failed TypeScript because of the missing desktop dependencies; other Python/PostgreSQL/voice/service-manager/desktop jobs passed. The current code fixes that installation gap. Commit `d1f5fd9` also includes voice timing regressions in CI with the pinned Whisper/Piper extras, without downloading GPU models. Fresh PR/CI status will be recorded after push. **No release merge while failed live reliability acceptance remains open.**
+The earlier remote run for `ba81c58` failed TypeScript because of the missing desktop dependencies; other Python/PostgreSQL/voice/service-manager/desktop jobs passed. The current code fixes that installation gap. Commit `d1f5fd9` also includes voice timing regressions in CI with the pinned Whisper/Piper extras. The first expanded voice run at `75e1ca4` exposed the missing Torch import dependency; CI now adds the hash-pinned CPU wheel corresponding to the production lockfile's Torch 2.11.0 version, from the [official PyTorch CPU index](https://download.pytorch.org/whl/cpu/torch/). Production CUDA configuration is unchanged and no GPU models are downloaded by CI.
+
+Remote CI status and exact tested head are available at [PR #6 checks](https://github.com/brutalstein/jarvis216/pull/6/checks). The local completion receipt is `artifacts/hardening-20261021/ci-final.json`; earlier failures are retained in that directory. **No release merge while failed live reliability acceptance remains open, even if CI is green.**
 
 ## Historical baseline — 2026-10-20
 
