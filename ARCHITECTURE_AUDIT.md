@@ -1,12 +1,12 @@
 # JARVIS216 architecture audit — 2026-10-21
 
-Status: implementation and acceptance testing in progress. This is an evidence ledger, not a functionality certification.
+Status: implementation and local verification completed for the changes below; live reliability acceptance remains incomplete. This is an evidence ledger, not a functionality certification. Current results: [E2E_REPORT.md](E2E_REPORT.md).
 
 ## Scope and preservation
 
 Base: `release/v1.0.0`, commit `3886783227328920f65876dee3536234ed69b263`. Work branch: `codex/autonomous-agent-hardening`. Existing snapshot repair, E2E report and graph changes were preserved before edits in `artifacts/hardening-20261021/preexisting.patch`. Protected configuration hashes are in `protected-before.json`; no saved operator configuration is intentionally edited. Claude is disabled in every live acceptance Core's process environment.
 
-Source retrieval used local graphify queries followed by the relevant source. The initial graph had 2,352 nodes; truncated queries do not establish exhaustive coverage. Optional graph MCP extensions were not invoked because of the supplied extension allowlist. Relevant branch comparison found reusable native GitHub CLI handling on `feature/live-acceptance-20261020-133005`; merging that older branch wholesale would remove newer infrastructure and CI work, so only compatible behavior was reused.
+Source retrieval initially used local graphify queries followed by relevant source. In this continuation the developer-required Tier 2 codebase-memory project `C-Users-cenke-OneDrive-Desktop-jarvis216` was also queried, traced and coverage-checked. Metadata-changed/ignored paths were read directly; neither graph is an exhaustive proof. Graphify was refreshed after code changes (2,505 nodes at the first refresh; AST only, no model labeling). Relevant branch comparison found reusable native GitHub CLI handling on `feature/live-acceptance-20261020-133005`; merging that older branch wholesale would remove newer infrastructure and CI work, so only compatible behavior was reused.
 
 ## Existing execution authority
 
@@ -43,3 +43,9 @@ The pinned Playwright MCP README explicitly states that allowed origins are not 
 Fresh baseline before this implementation: 701 tests passed, one live-PostgreSQL test skipped. Current acceptance has verified a real Codex-only Turkish conversational reply and standalone authenticated GitHub profile access. More complex requests have also hit the current 20-second turn deadline; those failures remain evidence, not hidden retries. Final test counts, physical voice results, protected hashes and remaining limitations belong in the final reports after reruns.
 
 Official configuration references: [OpenAI Codex SDK](https://developers.openai.com/codex/sdk), [OpenAI configuration schema](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json), [pinned Microsoft Playwright MCP README](https://github.com/microsoft/playwright-mcp/blob/v0.0.83/README.md).
+
+## Follow-up verified findings
+
+The continuation reproduced HTTP disconnects leaving model execution alive, malformed ICE producing 500/partial application, full repository output exceeding the capture limit, capability discovery exceeding HTTP idle time, and CI missing the desktop dependency install. Shared-boundary fixes and their fresh retests are recorded in [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Existing commits and saved configuration were preserved.
+
+Real evidence now includes complete CRUD, local form submission, standalone private-repository reads, mixed typed tools, a persisted note after restart, and learned-skill reuse without a model call. Repeated live Codex timeouts remain unresolved. Physical spoken recognition, human audibility and Bluetooth are blocked; no general Windows GUI or external browser security certification is inferred.

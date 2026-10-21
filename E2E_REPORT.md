@@ -1,4 +1,108 @@
-# JARVIS216 local Windows E2E report
+# JARVIS216 verified Windows E2E — 2026-10-21
+
+**Result: supported real tasks work; overall reliability acceptance remains incomplete.** Tests were driven through JARVIS HTTP APIs/Electron. Codex supplied fixtures, repaired code and independently observed results. No direct Codex filesystem/browser/account action is counted as JARVIS execution. No real Claude or Claude Code was invoked.
+
+Code: existing hardening commit `ba81c58830544278ed2c249b9e0e596937700027`, follow-up `c3c76832d85f425c39c38f894f9ab57b70738d4c`, branch `codex/autonomous-agent-hardening`, release base `3886783227328920f65876dee3536234ed69b263`. Remote CI/release status is recorded below after dispatch. The earlier report is retained as a historical baseline at the end.
+
+## Test boundary
+
+Real PostgreSQL 18.3 on `127.0.0.1:55432`, Core `2168`, fixture website `2188`, isolated schema `hardening_1792570275755`, disposable Electron/enrollment profiles and `artifacts/hardening-20261021/workspace`. All Claude flags and other model providers were disabled in the acceptance process environment; Codex used the existing isolated authentication. GitHub used its own native CLI authentication. Normal saved `.env` switches and Core on port 2160 were not changed.
+
+The operator subsequently said **“Şu anda konuşamıyorum”**. Physical spoken recognition and human audibility therefore remain BLOCKED. A recorded Turkish WAV through the actual Electron capture/STT/Core/TTS transport is a separate software-path test. Chromium fake input/output devices in that run do not establish hardware compatibility.
+
+## PASS / FAIL / BLOCKED matrix
+
+| Scenario / assertion | Result | Observable evidence and limit |
+|---|---|---|
+| PostgreSQL | PASS | Real 18.3 server; scoped concurrent-bootstrap/claim/reconnect opt-in test passed. |
+| Core | PASS | Isolated authenticated HTTP API, persistent tasks/plans and successful restart; no public liveness response counted as account proof. |
+| Electron | PASS | Real test-profile window/voice launch; 21 UI tests passed, one physical opt-in skipped. |
+| Brain notes | PASS | Saved `LANTERN_216` through a JARVIS plan, retrieved correctly in a later model reply and after Core restart. |
+| Brain learned skill reuse | PASS | Three successful real file-read plans; fourth request used a learned plan with `provider:null`, `taskId:null`, 82 ms. Core executed/verified the read again. Brain skill has four successes and one use. |
+| Action Engine | PASS | Real contained CRUD and conditional actions; independent filesystem observations. |
+| MCP connections | PASS | Fresh authenticated discovery connected Windows-MCP (13 allowlisted descriptors) and Playwright MCP (5 allowed names). Discovery is not proof every tool works. |
+| OpenClaw fresh acceptance | BLOCKED | Service was stopped at continuation; earlier real marker passed. No fresh optional OpenClaw task was run without a verified non-Claude backend. |
+| GitHub authenticated profile | PASS | Real native-auth `/user` returned `brutalstein`; standalone provenance, not Codex's host connector. |
+| GitHub repositories, natural request | PASS | JARVIS's natural-language first-page plan completed; first 10 included private repositories, with truncation explicitly reported. |
+| GitHub complete available page | PASS | Typed Core task retest returned 27 repositories, 7 private, `truncated:false`. Native command output was independently schema-checked. This is a typed API retest, not a new natural-language full-list PASS. |
+| `brutalstein/jarvis216` details | PASS | Typed Core task returned repository ID `1422808023`, branch `main`, public visibility and observed outcome. Natural requests for the details also timed out; that reliability failure remains below. |
+| Browser registration | PASS | Natural JARVIS plan completed navigate/snapshot/fill Name/fill Email/approve Register/verify. Real `POST /register` and fixture server record `JarvisTest`, `jarvis216@example.invalid`; no external account. |
+| File create | PASS | Natural five-step plan; independent readback `FIRST_216`. |
+| File read / modify / reread | PASS | Independent readbacks `FIRST_216`, then `SECOND_216`; UI panels match observed contents. |
+| File delete | PASS | Same rerun plan completed HIGH deletion under the isolated autonomous preset; independent `ENOENT`. Earlier approval-cancellation failure is retained. |
+| Conditional execution | PASS | Natural matching branch completed. Typed Core API false-branch retest returned SKIPPED with zero actions; independent contents stayed NO_BRANCH. A natural-language false-branch repeat timed out, so runtime and language reliability are distinct. |
+| Conditional natural-language repeat | FAIL | False-branch natural request returned `504 TURN_TIMEOUT`; the separately supplied typed Core condition is not counted as natural-language planning success. |
+| Mixed tools | PASS | Natural GitHub-profile → local file-read plan completed both typed executors and displayed actual results. |
+| Complex mixed-task reliability | FAIL | Two larger GitHub + conditional file requests returned `504 TURN_TIMEOUT`; a smaller mixed-plan PASS does not supersede these failures. |
+| Permissions | PASS | Real guarded/ask flow and exact HIGH action approval earlier; autonomous preset completed isolated CRUD without repeated prompts. Permission/risk matrix and stale-approval tests passed. General Codex remains HIGH. |
+| HTTP disconnect cancellation | PASS | Real local HTTP regression aborts in-flight provider for retry-safe and unsafe variants; statuses are CANCELLED and RECOVERY_REQUIRED respectively, preserving uncertainty. Fixture provider, not an upstream cancellation latency claim. |
+| Transient recovery, live-provider acceptance | BLOCKED | Mock/fault-injection and restart tests pass; a complete real-provider fault/recovery workflow has not been demonstrated while Codex planning is intermittent. |
+| Built-in microphone capture/transport | PASS | Senary microphone track live, outbound bytes increased after connection (421,867 final bytes); no intelligible physical utterance is inferred from that. |
+| Physical wake word / Turkish recognition | BLOCKED | Operator could not speak during the final physical test. Prior “no answer” symptom does not establish a hardware/STT root cause. |
+| Recorded Turkish STT / addressee handling | PASS | Actual WAV recognized “Jarvis, bugün neler yapabiliriz?” through real Whisper; repeat recognized it once before fixture input was muted. This is name/addressee detection, not proof of a standalone always-on keyword engine. |
+| Recorded Codex → TTS software path | PASS | First run contained an actual Codex answer, Piper synthesis, received RTP/audio energy and playback. Timing below. |
+| Recorded voice repeated reliability | FAIL | Controlled repeat reached STT but Core timed out; JARVIS spoke “Şu an yanıt veremiyorum, efendim.” This is failure handling, not a successful AI answer. |
+| TTS playback transport | PASS | First run inbound bytes 343,929 and energy 6.2997, advancing unpaused audio; renderer playback-start event 19 ms. Human audibility remains unverified. |
+| Native speaker selection | PASS | Selected real “Hoparlör (Senary Audio)” output; media element `sinkId` matched its enumerated non-default ID. No human hearing confirmation. |
+| Physical audible response | BLOCKED | No operator hearing confirmation. |
+| Bluetooth compatibility | BLOCKED | No connected Bluetooth headset/output available; an adapter alone is insufficient. |
+| Protected configuration | PASS | Five baseline SHA-256 comparisons unchanged: dotenv files, isolated Codex auth, OpenClaw config, existing Electron Preferences. |
+
+## Actual outputs and evidence identifiers
+
+Sanitized, reviewable outputs are committed in [docs/evidence-hardening-20261021.json](docs/evidence-hardening-20261021.json). Detailed local logs remain under `artifacts/hardening-20261021/` (ignored; do not publish raw auth/session dumps).
+
+| Execution | ID / artifact | Result excerpt |
+|---|---|---|
+| Codex-only conversation | task `a46bb55c…`, `conversation-v3.json` | “Merhaba efendim. Sistemler sakin, ben hazırım; siz nasılsınız?”; 5,881 ms. |
+| Native GitHub profile | plan `987bc833-c198-4f19-aa1b-7209d0c4cde3` | `authenticated:true`, `login:brutalstein`, provenance `standalone:gh-native-auth`. |
+| Repository list retest | task `4ec4c9ac-3efa-44ab-88d5-3e31d6f14bfe` | COMPLETED, 27 repositories / 7 private / not truncated. Private names/IDs are redacted from shared evidence. |
+| Target metadata | task `e6c79ab3-602a-46ac-a8aa-882dfb3886e5` | `1422808023`, `brutalstein/jarvis216`, `main`. |
+| Local registration | plan `45ff5de1-7701-4945-a743-763963a0ec37` | Six completed actions; server `POST /register` at `2026-10-21T08:20:49.257Z`; “Registration successful”. |
+| CRUD rerun | plan `06467d93-b0a5-4451-af3b-b38cd6e601e8` | Five completed actions; FIRST_216 → FIRST_216 → SECOND_216 → SECOND_216 → ENOENT. |
+| Conditional true branch | plan `75f11e32-9784-40a8-8265-f4cd5392c4e5` | Read MATCH_216 then HIGH delete completed. |
+| Mixed tools | plan `993c2783-d1ea-4409-8275-49bcb7e3c109` | GitHub profile COMPLETED; file.read COMPLETED with MIXED_216. |
+| Memory after restart | task `9f439e0a-6c40-4743-9609-8205267418f8` | “Your test code is LANTERN_216, sir.”; 4,525 ms. |
+| Learned skill reuse | plan `d7c2bb26-bffc-4190-8b1a-d5e5842548ac` | No model task; reused verified read plan, completed. Skill `2b0a9fad-451f-4d16-84fd-e7ca792a7be6`, `successes:4`, `uses:1`. |
+| Conditional false runtime | task `d0c8e3c4-1a97-4eeb-84a5-a2d14f81e535` | SKIPPED; zero actions; independent file contents remain NO_BRANCH. Typed API request. |
+
+Recorded first-run timing (ms):
+
+```json
+{"turnEndMs":231,"segmentQueueMs":0,"speakerMs":0,"transcribeMs":625,"sttMs":625,"coreMs":5687,"replyWaitMs":0,"firstAudioMs":6856,"totalMs":6918,"ttsMs":375,"ttsFirstAudioMs":313}
+```
+
+Actual first reply: “Bugün GitHub depolarınızı inceleyebilir, açık sorunları gözden geçirebilir, izinli web işlemleri yapabilir veya bilgisayarınızdaki dosya ve uygulamalarla çalışabiliriz, efendim. Ne yapmak istersiniz?”
+
+Controlled repeat: STT 594 ms, Core 20,078 ms, first audio 20,996 ms; spoken fallback rather than an AI answer. The first run's repeating WAV interrupted several turns; its one successful answer is evidence of capability, not repeatability. Old mutable VAD timings must not be used to claim a measured 20-second STT speedup.
+
+## Reproduced defects and retests
+
+| Defect | Cause established by evidence | Repair / retest |
+|---|---|---|
+| False delegated completion | Any non-empty agent prose satisfied old verification, including a refusal. | Structured postcondition gate; unsafe unverified outcomes require recovery. Fixture tests confirm. |
+| Approval disappears before file delete | Plan refresh recognized awaiting HIGH integration actions but not HIGH desktop actions. | All awaiting exact approvals retained until deadline; regression and complete real CRUD rerun pass. |
+| Later steps prematurely expire | Per-step duration omitted earlier dependency waiting. | Cumulative admission budget within plan window; regression passed. |
+| Abandoned voice HTTP requests retain model work | Disconnect signal stopped at the HTTP boundary. | Propagated to intent/repair wait and Task Service/worker cancellation; real-socket regression passes for safe/unsafe executors. Not claimed as the root cause of all upstream timeouts. |
+| Full GitHub page becomes uncertain | Independent inspection measured 144,613 raw response bytes, exceeding the 128,000-byte subprocess capture bound. | Fixed field projection before capture; noisy-response RED→GREEN and actual 27-repo retest pass. Bound was not raised; independent inspection is not counted as JARVIS execution. |
+| Capabilities connection dropped | 10-second HTTP idle timeout could precede MCP discovery completion. | Bounded initialize/shared-page discovery and endpoint idle allowance; fresh connected descriptors, stalled child eventually reaped. |
+| Malformed ICE yields 500/partial batch | Candidate field types/SDP assertions unvalidated and list silently sliced. | Reject invalid/overlarge batches before application; server regression passes, valid end-of-candidates accepted. |
+| Root CI cannot typecheck voice renderer imports | CI installed only root dependencies; desktop has a separate lockfile. | Install desktop dependencies in TypeScript job; fresh CI remains an independent gate. |
+| Intermittent Codex timeout | Authoritative deadline reached before a useful model result. Native failed sessions show no completed answer. | Upstream transport/model cause unresolved; FAIL retained. Saved model/provider settings and deadlines were not changed to conceal it. |
+
+## Quality gates and release
+
+Last full local coverage: **769 PASS / 1 SKIP**, existing coverage floors passed (lines 95.43%, statements 93.34%, functions 93.26%, branches 84.80%). Expanded two-variant HTTP cancellation regression passed afterward. Real PostgreSQL: 1 PASS; Electron: 21 PASS / 1 SKIP; Python voice: 42 PASS, affected server rerun 10 PASS; Python browser: 15 PASS. Typechecks, lint, builds, matrix check, Ruff, mypy and four isolated PowerShell CI blocks passed. Both npm audits reported zero vulnerabilities. Unit/fixture checks are not counted as real integration successes in the matrix.
+
+Cleanup: JARVIS deleted the remaining isolated `condition.txt` and `mixed.txt` fixtures; independent checks confirm all CRUD/conditional fixture files absent. Owned Core/site ports 2168/2188 closed; disposable Electron/voice sessions closed. PostgreSQL remains healthy/available. Isolated schemas and sanitized evidence are retained for investigation. Final protected-file comparisons remained unchanged.
+
+The earlier remote run for `ba81c58` failed TypeScript because of the missing desktop dependencies; other Python/PostgreSQL/voice/service-manager/desktop jobs passed. The current code fixes that installation gap. Commit `d1f5fd9` also includes voice timing regressions in CI with the pinned Whisper/Piper extras, without downloading GPU models. Fresh PR/CI status will be recorded after push. **No release merge while failed live reliability acceptance remains open.**
+
+## Historical baseline — 2026-10-20
+
+The following original report describes the earlier build and is retained for comparison. Its failures are superseded only where the newer matrix gives explicit retest evidence.
+
+### Original local Windows E2E report
 
 Date: 20 October 2026, Europe/Istanbul. Tests executed by Codex against the local checkout of `brutalstein/jarvis216`, base commit `3886783227328920f65876dee3536234ed69b263`.
 
