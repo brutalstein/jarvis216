@@ -2,6 +2,15 @@
 
 JARVIS completed real supported tasks; acceptance is incomplete. Passing fixture/contract tests and a green CI run cannot replace the failed live repeat or missing hardware evidence.
 
+2026-10-22 release follow-up: a Windows desktop candidate and in-app update button
+are implemented and locally checked. Stable publication remains BLOCKED by the live
+E2E matrix (25 PASS / 3 FAIL / 5 BLOCKED). The candidate is unsigned; production
+packaging correctly refuses missing signing credentials. A real signed upgrade,
+restart and data-preservation test remains BLOCKED. The installer updates the
+desktop client only; Core/PostgreSQL, Python/uv, voice checkout and models remain
+external. A user must supply JARVIS_ENV_FILE/JARVIS_REPO_ROOT for the existing
+deployment. GitHub Actions candidate downloads are not a stable GitHub Release.
+
 | Priority | Remaining issue / exact evidence | Next action / release implication |
 |---|---|---|
 | P0 | Codex conversation is intermittent: real replies completed in approximately 4.5–9.4 seconds, while repeated larger requests and profile-learning attempts returned `504 TURN_TIMEOUT` at the 20-second task deadline. A controlled recorded-voice repeat transcribed correctly but spoke the failure fallback after Core took 20,078 ms. | Diagnose upstream time-to-first-output and SDK/native CLI version/transport compatibility with sanitized phase diagnostics. No larger deadline or alternative provider was silently substituted. The upstream cause is not established. Keep broad reliability acceptance open. |

@@ -21,7 +21,7 @@ export async function launch(
     Object.entries(env).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
   );
   const app = await _electron.launch({
-    args: [resolve("."), ...(options.args ?? [])],
+    args: [resolve("."), `--user-data-dir=${join(dir, "profile")}`, ...(options.args ?? [])],
     env: cleanEnv,
   });
   await expect

@@ -27,7 +27,7 @@ export function settings(options: {
   changeSpeaker(id: string): Promise<void>;
   listen(): void;
 }) {
-  const sheet = el<HTMLDialogElement>("dialog.sheet");
+  const sheet = el<HTMLDialogElement>("#settings-dialog");
   const status = el("[data-settings-status]");
   const voice = el("[data-enroll]");
   const note = el("[data-enroll-note]");

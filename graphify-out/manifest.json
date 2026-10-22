@@ -396,15 +396,15 @@
     "semantic_hash": ""
   },
   "apps/desktop/build.mjs": {
-    "mtime": 1792284257.1061075,
-    "seen": 1792322591.447521,
-    "ast_hash": "de3ba86f1ba556aae555d48108c467d7",
+    "mtime": 1792621977.011574,
+    "seen": 1792622400.3310568,
+    "ast_hash": "6802ba592293c0f2a8a5f4eb187e7ea6",
     "semantic_hash": ""
   },
   "apps/desktop/package.json": {
-    "mtime": 1792284257.1081903,
-    "seen": 1792322591.447521,
-    "ast_hash": "be989aa789eb8749b17cdad11a1475af",
+    "mtime": 1792622202.6283612,
+    "seen": 1792622400.3310568,
+    "ast_hash": "4460f71e75eaafe08ad6783d27b6f9f4",
     "semantic_hash": ""
   },
   "apps/desktop/playwright.config.ts": {
@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "apps/desktop/src/main/main.ts": {
-    "mtime": 1792430277.7924645,
-    "seen": 1792448241.119089,
-    "ast_hash": "0864bfe2b62fa69bb355fed0781c75d6",
+    "mtime": 1792622093.010539,
+    "seen": 1792622400.3310568,
+    "ast_hash": "b499c762dfa4800c2638307dad0d6892",
     "semantic_hash": ""
   },
   "apps/desktop/src/main/voice.ts": {
@@ -432,15 +432,15 @@
     "semantic_hash": ""
   },
   "apps/desktop/src/preload/preload.ts": {
-    "mtime": 1792366307.2176452,
-    "seen": 1792448241.119089,
-    "ast_hash": "5094aae883b7af3b3853b2c332065209",
+    "mtime": 1792621977.0105734,
+    "seen": 1792622400.3310568,
+    "ast_hash": "75e1612495e285e452ace33e65b9f0d7",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/app.ts": {
-    "mtime": 1792570151.6503458,
-    "seen": 1792600676.7640092,
-    "ast_hash": "dacbea87ea36fcc0d1856837063afca3",
+    "mtime": 1792622093.000921,
+    "seen": 1792622400.3310568,
+    "ast_hash": "c97ee940d47b2df666f6f13df5718ea4",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/assets.d.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/settings.ts": {
-    "mtime": 1792570151.6503458,
-    "seen": 1792600676.7640092,
-    "ast_hash": "a7fe4d8e1e80bd2f562528d9ec66ba42",
+    "mtime": 1792621977.0155764,
+    "seen": 1792622400.3310568,
+    "ast_hash": "38b5997fb99174e9c259336e6a1ec76f",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/ui.ts": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "apps/desktop/src/shared.ts": {
-    "mtime": 1792406292.6455066,
-    "seen": 1792448241.119089,
-    "ast_hash": "ab06a255afa97de322ae9788c3f2b153",
+    "mtime": 1792622092.9914062,
+    "seen": 1792622400.3310568,
+    "ast_hash": "682bd0cca0088516acb0529bf0e2e509",
     "semantic_hash": ""
   },
   "apps/desktop/tests/e2e.spec.ts": {
@@ -498,15 +498,15 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/helpers.ts": {
-    "mtime": 1792284257.129271,
-    "seen": 1792322591.447521,
-    "ast_hash": "3b5a7f41730da2721a1447b51962ff61",
+    "mtime": 1792622136.312491,
+    "seen": 1792622400.3310568,
+    "ast_hash": "2bb0a79823003c163b8f84ad84e8c3f0",
     "semantic_hash": ""
   },
   "apps/desktop/tests/shell.spec.ts": {
-    "mtime": 1792366307.232324,
-    "seen": 1792448241.119089,
-    "ast_hash": "c1450a57acd58490962e82fcdf3fabdc",
+    "mtime": 1792621977.0165749,
+    "seen": 1792622400.3310568,
+    "ast_hash": "ef93cb17195f642edb2b85816696db60",
     "semantic_hash": ""
   },
   "apps/desktop/tests/ui.spec.ts": {
@@ -864,15 +864,15 @@
     "semantic_hash": ""
   },
   "apps/desktop/README.md": {
-    "mtime": 1792370179.746785,
-    "seen": 1792448241.119089,
-    "ast_hash": "f732c3ceb32354580f7483bde9530459",
+    "mtime": 1792622379.1989267,
+    "seen": 1792622400.332057,
+    "ast_hash": "3b2eae9c7fc0d52d388328e6a1294dec",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/index.html": {
-    "mtime": 1792570095.916686,
-    "seen": 1792600676.7640092,
-    "ast_hash": "2d4c1b0fe8297bcf4d8cd578b755a7f7",
+    "mtime": 1792621977.0145755,
+    "seen": 1792622400.332057,
+    "ast_hash": "10f861eef6222696fdfac3e42fae0db8",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/overlay.html": {
@@ -1050,33 +1050,33 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/approval.png": {
-    "mtime": 1792600643.833979,
-    "seen": 1792600676.7640092,
-    "ast_hash": "3cad06f22d3190c52e42a812dc09df1c",
+    "mtime": 1792622218.8840525,
+    "seen": 1792622400.332057,
+    "ast_hash": "fd6b44d28370137a6b9140ad984db617",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/candidates-failure.png": {
-    "mtime": 1792600643.837988,
-    "seen": 1792600676.7640092,
-    "ast_hash": "62a3f468e4380c027efcd7fdf109863f",
+    "mtime": 1792622224.1237032,
+    "seen": 1792622400.332057,
+    "ast_hash": "a489f56f80f439306f68ce67f322fd46",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/news.png": {
-    "mtime": 1792600643.8420975,
-    "seen": 1792600676.7640092,
-    "ast_hash": "146e3e48e24e2c0d2ef6c6f08899e91d",
+    "mtime": 1792622224.3389378,
+    "seen": 1792622400.332057,
+    "ast_hash": "bca138e55f0c2c91d6c7b28e0dfdfe80",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/overlay-control.png": {
-    "mtime": 1792600115.632766,
-    "seen": 1792600676.7640092,
+    "mtime": 1792622225.9008253,
+    "seen": 1792622400.332057,
     "ast_hash": "f920b49444330e1e69f51756fbc5c3f8",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/progress.png": {
-    "mtime": 1792600643.8447182,
-    "seen": 1792600676.7640092,
-    "ast_hash": "17caa2cfee530fbad0780393ce934f08",
+    "mtime": 1792622224.552823,
+    "seen": 1792622400.332057,
+    "ast_hash": "c83bdd8dfd69572b49a41503915dcf8d",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/controls.ts": {
@@ -1524,21 +1524,21 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/live-progress.png": {
-    "mtime": 1792600643.837988,
-    "seen": 1792600676.7640092,
-    "ast_hash": "3abce64df82c205cbbaa1e54c79f63ea",
+    "mtime": 1792622234.2561975,
+    "seen": 1792622400.332057,
+    "ast_hash": "435247231074a5a6b867eb79197755c4",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/settings-learning.png": {
-    "mtime": 1792600643.847056,
-    "seen": 1792600676.7640092,
-    "ast_hash": "b28142c7b11380b5371178f369d05cff",
+    "mtime": 1792622242.4239433,
+    "seen": 1792622400.332057,
+    "ast_hash": "f11f445b141eee1f983b06902abf337e",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/settings-permissions.png": {
-    "mtime": 1792600643.8491383,
-    "seen": 1792600676.7640092,
-    "ast_hash": "01cef3f404692db215831c529961e04b",
+    "mtime": 1792622238.3122013,
+    "seen": 1792622400.332057,
+    "ast_hash": "a46789f396a0afd03faadf3de94e2400",
     "semantic_hash": ""
   },
   "tests/e2e/matrix/coverage.cases.json": {
@@ -1722,9 +1722,9 @@
     "semantic_hash": ""
   },
   "E2E_REPORT.md": {
-    "mtime": 1792621276.3346856,
-    "seen": 1792621286.304937,
-    "ast_hash": "4c7f078927aa8649f420bb549dcf5cbb",
+    "mtime": 1792622498.3795447,
+    "seen": 1792622525.7271059,
+    "ast_hash": "7e1321802ec6246af6f95711157b42a6",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-21-autonomous-agent-hardening.md": {
@@ -1752,9 +1752,57 @@
     "semantic_hash": ""
   },
   "REMAINING_LIMITATIONS.md": {
-    "mtime": 1792601440.2316465,
-    "seen": 1792620888.5621996,
-    "ast_hash": "9035b51f7d50f0e3cbf7796ebcbac5d4",
+    "mtime": 1792622498.3805504,
+    "seen": 1792622525.7271059,
+    "ast_hash": "a948f3b3dad3af970044a225c0045a4c",
+    "semantic_hash": ""
+  },
+  "apps/desktop/src/main/updates.ts": {
+    "mtime": 1792622498.376585,
+    "seen": 1792622525.7271059,
+    "ast_hash": "be4c4d282820f6be8e30a5a7dc8ffd98",
+    "semantic_hash": ""
+  },
+  "apps/desktop/src/renderer/updates.ts": {
+    "mtime": 1792622092.9914062,
+    "seen": 1792622400.3310568,
+    "ast_hash": "893a8565d35a92a8b0eea6abf6e6f427",
+    "semantic_hash": ""
+  },
+  "apps/desktop/tests/updates.spec.ts": {
+    "mtime": 1792622345.2899172,
+    "seen": 1792622400.3310568,
+    "ast_hash": "d2b1ae98548d956d90ec6d367cce4a44",
+    "semantic_hash": ""
+  },
+  "apps/desktop/verify-package.mjs": {
+    "mtime": 1792622498.3780925,
+    "seen": 1792622525.7271059,
+    "ast_hash": "52d8eaffcbd0aaca655f8b6f331edf23",
+    "semantic_hash": ""
+  },
+  "tests/desktop-updates.test.ts": {
+    "mtime": 1792621977.0080504,
+    "seen": 1792622400.332057,
+    "ast_hash": "0f65f344ffa8ab58cb3f99d3ad846ba0",
+    "semantic_hash": ""
+  },
+  ".github/workflows/desktop-installer.yml": {
+    "mtime": 1792622296.315145,
+    "seen": 1792622400.332057,
+    "ast_hash": "3d8c0e5d406df7240c22672aedbbd8e6",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-10-22-desktop-updates.md": {
+    "mtime": 1792621923.8599799,
+    "seen": 1792622400.332057,
+    "ast_hash": "82cd9859acf5b3edc772a4b69a215a27",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-10-22-desktop-updates-design.md": {
+    "mtime": 1792621923.8588665,
+    "seen": 1792622400.332057,
+    "ast_hash": "d96694693083b4938cee9783942ecfb7",
     "semantic_hash": ""
   }
 }

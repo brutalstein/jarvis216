@@ -1,4 +1,4 @@
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   app,
@@ -12,9 +12,11 @@ import {
   shell,
   Tray,
 } from "electron";
+import { autoUpdater } from "electron-updater";
 import type { PermissionChange, PlanView, UiEvent, Voice } from "../shared";
 import { readOperatorEnv } from "./env";
 import { streamPlans } from "./plans";
+import { desktopUpdates } from "./updates";
 import { startVoiceService } from "./voice";
 
 const testing = process.env.JARVIS_DESKTOP_TEST === "1";
@@ -225,6 +227,24 @@ app.whenReady().then(async () => {
       main.hide();
     }
   });
+  const updates = desktopUpdates({
+    driver: autoUpdater,
+    enabled: app.isPackaged && process.platform === "win32",
+    version: app.getVersion(),
+    notify: (update) => {
+      if (!main.isDestroyed()) main.webContents.send("ui:event", { type: "update", update });
+    },
+    beforeInstall: () => {
+      quitting = true;
+    },
+  });
+  for (const method of ["status", "check", "download", "install"] as const) {
+    ipcMain.handle(`updates:${method}`, (event) => {
+      if (event.sender !== main.webContents || event.senderFrame !== main.webContents.mainFrame)
+        throw new Error("FORBIDDEN");
+      return updates[method]();
+    });
+  }
   // An embedded geometric application mark; no external asset or network request.
   const icon = nativeImage.createFromBuffer(
     Buffer.from(
@@ -239,12 +259,18 @@ app.whenReady().then(async () => {
   if (testing) ipcMain.on("test:toggle-listening", () => setListening(!listening));
 
   let voiceFailed = false;
+  // Installed clients use the existing deployment; application updates never contain operator data.
+  const repoRoot =
+    process.env.JARVIS_REPO_ROOT ??
+    (app.isPackaged
+      ? dirname(resolve(process.env.JARVIS_ENV_FILE ?? ".env"))
+      : resolve(__dirname, "../../.."));
   const startVoice = () => {
     voiceFailed = false;
     voice = startVoiceService({
-      repoRoot: resolve(__dirname, "../../.."),
+      repoRoot,
       ...env,
-      dataDir: process.env.VOICE_DATA_DIR ?? resolve(__dirname, "../../../data/voice"),
+      dataDir: process.env.VOICE_DATA_DIR ?? join(repoRoot, "data/voice"),
       onExit: () => {
         voiceFailed = !quitting;
         service = undefined;

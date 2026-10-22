@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { Bridge, UiEvent } from "../shared";
 
 const bridge: Bridge = {
+  updates: {
+    status: () => ipcRenderer.invoke("updates:status"),
+    check: () => ipcRenderer.invoke("updates:check"),
+    download: () => ipcRenderer.invoke("updates:download"),
+    install: () => ipcRenderer.invoke("updates:install"),
+  },
   voice: () => ipcRenderer.invoke("voice"),
   onEvent: (cb) => {
     ipcRenderer.on("ui:event", (_event, data: UiEvent) => cb(data));

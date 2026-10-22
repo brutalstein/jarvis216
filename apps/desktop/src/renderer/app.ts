@@ -4,6 +4,7 @@ import { hud } from "./hud";
 import { Presence } from "./presence";
 import { settings } from "./settings";
 import { captions, el, hydrateIcons, isState, STATES, setIcon, stage } from "./ui";
+import { updates } from "./updates";
 
 const NOTICES: Record<string, string> = {
   ENV_MISSING: "Ayar dosyası bulunamadı. JARVIS_ENV_FILE ile yeniden başlatın.",
@@ -15,6 +16,7 @@ const NOTICES: Record<string, string> = {
 };
 
 hydrateIcons();
+updates();
 const body = document.body;
 const presence = new Presence(el<HTMLCanvasElement>("[data-presence]"));
 const caption = captions(el("[data-caption]"));

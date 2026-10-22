@@ -4,7 +4,41 @@
 
 Code: existing hardening commit `ba81c58830544278ed2c249b9e0e596937700027`, follow-up `c3c76832d85f425c39c38f894f9ab57b70738d4c`, branch `codex/autonomous-agent-hardening`, release base `3886783227328920f65876dee3536234ed69b263`. [Draft PR #6](https://github.com/brutalstein/jarvis216/pull/6) targets `release/v1.0.0`. The earlier report is retained as a historical baseline at the end.
 
-## Test boundary
+## Release and desktop updates — 2026-10-22 follow-up
+
+**Stable release: BLOCKED.** The original live matrix below remains **25 PASS /
+3 FAIL / 5 BLOCKED**; CI does not resolve its Codex/Core timeouts, recorded-voice
+fallback, physical speech/audibility or Bluetooth gaps. No stable release/tag or
+GitHub Releases download has been created. PR #6 remains draft.
+
+The new update button sits directly beside Settings. The installed Windows client
+uses electron-updater with NSIS/GitHub, manual check/download/restart, stable versions
+only, no downgrade or automatic install-on-quit. The fixed main-window-only bridge
+accepts no arbitrary URL, path or token. Default signature checks remain enabled;
+production packaging requires signing. Core/voice/model data remain external.
+
+| Additional release assertion | Result | Fresh observed evidence |
+|---|---|---|
+| Update state transitions, concurrent clicks, failed network/integrity operations, premature install | PASS (controlled driver) | 4 Vitest tests; not a real signed upgrade. |
+| Actual Electron button, development-mode limit, Settings regression, overlay IPC denial | PASS | Real Electron UI test; main-only updates bridge; isolated user-data path asserted. |
+| Full local software regression | PASS | `npm run check`: 774 passed / 1 skipped; typecheck, lint and build successful. Desktop: 22 passed / 1 hardware opt-in skipped, then affected IPC test rerun successfully. |
+| Real x64 NSIS candidate and archive/manifest inspection | PASS (unsigned candidate only) | 114,615,082-byte PE installer; SHA-512 matches `latest.yml`; actual packaged shell opens in a disposable profile; 5,326 archive entries inspected, no operator files. |
+| Missing signing credentials fail closed for production packaging | PASS | `forceCodeSigning:true` refused with `App is not signed`; candidate Authenticode status is `NotSigned`. |
+| Signed download, install, restart, rollback/data compatibility across two released versions | BLOCKED | No signing certificate/two signed versions supplied; no installer executed against the operator's existing installation. |
+| Stable publication | BLOCKED | Live E2E acceptance above is still incomplete; candidate workflow explicitly uses `--publish never`. |
+
+Local candidate: `artifacts/desktop-release/JARVIS216-Setup-0.1.0-x64.exe` (109.31 MiB),
+SHA-256 `7d989a8d1347cb650f5804c63494cc220c9ec1b8744ae61498f7b48491eee7f3`.
+Receipt and screenshot: `artifacts/desktop-release/verification.json` and
+`packaged-updates.png`; sanitized tracked evidence is
+`docs/evidence-desktop-update-20261022.json`. GitHub Actions candidate artifacts are
+separate from a published GitHub Release and require GitHub sign-in to download.
+The current protected-file hash comparison remains unchanged for all five files.
+
+Graph tooling: codebase-memory transport remained closed; local graphify plus exact
+source reads were used. Graph refresh is AST-only. No subagents or Claude invoked.
+
+## Original live-test boundary
 
 Real PostgreSQL 18.3 on `127.0.0.1:55432`, Core `2168`, fixture website `2188`, isolated schema `hardening_1792570275755`, disposable Electron/enrollment profiles and `artifacts/hardening-20261021/workspace`. All Claude flags and other model providers were disabled in the acceptance process environment; Codex used the existing isolated authentication. GitHub used its own native CLI authentication. Normal saved `.env` switches and Core on port 2160 were not changed.
 

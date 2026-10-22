@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-22 Europe/Istanbul",
+  "packaged": {
+    "checkedAt": "2026-10-21T22:41:42.922Z",
+    "version": "0.1.0",
+    "installer": "JARVIS216-Setup-0.1.0-x64.exe",
+    "installerSha256": "7d989a8d1347cb650f5804c63494cc220c9ec1b8744ae61498f7b48491eee7f3",
+    "manifestSha512Matches": true,
+    "isolatedProfile": true,
+    "packagedShell": true,
+    "archiveFiles": 5326,
+    "operatorFilesExcluded": true,
+    "updaterPhase": "idle",
+    "signaturePublisherConfigured": false,
+    "feedCheck": "error",
+    "updaterErrors": [],
+    "liveCoreAndVoice": "NOT_RUN",
+    "signedUpgrade": "BLOCKED",
+    "publishedRelease": false
+  },
+  "localRegression": {
+    "corePassed": 774,
+    "coreSkipped": 1,
+    "desktopPassed": 22,
+    "updaterControlledTests": 4,
+    "overlayIPCDenied": true,
+    "desktopSkipped": 1
+  },
+  "productionSigningGate": "Refused: App is not signed and forceCodeSigning is set to true",
+  "protectedFiles": [
+    {
+      "file": ".env",
+      "unchanged": true
+    },
+    {
+      "file": ".env.voice-dev",
+      "unchanged": true
+    },
+    {
+      "file": "auth.json",
+      "unchanged": true
+    },
+    {
+      "file": "openclaw.json",
+      "unchanged": true
+    },
+    {
+      "file": "Preferences",
+      "unchanged": true
+    }
+  ],
+  "liveAcceptance": {
+    "blocked": 5,
+    "fail": 3,
+    "rerunInThisFollowup": false,
+    "pass": 25
+  },
+  "stableRelease": "BLOCKED",
+  "scope": "Desktop client only; Core/PostgreSQL/voice checkout/models remain external",
+  "realSignedUpgrade": "BLOCKED",
+  "claudeInvoked": false,
+  "subagentsUsed": false
+}

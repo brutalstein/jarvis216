@@ -31,6 +31,12 @@ service for calibration with the operator's microphone.
 
 ## Use
 
+- **Güncellemeler**, beside Settings: check GitHub for a stable desktop release,
+  choose **İndir**, then **Yeniden başlat ve yükle**. Downloads and installation
+  require an explicit click; ordinary quit never installs an update. Development
+  copies are not updated. A missing release or failed integrity/signature check
+  produces a retryable error, not an installation.
+
 - Say “Jarvis” (Turkish spelling variations are accepted), then speak normally. Without a voice
   print, the assistant requires its name. With a print, an eight-second
   follow-up window opens after each reply.
@@ -103,3 +109,44 @@ Remove-Item Env:JARVIS_E2E
 
 Run Electron tests sequentially: concurrent app instances compete for the global shortcut.
 Evidence and remaining operator checks: [M1 report](../../docs/VOICE_DESKTOP_EVIDENCE.md).
+
+## Windows installer and release gate
+
+`npm run package:win` builds an x64 NSIS installer and `latest.yml` with publishing
+disabled. It requires a Windows signing certificate via electron-builder's standard
+signing configuration. Keep the app id and package name stable across releases;
+the existing `jarvis-desktop` profile and data must survive upgrades.
+
+`npm run package:win:test` explicitly permits an **unsigned test candidate**. This
+is not a stable release. `node verify-package.mjs` inspects the actual archive and
+manifest and opens the packaged shell in a disposable profile without Core/voice.
+The Windows desktop candidate workflow provides the installer, blockmap, manifest,
+checksums and verification receipt as a GitHub Actions artifact; it never publishes
+a GitHub release. Unsigned candidates are for verification, not daily installation.
+
+This is a **desktop client installer**, not a bundled Core/PostgreSQL/voice runtime.
+Keep the existing deployment and Node/uv/models installed. Start its Core separately;
+launch the installed client from a session containing these paths:
+
+```powershell
+$env:JARVIS_ENV_FILE = 'C:\path\to\jarvis216\.env'
+$env:JARVIS_REPO_ROOT = 'C:\path\to\jarvis216'
+& 'C:\path\to\installed\JARVIS216.exe'
+```
+
+Use the actual installation path if it differs. `VOICE_DATA_DIR` may retain an
+existing external voice data directory; by default it is `data/voice` in the
+deployment checkout. The installer contains neither `.env` nor models, credentials,
+the Core checkout or personal files. Installed desktop updates do not upgrade Core
+or the voice worker. Keep their API versions compatible manually.
+
+Publish the signed installer, its `.exe.blockmap`, `latest.yml` and checksums
+together on a stable GitHub release only after live E2E acceptance passes. Do not
+replace an already released version's assets. Test a signed version-to-version
+upgrade before claiming the update path is verified. See [E2E report](../../E2E_REPORT.md)
+for the current failures and blocked checks. No stable release has been published.
+
+Packaging pins electron-builder 26.15.3 and electron-updater 6.8.9. The scoped
+`@electron/get` override selects global-agent 4.1.3 to remove its obsolete vulnerable
+sprintf-js chain; the downloader's bootstrap export is retained. Package downloads
+were exercised directly; a corporate proxy environment has not been certified.

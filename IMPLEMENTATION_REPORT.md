@@ -4,6 +4,15 @@ Release base: `3886783227328920f65876dee3536234ed69b263` (`release/v1.0.0`). Fea
 
 ## Changes and authority
 
+2026-10-22 follow-up adds a fixed main-window updater bridge, an update button
+beside Settings, explicit check/download/restart using NSIS/GitHub, and an allowlisted
+desktop installer build. Candidate packages never publish automatically; production
+builds require signing. The actual unsigned Windows candidate, manifest and packaged
+shell were checked locally. Core/voice runtimes remain external; real signed upgrades
+and stable publication remain BLOCKED. See the release section of E2E_REPORT.md and
+`docs/evidence-desktop-update-20261022.json`. Electron tests now use a temporary
+user-data directory explicitly, retaining operator settings. No subagents used.
+
 Core remains the sole owner of plans, dependency admission, permissions, exact approvals, leases, verification, cancellation and recovery. IntegrationHub provides recipes. Typed executors observe results; model prose cannot certify a completed side effect.
 
 | Boundary | Implemented behavior | Verification |
