@@ -66,6 +66,7 @@ export function hud(root: HTMLElement, compact = false) {
   root.before(indicator);
   const plans = new Map<string, PlanView>();
   const busy = new Set<string>();
+  const watched = new Set<string>();
 
   function button(
     label: string,
@@ -235,12 +236,51 @@ export function hud(root: HTMLElement, compact = false) {
         card.append(list);
       } else if (panel.type === "text") {
         card.append(node("h3", panel.title), node("pre", panel.body, "text-panel"));
+      } else if (panel.type === "guide") {
+        card.dataset.panel = "guide";
+        card.append(node("h3", panel.title, "guide-title"));
+        const steps = node("ol", "", "guide-steps");
+        panel.steps.forEach((step, index) => {
+          const item = node("li", step);
+          item.style.setProperty("--i", String(index));
+          steps.append(item);
+        });
+        card.append(steps);
+        if (panel.where) card.append(node("p", panel.where, "guide-where"));
+        const links = node("div", "", "guide-links");
+        panel.links.forEach((link, index) => {
+          const open = button(
+            link.label,
+            () => window.jarvis.plans.open(link.url),
+            card,
+            plan.id,
+            index === 0,
+          );
+          open.dataset.guideLink = "";
+          links.append(open);
+        });
+        card.append(links);
+        const hosts = [...new Set(panel.sources.map((source) => new URL(source).hostname))];
+        card.append(node("p", `Resmi kaynak: ${hosts.join(", ")}`, "guide-sources"));
       }
     }
     return card;
   }
 
   function update(plan: PlanView) {
+    // A guide that finishes while watched opens its first page; replayed old plans do not.
+    // Only the main window's HUD opens it; the edge overlay shows the same plans.
+    if (plan.status === "RUNNING" || plan.status === "AWAITING_APPROVAL") watched.add(plan.id);
+    const guide = plan.panels.find((panel) => panel.type === "guide");
+    if (
+      !compact &&
+      plan.status === "COMPLETED" &&
+      watched.delete(plan.id) &&
+      guide?.type === "guide"
+    ) {
+      const first = guide.links[0];
+      if (first) window.jarvis.plans.open(first.url).catch(() => undefined);
+    }
     plans.delete(plan.id);
     plans.set(plan.id, plan);
     if (plans.size > 5) {

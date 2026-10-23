@@ -354,6 +354,19 @@ const definitions: ActionDef[] = [
     },
   ],
   [
+    "help.guide",
+    "integration",
+    "LOW",
+    "Operatörün yapması gereken kurulumu (API anahtarı, giriş, OAuth) resmi kaynaktan adım adım göster ve sayfayı aç",
+    "Show, from the vendor's official pages, the exact steps the operator must do (API key, " +
+      "sign-in, OAuth connection, account setting) and open the page. Plan it whenever a request " +
+      "needs something only the operator can provide or an action is missing because it is not " +
+      "configured. Known topics: n8n-api-key (lets JARVIS write n8n automations), youtube-n8n " +
+      "(YouTube uploads from n8n), gemini-api-key, openrouter-api-key, anthropic-api-key, " +
+      "github-cli; any other topic is researched on official sites.",
+    { topic: label(200) },
+  ],
+  [
     "memory.save",
     "memory",
     "MEDIUM",

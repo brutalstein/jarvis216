@@ -48,6 +48,7 @@ it("codex chatgpt mode registers without OPENAI_API_KEY when auth.json exists", 
       riskFloor: "LOW",
       outputTokenLimitEnforced: false,
     }),
+    expect.objectContaining({ id: "guide" }),
   ]);
 });
 it("codex chatgpt mode refuses startup without auth.json", async () => {
@@ -71,6 +72,7 @@ it("claude code registers with an existing absolute path", async () => {
   const { registry } = await configuredProviders(claude, secrets);
   expect(registry.list()).toEqual([
     expect.objectContaining({ id: "claude-code", outputTokenLimitEnforced: false }),
+    expect.objectContaining({ id: "guide" }),
   ]);
   const spec = TaskSpecSchema.parse({
     objective: "test",
@@ -145,7 +147,10 @@ it("desktop refuses roots outside the operator profile", async () => {
 
 it("news can be enabled independently of desktop tools", async () => {
   const { registry, tools } = await configuredProviders({ ENABLE_NEWS: "true" }, secrets);
-  expect(registry.list()).toMatchObject([{ id: "news", capability: "info.fetch" }]);
+  expect(registry.list()).toMatchObject([
+    { id: "news", capability: "info.fetch" },
+    { id: "guide" },
+  ]);
   expect(tools).toBeUndefined();
 });
 
@@ -157,6 +162,7 @@ it("Claude agent registers independently of conversation, with HIGH risk", async
   expect(registry.list()).toMatchObject([
     { id: "claude-code", riskFloor: "LOW" },
     { id: "claude-agent", riskFloor: "HIGH" },
+    { id: "guide" },
   ]);
   expect(registry.retrySafe("claude-code")).toBe(true);
   expect(registry.retrySafe("claude-agent")).toBe(false);

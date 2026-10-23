@@ -172,6 +172,11 @@
       "kind": "integration"
     },
     {
+      "id": "help.guide",
+      "risk": "LOW",
+      "kind": "integration"
+    },
+    {
       "id": "key.shortcut",
       "risk": "MEDIUM",
       "kind": "desktop"
@@ -511,6 +516,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "custom-ask/help.guide",
+      "policy": "custom-ask",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
       "id": "custom-ask/memory.save",
       "policy": "custom-ask",
       "action": "memory.save",
@@ -816,6 +828,13 @@
       "policy": "custom-allow",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/help.guide",
+      "policy": "custom-allow",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -1127,6 +1146,13 @@
       "expectedMode": "deny"
     },
     {
+      "id": "custom-deny/help.guide",
+      "policy": "custom-deny",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
       "id": "custom-deny/memory.save",
       "policy": "custom-deny",
       "action": "memory.save",
@@ -1432,6 +1458,13 @@
       "policy": "allow-3600000-active",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/help.guide",
+      "policy": "allow-3600000-active",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -1743,6 +1776,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-3600000-expired/help.guide",
+      "policy": "allow-3600000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-3600000-expired/memory.save",
       "policy": "allow-3600000-expired",
       "action": "memory.save",
@@ -2048,6 +2088,13 @@
       "policy": "allow-28800000-active",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/help.guide",
+      "policy": "allow-28800000-active",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -2359,6 +2406,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-28800000-expired/help.guide",
+      "policy": "allow-28800000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-28800000-expired/memory.save",
       "policy": "allow-28800000-expired",
       "action": "memory.save",
@@ -2664,6 +2718,13 @@
       "policy": "allow-86400000-active",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/help.guide",
+      "policy": "allow-86400000-active",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -2975,6 +3036,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "allow-86400000-expired/help.guide",
+      "policy": "allow-86400000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-86400000-expired/memory.save",
       "policy": "allow-86400000-expired",
       "action": "memory.save",
@@ -3281,6 +3349,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/help.guide",
+      "policy": "preset-guarded",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded/memory.save",
@@ -3591,6 +3666,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-3600000-active/help.guide",
+      "policy": "preset-guarded-3600000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-3600000-active/memory.save",
       "policy": "preset-guarded-3600000-active",
       "action": "memory.save",
@@ -3897,6 +3979,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/help.guide",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-3600000-expired/memory.save",
@@ -4207,6 +4296,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-28800000-active/help.guide",
+      "policy": "preset-guarded-28800000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-28800000-active/memory.save",
       "policy": "preset-guarded-28800000-active",
       "action": "memory.save",
@@ -4513,6 +4609,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/help.guide",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-28800000-expired/memory.save",
@@ -4823,6 +4926,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-guarded-86400000-active/help.guide",
+      "policy": "preset-guarded-86400000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-guarded-86400000-active/memory.save",
       "policy": "preset-guarded-86400000-active",
       "action": "memory.save",
@@ -5129,6 +5239,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/help.guide",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-guarded-86400000-expired/memory.save",
@@ -5439,6 +5556,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted/help.guide",
+      "policy": "preset-trusted",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted/memory.save",
       "policy": "preset-trusted",
       "action": "memory.save",
@@ -5745,6 +5869,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-active/help.guide",
+      "policy": "preset-trusted-3600000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-3600000-active/memory.save",
@@ -6055,6 +6186,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-3600000-expired/help.guide",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-3600000-expired/memory.save",
       "policy": "preset-trusted-3600000-expired",
       "action": "memory.save",
@@ -6361,6 +6499,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-active/help.guide",
+      "policy": "preset-trusted-28800000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-28800000-active/memory.save",
@@ -6671,6 +6816,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-28800000-expired/help.guide",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-28800000-expired/memory.save",
       "policy": "preset-trusted-28800000-expired",
       "action": "memory.save",
@@ -6977,6 +7129,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-active/help.guide",
+      "policy": "preset-trusted-86400000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-trusted-86400000-active/memory.save",
@@ -7287,6 +7446,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-trusted-86400000-expired/help.guide",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-86400000-expired/memory.save",
       "policy": "preset-trusted-86400000-expired",
       "action": "memory.save",
@@ -7592,6 +7758,13 @@
       "policy": "preset-autonomous",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/help.guide",
+      "policy": "preset-autonomous",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -7903,6 +8076,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/help.guide",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/memory.save",
       "policy": "preset-autonomous-3600000-active",
       "action": "memory.save",
@@ -8211,6 +8391,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-3600000-expired/help.guide",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-expired/memory.save",
       "policy": "preset-autonomous-3600000-expired",
       "action": "memory.save",
@@ -8516,6 +8703,13 @@
       "policy": "preset-autonomous-28800000-active",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/help.guide",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -8827,6 +9021,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "preset-autonomous-28800000-expired/help.guide",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-28800000-expired/memory.save",
       "policy": "preset-autonomous-28800000-expired",
       "action": "memory.save",
@@ -9132,6 +9333,13 @@
       "policy": "preset-autonomous-86400000-active",
       "action": "automation.create",
       "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/help.guide",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "help.guide",
+      "risk": "LOW",
       "expectedMode": "allow"
     },
     {
@@ -9441,6 +9649,13 @@
       "action": "automation.create",
       "risk": "HIGH",
       "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/help.guide",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "help.guide",
+      "risk": "LOW",
+      "expectedMode": "allow"
     },
     {
       "id": "preset-autonomous-86400000-expired/memory.save",

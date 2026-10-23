@@ -110,6 +110,8 @@ describe("generated pairwise configuration rows through Core", () => {
       ...Object.values(catalog)
         .filter((a) => a.kind === "memory" || (a.kind === "desktop" && row.desktop === "on"))
         .map((a) => a.id),
+      // Official setup guides work in every topology (curated ones need no model).
+      "help.guide",
       ...(row.news === "on" ? ["news.brief"] : []),
       ...(row.browser === "on" ? ["browser.read", "browser.read_many"] : []),
       ...(row.openclaw === "on" ? ["agent.delegate"] : []),

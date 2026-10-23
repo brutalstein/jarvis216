@@ -1200,6 +1200,60 @@ body:has([data-hud-card]) .presence {
   text-align: left;
   justify-content: flex-start;
 }
+/* Guide: numbered steps the operator follows, the page buttons, and where the value goes. */
+.card[data-panel="guide"] {
+  --accent: var(--peach);
+}
+.guide-steps {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: guide;
+}
+.guide-steps li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  align-items: start;
+  color: var(--ink);
+  line-height: 1.45;
+  counter-increment: guide;
+  animation: rise 520ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+.guide-steps li::before {
+  content: counter(guide);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85em;
+}
+.guide-where {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-input);
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+  color: var(--ink);
+}
+.guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.guide-sources {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85em;
+}
 /* News: in-app cards, one column in the standard stage, two when the stage is wide. */
 .news-grid {
   display: grid;
