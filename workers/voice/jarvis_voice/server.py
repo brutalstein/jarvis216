@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +44,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
     sessions: set[asyncio.Task[None]] = set()
     peer: Any = None
     brain: Brain | None = None
+    offer_lock = asyncio.Lock()
 
     async def announce(request: web.Request) -> web.Response:
         try:
@@ -95,7 +97,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
         enrollment.gate.delete()
         return web.Response(status=204)
 
-    async def offer(request: web.Request) -> web.Response:
+    async def handle_offer(request: web.Request) -> web.Response:
         nonlocal peer
         try:
             data = await request.json()
@@ -106,11 +108,36 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
 
                 if peer is None or data.get("pc_id") != peer.pc_id:
                     return web.json_response({"error": "NO_SESSION"}, status=404)
-                for item in data["candidates"][:32]:
-                    candidate = candidate_from_sdp(item["candidate"]) if item["candidate"] else None
+                items = data.get("candidates")
+                if not isinstance(items, list) or len(items) > 32:
+                    raise ValueError("INVALID_OFFER")
+                candidates = []
+                for item in items:
+                    if (
+                        not isinstance(item, dict)
+                        or not isinstance(item.get("candidate"), str)
+                        or len(item["candidate"]) > 8192
+                    ):
+                        raise ValueError("INVALID_OFFER")
+                    try:
+                        candidate = (
+                            candidate_from_sdp(item["candidate"]) if item["candidate"] else None
+                        )
+                    except AssertionError as error:
+                        raise ValueError("INVALID_OFFER") from error
                     if candidate is not None:
-                        candidate.sdpMid = item["sdp_mid"]
-                        candidate.sdpMLineIndex = item["sdp_mline_index"]
+                        mid, index = item.get("sdp_mid"), item.get("sdp_mline_index")
+                        if (
+                            not (mid is None or isinstance(mid, str) and len(mid) <= 256)
+                            or not (index is None or type(index) is int and 0 <= index <= 65535)
+                            or mid is None
+                            and index is None
+                        ):
+                            raise ValueError("INVALID_OFFER")
+                        candidate.sdpMid = mid
+                        candidate.sdpMLineIndex = index
+                    candidates.append(candidate)
+                for candidate in candidates:
                     await peer.add_ice_candidate(candidate)
                 return web.Response(status=200)
             if data.get("type") != "offer" or not isinstance(data.get("sdp"), str):
@@ -144,7 +171,27 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                     if peer is connection and (current is None or session_open):
                         brain = current
 
-                task = asyncio.create_task(run_session(connection, enrollment, set_brain))
+                async def session() -> None:
+                    nonlocal peer
+                    try:
+                        await run_session(connection, enrollment, set_brain)
+                    except Exception:
+                        connection.send_app_message(
+                            {
+                                "label": "rtvi-ai",
+                                "type": "server-message",
+                                "data": {"type": "error", "code": "VOICE_PIPELINE_FAILED"},
+                            }
+                        )
+                        raise
+                    finally:
+                        set_brain(None)
+                        if peer is connection:
+                            peer = None
+                        with suppress(Exception):
+                            await asyncio.wait_for(connection.disconnect(), 5)
+
+                task = asyncio.create_task(session())
                 sessions.add(task)
 
                 def finished(done: asyncio.Task[None]) -> None:
@@ -155,13 +202,6 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                             f"VOICE_PIPELINE_FAILED: {type(error).__name__}: {error}",
                             file=sys.stderr,
                         )
-                        connection.send_app_message(
-                            {
-                                "label": "rtvi-ai",
-                                "type": "server-message",
-                                "data": {"type": "error", "code": "VOICE_PIPELINE_FAILED"},
-                            }
-                        )
 
                 task.add_done_callback(finished)
 
@@ -169,12 +209,18 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
         except (KeyError, TypeError, ValueError):
             return web.json_response({"error": "INVALID_OFFER"}, status=400)
 
+    async def offer(request: web.Request) -> web.Response:
+        async with offer_lock:
+            return await handle_offer(request)
+
     async def cleanup(app: web.Application) -> None:
+        pending = list(sessions)
         if peer:
-            await peer.disconnect()
-        for task in sessions:
+            with suppress(Exception):
+                await asyncio.wait_for(peer.disconnect(), 5)
+        for task in pending:
             task.cancel()
-        await asyncio.gather(*sessions, return_exceptions=True)
+        await asyncio.gather(*pending, return_exceptions=True)
 
     app.router.add_get("/health", health)
     app.router.add_post("/enroll/start", start)
@@ -275,6 +321,7 @@ async def run_session(
         set_brain(None)
         for task in warming:
             task.cancel()
+        await asyncio.gather(*warming, return_exceptions=True)
         await core.http.aclose()
 
 

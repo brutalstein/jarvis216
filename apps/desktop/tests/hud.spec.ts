@@ -163,7 +163,8 @@ test("news, candidates and windows use text-only panels with a running control i
       },
     });
     await expect(run.page.locator("[data-news]")).toHaveCount(5);
-    await expect(run.page.locator("[data-news]").first()).toContainText(items[0].headline);
+    await expect(run.page.locator("[data-news]").first()).toContainText("Haber 1");
+    await expect(run.page.locator("[data-news]").first()).not.toContainText("<b>");
     expect(await run.page.locator("[data-news] b").count()).toBe(0);
     await run.page.screenshot({ path: `${shots}/news.png` });
     await emit(run.app, {
@@ -256,6 +257,76 @@ test("authenticated SSE delivers plans; arbitrary external URLs cannot open", as
       "data-plan-status",
       "CANCELLED",
     );
+  } finally {
+    await run.close();
+  }
+});
+
+test("a guide shows numbered steps, opens its first official page once and only its own links", async () => {
+  stream = undefined;
+  const run = await launch();
+  try {
+    await expect.poll(() => Boolean(stream)).toBe(true);
+    await run.app.evaluate(({ shell }) => {
+      Reflect.set(globalThis, "opened", []);
+      shell.openExternal = async (url: string) => {
+        (Reflect.get(globalThis, "opened") as string[]).push(url);
+      };
+    });
+    const opened = () => run.app.evaluate(() => Reflect.get(globalThis, "opened") as string[]);
+    const guide: PlanView = {
+      ...plan,
+      id: "guide-plan",
+      goal: "n8n API anahtarı",
+      kind: "integration",
+      status: "RUNNING",
+      needsApproval: false,
+      steps: [
+        {
+          action: "help.guide",
+          args: { topic: "n8n-api-key" },
+          risk: "LOW",
+          mode: "allow",
+          status: "RUNNING",
+        },
+      ],
+    };
+    const send = (value: PlanView) =>
+      (stream as ServerResponse | undefined)?.write(
+        `event: plan\ndata: ${JSON.stringify(value)}\n\n`,
+      );
+    send(guide);
+    await expect(run.page.locator("[data-hud-card=guide-plan]")).toBeVisible();
+    send({
+      ...guide,
+      status: "COMPLETED",
+      panels: [
+        {
+          type: "guide",
+          title: "n8n API anahtarı",
+          steps: ["Açılan n8n sayfasında giriş yap.", "Create an API key düğmesine bas."],
+          links: [
+            { label: "n8n API ayarları", url: "http://127.0.0.1:5678/settings/api" },
+            { label: "Dokümantasyon", url: "https://docs.n8n.io/api/authentication/" },
+          ],
+          sources: ["https://docs.n8n.io/api/authentication/"],
+          where: ".env içindeki N8N_API_KEY= satırına yapıştır.",
+        },
+      ],
+    });
+    const card = run.page.locator("[data-panel=guide]");
+    await expect(card.locator(".guide-steps li")).toHaveCount(2);
+    await expect(card.locator(".guide-where")).toContainText("N8N_API_KEY");
+    await expect(card.locator(".guide-sources")).toHaveText("Resmi kaynak: docs.n8n.io");
+    await expect.poll(opened).toEqual(["http://127.0.0.1:5678/settings/api"]);
+    await card.locator("[data-guide-link]").nth(1).click();
+    await expect
+      .poll(opened)
+      .toEqual(["http://127.0.0.1:5678/settings/api", "https://docs.n8n.io/api/authentication/"]);
+    await run.page.screenshot({ path: `${shots}/guide.png` });
+    await expect(
+      run.page.evaluate(() => window.jarvis.plans.open("http://127.0.0.1:9999/other")),
+    ).rejects.toThrow("FORBIDDEN");
   } finally {
     await run.close();
   }

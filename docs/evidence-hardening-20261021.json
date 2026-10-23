@@ -1,0 +1,684 @@
+{
+  "codeCommit": "c3c76832d85f425c39c38f894f9ab57b70738d4c",
+  "github": {
+    "taskId": "4ec4c9ac-3efa-44ab-88d5-3e31d6f14bfe",
+    "status": "COMPLETED",
+    "source": "github-cli:observed",
+    "outcome": {
+      "status": "completed",
+      "verified": true
+    },
+    "repositoryCount": 27,
+    "privateCount": 7,
+    "truncated": false,
+    "rawResponse": {
+      "independentInspectionOnly": true,
+      "rawBytes": 144613,
+      "captureLimit": 128000,
+      "exceedsLimit": true
+    }
+  },
+  "fileCRUD": {
+    "id": "06467d93-b0a5-4451-af3b-b38cd6e601e8",
+    "status": "COMPLETED",
+    "steps": [
+      {
+        "action": "file.create",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "retest.txt holds the requested content"
+        }
+      },
+      {
+        "action": "file.read",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "retest.txt was read",
+          "panel": {
+            "type": "text",
+            "title": "retest.txt",
+            "body": "FIRST_216"
+          }
+        }
+      },
+      {
+        "action": "file.write",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "retest.txt holds the requested content"
+        }
+      },
+      {
+        "action": "file.read",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "retest.txt was read",
+          "panel": {
+            "type": "text",
+            "title": "retest.txt",
+            "body": "SECOND_216"
+          }
+        }
+      },
+      {
+        "action": "file.delete",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "retest.txt is absent"
+        }
+      }
+    ]
+  },
+  "filesystemReadback": [
+    {
+      "taskId": "99022a26-7654-480b-a3bb-874720094e60",
+      "action": "file.create",
+      "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/retest.txt",
+      "content": "FIRST_216",
+      "result": {
+        "text": "{\"ok\":true,\"evidence\":\"postcondition\",\"observation\":\"retest.txt holds the requested content\"}",
+        "source": "windows-mcp:postcondition"
+      }
+    },
+    {
+      "taskId": "521d9857-10e9-49d5-b730-2bfcd55e40a6",
+      "action": "file.read",
+      "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/retest.txt",
+      "content": "FIRST_216",
+      "result": {
+        "text": "{\"ok\":true,\"evidence\":\"postcondition\",\"observation\":\"retest.txt was read\",\"panel\":{\"type\":\"text\",\"title\":\"retest.txt\",\"body\":\"FIRST_216\"}}",
+        "source": "windows-mcp:postcondition"
+      }
+    },
+    {
+      "taskId": "0a14d644-3725-4f1c-bc33-00d1933fb224",
+      "action": "file.write",
+      "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/retest.txt",
+      "content": "SECOND_216",
+      "result": {
+        "text": "{\"ok\":true,\"evidence\":\"postcondition\",\"observation\":\"retest.txt holds the requested content\"}",
+        "source": "windows-mcp:postcondition"
+      }
+    },
+    {
+      "taskId": "37426265-79c2-4681-ba8c-4be26c7ffa2f",
+      "action": "file.read",
+      "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/retest.txt",
+      "content": "SECOND_216",
+      "result": {
+        "text": "{\"ok\":true,\"evidence\":\"postcondition\",\"observation\":\"retest.txt was read\",\"panel\":{\"type\":\"text\",\"title\":\"retest.txt\",\"body\":\"SECOND_216\"}}",
+        "source": "windows-mcp:postcondition"
+      }
+    },
+    {
+      "taskId": "67692c73-643c-4daf-865f-6d81f6baabfb",
+      "action": "file.delete",
+      "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/retest.txt",
+      "content": {
+        "code": "ENOENT"
+      },
+      "result": {
+        "text": "{\"ok\":true,\"evidence\":\"postcondition\",\"observation\":\"retest.txt is absent\"}",
+        "source": "windows-mcp:postcondition"
+      }
+    }
+  ],
+  "browser": {
+    "id": "45ff5de1-7701-4945-a743-763963a0ec37",
+    "status": "COMPLETED",
+    "steps": [
+      {
+        "action": "browser.navigate",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Navigation URL independently observed",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/",
+            "body": "- generic [active] [ref=e1]:\n  - heading \"Local registration\" [level=1] [ref=e2]\n  - generic [ref=e3]:\n    - generic [ref=e4]:\n      - text: Name\n      - textbox \"Name\" [ref=e5]\n    - generic [ref=e6]:\n      - text: Email\n      - textbox \"Email\" [ref=e7]\n    - button \"Register\" [ref=e8]"
+          }
+        }
+      },
+      {
+        "action": "browser.snapshot",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Current page accessibility snapshot observed",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/",
+            "body": "- generic [active] [ref=e1]:\n  - heading \"Local registration\" [level=1] [ref=e2]\n  - generic [ref=e3]:\n    - generic [ref=e4]:\n      - text: Name\n      - textbox \"Name\" [ref=e5]\n    - generic [ref=e6]:\n      - text: Email\n      - textbox \"Email\" [ref=e7]\n    - button \"Register\" [ref=e8]"
+          }
+        }
+      },
+      {
+        "action": "browser.fill",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Field value independently observed",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/",
+            "label": "Name"
+          }
+        }
+      },
+      {
+        "action": "browser.fill",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Field value independently observed",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/",
+            "label": "Email"
+          }
+        }
+      },
+      {
+        "action": "browser.click",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Click produced an independently observed page change",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/register",
+            "body": "- heading \"Registration successful\" [level=1] [ref=f1e2]"
+          }
+        }
+      },
+      {
+        "action": "browser.verify",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "Expected text independently observed",
+          "provenance": "standalone:playwright-mcp",
+          "data": {
+            "url": "http://127.0.0.1:2188/register",
+            "text": "Registration successful"
+          }
+        }
+      }
+    ]
+  },
+  "registration": {
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/",
+        "time": "2026-10-21T08:20:47.903Z"
+      },
+      {
+        "method": "POST",
+        "url": "/register",
+        "time": "2026-10-21T08:20:49.257Z"
+      }
+    ],
+    "registrations": [
+      {
+        "name": "Jarvis Test",
+        "email": "jarvis216@example.invalid"
+      }
+    ]
+  },
+  "conditional": {
+    "id": "75f11e32-9784-40a8-8265-f4cd5392c4e5",
+    "status": "COMPLETED",
+    "steps": [
+      {
+        "action": "file.read",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "condition.txt was read",
+          "panel": {
+            "type": "text",
+            "title": "condition.txt",
+            "body": "MATCH_216"
+          }
+        }
+      },
+      {
+        "action": "file.delete",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "condition.txt is absent"
+        }
+      }
+    ]
+  },
+  "mixed": {
+    "id": "993c2783-d1ea-4409-8275-49bcb7e3c109",
+    "status": "COMPLETED",
+    "steps": [
+      {
+        "action": "github.profile",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "observed",
+          "observation": "github.profile verified through GitHub API",
+          "provenance": "standalone:gh-native-auth",
+          "data": {
+            "authenticated": true,
+            "login": "brutalstein",
+            "url": "https://github.com/brutalstein"
+          },
+          "panel": {
+            "type": "text",
+            "title": "GitHub",
+            "body": "brutalstein\nhttps://github.com/brutalstein"
+          }
+        }
+      },
+      {
+        "action": "file.read",
+        "status": "COMPLETED",
+        "evidence": {
+          "ok": true,
+          "evidence": "postcondition",
+          "observation": "mixed.txt was read",
+          "panel": {
+            "type": "text",
+            "title": "mixed.txt",
+            "body": "MIXED_216"
+          }
+        }
+      }
+    ]
+  },
+  "memoryAfterRestart": {
+    "utterance": "Jarvis, what is my test code?",
+    "status": 200,
+    "body": {
+      "id": "3f3fcbd1-dd82-4301-a9c5-d5b82deb1f7a",
+      "taskId": "9f439e0a-6c40-4743-9609-8205267418f8",
+      "addressed": true,
+      "say": "Your test code is LANTERN_216, sir.",
+      "lang": "en",
+      "display": [],
+      "intent": {
+        "kind": "reply"
+      },
+      "provider": "codex-live",
+      "latencyMs": 4525
+    }
+  },
+  "voiceFirst": {
+    "timings": [
+      "{\"event\":\"voice.playback\",\"playbackStartMs\":19}",
+      "{\"event\":\"turn.timing\",\"turnEndMs\":231,\"segmentQueueMs\":0,\"speakerMs\":0,\"transcribeMs\":625,\"sttMs\":625,\"coreMs\":5687,\"replyWaitMs\":0,\"firstAudioMs\":6856,\"totalMs\":6918,\"ttsMs\":375,\"ttsFirstAudioMs\":313}\n"
+    ],
+    "captions": [
+      {
+        "type": "caption",
+        "role": "jarvis",
+        "text": "Bugün GitHub depolarınızı inceleyebilir, açık sorunları gözden geçirebilir, izinli web işlemleri yapabilir veya bilgisayarınızdaki dosya ve uygulamalarla çalışabiliriz, efendim. Ne yapmak istersiniz?"
+      }
+    ]
+  },
+  "voiceRepeat": {
+    "timings": [
+      "{\"event\":\"voice.playback\",\"playbackStartMs\":23}",
+      "{\"event\":\"turn.timing\",\"turnEndMs\":246,\"segmentQueueMs\":0,\"speakerMs\":0,\"transcribeMs\":594,\"sttMs\":594,\"coreMs\":20078,\"replyWaitMs\":0,\"firstAudioMs\":20996,\"totalMs\":20996,\"ttsMs\":78,\"ttsFirstAudioMs\":78}\n"
+    ],
+    "captions": [
+      {
+        "type": "caption",
+        "role": "user",
+        "text": "Jarvis, bugün neler yapabiliriz?"
+      },
+      {
+        "type": "caption",
+        "role": "jarvis",
+        "text": "Şu an yanıt veremiyorum, efendim."
+      }
+    ]
+  },
+  "physical": {
+    "events": 0,
+    "tracks": [
+      {
+        "label": "Default - Mikrofon Dizisi (Senary Audio)",
+        "readyState": "live"
+      }
+    ],
+    "output": {
+      "label": "Hoparlör (Senary Audio)",
+      "sinkMatched": true,
+      "status": null
+    }
+  },
+  "mcp": [
+    {
+      "id": "windows-mcp",
+      "status": "connected",
+      "tools": [
+        "ControlStatus",
+        "App",
+        "FileSystem",
+        "Snapshot",
+        "Screenshot",
+        "Click",
+        "Type",
+        "Scroll",
+        "Shortcut",
+        "Wait",
+        "WaitFor",
+        "Clipboard"
+      ]
+    },
+    {
+      "id": "playwright-mcp",
+      "status": "connected",
+      "tools": [
+        "browser_close",
+        "browser_type",
+        "browser_navigate",
+        "browser_snapshot",
+        "browser_click"
+      ]
+    }
+  ],
+  "preservation": [
+    {
+      "path": ".env",
+      "unchanged": true
+    },
+    {
+      "path": ".env.voice-dev",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\cenke\\OneDrive\\Desktop\\jarvis216\\data\\codex-homes\\jarvis\\auth.json",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\cenke\\.openclaw\\openclaw.json",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\cenke\\AppData\\Roaming\\jarvis-desktop\\Preferences",
+      "unchanged": true
+    }
+  ],
+  "learning": [
+    {
+      "iteration": 1,
+      "turn": {
+        "id": "dafdd1d0-a9a6-4a9e-b0a6-478d8777fa37",
+        "taskId": "f11b6a0b-53d1-4edb-9c1b-fa1751e11da6",
+        "addressed": true,
+        "say": "Done, sir.",
+        "lang": "en",
+        "display": [],
+        "intent": {
+          "kind": "plan",
+          "goal": "Read mixed.txt",
+          "steps": [
+            {
+              "action": "file.read",
+              "args": {
+                "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+              }
+            }
+          ],
+          "confidence": 1
+        },
+        "provider": "codex-live",
+        "latencyMs": 6740,
+        "planId": "6fe89fcf-e4dc-4372-98c0-59e821af4a9f"
+      },
+      "status": "COMPLETED",
+      "steps": [
+        {
+          "action": "file.read",
+          "args": {
+            "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+          },
+          "risk": "LOW",
+          "mode": "allow",
+          "status": "COMPLETED",
+          "evidence": {
+            "ok": true,
+            "evidence": "postcondition",
+            "observation": "mixed.txt was read",
+            "panel": {
+              "type": "text",
+              "title": "mixed.txt",
+              "body": "MIXED_216"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "turn": {
+        "id": "4ba27bfd-dff6-484d-a210-36425bd6c779",
+        "taskId": "4766f3fc-2546-4171-8b2f-7a01ddf011c3",
+        "addressed": true,
+        "say": "Done, sir.",
+        "lang": "en",
+        "display": [],
+        "intent": {
+          "kind": "plan",
+          "goal": "Read mixed.txt",
+          "steps": [
+            {
+              "action": "file.read",
+              "args": {
+                "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+              }
+            }
+          ],
+          "confidence": 1
+        },
+        "provider": "codex-live",
+        "latencyMs": 7098,
+        "planId": "9fcbf54b-cda1-4855-9212-fd7d9f2452c6"
+      },
+      "status": "COMPLETED",
+      "steps": [
+        {
+          "action": "file.read",
+          "args": {
+            "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+          },
+          "risk": "LOW",
+          "mode": "allow",
+          "status": "COMPLETED",
+          "evidence": {
+            "ok": true,
+            "evidence": "postcondition",
+            "observation": "mixed.txt was read",
+            "panel": {
+              "type": "text",
+              "title": "mixed.txt",
+              "body": "MIXED_216"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "iteration": 3,
+      "turn": {
+        "id": "7a8d531b-833f-4e95-89fe-1dc837c0ca60",
+        "taskId": "283b9b1e-9f71-4698-9885-f66cae91b5ba",
+        "addressed": true,
+        "say": "Done, sir.",
+        "lang": "en",
+        "display": [],
+        "intent": {
+          "kind": "plan",
+          "goal": "Read mixed.txt",
+          "steps": [
+            {
+              "action": "file.read",
+              "args": {
+                "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+              }
+            }
+          ],
+          "confidence": 1
+        },
+        "provider": "codex-live",
+        "latencyMs": 6864,
+        "planId": "03af24db-ab86-4e03-a589-2d92c27e0436"
+      },
+      "status": "COMPLETED",
+      "steps": [
+        {
+          "action": "file.read",
+          "args": {
+            "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+          },
+          "risk": "LOW",
+          "mode": "allow",
+          "status": "COMPLETED",
+          "evidence": {
+            "ok": true,
+            "evidence": "postcondition",
+            "observation": "mixed.txt was read",
+            "panel": {
+              "type": "text",
+              "title": "mixed.txt",
+              "body": "MIXED_216"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "iteration": 4,
+      "turn": {
+        "id": "463d1162-6a9f-4d71-805e-6d8d6a93692f",
+        "taskId": null,
+        "addressed": true,
+        "say": "Done, sir.",
+        "lang": "en",
+        "display": [],
+        "intent": {
+          "kind": "plan",
+          "goal": "Read mixed.txt",
+          "steps": [
+            {
+              "action": "file.read",
+              "args": {
+                "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+              }
+            }
+          ]
+        },
+        "provider": null,
+        "latencyMs": 82,
+        "planId": "d7c2bb26-bffc-4190-8b1a-d5e5842548ac"
+      },
+      "status": "COMPLETED",
+      "steps": [
+        {
+          "action": "file.read",
+          "args": {
+            "path": "C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/mixed.txt"
+          },
+          "risk": "LOW",
+          "mode": "allow",
+          "status": "COMPLETED",
+          "evidence": {
+            "ok": true,
+            "evidence": "postcondition",
+            "observation": "mixed.txt was read",
+            "panel": {
+              "type": "text",
+              "title": "mixed.txt",
+              "body": "MIXED_216"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "brain": {
+    "stats": {
+      "experiences": 18,
+      "skills": 1,
+      "preferences": 0,
+      "planSuccessRate": 0.9166666666666666,
+      "correctionRate": 0,
+      "reflexShare": 0.05555555555555555,
+      "lastConsolidatedAt": 1792600682463,
+      "topSkills": [
+        {
+          "id": "2b0a9fad-451f-4d16-84fd-e7ca792a7be6",
+          "goal": "Read mixed.txt",
+          "phrase": "read c users cenke onedrive desktop artifacts hardening 20261021 workspace mixed txt",
+          "strength": 0.877,
+          "successes": 4,
+          "uses": 1
+        }
+      ]
+    },
+    "skills": [
+      {
+        "id": "2b0a9fad-451f-4d16-84fd-e7ca792a7be6",
+        "goal": "Read mixed.txt",
+        "phrases": [
+          "read c users cenke onedrive desktop artifacts hardening 20261021 workspace mixed txt"
+        ],
+        "steps": [
+          "file.read"
+        ],
+        "strength": 0.877,
+        "successes": 4,
+        "failures": 0,
+        "uses": 1,
+        "lastUsedAt": 1792600947641
+      }
+    ]
+  },
+  "conditionalFalse": {
+    "typedCoreAPI": true,
+    "readTask": "4d19ab12-785d-4c9f-8ed0-5761ec63d6b0",
+    "skippedTask": "d0c8e3c4-1a97-4eeb-84a5-a2d14f81e535",
+    "status": "SKIPPED",
+    "actionCount": 0,
+    "independentContent": "NO_BRANCH"
+  },
+  "conditionalFalseNatural": {
+    "utterance": "Jarvis, read C:/Users/cenke/OneDrive/Desktop/jarvis216/artifacts/hardening-20261021/workspace/condition.txt and delete it only if its read result contains MATCH_216.",
+    "status": 504,
+    "body": {
+      "error": "TURN_TIMEOUT"
+    }
+  },
+  "cleanup": {
+    "testFilesAbsent": true,
+    "ownedCoreStopped": true
+  }
+}

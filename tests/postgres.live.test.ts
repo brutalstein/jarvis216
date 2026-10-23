@@ -15,6 +15,7 @@ it.skipIf(process.env.JARVIS_LIVE_POSTGRES_TEST !== "true" || !process.env.TEST_
     await admin.query(`CREATE SCHEMA ${schema}`);
     const scoped = new URL(url);
     scoped.searchParams.set("options", `-c search_path=${schema}`);
+    scoped.searchParams.set("application_name", schema);
     const a = postgres(scoped.toString());
     const b = postgres(scoped.toString());
     try {
@@ -37,7 +38,8 @@ it.skipIf(process.env.JARVIS_LIVE_POSTGRES_TEST !== "true" || !process.env.TEST_
       expect((await second.get(task.id)).status).toBe("RUNNING");
       // Server-side connection loss: the pool must discard dead clients and reconnect.
       await admin.query(
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()",
+        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name=$1 AND pid<>pg_backend_pid()",
+        [schema],
       );
       // One failed query on a stale idle client is acceptable; the next must reconnect.
       const recovered = await first.get(task.id).catch(() => first.get(task.id));

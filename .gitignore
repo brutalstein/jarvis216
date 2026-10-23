@@ -17,3 +17,4 @@ graphify-out/.graphify_python
 .tools/
 graphify-out/cache/
 graphify-out/20??-??-??/
+.playwright-mcp/

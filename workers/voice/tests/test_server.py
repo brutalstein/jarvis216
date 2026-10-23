@@ -41,6 +41,93 @@ class FakeConnection:
 
 
 class ServerTest(unittest.IsolatedAsyncioTestCase):
+    async def test_invalid_ice_candidates_never_reach_peer(self) -> None:
+        async def session(*args: Any) -> None:
+            await asyncio.Event().wait()
+
+        add = AsyncMock()
+        with (
+            patch("jarvis_voice.server.run_session", session),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", FakeConnection
+            ),
+            patch.object(FakeConnection, "add_ice_candidate", add, create=True),
+        ):
+            headers = {"authorization": "Bearer secret"}
+            await self.client.post(
+                "/offer", json={"sdp": "offer", "type": "offer"}, headers=headers
+            )
+            for candidates in [
+                None,
+                {},
+                [None],
+                [7],
+                [{"candidate": 1}],
+                [{"candidate": "bad"}],
+                [{"candidate": "1 1 udp 1 127.0.0.1 9 typ host", "sdp_mid": []}],
+                [{"candidate": "1 1 udp 1 127.0.0.1 9 typ host", "sdp_mline_index": True}],
+                [{"candidate": ""}] * 33,
+            ]:
+                with self.subTest(candidates=candidates):
+                    response = await self.client.patch(
+                        "/offer",
+                        json={"pc_id": "connection", "candidates": candidates},
+                        headers=headers,
+                    )
+                    self.assertEqual(response.status, 400)
+            add.assert_not_awaited()
+            response = await self.client.patch(
+                "/offer",
+                json={"pc_id": "connection", "candidates": [{"candidate": ""}]},
+                headers=headers,
+            )
+            self.assertEqual(response.status, 200)
+            add.assert_awaited_once_with(None)
+
+    async def test_failed_pipeline_releases_peer_for_retry(self) -> None:
+        async def fail(*args: Any) -> None:
+            raise RuntimeError("test pipeline failure")
+
+        with (
+            patch("jarvis_voice.server.run_session", fail),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", FakeConnection
+            ),
+        ):
+            headers = {"authorization": "Bearer secret"}
+            for _ in range(2):
+                response = await self.client.post(
+                    "/offer", json={"sdp": "offer", "type": "offer"}, headers=headers
+                )
+                self.assertEqual(response.status, 200)
+                await asyncio.sleep(0.03)
+
+    async def test_concurrent_offers_do_not_create_two_sessions(self) -> None:
+        class SlowConnection(FakeConnection):
+            async def initialize(self, sdp: str, kind: str) -> None:
+                await asyncio.sleep(0.03)
+
+        async def session(*args: Any) -> None:
+            await asyncio.Event().wait()
+
+        with (
+            patch("jarvis_voice.server.run_session", session),
+            patch(
+                "pipecat.transports.smallwebrtc.connection.SmallWebRTCConnection", SlowConnection
+            ),
+        ):
+            responses = await asyncio.gather(
+                *[
+                    self.client.post(
+                        "/offer",
+                        json={"sdp": "offer", "type": "offer"},
+                        headers={"authorization": "Bearer secret"},
+                    )
+                    for _ in range(2)
+                ]
+            )
+            self.assertEqual(sorted(response.status for response in responses), [200, 409])
+
     async def asyncSetUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.enrollment = Enrollment(Path(self.temp.name), 0.7)

@@ -11,9 +11,36 @@
     <link rel="stylesheet" href="styles.css" />
     <script defer src="app.js"></script>
   </head>
-  <body data-state="idle" data-listening="true" data-cards="false" data-heard="false">
+  <body
+    data-state="idle"
+    data-listening="true"
+    data-cards="false"
+    data-heard="false"
+    data-view="auto"
+    data-layout="focus"
+  >
     <header class="topbar">
       <h1 class="wordmark">JARVIS</h1>
+      <div class="view-bar">
+        <fieldset class="view-switch">
+          <legend class="sr-only">Görünüm</legend>
+          <button type="button" data-view-choice="auto" aria-label="Otomatik" aria-pressed="true" title="JARVIS duruma göre seçer">
+            <span data-icon="auto"></span><span class="view-word">Otomatik</span>
+          </button>
+          <button type="button" data-view-choice="focus" aria-label="Odak" aria-pressed="false" title="Yalnızca JARVIS ve yanıtlar">
+            <span data-icon="focus"></span><span class="view-word">Odak</span>
+          </button>
+          <button type="button" data-view-choice="wide" aria-label="Geniş" aria-pressed="false" title="Etkinlik akışı ve geniş kartlar">
+            <span data-icon="wide"></span><span class="view-word">Geniş</span>
+          </button>
+        </fieldset>
+        <span class="view-pick" data-layout-label></span>
+      </div>
+      <div class="topbar-actions">
+      <button type="button" class="icon-button" id="mini" aria-label="Mini" title="Kenar moduna geç">
+        <span data-icon="mini"></span>
+      </button>
+      <button type="button" class="btn outline" id="updates-open" aria-haspopup="dialog">Güncellemeler</button>
       <button
         type="button"
         class="icon-button"
@@ -23,9 +50,15 @@
       >
         <span data-icon="gear"></span>
       </button>
+      </div>
     </header>
 
     <main class="scene">
+      <aside class="feed" data-feed aria-labelledby="feed-title">
+        <h2 id="feed-title"><span data-icon="pulse"></span>Neler oldu</h2>
+        <ol class="feed-list" data-feed-list role="log" aria-live="off"></ol>
+        <p class="feed-empty">Henüz bir şey olmadı. “Jarvis” diye seslenin.</p>
+      </aside>
       <section class="presence" aria-label="JARVIS">
         <canvas data-presence role="img" aria-label="JARVIS"></canvas>
         <p class="state" data-status role="status">Beklemede</p>
@@ -49,7 +82,19 @@
       </span>
     </footer>
 
-    <dialog class="sheet" aria-labelledby="settings-title">
+    <dialog class="sheet" id="updates-dialog" aria-labelledby="updates-title">
+      <div class="sheet-body">
+        <div class="sheet-head">
+          <h2 id="updates-title">Güncellemeler</h2>
+          <form method="dialog"><button type="submit" class="icon-button" aria-label="Kapat"><span data-icon="close"></span></button></form>
+        </div>
+        <p class="note" id="updates-status" role="status" aria-live="polite"></p>
+        <p class="note">Masaüstü uygulaması güncellenir. Core ve ses servisleri mevcut kurulumunuzdan çalışır.</p>
+        <div class="actions"><button type="button" class="btn primary" id="updates-action" disabled>Güncellemeleri denetle</button></div>
+      </div>
+    </dialog>
+
+    <dialog class="sheet" id="settings-dialog" aria-labelledby="settings-title">
       <div class="sheet-body">
         <div class="sheet-head">
           <h2 id="settings-title">Ayarlar</h2>
@@ -73,6 +118,14 @@
             <select id="microphone">
               <option value="">Varsayılan mikrofon</option>
             </select>
+            <span data-icon="caret"></span>
+          </div>
+        </section>
+
+        <section class="group">
+          <label for="speaker">Ses çıkışı</label>
+          <div class="select">
+            <select id="speaker"><option value="">Varsayılan ses çıkışı</option></select>
             <span data-icon="caret"></span>
           </div>
         </section>

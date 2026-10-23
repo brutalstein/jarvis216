@@ -14,6 +14,8 @@ export class Microphone {
   private audio?: AudioContext;
   private animation = 0;
   private options: PipecatClientOptions | undefined;
+  private generation = 0;
+  private replacing: Promise<void> = Promise.resolve();
   constructor(private replace: (track: MediaStreamTrack) => Promise<void>) {}
   setClientOptions(options: PipecatClientOptions) {
     this.options = options;
@@ -26,13 +28,15 @@ export class Microphone {
     await this.initialize();
   }
   async disconnect() {
+    this.generation++;
     cancelAnimationFrame(this.animation);
     this.stream?.getTracks().forEach((track) => {
       track.stop();
     });
     this.stream = undefined;
-    await this.audio?.close();
+    const audio = this.audio;
     this.audio = undefined;
+    await audio?.close();
   }
   async getAllMics() {
     return (await navigator.mediaDevices.enumerateDevices()).filter(
@@ -48,6 +52,7 @@ export class Microphone {
     );
   }
   async updateMic(id: string) {
+    const generation = ++this.generation;
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -58,30 +63,49 @@ export class Microphone {
       video: false,
     });
     const track = stream.getAudioTracks()[0];
-    track.enabled = this.isMicEnabled;
-    try {
-      await this.replace(track);
-    } catch (error) {
+    const stop = () =>
       stream.getTracks().forEach((t) => {
         t.stop();
       });
+    if (!track) {
+      stop();
+      throw new Error("MICROPHONE_UNAVAILABLE");
+    }
+    if (generation !== this.generation) {
+      stop();
+      return;
+    }
+    track.enabled = this.isMicEnabled;
+    try {
+      const replacing = this.replacing.then(async () => {
+        if (generation === this.generation) await this.replace(track);
+      });
+      this.replacing = replacing.catch(() => {});
+      await replacing;
+    } catch (error) {
+      stop();
       throw error;
+    }
+    if (generation !== this.generation) {
+      stop();
+      return;
     }
     this.stream?.getTracks().forEach((t) => {
       t.stop();
     });
     this.stream = stream;
     this.selectedMic =
-      (await this.getAllMics()).find(
+      (await this.getAllMics().catch(() => [])).find(
         (device) => device.deviceId === track.getSettings().deviceId,
       ) ?? {};
+    if (generation !== this.generation) return;
     this.options?.callbacks?.onTrackStarted?.(track, {
       id: "operator",
       name: "Operator",
       local: true,
     });
     cancelAnimationFrame(this.animation);
-    await this.audio?.close();
+    void this.audio?.close().catch(() => {});
     this.audio = new AudioContext();
     const analyser = this.audio.createAnalyser();
     analyser.fftSize = 256;

@@ -202,7 +202,43 @@ describe("memory in plans and conversation", () => {
     expect(prompt).toContain("memory.save(note: string)");
     expect(
       conversationPrompt({ utterance: "x", followUp: false, history: [], now: new Date() }),
-    ).not.toContain("Notes the operator asked you to remember");
+    ).not.toContain("What you know about the operator");
+  });
+
+  it("learns lasting facts from a turn without being asked, never secrets", async () => {
+    tasks = new TaskService(db);
+    const worker = new Worker(
+      tasks,
+      new ProviderRegistry([
+        {
+          id: "fake",
+          capability: "text.generate",
+          external: true,
+          retrySafe: true,
+          enabled: true,
+          authenticated: true,
+          priority: 1,
+          maxInputChars: 20_000,
+          execute: async () => ({
+            text: JSON.stringify({
+              say: "Memnun oldum efendim.",
+              lang: "tr",
+              learn: ["Operatörün kızının adı Ece.", "Operatörün şifresi kedi123.", 7],
+            }),
+            source: "fixture",
+          }),
+        },
+      ]),
+    );
+    stop = new AbortController();
+    running = worker.run(stop.signal);
+    const conversation = new ConversationService(tasks, {
+      providers: ["fake"],
+      wake: () => worker.wake(),
+      memory: store,
+    });
+    await conversation.turn({ utterance: "Jarvis, kızımın adı Ece", followUp: false });
+    expect((await store.list()).map((m) => m.note)).toEqual(["Operatörün kızının adı Ece."]);
   });
 });
 

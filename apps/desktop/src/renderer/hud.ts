@@ -1,9 +1,10 @@
 import type { PlanView } from "../shared";
 
-const states: Record<string, string> = {
+export const states: Record<string, string> = {
   AWAITING_APPROVAL: "Onayınızı bekliyorum",
   RUNNING: "İşlem sürüyor",
   COMPLETED: "Tamamlandı",
+  SKIPPED: "Koşul sağlanmadığı için atlandı",
   FAILED: "Tamamlanamadı",
   CANCELLED: "İptal edildi",
   RECOVERY_REQUIRED: "Sonuç doğrulanamadı",
@@ -65,6 +66,7 @@ export function hud(root: HTMLElement, compact = false) {
   root.before(indicator);
   const plans = new Map<string, PlanView>();
   const busy = new Set<string>();
+  const watched = new Set<string>();
 
   function button(
     label: string,
@@ -204,16 +206,19 @@ export function hud(root: HTMLElement, compact = false) {
         for (const item of panel.items) list.append(node("li", item));
         card.append(node("h3", "Pencereler"), list);
       } else if (panel.type === "news") {
-        card.append(node("h3", panel.title));
+        card.dataset.panel = "news";
+        card.append(node("h3", panel.title, "news-title"));
         const list = node("div", "", "news-grid");
-        for (const item of panel.items) {
+        panel.items.forEach((item, index) => {
           const news = button("", () => window.jarvis.plans.open(item.url), card, plan.id);
           news.className = "news-item";
           news.dataset.news = "";
+          news.style.setProperty("--i", String(index));
           const text = node("span", "", "news-text");
           text.append(
-            node("span", item.headline, "news-headline"),
             node("span", item.source, "news-source"),
+            // Feeds sometimes carry highlight markup; headlines are shown as plain words.
+            node("span", item.headline.replace(/<\/?[a-z][^<>]*>/gi, ""), "news-headline"),
           );
           news.append(text);
           if (
@@ -227,16 +232,55 @@ export function hud(root: HTMLElement, compact = false) {
             news.prepend(image);
           }
           list.append(news);
-        }
+        });
         card.append(list);
       } else if (panel.type === "text") {
         card.append(node("h3", panel.title), node("pre", panel.body, "text-panel"));
+      } else if (panel.type === "guide") {
+        card.dataset.panel = "guide";
+        card.append(node("h3", panel.title, "guide-title"));
+        const steps = node("ol", "", "guide-steps");
+        panel.steps.forEach((step, index) => {
+          const item = node("li", step);
+          item.style.setProperty("--i", String(index));
+          steps.append(item);
+        });
+        card.append(steps);
+        if (panel.where) card.append(node("p", panel.where, "guide-where"));
+        const links = node("div", "", "guide-links");
+        panel.links.forEach((link, index) => {
+          const open = button(
+            link.label,
+            () => window.jarvis.plans.open(link.url),
+            card,
+            plan.id,
+            index === 0,
+          );
+          open.dataset.guideLink = "";
+          links.append(open);
+        });
+        card.append(links);
+        const hosts = [...new Set(panel.sources.map((source) => new URL(source).hostname))];
+        card.append(node("p", `Resmi kaynak: ${hosts.join(", ")}`, "guide-sources"));
       }
     }
     return card;
   }
 
   function update(plan: PlanView) {
+    // A guide that finishes while watched opens its first page; replayed old plans do not.
+    // Only the main window's HUD opens it; the edge overlay shows the same plans.
+    if (plan.status === "RUNNING" || plan.status === "AWAITING_APPROVAL") watched.add(plan.id);
+    const guide = plan.panels.find((panel) => panel.type === "guide");
+    if (
+      !compact &&
+      plan.status === "COMPLETED" &&
+      watched.delete(plan.id) &&
+      guide?.type === "guide"
+    ) {
+      const first = guide.links[0];
+      if (first) window.jarvis.plans.open(first.url).catch(() => undefined);
+    }
     plans.delete(plan.id);
     plans.set(plan.id, plan);
     if (plans.size > 5) {

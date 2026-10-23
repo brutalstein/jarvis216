@@ -13,8 +13,151 @@ const label = (max: number) => z.string().trim().min(1).max(max);
 const typed = z.string().min(1).max(2000);
 const path = label(1024);
 const files = z.strictObject({ source: path, destination: path });
+const content = z
+  .string()
+  .max(16_000)
+  .refine(
+    (value) => value.isWellFormed() && Buffer.byteLength(value, "utf8") <= 16_000,
+    "content must be valid UTF8 of at most 16000 bytes",
+  );
+const owner = label(39).regex(/^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}$/);
+const repo = label(100).regex(/^[a-zA-Z0-9_.-]+$/);
+const repository = { owner, repo };
+const limit = z.number().int().min(1).max(30).optional();
+// n8n nodes JARVIS may compose into automations. No code, shell, HTTP or n8n-admin nodes.
+export const automationNodeTypes = [
+  "scheduleTrigger",
+  "manualTrigger",
+  "readWriteFile",
+  "youTube",
+  "googleDrive",
+  "set",
+  "if",
+  "filter",
+  "sort",
+  "limit",
+  "removeDuplicates",
+  "splitInBatches",
+  "merge",
+  "wait",
+  "dateTime",
+  "noOp",
+  "rssFeedRead",
+] as const;
 
 const definitions: ActionDef[] = [
+  [
+    "browser.navigate",
+    "integration",
+    "MEDIUM",
+    "İzinli tarayıcı adresini aç",
+    "Navigate to an allowed browser origin",
+    { url: z.url().max(2000) },
+  ],
+  [
+    "browser.snapshot",
+    "integration",
+    "LOW",
+    "Tarayıcı sayfasını oku",
+    "Read the current browser snapshot",
+    {},
+  ],
+  [
+    "browser.fill",
+    "integration",
+    "MEDIUM",
+    "Tarayıcı alanını doldur",
+    "Fill a labeled browser field",
+    { label: label(120), value: z.string().max(2000) },
+  ],
+  [
+    "browser.click",
+    "integration",
+    "HIGH",
+    "Tarayıcı düğmesini tıkla; form gönderebilir",
+    "Click a named browser control; may submit a form",
+    { name: label(120) },
+  ],
+  [
+    "browser.verify",
+    "integration",
+    "LOW",
+    "Sayfa sonucunu doğrula",
+    "Verify visible browser text",
+    { text: label(4096) },
+  ],
+  [
+    "browser.fill_password",
+    "integration",
+    "MEDIUM",
+    "Parola alanına kasadaki parolayı yaz; yoksa güçlü bir parola üretip sakla",
+    "Type this site's vault password into a password field, creating and storing a strong one if new; never write passwords yourself",
+    { label: label(120) },
+  ],
+  [
+    "browser.save_key",
+    "integration",
+    "MEDIUM",
+    "Sayfada görünen API anahtarını kasaya kaydet",
+    "Save the one API key visible on the page to the vault under a name such as OPENROUTER_API_KEY",
+    { name: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]{0,59}$/) },
+  ],
+  [
+    "github.profile",
+    "integration",
+    "LOW",
+    "Kimlik doğrulanmış GitHub profilini oku",
+    "Read the authenticated GitHub profile",
+    {},
+  ],
+  [
+    "github.repositories",
+    "integration",
+    "LOW",
+    "GitHub depolarımı listele",
+    "List authenticated GitHub repositories",
+    { owner: owner.optional(), limit },
+  ],
+  [
+    "github.repository",
+    "integration",
+    "LOW",
+    "GitHub depo ayrıntılarını oku",
+    "Read GitHub repository details",
+    repository,
+  ],
+  [
+    "github.file",
+    "integration",
+    "LOW",
+    "GitHub dosyasını oku",
+    "Read a GitHub repository file",
+    { ...repository, path: label(1024), ref: label(200).optional() },
+  ],
+  [
+    "github.issues",
+    "integration",
+    "LOW",
+    "GitHub sorunlarını listele",
+    "List repository issues",
+    { ...repository, limit },
+  ],
+  [
+    "github.issue",
+    "integration",
+    "LOW",
+    "GitHub sorununu oku",
+    "Read a repository issue",
+    { ...repository, number: z.number().int().min(1).max(2147483647) },
+  ],
+  [
+    "github.issue_create",
+    "integration",
+    "HIGH",
+    "Onaylı GitHub sorunu oluştur",
+    "Create an approved GitHub issue",
+    { ...repository, title: label(256), body: z.string().max(8000) },
+  ],
   ["app.open", "desktop", "LOW", "Uygulama aç", "Open an application", { name: label(80) }],
   [
     "app.focus",
@@ -88,6 +231,31 @@ const definitions: ActionDef[] = [
   ["file.rename", "desktop", "MEDIUM", "Dosyayı yeniden adlandır", "Rename a file", files.shape],
   ["file.mkdir", "desktop", "MEDIUM", "Klasör oluştur", "Create a folder", { path }],
   [
+    "file.create",
+    "desktop",
+    "MEDIUM",
+    "Yeni metin dosyası oluştur",
+    "Create a new UTF8 text file without overwriting",
+    { path, content },
+  ],
+  ["file.read", "desktop", "LOW", "Metin dosyasını oku", "Read a bounded UTF8 text file", { path }],
+  [
+    "file.write",
+    "desktop",
+    "MEDIUM",
+    "Mevcut metin dosyasına yaz",
+    "Replace an existing regular file with UTF8 text",
+    { path, content },
+  ],
+  [
+    "file.delete",
+    "desktop",
+    "HIGH",
+    "Tek dosyayı sil",
+    "Delete one regular file, never a folder",
+    { path },
+  ],
+  [
     "web.open",
     "desktop",
     "MEDIUM",
@@ -146,6 +314,59 @@ const definitions: ActionDef[] = [
     { workflow: label(100), payload: z.record(z.string(), z.json()).default({}) },
   ],
   [
+    "automation.create",
+    "integration",
+    "HIGH",
+    "Zamanlanmış n8n otomasyonu oluştur ya da aynı adlıyı güncelle ve yayınla",
+    "Create (or update the same-named) scheduled n8n automation and publish it. " +
+      "nodes: [{name, type, typeVersion?, parameters, credentials?: {credentialType: name or ''}}]; " +
+      "connections: [{from, to, output?}]. One scheduleTrigger or manualTrigger is required. " +
+      "Files: readWriteFile reads only under /home/node/.n8n-files/ (the operator's mounted folder), " +
+      "glob fileSelector, binary in 'data'. youTube upload: resource 'video', operation 'upload', " +
+      "title, regionCode, categoryId, binaryProperty 'data', options.privacyStatus, " +
+      "credentials {youTubeOAuth2Api: ''}. Skip already handled items with removeDuplicates " +
+      "operation 'removeItemsSeenInPreviousExecutions' and dedupeValue.",
+    {
+      name: label(80),
+      nodes: z
+        .array(
+          z.strictObject({
+            name: label(80),
+            type: z.enum(automationNodeTypes),
+            typeVersion: z.number().min(1).max(10).optional(),
+            parameters: z.record(z.string(), z.json()).default({}),
+            credentials: z
+              .record(z.string().regex(/^[A-Za-z0-9]{1,80}$/), z.string().max(120))
+              .optional(),
+          }),
+        )
+        .min(2)
+        .max(30),
+      connections: z
+        .array(
+          z.strictObject({
+            from: label(80),
+            to: label(80),
+            output: z.number().int().min(0).max(9).default(0),
+          }),
+        )
+        .max(60),
+    },
+  ],
+  [
+    "help.guide",
+    "integration",
+    "LOW",
+    "Operatörün yapması gereken kurulumu (API anahtarı, giriş, OAuth) resmi kaynaktan adım adım göster ve sayfayı aç",
+    "Show, from the vendor's official pages, the exact steps the operator must do (API key, " +
+      "sign-in, OAuth connection, account setting) and open the page. Plan it whenever a request " +
+      "needs something only the operator can provide or an action is missing because it is not " +
+      "configured. Known topics: n8n-api-key (lets JARVIS write n8n automations), youtube-n8n " +
+      "(YouTube uploads from n8n), gemini-api-key, openrouter-api-key, anthropic-api-key, " +
+      "github-cli; any other topic is researched on official sites.",
+    { topic: label(200) },
+  ],
+  [
     "memory.save",
     "memory",
     "MEDIUM",
@@ -192,6 +413,18 @@ export function compile(
   const errors: string[] = [];
   const compiled: CompiledStep[] = [];
   steps.forEach((step, index) => {
+    const conditional = z
+      .strictObject({
+        step: z.number().int().min(1).max(Math.max(1, index)),
+        contains: z.string().min(1).max(4096),
+        not: z.boolean().optional(),
+      })
+      .optional()
+      .safeParse(step?.when);
+    if (!conditional.success || (conditional.data && index === 0)) {
+      errors.push(`step ${index + 1}: condition must reference an earlier step`);
+      return;
+    }
     const { action, args } = (step ?? {}) as { action?: unknown; args?: unknown };
     // Own-property lookup: "__proto__" or "constructor" must not resolve to Object internals.
     const definition =
@@ -213,6 +446,7 @@ export function compile(
       args: parsed.data,
       risk: definition.risk,
       kind: definition.kind,
+      ...(conditional.data && { when: conditional.data }),
     });
   });
   return errors.length ? { ok: false, errors } : { ok: true, steps: compiled };

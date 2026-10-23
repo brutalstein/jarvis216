@@ -51,7 +51,10 @@ services:
       N8N_PERSONALIZATION_ENABLED: "false"
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
       GENERIC_TIMEZONE: Europe/Istanbul
-    volumes: ["n8n-data:/home/node/.n8n"]
+    volumes:
+      - n8n-data:/home/node/.n8n
+      # The operator's media folder, read-only, in the only path n8n 2.x file nodes may read.
+      - ${JARVIS_MEDIA_DIR:-./data/n8n-files}:/home/node/.n8n-files:ro
     networks: [automation]
     mem_limit: 1g
     cpus: 1

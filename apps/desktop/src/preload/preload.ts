@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { Bridge, UiEvent } from "../shared";
 
 const bridge: Bridge = {
+  updates: {
+    status: () => ipcRenderer.invoke("updates:status"),
+    check: () => ipcRenderer.invoke("updates:check"),
+    download: () => ipcRenderer.invoke("updates:download"),
+    install: () => ipcRenderer.invoke("updates:install"),
+  },
   voice: () => ipcRenderer.invoke("voice"),
   onEvent: (cb) => {
     ipcRenderer.on("ui:event", (_event, data: UiEvent) => cb(data));
@@ -45,6 +51,8 @@ const bridge: Bridge = {
   setListening: (on) => {
     ipcRenderer.send("listening", on);
   },
+  mini: () => ipcRenderer.send("window:mini"),
+  restore: () => ipcRenderer.send("window:restore"),
 };
 contextBridge.exposeInMainWorld("jarvis", bridge);
 window.addEventListener("jarvis:ui", (event) => {
@@ -57,7 +65,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.send(
       "overlay:pointer",
       event.target instanceof Element &&
-        Boolean(event.target.closest("[data-card], [data-hud-card]")),
+        Boolean(event.target.closest("[data-card], [data-hud-card], [data-restore]")),
     );
   });
   window.addEventListener("mouseleave", () => ipcRenderer.send("overlay:pointer", false));

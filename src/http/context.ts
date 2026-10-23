@@ -18,6 +18,7 @@ export interface ServerOptions {
   memory?: MemoryStore;
   permissions?: PermissionService;
   brain?: Brain;
+  capabilities?(): Promise<unknown>;
 }
 export const TaskId = z.strictObject({ id: z.uuid() });
 export type HttpContext = {

@@ -1,4 +1,6 @@
-import { mkdir, stat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { constants } from "node:fs";
+import { link, lstat, mkdir, open, realpath, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { appNames } from "./apps.js";
@@ -11,7 +13,16 @@ import type { CompiledStep, ToolPort, ToolResult } from "./types.js";
 export type Panel =
   | { type: "windows"; items: string[] }
   | { type: "news"; title: string; items: NewsItem[] }
-  | { type: "text"; title: string; body: string };
+  | { type: "text"; title: string; body: string }
+  // What only the operator can do (a key, a sign-in), taken from the vendor's official pages.
+  | {
+      type: "guide";
+      title: string;
+      steps: string[];
+      links: { label: string; url: string }[];
+      sources: string[];
+      where?: string;
+    };
 export type Evidence = {
   ok: boolean;
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";
@@ -56,12 +67,15 @@ const bad = (result: ToolResult, pattern = errorText) =>
   !result.ok || pattern.test(result.text.trim());
 
 type Seen = Snapshot & { text: string };
+class SnapshotFailure extends Error {}
+
 async function look(ctx: RunContext): Promise<Seen> {
   const result = await ctx.tools.call(
     "Snapshot",
     { use_vision: false, use_annotation: false },
     ctx.signal,
   );
+  if (bad(result)) throw new SnapshotFailure(redactSecrets(result.text));
   return { ...parseSnapshot(result.text), text: snapshotText(result.text) };
 }
 
@@ -164,6 +178,148 @@ async function transfer(
   return arrived && left
     ? seen(`${path.basename(to)} is in ${path.dirname(to)}`)
     : failed(result.text);
+}
+
+const maxFileBytes = 16_000;
+
+async function regularFile(target: string) {
+  const info = await lstat(target);
+  if (!info.isFile() || info.isSymbolicLink())
+    throw new GuardError("only regular files are allowed");
+  return info;
+}
+
+async function readTextFile(target: string): Promise<string> {
+  const before = await regularFile(target);
+  if (before.size > maxFileBytes) throw new GuardError("file exceeds 16000 UTF8 bytes");
+  const handle = await open(target, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const opened = await handle.stat();
+    if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino)
+      throw new GuardError("file changed before reading");
+    const buffer = Buffer.alloc(maxFileBytes + 1);
+    let length = 0;
+    while (length < buffer.length) {
+      const { bytesRead } = await handle.read(buffer, length, buffer.length - length, null);
+      if (!bytesRead) break;
+      length += bytesRead;
+    }
+    if (length > maxFileBytes) throw new GuardError("file exceeds 16000 UTF8 bytes");
+    try {
+      return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        buffer.subarray(0, length),
+      );
+    } catch {
+      throw new GuardError("file is not valid UTF8");
+    }
+  } finally {
+    await handle.close();
+  }
+}
+
+async function fileAction(
+  operation: "create" | "read" | "write" | "delete",
+  args: Record<string, unknown>,
+  ctx: RunContext,
+): Promise<Evidence> {
+  const input = text(args, "path");
+  // Refuse Windows alternate streams and NUL paths on every host, before filesystem access.
+  if (input.includes("\0") || input.replace(/^[a-z]:[\\/]/i, "").includes(":"))
+    return refused(outsideRoots);
+  const requested = await inside(ctx, input);
+  if (!requested) return refused(outsideRoots);
+  let temporary: string | undefined;
+  let published = false;
+  try {
+    // Use the canonical parent so an already-resolved junction is not traversed for the write.
+    const target = path.join(await realpath(path.dirname(requested)), path.basename(requested));
+    const roots = (
+      await Promise.all(ctx.roots.map((root) => realpath(root).catch(() => null)))
+    ).filter((root): root is string => root !== null);
+    await containedPath(target, roots);
+    ctx.signal.throwIfAborted();
+    if (operation === "read") {
+      const content = await readTextFile(target);
+      ctx.signal.throwIfAborted();
+      return seen(`${path.basename(target)} was read`, {
+        type: "text",
+        title: path.basename(target),
+        body: content,
+      });
+    }
+    if (operation === "delete") {
+      await regularFile(target);
+      ctx.signal.throwIfAborted();
+      await unlink(target);
+      published = true;
+      const missing = await lstat(target).then(
+        () => false,
+        (error: NodeJS.ErrnoException) => {
+          if (error.code === "ENOENT") return true;
+          throw error;
+        },
+      );
+      return missing
+        ? seen(`${path.basename(target)} is absent`)
+        : failed("the file is still present");
+    }
+    const content = text(args, "content");
+    if (!content.isWellFormed() || Buffer.byteLength(content, "utf8") > maxFileBytes)
+      return refused("content exceeds 16000 UTF8 bytes or is invalid");
+    const before = operation === "write" ? await regularFile(target) : undefined;
+    const destination = path.join(path.dirname(target), `.jarvis-${randomUUID()}.tmp`);
+    const handle = await open(destination, "wx", before ? before.mode & 0o777 : 0o600);
+    temporary = destination;
+    try {
+      await handle.writeFile(content, { encoding: "utf8", signal: ctx.signal });
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    if ((await readTextFile(destination)) !== content)
+      throw new Error("file content readback failed");
+    if (before) {
+      const current = await regularFile(target);
+      if (
+        current.dev !== before.dev ||
+        current.ino !== before.ino ||
+        current.mtimeMs !== before.mtimeMs ||
+        current.size !== before.size
+      )
+        throw new GuardError("file changed before replacement");
+      await containedPath(target, roots);
+      ctx.signal.throwIfAborted();
+      // shortcut: portable Node paths cannot lock parent directories against hostile replacement.
+      await rename(destination, target);
+      temporary = undefined;
+      published = true;
+    } else {
+      await containedPath(target, roots);
+      ctx.signal.throwIfAborted();
+      // Linking a prepared sibling publishes complete content and refuses an existing target.
+      await link(destination, target);
+      published = true;
+    }
+    return (await readTextFile(target)) === content
+      ? seen(`${path.basename(target)} holds the requested content`)
+      : failed("the file does not hold the requested content");
+  } catch (error) {
+    if (published) throw error;
+    if (error instanceof GuardError) return refused(error.message);
+    // These are definite filesystem refusals; unexpected I/O failures remain uncertain to Core.
+    if (
+      ["ENOENT", "EEXIST", "EISDIR", "ENOTDIR", "EACCES", "EPERM", "ELOOP"].includes(
+        (error as NodeJS.ErrnoException).code ?? "",
+      )
+    )
+      return failed((error as Error).message);
+    throw error;
+  } finally {
+    if (temporary)
+      await unlink(temporary).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") throw error;
+      });
+  }
 }
 
 const mediaKeys = new Map([
@@ -385,6 +541,11 @@ const bindings: Record<string, (args: Args, ctx: RunContext) => Promise<Evidence
       : failed("the folder was not created");
   },
 
+  "file.create": (args, ctx) => fileAction("create", args, ctx),
+  "file.read": (args, ctx) => fileAction("read", args, ctx),
+  "file.write": (args, ctx) => fileAction("write", args, ctx),
+  "file.delete": (args, ctx) => fileAction("delete", args, ctx),
+
   async "web.open"(args, ctx) {
     // explorer.exe hands an http(s) URL to the default browser; argv, never a shell.
     const executable = path.join(process.env.SystemRoot ?? "C:\\Windows", "explorer.exe");
@@ -408,5 +569,10 @@ export async function runStep(step: CompiledStep, ctx: RunContext): Promise<Evid
   ctx.signal.throwIfAborted();
   const binding = Object.hasOwn(bindings, step.action) ? bindings[step.action] : undefined;
   if (!binding) throw new Error(`${step.action} is not a desktop action`);
-  return binding(step.args, ctx);
+  try {
+    return await binding(step.args, ctx);
+  } catch (error) {
+    if (error instanceof SnapshotFailure) return failed(error.message);
+    throw error;
+  }
 }

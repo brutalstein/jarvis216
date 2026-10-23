@@ -4,6 +4,7 @@ export type Block =
   | { type: "list"; title?: string; items: string[] }
   | { type: "code"; language?: string; code: string };
 export type UiEvent =
+  | { type: "update"; update: UpdateState }
   | { type: "state"; value: State }
   | { type: "caption"; role: "user" | "jarvis"; text: string }
   | { type: "display"; blocks: Block[] }
@@ -19,6 +20,21 @@ export type UiEvent =
     }
   | { type: "error"; code: string };
 export type Voice = { url: string; token: string; test?: boolean };
+export type UpdateState = {
+  phase:
+    | "unsupported"
+    | "idle"
+    | "checking"
+    | "current"
+    | "available"
+    | "downloading"
+    | "ready"
+    | "installing"
+    | "error";
+  version: string;
+  next?: string;
+  percent?: number;
+};
 export type PermissionMode = "ask" | "allow" | "deny";
 export type Preset = "guarded" | "trusted" | "autonomous";
 export type PermissionChange = {
@@ -48,6 +64,12 @@ export type BrainView = {
 export type MemoryNote = { id: string; note: string; createdAt: number };
 export type Enrollment = { enrolled: boolean; seconds: number };
 export interface Bridge {
+  updates: {
+    status(): Promise<UpdateState>;
+    check(): Promise<UpdateState>;
+    download(): Promise<UpdateState>;
+    install(): Promise<void>;
+  };
   voice(): Promise<Voice>;
   onEvent(cb: (event: UiEvent) => void): void;
   turns: { export(): Promise<unknown>; deleteAll(): Promise<void> };
@@ -83,6 +105,10 @@ export interface Bridge {
     remove(): Promise<void>;
   };
   setListening(on: boolean): void;
+  /** Hides the main window; the edge overlay takes over. */
+  mini(): void;
+  /** Brings the main window back from the edge overlay. */
+  restore(): void;
 }
 declare global {
   interface Window {

@@ -232,6 +232,7 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         )
         try:
             result = await self.core.turn(text, follow_up)
+            core_done = time.monotonic()
         finally:
             if filler is not None:
                 filler.cancel()
@@ -255,7 +256,12 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         await self.send({"type": "state", "value": "speaking"})
         speech = TTSSpeakFrame(say)
         speech.metadata.update(
-            {**timing, "lang": lang, "coreMs": round((time.monotonic() - started) * 1000)}
+            {
+                **timing,
+                "lang": lang,
+                "coreMs": round((core_done - started) * 1000),
+                "replyWaitMs": round((time.monotonic() - core_done) * 1000),
+            }
         )
         self.replied = True
         await self.push_frame(speech)

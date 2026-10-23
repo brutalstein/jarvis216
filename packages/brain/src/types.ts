@@ -1,5 +1,9 @@
 export type Lang = "tr" | "en";
-export type Step = { action: string; args: Record<string, unknown> };
+export type Step = {
+  action: string;
+  args: Record<string, unknown>;
+  when?: { step: number; contains: string; not?: boolean };
+};
 export type IntentRecord = {
   kind: "reply" | "clarify" | "plan" | "cancel";
   goal?: string;

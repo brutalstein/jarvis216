@@ -1,11 +1,27 @@
 import { existsSync, readFileSync, renameSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  link,
+  lstat,
+  mkdir,
+  mkdtemp,
+  open,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { compile } from "../src/catalog.js";
 import { runStep } from "../src/run.js";
 import type { CompiledStep, ToolPort } from "../src/types.js";
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, open: vi.fn(actual.open) };
+});
 
 const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/windows-mcp/${name}`, import.meta.url), "utf8");
@@ -411,6 +427,247 @@ describe("files and web", () => {
       },
     });
   });
+});
+
+describe("contained file CRUD", () => {
+  const execute = (action: string, args: Record<string, unknown>) =>
+    runStep(
+      step(action, args),
+      ctx(
+        fake(() => {
+          throw new Error("file CRUD must not call MCP");
+        }).port,
+      ),
+    );
+
+  it("creates exclusively and independently reads the actual UTF8 contents", async () => {
+    const content = "Merhaba dünya\n  preserved whitespace  ";
+    expect(await execute("file.create", { path: "created.txt", content })).toMatchObject({
+      ok: true,
+      evidence: "postcondition",
+    });
+    expect(await readFile(join(root, "created.txt"), "utf8")).toBe(content);
+    expect(await execute("file.read", { path: "created.txt" })).toMatchObject({
+      ok: true,
+      evidence: "postcondition",
+      panel: { type: "text", title: "created.txt", body: content },
+    });
+    expect(
+      await execute("file.create", { path: "created.txt", content: "overwritten" }),
+    ).toMatchObject({ ok: false });
+    expect(await readFile(join(root, "created.txt"), "utf8")).toBe(content);
+  });
+
+  it("publishes exactly one complete file for concurrent exclusive creates", async () => {
+    const [first, second] = await Promise.all([
+      execute("file.create", { path: "concurrent.txt", content: "first" }),
+      execute("file.create", { path: "concurrent.txt", content: "second" }),
+    ]);
+    expect([first.ok, second.ok].filter(Boolean)).toHaveLength(1);
+    expect(await readFile(join(root, "concurrent.txt"), "utf8")).toBe(
+      first.ok ? "first" : "second",
+    );
+  });
+
+  it("does not publish partial content when the disk write fails", async () => {
+    const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    vi.mocked(open).mockImplementationOnce(async (...args) => {
+      const handle = await actual.open(...args);
+      handle.writeFile = async () => {
+        await handle.write("partial");
+        throw Object.assign(new Error("disk full"), { code: "ENOSPC" });
+      };
+      return handle;
+    });
+    await expect(
+      execute("file.create", { path: "partial.txt", content: "complete content" }),
+    ).rejects.toMatchObject({ code: "ENOSPC" });
+    expect(existsSync(join(root, "partial.txt"))).toBe(false);
+    expect((await readdir(root)).filter((name) => name.startsWith(".jarvis-"))).toEqual([]);
+  });
+
+  it("keeps the previous file intact when a replacement write fails", async () => {
+    await writeFile(join(root, "preserved.txt"), "previous content");
+    const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    vi.mocked(open).mockImplementationOnce(async (...args) => {
+      const handle = await actual.open(...args);
+      handle.writeFile = async () => {
+        await handle.write("partial");
+        throw Object.assign(new Error("disk full"), { code: "ENOSPC" });
+      };
+      return handle;
+    });
+    await expect(
+      execute("file.write", { path: "preserved.txt", content: "replacement" }),
+    ).rejects.toMatchObject({ code: "ENOSPC" });
+    expect(await readFile(join(root, "preserved.txt"), "utf8")).toBe("previous content");
+    expect((await readdir(root)).filter((name) => name.startsWith(".jarvis-"))).toEqual([]);
+  });
+
+  it("propagates an unreadable postcondition after publication as uncertain", async () => {
+    const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    const denied = Object.assign(new Error("readback denied"), { code: "EACCES" });
+    vi.mocked(open)
+      .mockImplementationOnce(actual.open)
+      .mockImplementationOnce(actual.open)
+      .mockRejectedValueOnce(denied);
+    await expect(
+      execute("file.create", { path: "uncertain.txt", content: "published" }),
+    ).rejects.toBe(denied);
+    expect(await readFile(join(root, "uncertain.txt"), "utf8")).toBe("published");
+  });
+
+  it("uses an existing allowed root when another configured root is absent", async () => {
+    const context = { ...ctx(fake(() => "").port), roots: [root, join(base, "missing-root")] };
+    expect(
+      await runStep(step("file.create", { path: "available-root.txt", content: "ok" }), context),
+    ).toMatchObject({ ok: true, evidence: "postcondition" });
+    expect(await readFile(join(root, "available-root.txt"), "utf8")).toBe("ok");
+  });
+
+  it("reads all permitted bytes without trimming or truncation", async () => {
+    const content = "é".repeat(8000);
+    await writeFile(join(root, "boundary.txt"), content);
+    expect((await execute("file.read", { path: "boundary.txt" })).panel).toMatchObject({
+      body: content,
+    });
+  });
+
+  it("does not publish a file when the operation is already cancelled", async () => {
+    const signal = AbortSignal.abort();
+    await expect(
+      runStep(step("file.create", { path: "cancelled.txt", content: "no" }), {
+        ...ctx(fake(() => "").port),
+        signal,
+      }),
+    ).rejects.toThrow();
+    expect(existsSync(join(root, "cancelled.txt"))).toBe(false);
+  });
+
+  it("writes only an existing regular file and verifies replacement content", async () => {
+    await writeFile(join(root, "written.txt"), "old and longer content");
+    expect(await execute("file.write", { path: "written.txt", content: "yeni ✓" })).toMatchObject({
+      ok: true,
+      evidence: "postcondition",
+    });
+    expect(await readFile(join(root, "written.txt"), "utf8")).toBe("yeni ✓");
+    expect(await execute("file.write", { path: "missing.txt", content: "no" })).toMatchObject({
+      ok: false,
+    });
+    expect(existsSync(join(root, "missing.txt"))).toBe(false);
+    expect(await execute("file.write", { path: "Raporlar", content: "no" })).toMatchObject({
+      ok: false,
+      evidence: "refused",
+    });
+  });
+
+  it("supports empty files and deletes a regular file with absence evidence", async () => {
+    expect((await execute("file.create", { path: "empty.txt", content: "" })).ok).toBe(true);
+    expect((await execute("file.read", { path: "empty.txt" })).panel).toMatchObject({ body: "" });
+    expect(await execute("file.delete", { path: "empty.txt" })).toMatchObject({
+      ok: true,
+      evidence: "postcondition",
+    });
+    await expect(lstat(join(root, "empty.txt"))).rejects.toMatchObject({ code: "ENOENT" });
+    expect(await execute("file.delete", { path: "Raporlar" })).toMatchObject({
+      ok: false,
+      evidence: "refused",
+    });
+    expect((await lstat(join(root, "Raporlar"))).isDirectory()).toBe(true);
+  });
+
+  it("does not modify a hard-linked outside file when replacing an allowed file", async () => {
+    const outside = join(base, "outside", "hardlinked.txt");
+    await writeFile(outside, "outside");
+    await link(outside, join(root, "hardlinked.txt"));
+    expect((await execute("file.write", { path: "hardlinked.txt", content: "inside" })).ok).toBe(
+      true,
+    );
+    expect(await readFile(outside, "utf8")).toBe("outside");
+    expect(await readFile(join(root, "hardlinked.txt"), "utf8")).toBe("inside");
+  });
+
+  it("refuses bounded reads of oversized and invalid UTF8 files", async () => {
+    await writeFile(join(root, "large.txt"), "é".repeat(8001));
+    await writeFile(join(root, "binary.txt"), Buffer.from([0xff, 0xfe]));
+    expect(await execute("file.read", { path: "large.txt" })).toMatchObject({
+      ok: false,
+      evidence: "refused",
+    });
+    expect(await execute("file.read", { path: "binary.txt" })).toMatchObject({
+      ok: false,
+      evidence: "refused",
+    });
+    expect(await execute("file.read", { path: "Raporlar" })).toMatchObject({
+      ok: false,
+      evidence: "refused",
+    });
+  });
+
+  it.each(["file.create", "file.read", "file.write", "file.delete"])(
+    "refuses root escapes and junctions for %s",
+    async (action) => {
+      const outside = join(base, "outside", `${action}.txt`);
+      await writeFile(outside, "unchanged");
+      const junction = join(root, `junction-${action}`);
+      await symlink(join(base, "outside"), junction, "junction");
+      for (const path of [
+        outside,
+        `../outside/${action}.txt`,
+        join(junction, `${action}.txt`),
+        "file.txt:stream",
+        "invalid\0.txt",
+      ])
+        expect(
+          await execute(action, {
+            path,
+            ...(["file.create", "file.write"].includes(action) && { content: "changed" }),
+          }),
+        ).toMatchObject({ ok: false, evidence: "refused" });
+      expect(await readFile(outside, "utf8")).toBe("unchanged");
+    },
+  );
+
+  it("refuses final symlinks even when they point inside the roots", async () => {
+    await writeFile(join(root, "link-target.txt"), "unchanged");
+    try {
+      await symlink(join(root, "link-target.txt"), join(root, "file-link.txt"), "file");
+    } catch (error) {
+      // Windows needs developer mode or symlink privilege for file links; junctions run above.
+      if ((error as NodeJS.ErrnoException).code === "EPERM") return;
+      throw error;
+    }
+    for (const action of ["file.read", "file.write", "file.delete"])
+      expect(
+        await execute(action, {
+          path: "file-link.txt",
+          ...(action === "file.write" && { content: "changed" }),
+        }),
+      ).toMatchObject({ ok: false, evidence: "refused" });
+    expect(await readFile(join(root, "link-target.txt"), "utf8")).toBe("unchanged");
+  });
+});
+
+describe("snapshot failures", () => {
+  it.each(["window.list", "screen.describe", "app.focus"])(
+    "does not treat a failed Snapshot as an observation for %s",
+    async (action) => {
+      const text = '{"code":"USER_CONTROL","status":{"state":"user"}}';
+      const calls: string[] = [];
+      const port: ToolPort = {
+        async call(name) {
+          calls.push(name);
+          return { ok: false, text };
+        },
+      };
+      const result = await runStep(
+        step(action, action === "app.focus" ? { name: "Brave" } : {}),
+        ctx(port),
+      );
+      expect(result).toEqual({ ok: false, evidence: "observed-failure", observation: text });
+      expect(calls).toEqual(["Snapshot"]);
+    },
+  );
 });
 
 describe("transport and cancellation", () => {

@@ -1,3 +1,4 @@
+import http.client
 import json
 import sys
 import threading
@@ -232,8 +233,21 @@ class ServerTests(unittest.TestCase):
         bad["url"] = "https://example.com/?x=1"
         self.assertEqual(self.post(bad)[0], 400)
         self.assertEqual(self.post(self.payload("not on the page"))[0], 400)
-        status, _, body = self.post(self.payload(), {"Transfer-Encoding": "chunked"})
-        self.assertEqual(status, 400)
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        try:
+            connection.putrequest("POST", "/v1/extract")
+            connection.putheader("Authorization", f"Bearer {self.token}")
+            connection.putheader("Content-Length", "1")
+            connection.putheader("Transfer-Encoding", "chunked")
+            # The server rejects these headers before reading a body; sending chunks races closure.
+            connection.endheaders()
+            response = connection.getresponse()
+            self.assertEqual(response.status, 400)
+            self.assertEqual(
+                json.loads(response.read()), {"error": "REQUEST_OR_VERIFICATION_FAILED"}
+            )
+        finally:
+            connection.close()
 
     def test_one_browser_at_a_time(self) -> None:
         entered, release = threading.Event(), threading.Event()

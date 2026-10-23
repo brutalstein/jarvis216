@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { Pool, type PoolClient } from "pg";
 
 export interface Sql {
@@ -14,7 +15,8 @@ export function postgres(
   url: string,
   pool = new Pool({
     connectionString: url,
-    max: 5,
+    // Every worker may hold a connection while HTTP routes still need theirs.
+    max: 10 + availableParallelism() * 2,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10_000,
   }),
@@ -249,5 +251,16 @@ export async function migrate(db: Database): Promise<void> {
       INSERT INTO schema_migrations VALUES (11);
     `;
     for (const statement of ddl.split(";").filter((sql) => sql.trim())) await tx.query(statement);
+  });
+  await db.transaction(async (tx) => {
+    await tx.query("SELECT pg_advisory_xact_lock(216216)");
+    if ((await tx.query("SELECT version FROM schema_migrations WHERE version=12")).rows.length)
+      return;
+    await tx.query("ALTER TABLE tasks DROP CONSTRAINT tasks_status_check");
+    await tx.query(`ALTER TABLE tasks ADD CONSTRAINT tasks_status_check CHECK(status IN (
+      'CREATED','VALIDATING','PLANNING','READY','RUNNING','WAITING_FOR_APPROVAL',
+      'WAITING_FOR_DEPENDENCY','VERIFYING','COMPLETED','FAILED','CANCELLED','BLOCKED',
+      'RECOVERY_REQUIRED','SKIPPED'))`);
+    await tx.query("INSERT INTO schema_migrations VALUES (12)");
   });
 }

@@ -30,6 +30,16 @@ function task(action: string, args: Record<string, unknown> = {}, risk = "LOW"):
 }
 
 describe("DesktopExecutor", () => {
+  it.each(["LOW", "MEDIUM"])("refuses a HIGH file deletion downgraded to %s", async (risk) => {
+    const call = vi.fn();
+    await expect(
+      new DesktopExecutor({ call }, []).execute(
+        task("file.delete", { path: "isolated.txt" }, risk),
+        signal(),
+      ),
+    ).rejects.toMatchObject({ kind: "policy-denied", dispatched: false });
+    expect(call).not.toHaveBeenCalled();
+  });
   it("maps typed evidence to the Core result contract", async () => {
     const call = vi.fn(async () => ({ ok: true, text: "Media key sent" }));
     const executor = new DesktopExecutor({ call }, []);

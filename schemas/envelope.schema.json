@@ -82,7 +82,8 @@
           "workflow.invoke",
           "desktop.act",
           "info.fetch",
-          "memory.write"
+          "memory.write",
+          "tool.execute"
         ]
       }
     },

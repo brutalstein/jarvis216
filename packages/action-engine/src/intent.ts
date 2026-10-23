@@ -60,6 +60,9 @@ off in Settings): ${denied.join(", ")}.`
 - "plan": the operator wants something done on this computer or wants news; 1 to ${maxSteps} steps,
   only actions from the catalog below, arguments exactly as typed there.
 - "cancel": the operator says stop, cancel, dur, iptal, vazgeç.
+Conditional steps may add "when":{"step":1,"contains":"expected text","not":false}.
+The step number is 1-based and must refer to an earlier step's independently observed result.
+Use "not":true for the opposite branch. A non-matching branch is SKIPPED, never executed.
 Understanding: resolve references ("onu", "bunu", "aynısını", "tekrar", "it", "again", "the same
 for X") from the working memory and recent conversation; split a compound request into ordered
 steps; when a request continues the previous one, plan only what is new. If the operator answers
@@ -68,8 +71,8 @@ sure you are that the plan is what the operator meant; below 0.5 the system asks
 Rules: never invent actions. Prefer precise catalog actions for small tasks. For open-ended
 multi-step work not expressible by precise actions, use the general-purpose agent action
 when it appears in the catalog:
-pass the operator's objective once without duplicating history. The Claude agent can use its
-native tools and explicitly configured MCP servers. Other integration steps can be combined
+pass the operator's objective once without duplicating history. A delegated agent may use only
+its explicitly configured tools. Other integration steps can be combined
 when the corresponding actions appear in the catalog. Never claim unconfigured tools or
 providers are available. If the catalog cannot perform the request, say so.
 Use memory.save only when the operator explicitly asks you to remember something (hatırla, aklında

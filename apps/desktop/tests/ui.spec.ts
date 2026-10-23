@@ -127,6 +127,91 @@ test("display cards render text only, keep three, pin and expire", async () => {
   }
 });
 
+test("JARVIS picks the view in auto mode; the operator can pin focus or wide", async () => {
+  const run = await launch();
+  try {
+    const body = run.page.locator("body");
+    await expect(body).toHaveAttribute("data-view", "auto");
+    await expect(body).toHaveAttribute("data-layout", "focus");
+    await emit(run.app, { type: "display", blocks: [{ type: "text", title: "Not", body: "x" }] });
+    await expect(body).toHaveAttribute("data-layout", "standard");
+    await emit(run.app, {
+      type: "plan",
+      plan: {
+        id: "auto-news",
+        goal: "Haberler",
+        kind: "info",
+        status: "COMPLETED",
+        needsApproval: false,
+        hash: "h",
+        steps: [],
+        panels: [{ type: "news", title: "Bugün", items: [] }],
+      },
+    });
+    await expect(body).toHaveAttribute("data-layout", "wide");
+    await expect(run.page.locator("[data-feed]")).toBeVisible();
+    const focus = run.page.getByRole("button", { name: "Odak" });
+    await focus.click();
+    await expect(focus).toHaveAttribute("aria-pressed", "true");
+    await expect(body).toHaveAttribute("data-layout", "focus");
+    await expect(run.page.locator("[data-feed]")).toBeHidden();
+    await run.page.reload();
+    await expect(run.page.locator("body")).toHaveAttribute("data-view", "focus");
+    await run.page.getByRole("button", { name: "Geniş" }).click();
+    await expect(run.page.locator("body")).toHaveAttribute("data-layout", "wide");
+  } finally {
+    await run.close();
+  }
+});
+
+test("the activity feed lists what happened, newest first, as text only", async () => {
+  const run = await launch();
+  try {
+    await run.page.getByRole("button", { name: "Geniş" }).click();
+    const items = run.page.locator("[data-feed] [data-feed-item]");
+    await emit(run.app, { type: "caption", role: "user", text: "Jarvis, haberler?" });
+    await emit(run.app, {
+      type: "announce",
+      kind: "outcome",
+      lang: "tr",
+      text: "Beş haber hazır.",
+    });
+    await emit(run.app, { type: "caption", role: "user", text: "<b>kalın</b>" });
+    await expect(items).toHaveCount(3);
+    await expect(items.first()).toContainText("<b>kalın</b>");
+    await expect(items.last()).toContainText("Jarvis, haberler?");
+    expect(await run.page.locator("[data-feed] b").count()).toBe(0);
+    await run.page.waitForTimeout(600);
+    await run.page.screenshot({ path: `${shots}/feed.png` });
+  } finally {
+    await run.close();
+  }
+});
+
+test("Mini sends JARVIS to the screen edge and the orb brings it back", async () => {
+  const run = await launch();
+  try {
+    const visible = (title: string) =>
+      run.app.evaluate(
+        ({ BrowserWindow }, name) =>
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === name)
+            ?.isVisible(),
+        title,
+      );
+    await expect.poll(() => visible("JARVIS")).toBe(true);
+    await run.page.getByRole("button", { name: "Mini" }).click();
+    await expect.poll(() => visible("JARVIS")).toBe(false);
+    await expect.poll(() => visible("JARVIS Overlay")).toBe(true);
+    const overlay = await overlayPage(run.app);
+    await overlay.locator("[data-restore]").evaluate((node) => (node as HTMLElement).click());
+    await expect.poll(() => visible("JARVIS")).toBe(true);
+    await expect.poll(() => visible("JARVIS Overlay")).toBe(false);
+  } finally {
+    await run.close();
+  }
+});
+
 test("reduced motion freezes the presence", async () => {
   const run = await launch();
   try {

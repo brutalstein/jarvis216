@@ -18,6 +18,14 @@ process.stdin.on("data", (chunk) => {
 process.stdin.on("end", () => {
   writeFileSync(record, JSON.stringify({ argv, env: process.env, stdin, pid: process.pid }));
   if (mode === "success") process.stdout.write(`${result(false, "verified")}\n`);
+  else if (mode === "agent-done" || mode === "agent-denied")
+    process.stdout.write(
+      JSON.stringify({
+        ...JSON.parse(result(false, "İstanbul: 21°C, sağanak")),
+        terminal_reason: "completed",
+        permission_denials: mode === "agent-denied" ? [{ tool_name: "Bash" }] : [],
+      }),
+    );
   else if (mode === "login") {
     process.stdout.write(`${result(true, "Not logged in · Please run /login")}\n`);
     process.exitCode = 1;

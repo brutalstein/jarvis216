@@ -22,6 +22,8 @@ const Output = z.object({
   is_error: z.boolean(),
   result: z.string().optional(),
   session_id: z.string().optional(),
+  terminal_reason: z.string().optional(),
+  permission_denials: z.array(z.unknown()).optional(),
   usage: z
     .object({ input_tokens: z.number().int().min(0), output_tokens: z.number().int().min(0) })
     .optional()
@@ -97,8 +99,9 @@ export class ClaudeCodeExecutor implements Executor {
           "default",
           "--permission-mode",
           autonomous ? "acceptEdits" : this.options.agent.permissionMode,
-          "--max-turns",
-          String(this.options.agent.maxTurns),
+          ...(this.options.agent.maxTurns > 0
+            ? ["--max-turns", String(this.options.agent.maxTurns)]
+            : []),
           ...(this.options.agent.mcpConfigs?.length
             ? ["--mcp-config", ...this.options.agent.mcpConfigs]
             : this.options.agent.mcpConfig
@@ -119,9 +122,12 @@ export class ClaudeCodeExecutor implements Executor {
                 "WebSearch",
                 "mcp__*",
               ]
-            : []),
+            : // The operator approved this exact run: reading the web is part of it, nothing more.
+              ["--allowedTools", "WebSearch", "WebFetch"]),
+          // Not "user": an apiKeyHelper or hook there would replace the subscription login or
+          // block the delegated run. The OAuth login itself is not a setting and still applies.
           "--setting-sources",
-          "user,project,local",
+          "project,local",
           "--no-session-persistence",
         ]
       : [
@@ -182,8 +188,19 @@ export class ClaudeCodeExecutor implements Executor {
         }
         if (parsed.is_error || code !== 0)
           return reject(failure(`${parsed.result ?? ""} ${stderr}`));
+        // A delegated run's outcome comes from the harness's own result fields, never the model's
+        // prose: the loop finished on its own and no tool it reached for was refused.
+        const done =
+          parsed.subtype === "success" &&
+          parsed.terminal_reason === "completed" &&
+          parsed.permission_denials?.length === 0;
         resolve({
           text: parsed.result ?? "",
+          ...(this.options.agent && {
+            outcome: done
+              ? { status: "completed" as const, verified: true }
+              : { status: "blocked" as const, verified: false },
+          }),
           source: `${this.id}:${model}:subscription`,
           ...(parsed.session_id ? { externalId: parsed.session_id } : {}),
           ...(parsed.usage && {

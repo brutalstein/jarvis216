@@ -59,7 +59,7 @@ describe("generated pairwise configuration rows through Core", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const provider = row.provider!;
+    const provider = row.provider === "none" && row.codex === "on" ? "codex-live" : row.provider!;
     running = await boot(
       db,
       {
@@ -80,6 +80,7 @@ describe("generated pairwise configuration rows through Core", () => {
       model,
       [
         ...(provider === "none" ? [] : [model.executor(provider)]),
+        ...(row.codex === "on" && provider !== "codex-live" ? [model.executor("codex-live")] : []),
         {
           id: "busy-fixture",
           capability: "text.generate",
@@ -109,6 +110,8 @@ describe("generated pairwise configuration rows through Core", () => {
       ...Object.values(catalog)
         .filter((a) => a.kind === "memory" || (a.kind === "desktop" && row.desktop === "on"))
         .map((a) => a.id),
+      // Official setup guides work in every topology (curated ones need no model).
+      "help.guide",
       ...(row.news === "on" ? ["news.brief"] : []),
       ...(row.browser === "on" ? ["browser.read", "browser.read_many"] : []),
       ...(row.openclaw === "on" ? ["agent.delegate"] : []),

@@ -172,6 +172,23 @@ builds panels from the fetched headlines only. Thumbnails come only from the fee
 URL, private addresses are refused, and only JPEG/PNG/WebP up to 200 KB are sent to the
 renderer as data URIs. The spoken brief is a `personal` text task over those headlines.
 
+## Setup guides (`help.guide`)
+
+Always on, no configuration. When a request needs something only the operator can do (an API
+key, a sign-in, an OAuth connection), JARVIS plans the LOW-risk `help.guide` action. It never
+creates accounts, keys or credentials itself.
+
+- Known topics (`n8n-api-key`, `youtube-n8n`, `gemini-api-key`, `openrouter-api-key`,
+  `anthropic-api-key`, `github-cli`) use curated steps checked against each vendor's docs, with
+  the docs listed as sources. They need no model or network.
+- Any other topic is researched: a text model names the vendor's official domain and its doc
+  pages; Core reads those pages itself (HTTPS, public addresses only, every redirect on that
+  domain, menus stripped) and a model writes the steps only from that text. Links survive only
+  if they open on the official domain; buttons show the page's real title. The configured text
+  models are tried best first, so one rate-limited model is skipped.
+- The desktop shows numbered steps, where the value goes, the source domains and one button per
+  page, and opens the first page by itself when the plan finishes.
+
 ## Long-term memory
 
 Always available; Settings → İzinler decides how it runs ([ADR 0014](ADR/0014-operator-standing-permissions.md)).
@@ -282,6 +299,26 @@ deduplicate task IDs durably before external writes and return `{ "text": "...",
 verification. Core cannot prove external truth from arbitrary webhook JSON. Admin discovery
 and status reads use `N8nClient` with an independently scoped `X-N8N-API-KEY`. Workflow
 discovery is currently a bounded first page. Public execution stopping is explicitly rejected.
+
+### Automations JARVIS writes (optional)
+
+With `ENABLE_N8N=true` and `N8N_API_KEY` (n8n: Settings > n8n API), JARVIS gets
+`automation.create`: it composes a scheduled workflow from a short node list, and Core saves it
+through n8n's public API as `JARVIS · <name>` (same name: updated, not duplicated), links the
+node credentials by type, publishes it and reads it back to confirm it is active. Rules:
+
+- HIGH risk: each create or update needs your exact approval; the card shows every node.
+- Nodes come from a fixed list (triggers, files, YouTube, Google Drive, flow and data nodes). No
+  Code, Execute Command, SSH, HTTP Request or n8n-admin nodes; a trigger is required.
+- Files are read only, only from `/home/node/.n8n-files`, which compose mounts read-only from
+  `JARVIS_MEDIA_DIR`. Literal paths only; expressions in `fileSelector` are refused.
+- Credentials are never created by JARVIS. Connect the account (for example YouTube OAuth) in
+  n8n once; a missing credential is refused before anything is written.
+- JARVIS does not run, stop or delete workflows; do that in n8n.
+
+Verified live against n8n 2.43.7: a compiled workflow read a video from the mounted folder and a
+second run skipped it through Remove Duplicates. The YouTube upload itself needs your credential
+and was not run.
 
 ### Pushed task outcomes (optional)
 

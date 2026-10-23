@@ -13,16 +13,17 @@ export const states = [
   "COMPLETED",
   "FAILED",
   "CANCELLED",
+  "SKIPPED",
   "BLOCKED",
   "RECOVERY_REQUIRED",
 ] as const;
 export type TaskState = (typeof states)[number];
-export const terminal = new Set<TaskState>(["COMPLETED", "FAILED", "CANCELLED"]);
+export const terminal = new Set<TaskState>(["COMPLETED", "FAILED", "CANCELLED", "SKIPPED"]);
 const transitions: Record<TaskState, readonly TaskState[]> = {
   CREATED: ["VALIDATING", "CANCELLED"],
   VALIDATING: ["PLANNING", "FAILED", "CANCELLED"],
   PLANNING: ["READY", "BLOCKED", "FAILED", "CANCELLED"],
-  READY: ["RUNNING", "WAITING_FOR_DEPENDENCY", "CANCELLED", "FAILED", "BLOCKED"],
+  READY: ["RUNNING", "WAITING_FOR_DEPENDENCY", "CANCELLED", "FAILED", "BLOCKED", "SKIPPED"],
   RUNNING: [
     "VERIFYING",
     "WAITING_FOR_APPROVAL",
@@ -33,13 +34,14 @@ const transitions: Record<TaskState, readonly TaskState[]> = {
     "BLOCKED",
   ],
   WAITING_FOR_APPROVAL: ["READY", "CANCELLED", "FAILED"],
-  WAITING_FOR_DEPENDENCY: ["READY", "BLOCKED", "CANCELLED", "FAILED"],
+  WAITING_FOR_DEPENDENCY: ["READY", "BLOCKED", "CANCELLED", "FAILED", "SKIPPED"],
   VERIFYING: ["COMPLETED", "FAILED", "RECOVERY_REQUIRED", "CANCELLED"],
   RECOVERY_REQUIRED: ["COMPLETED", "FAILED", "CANCELLED"],
   BLOCKED: ["READY", "CANCELLED", "FAILED"],
   COMPLETED: [],
   FAILED: [],
   CANCELLED: [],
+  SKIPPED: [],
 };
 export function canTransition(from: TaskState, to: string): boolean {
   return transitions[from].includes(to as TaskState);
@@ -63,6 +65,7 @@ export const CapabilitySchema = z.enum([
   "desktop.act",
   "info.fetch",
   "memory.write",
+  "tool.execute",
 ]);
 export type Capability = z.infer<typeof CapabilitySchema>;
 export const RiskSchema = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
@@ -117,8 +120,9 @@ export const TaskSpecSchema = z
     cachePrefix: z.number().int().min(1).max(16_000).optional(),
     budget: z
       .strictObject({
-        maxCalls: z.number().int().min(1).max(5).default(2),
-        maxDurationMs: z.number().int().min(100).max(300_000).default(60_000),
+        maxCalls: z.number().int().min(1).max(8).default(2),
+        // Up to a day, so delegated agent work can run in the background to completion.
+        maxDurationMs: z.number().int().min(100).max(86_400_000).default(60_000),
         maxOutputTokens: z.number().int().min(1).max(8192).default(1024),
       })
       .default({ maxCalls: 2, maxDurationMs: 60_000, maxOutputTokens: 1024 }),
@@ -127,13 +131,27 @@ export const TaskSpecSchema = z
     // The approved plan this step belongs to; binds MEDIUM approval to the compiled step.
     planId: z.uuid().optional(),
     dependencies: z.array(z.uuid()).max(32).default([]),
+    condition: z
+      .strictObject({
+        dependencyId: z.uuid(),
+        contains: z.string().min(1).max(4096),
+        not: z.boolean().optional(),
+      })
+      .optional(),
     context: z.array(ContextEntrySchema).max(8).default([]),
     verification: z.discriminatedUnion("kind", [
       z.strictObject({ kind: z.literal("contains"), value: z.string().min(1).max(4096) }),
       z.strictObject({ kind: z.literal("non-empty") }),
+      z.strictObject({ kind: z.literal("postcondition") }),
     ]),
   })
   .superRefine((task, ctx) => {
+    if (task.condition && !task.dependencies.includes(task.condition.dependencyId))
+      ctx.addIssue({
+        code: "custom",
+        path: ["condition"],
+        message: "Condition must reference a declared dependency",
+      });
     if (task.responseFormat && task.capability !== "text.generate")
       ctx.addIssue({
         code: "custom",
@@ -156,7 +174,17 @@ export const TaskSpecSchema = z
       });
   });
 export type TaskSpec = z.infer<typeof TaskSpecSchema>;
-export function verified(spec: TaskSpec, text: string): boolean {
+export const OutcomeSchema = z.strictObject({
+  status: z.enum(["completed", "blocked", "failed", "incomplete"]),
+  verified: z.boolean(),
+});
+export function verified(
+  spec: TaskSpec,
+  text: string,
+  outcome?: z.infer<typeof OutcomeSchema>,
+): boolean {
+  if (outcome && (outcome.status !== "completed" || !outcome.verified)) return false;
+  if (spec.verification.kind === "postcondition") return outcome?.verified === true;
   return spec.verification.kind === "contains"
     ? text.includes(spec.verification.value)
     : text.trim().length > 0;
@@ -165,6 +193,8 @@ export const ResultSchema = z.strictObject({
   text: z.string().min(1).max(64_000),
   source: z.string().min(1).max(512),
   externalId: z.string().max(256).optional(),
+  // Populated by typed executors after observation, never parsed from model prose.
+  outcome: OutcomeSchema.optional(),
   // Provider-reported token counts, for usage budgets; never trusted for anything else.
   usage: z
     .strictObject({

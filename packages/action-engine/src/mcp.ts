@@ -31,8 +31,32 @@ export class McpToolPort implements ToolPort {
   }
 
   async list(): Promise<string[]> {
-    const { tools } = await (await this.#ready()).listTools();
-    return tools.map((tool) => tool.name);
+    return (await this.describe()).map((tool) => tool.name);
+  }
+
+  async describe(): Promise<{ name: string; description: string; inputSchema: unknown }[]> {
+    const signal = AbortSignal.timeout(15000);
+    const client = await this.#ready();
+    const descriptors: { name: string; description: string; inputSchema: unknown }[] = [];
+    const seen = new Set<string>();
+    let cursor: string | undefined;
+    do {
+      const page = await client.listTools(cursor ? { cursor } : undefined, {
+        signal,
+      });
+      for (const tool of page.tools)
+        if (this.#options.allow.includes(tool.name))
+          descriptors.push({
+            name: tool.name,
+            description: tool.description ?? "",
+            inputSchema: tool.inputSchema,
+          });
+      cursor = page.nextCursor;
+      if (cursor && (seen.has(cursor) || seen.size >= 32))
+        throw new Error("MCP_PAGINATION_INVALID");
+      if (cursor) seen.add(cursor);
+    } while (cursor);
+    return descriptors;
   }
 
   async call(
@@ -67,7 +91,7 @@ export class McpToolPort implements ToolPort {
   }
 
   async close(): Promise<void> {
-    const client = this.#client;
+    const client = this.#client ?? (await this.#starting?.catch(() => null));
     this.#client = null;
     await client?.close();
   }
@@ -108,7 +132,12 @@ export class McpToolPort implements ToolPort {
         this.#crashes.push(this.#now());
       }
     };
-    await client.connect(transport);
+    try {
+      await client.connect(transport, { signal: AbortSignal.timeout(15000) });
+    } catch (error) {
+      await client.close();
+      throw error;
+    }
     this.#client = client;
     return client;
   }

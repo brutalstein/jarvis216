@@ -243,8 +243,29 @@ describe("tool-using Claude Code agent", () => {
     expect(sent.argv).not.toContain("--mcp-config");
     expect(sent.argv).not.toContain("--strict-mcp-config");
     expect(sent.argv).not.toContain("--disable-slash-commands");
-    expect(sent.argv).toContain("user,project,local");
+    // User-level settings may carry an apiKeyHelper or hooks that override the subscription login.
+    expect(sent.argv[sent.argv.indexOf("--setting-sources") + 1]).toBe("project,local");
     expect(sent.argv).not.toContain("--safe-mode");
+  });
+
+  it("reports a delegated run's outcome from Claude Code's own result fields, never its prose", async () => {
+    const run = async (mode: string, agent: boolean) =>
+      new ClaudeCodeExecutor({
+        command: [process.execPath, fixture, mode, path.join(dir, `agent-outcome-${n++}.json`)],
+        model: "test-model",
+        workdir: dir,
+        ...(agent && { agent: { maxTurns: 5, permissionMode: "auto" as const } }),
+      }).execute(task("research"), new AbortController().signal);
+    expect((await run("agent-done", true)).outcome).toEqual({
+      status: "completed",
+      verified: true,
+    });
+    // A tool the run needed was refused: it did not do everything it was approved for.
+    expect((await run("agent-denied", true)).outcome).toEqual({
+      status: "blocked",
+      verified: false,
+    });
+    expect((await run("agent-done", false)).outcome).toBeUndefined();
   });
 
   it("passes the live Full Access grant into native and MCP tool approvals", async () => {
@@ -266,7 +287,11 @@ describe("tool-using Claude Code agent", () => {
     });
     await executor.execute(task("first run"), new AbortController().signal);
     const restricted = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
-    expect(restricted.argv).not.toContain("--allowedTools");
+    // An operator-approved run may read the web, nothing more, without Full Access.
+    const readOnly = restricted.argv.indexOf("--allowedTools");
+    expect(restricted.argv.slice(readOnly + 1, readOnly + 3)).toEqual(["WebSearch", "WebFetch"]);
+    expect(restricted.argv).not.toContain("Bash");
+    expect(restricted.argv).not.toContain("mcp__*");
     expect(restricted.argv[restricted.argv.indexOf("--permission-mode") + 1]).toBe("auto");
     expect(restricted.argv).not.toContain("--strict-mcp-config");
     expect(restricted.argv).toContain(path.resolve("operator-mcp.json"));

@@ -292,8 +292,12 @@ function Start-Docker($State,[string]$Name,$Config) {
     $dockerReady=$LASTEXITCODE -eq 0
   } catch { $dockerReady=$false }
   if (-not $dockerReady) {
-    $desktop=Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'
-    if (-not (Test-Path -LiteralPath $desktop -PathType Leaf)) {
+    # Machine-wide and per-user Docker Desktop installs live in different folders.
+    $desktop=@(
+      (Join-Path $env:ProgramFiles 'Docker\Docker\Docker Desktop.exe'),
+      (Join-Path $env:LOCALAPPDATA 'Programs\DockerDesktop\Docker Desktop.exe')
+    ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+    if (-not $desktop) {
       Die 'DOCKER_NOT_READY' 'Docker Engine is down and Docker Desktop executable was not found. Start Docker Desktop manually.'
     }
     Say 'WARN' 'Docker Engine is not running; launching Docker Desktop...'
