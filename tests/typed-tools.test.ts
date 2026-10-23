@@ -6,6 +6,7 @@ import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { type Task, TaskSpecSchema } from "../src/core/contracts.js";
 import { GitHubExecutor } from "../src/integrations/github.js";
 import { InteractiveBrowserExecutor } from "../src/integrations/interactive-browser.js";
+import { CredentialVault } from "../src/integrations/vault.js";
 
 const dir = mkdtempSync(join(tmpdir(), "jarvis-typed-tools-"));
 let sequence = 0;
@@ -308,6 +309,81 @@ describe("isolated interactive browser", () => {
     ).toBe("refused");
     expect(await run.executor.discover()).not.toContain("browser_evaluate");
     await run.executor.close();
+  });
+  it("types the site's vault password without the model ever seeing it", async () => {
+    const vault = new CredentialVault(join(dir, `${sequence++}.json`), "operator-token-fixture");
+    const run = browser([
+      snapshot(),
+      snapshot('- textbox "Password" [ref=e1]'),
+      snapshot('- textbox "Password" [ref=e1]'),
+    ]);
+    const executor = new InteractiveBrowserExecutor({
+      origins: ["http://127.0.0.1:8765"],
+      createTools: run.createTools,
+      vault,
+    });
+    await executor.execute(
+      task("browser.navigate", { url: "http://127.0.0.1:8765/" }, "MEDIUM"),
+      signal(),
+    );
+    const filled = await executor.execute(
+      task("browser.fill_password", { label: "Password" }, "MEDIUM"),
+      signal(),
+    );
+    const password = (await vault.list())["password:http://127.0.0.1:8765"];
+    expect(password).toMatch(/^.{20}$/);
+    expect(JSON.parse(filled.text).ok).toBe(true);
+    expect(filled.text).not.toContain(password);
+    expect(run.call).toHaveBeenCalledWith(
+      "browser_type",
+      { element: "Password", target: "e1", text: password, submit: false },
+      expect.any(AbortSignal),
+    );
+    // A later login reuses the same password.
+    expect(await vault.password("http://127.0.0.1:8765")).toBe(password);
+  });
+  it("saves the one visible API key and masks keys in every result", async () => {
+    const vault = new CredentialVault(join(dir, `${sequence++}.json`), "operator-token-fixture");
+    const key = `sk-or-v1-${"a1".repeat(16)}`;
+    const page = snapshot(`- text "Your key: ${key}" [ref=e1]`);
+    const run = browser([page, page, page]);
+    const executor = new InteractiveBrowserExecutor({
+      origins: ["http://127.0.0.1:8765"],
+      createTools: run.createTools,
+      vault,
+    });
+    const navigated = await executor.execute(
+      task("browser.navigate", { url: "http://127.0.0.1:8765/" }, "MEDIUM"),
+      signal(),
+    );
+    expect(navigated.text).not.toContain(key);
+    const saved = await executor.execute(
+      task("browser.save_key", { name: "OPENROUTER_API_KEY" }, "MEDIUM"),
+      signal(),
+    );
+    expect(JSON.parse(saved.text).ok).toBe(true);
+    expect((await vault.list()).OPENROUTER_API_KEY).toBe(key);
+    expect(saved.text).not.toContain(key);
+  });
+  it("opens every public https site with '*' but never this machine or its network", () => {
+    const executor = new InteractiveBrowserExecutor({
+      origins: ["*"],
+      egressVerified: true,
+      createTools: browser([]).createTools,
+    });
+    const allowed = (url: string) =>
+      (executor as unknown as { allowed(u: string): boolean }).allowed(url);
+    expect(allowed("https://openrouter.ai/keys")).toBe(true);
+    for (const url of [
+      "http://example.com/",
+      "https://192.168.1.1/",
+      "https://localhost/",
+      "https://u:p@example.com/",
+    ])
+      expect(allowed(url)).toBe(false);
+    expect(() => new InteractiveBrowserExecutor({ origins: ["*"] })).toThrow(
+      "BROWSER_EGRESS_UNVERIFIED",
+    );
   });
   it("requires localhost opt-in and verified external egress", () => {
     vi.stubEnv("JARVIS_BROWSER_ALLOW_LOCALHOST", "false");

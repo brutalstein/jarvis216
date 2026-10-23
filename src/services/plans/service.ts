@@ -19,6 +19,7 @@ import {
   type PlanRow,
   type PlanStatus,
   type PlanView,
+  planDeadlineMs,
   planWindowMs,
   replyWaitMs,
   type StepTask,
@@ -470,9 +471,9 @@ export class PlanService extends EventEmitter {
           // Tasks share admission time; later steps must retain their dependency wait budget.
           budget: {
             ...(external?.budget ?? { maxCalls: 1 }),
-            maxDurationMs: Math.min(elapsed, planWindowMs),
+            maxDurationMs: Math.min(elapsed, planDeadlineMs),
           },
-          deadline: new Date(started + Math.min(elapsed, planWindowMs)).toISOString(),
+          deadline: new Date(started + Math.min(elapsed, planDeadlineMs)).toISOString(),
           dependencies: [
             ...new Set([
               ...ids.slice(-1),

@@ -67,6 +67,22 @@ const definitions: ActionDef[] = [
     { text: label(4096) },
   ],
   [
+    "browser.fill_password",
+    "integration",
+    "MEDIUM",
+    "Parola alanına kasadaki parolayı yaz; yoksa güçlü bir parola üretip sakla",
+    "Type this site's vault password into a password field, creating and storing a strong one if new; never write passwords yourself",
+    { label: label(120) },
+  ],
+  [
+    "browser.save_key",
+    "integration",
+    "MEDIUM",
+    "Sayfada görünen API anahtarını kasaya kaydet",
+    "Save the one API key visible on the page to the vault under a name such as OPENROUTER_API_KEY",
+    { name: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]{0,59}$/) },
+  ],
+  [
     "github.profile",
     "integration",
     "LOW",

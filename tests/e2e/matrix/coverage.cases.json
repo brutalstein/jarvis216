@@ -42,6 +42,11 @@
       "kind": "integration"
     },
     {
+      "id": "browser.fill_password",
+      "risk": "MEDIUM",
+      "kind": "integration"
+    },
+    {
       "id": "browser.navigate",
       "risk": "MEDIUM",
       "kind": "integration"
@@ -54,6 +59,11 @@
     {
       "id": "browser.read_many",
       "risk": "LOW",
+      "kind": "integration"
+    },
+    {
+      "id": "browser.save_key",
+      "risk": "MEDIUM",
       "kind": "integration"
     },
     {
@@ -241,6 +251,20 @@
       "policy": "custom-ask",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.fill_password",
+      "policy": "custom-ask",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "custom-ask/browser.save_key",
+      "policy": "custom-ask",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "ask"
     },
     {
@@ -531,6 +555,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "custom-allow/browser.fill_password",
+      "policy": "custom-allow",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/browser.save_key",
+      "policy": "custom-allow",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
       "id": "custom-allow/github.profile",
       "policy": "custom-allow",
       "action": "github.profile",
@@ -815,6 +853,20 @@
       "policy": "custom-deny",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.fill_password",
+      "policy": "custom-deny",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "deny"
+    },
+    {
+      "id": "custom-deny/browser.save_key",
+      "policy": "custom-deny",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "deny"
     },
     {
@@ -1105,6 +1157,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-3600000-active/browser.fill_password",
+      "policy": "allow-3600000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/browser.save_key",
+      "policy": "allow-3600000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
       "id": "allow-3600000-active/github.profile",
       "policy": "allow-3600000-active",
       "action": "github.profile",
@@ -1392,6 +1458,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-3600000-expired/browser.fill_password",
+      "policy": "allow-3600000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-3600000-expired/browser.save_key",
+      "policy": "allow-3600000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-3600000-expired/github.profile",
       "policy": "allow-3600000-expired",
       "action": "github.profile",
@@ -1676,6 +1756,20 @@
       "policy": "allow-28800000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.fill_password",
+      "policy": "allow-28800000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/browser.save_key",
+      "policy": "allow-28800000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -1966,6 +2060,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-28800000-expired/browser.fill_password",
+      "policy": "allow-28800000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-28800000-expired/browser.save_key",
+      "policy": "allow-28800000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-28800000-expired/github.profile",
       "policy": "allow-28800000-expired",
       "action": "github.profile",
@@ -2250,6 +2358,20 @@
       "policy": "allow-86400000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.fill_password",
+      "policy": "allow-86400000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/browser.save_key",
+      "policy": "allow-86400000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -2540,6 +2662,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-86400000-expired/browser.fill_password",
+      "policy": "allow-86400000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "allow-86400000-expired/browser.save_key",
+      "policy": "allow-86400000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-86400000-expired/github.profile",
       "policy": "allow-86400000-expired",
       "action": "github.profile",
@@ -2825,6 +2961,20 @@
       "action": "browser.verify",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/browser.fill_password",
+      "policy": "preset-guarded",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded/browser.save_key",
+      "policy": "preset-guarded",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded/github.profile",
@@ -3114,6 +3264,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-3600000-active/browser.fill_password",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-active/browser.save_key",
+      "policy": "preset-guarded-3600000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-3600000-active/github.profile",
       "policy": "preset-guarded-3600000-active",
       "action": "github.profile",
@@ -3399,6 +3563,20 @@
       "action": "browser.verify",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.fill_password",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/browser.save_key",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-3600000-expired/github.profile",
@@ -3688,6 +3866,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-28800000-active/browser.fill_password",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-active/browser.save_key",
+      "policy": "preset-guarded-28800000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-28800000-active/github.profile",
       "policy": "preset-guarded-28800000-active",
       "action": "github.profile",
@@ -3973,6 +4165,20 @@
       "action": "browser.verify",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.fill_password",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/browser.save_key",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-28800000-expired/github.profile",
@@ -4262,6 +4468,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-86400000-active/browser.fill_password",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-active/browser.save_key",
+      "policy": "preset-guarded-86400000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-active/github.profile",
       "policy": "preset-guarded-86400000-active",
       "action": "github.profile",
@@ -4549,6 +4769,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-86400000-expired/browser.fill_password",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/browser.save_key",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-expired/github.profile",
       "policy": "preset-guarded-86400000-expired",
       "action": "github.profile",
@@ -4833,6 +5067,20 @@
       "policy": "preset-trusted",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.fill_password",
+      "policy": "preset-trusted",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted/browser.save_key",
+      "policy": "preset-trusted",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -5123,6 +5371,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-3600000-active/browser.fill_password",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/browser.save_key",
+      "policy": "preset-trusted-3600000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-trusted-3600000-active/github.profile",
       "policy": "preset-trusted-3600000-active",
       "action": "github.profile",
@@ -5410,6 +5672,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-3600000-expired/browser.fill_password",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-3600000-expired/browser.save_key",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-3600000-expired/github.profile",
       "policy": "preset-trusted-3600000-expired",
       "action": "github.profile",
@@ -5694,6 +5970,20 @@
       "policy": "preset-trusted-28800000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.fill_password",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/browser.save_key",
+      "policy": "preset-trusted-28800000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -5984,6 +6274,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-28800000-expired/browser.fill_password",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-28800000-expired/browser.save_key",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-28800000-expired/github.profile",
       "policy": "preset-trusted-28800000-expired",
       "action": "github.profile",
@@ -6268,6 +6572,20 @@
       "policy": "preset-trusted-86400000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.fill_password",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/browser.save_key",
+      "policy": "preset-trusted-86400000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -6558,6 +6876,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-86400000-expired/browser.fill_password",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-trusted-86400000-expired/browser.save_key",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-86400000-expired/github.profile",
       "policy": "preset-trusted-86400000-expired",
       "action": "github.profile",
@@ -6842,6 +7174,20 @@
       "policy": "preset-autonomous",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.fill_password",
+      "policy": "preset-autonomous",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/browser.save_key",
+      "policy": "preset-autonomous",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -7132,6 +7478,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/browser.fill_password",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-3600000-active/browser.save_key",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/github.profile",
       "policy": "preset-autonomous-3600000-active",
       "action": "github.profile",
@@ -7419,6 +7779,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-expired/browser.fill_password",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-3600000-expired/browser.save_key",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-3600000-expired/github.profile",
       "policy": "preset-autonomous-3600000-expired",
       "action": "github.profile",
@@ -7703,6 +8077,20 @@
       "policy": "preset-autonomous-28800000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.fill_password",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/browser.save_key",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -7993,6 +8381,20 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-28800000-expired/browser.fill_password",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-28800000-expired/browser.save_key",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-28800000-expired/github.profile",
       "policy": "preset-autonomous-28800000-expired",
       "action": "github.profile",
@@ -8277,6 +8679,20 @@
       "policy": "preset-autonomous-86400000-active",
       "action": "browser.verify",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.fill_password",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/browser.save_key",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
       "expectedMode": "allow"
     },
     {
@@ -8565,6 +8981,20 @@
       "action": "browser.verify",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.fill_password",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.fill_password",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/browser.save_key",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "browser.save_key",
+      "risk": "MEDIUM",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-autonomous-86400000-expired/github.profile",

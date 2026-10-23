@@ -99,8 +99,9 @@ export class ClaudeCodeExecutor implements Executor {
           "default",
           "--permission-mode",
           autonomous ? "acceptEdits" : this.options.agent.permissionMode,
-          "--max-turns",
-          String(this.options.agent.maxTurns),
+          ...(this.options.agent.maxTurns > 0
+            ? ["--max-turns", String(this.options.agent.maxTurns)]
+            : []),
           ...(this.options.agent.mcpConfigs?.length
             ? ["--mcp-config", ...this.options.agent.mcpConfigs]
             : this.options.agent.mcpConfig

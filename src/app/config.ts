@@ -29,6 +29,7 @@ import {
 } from "../integrations/models.js";
 import { OpenAICompatibleExecutor, providerId } from "../integrations/openai-compatible.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "../integrations/services.js";
+import { CredentialVault } from "../integrations/vault.js";
 import { MemoryExecutor, type MemoryStore } from "../services/memory.js";
 
 // .env.example placeholders are long enough to pass length checks; never accept them.
@@ -49,10 +50,20 @@ export const ConfigSchema = z
     N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
     // Background work scales with this machine; model calls are mostly waiting on the network.
-    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(cores * 2).default(Math.max(2, cores)),
+    WORKER_CONCURRENCY: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(cores * 2)
+      .default(Math.max(2, cores)),
     // Extra workers that only take spoken turns, so conversation never queues behind work.
     INTERACTIVE_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
-    MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(cores * 2).default(Math.max(2, cores)),
+    MODEL_CONCURRENCY: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(cores * 2)
+      .default(Math.max(2, cores)),
     BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
     WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(cores).default(1),
     // Optional push of n8n-submitted task outcomes to a registered n8n webhook.
@@ -241,9 +252,9 @@ export async function configuredProviders(
     const maxTurns = z.coerce
       .number()
       .int()
-      .min(1)
-      .max(80)
+      .min(0)
       .default(12)
+      // 0: no turn limit; the run ends when the agent finishes or its deadline passes.
       .parse(env.CLAUDE_AGENT_MAX_TURNS || undefined);
     const mcpConfig = env.CLAUDE_AGENT_MCP_CONFIG?.trim() || undefined;
     let mcpFileContent = "";
@@ -311,7 +322,7 @@ export async function configuredProviders(
   }
   if (env.ENABLE_PLAYWRIGHT === "true") {
     const origins = z
-      .array(z.url())
+      .array(z.union([z.literal("*"), z.url()]))
       .min(1)
       .max(16)
       .parse(JSON.parse(env.PLAYWRIGHT_ALLOWED_ORIGINS ?? "[]"));
@@ -319,6 +330,7 @@ export async function configuredProviders(
       origins,
       headless: env.PLAYWRIGHT_HEADLESS === "true",
       egressVerified: env.PLAYWRIGHT_EGRESS_VERIFIED === "true",
+      vault: new CredentialVault(path.resolve("data/vault.json"), secrets.resolve("JARVIS_TOKEN")),
     });
     register(
       interactiveBrowser,

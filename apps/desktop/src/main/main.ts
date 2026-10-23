@@ -7,6 +7,7 @@ import {
   globalShortcut,
   ipcMain,
   Menu,
+  Notification,
   nativeImage,
   screen,
   session,
@@ -39,6 +40,14 @@ function receivePlan(event: UiEvent) {
     if (plans.size > 20) plans.delete(plans.keys().next().value ?? "");
   }
   broadcast(event);
+  // Finished background work also reaches the operator when they are away from the window.
+  if (
+    event.type === "announce" &&
+    event.kind === "outcome" &&
+    !testing &&
+    Notification.isSupported()
+  )
+    new Notification({ title: "JARVIS", body: event.text }).show();
   if (event.type === "announce") {
     void voice
       .then(async (connection) => {

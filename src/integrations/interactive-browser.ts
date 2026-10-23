@@ -3,6 +3,7 @@ import { z } from "zod";
 import { type ExecutionResult, type Executor, type Task, taskDeadline } from "../core/contracts.js";
 import { ProviderFailure } from "../core/routing.js";
 import { playwrightMcpConfig } from "./claude-mcp.js";
+import type { CredentialVault } from "./vault.js";
 
 const label = z.string().trim().min(1).max(200);
 export const interactiveBrowserActionSchemas = {
@@ -11,7 +12,16 @@ export const interactiveBrowserActionSchemas = {
   "browser.fill": z.strictObject({ label, value: z.string().min(1).max(4000) }),
   "browser.click": z.strictObject({ name: label }),
   "browser.verify": z.strictObject({ text: z.string().trim().min(1).max(4000) }),
+  // The password comes from Core's vault, so the model never chooses or sees it.
+  "browser.fill_password": z.strictObject({ label }),
+  "browser.save_key": z.strictObject({ name: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]{0,59}$/) }),
 };
+// API keys and tokens as sites show them: known prefixes, or long mixed letter-digit runs.
+const keyShaped =
+  /\b(?:sk|pk|rk|ghp|gho|ghs|github_pat|xox[abpr]|nvapi|hf|glpat)[-_][A-Za-z0-9_-]{16,}|\bAIza[A-Za-z0-9_-]{30,}|\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{32,}\b/g;
+// "*" opens every public https site; this machine and its local network stay out of reach.
+const privateHost =
+  /^(localhost|.*\.local|.*\.internal|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|\[)/i;
 export const interactiveBrowserTools = [
   "browser_navigate",
   "browser_snapshot",
@@ -76,6 +86,8 @@ export class InteractiveBrowserExecutor implements Executor {
   readonly retrySafe = false;
   readonly outcomeObservable = false;
   private origins: Set<string>;
+  private anyOrigin: boolean;
+  private vault?: CredentialVault;
   private sessions = new Map<string, Session>();
   private createTools: () => InteractiveBrowserPort;
   constructor(options: {
@@ -83,30 +95,38 @@ export class InteractiveBrowserExecutor implements Executor {
     headless?: boolean;
     egressVerified?: boolean;
     createTools?: () => InteractiveBrowserPort;
+    vault?: CredentialVault;
   }) {
+    this.vault = options.vault;
+    this.anyOrigin = options.origins.includes("*");
+    if (this.anyOrigin && options.egressVerified !== true)
+      throw new Error("BROWSER_EGRESS_UNVERIFIED");
     this.origins = new Set(
-      options.origins.map((origin) => {
-        const url = new URL(origin);
-        const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
-        if (
-          url.origin !== origin ||
-          url.username ||
-          url.password ||
-          (url.protocol !== "https:" &&
-            !(
-              local &&
-              url.protocol === "http:" &&
-              process.env.JARVIS_BROWSER_ALLOW_LOCALHOST === "true"
-            ))
-        )
-          throw new Error("INVALID_BROWSER_ORIGIN");
-        if (local && process.env.JARVIS_BROWSER_ALLOW_LOCALHOST !== "true")
-          throw new Error("LOCAL_BROWSER_DISABLED");
-        if (!local && options.egressVerified !== true) throw new Error("BROWSER_EGRESS_UNVERIFIED");
-        return origin;
-      }),
+      options.origins
+        .filter((origin) => origin !== "*")
+        .map((origin) => {
+          const url = new URL(origin);
+          const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+          if (
+            url.origin !== origin ||
+            url.username ||
+            url.password ||
+            (url.protocol !== "https:" &&
+              !(
+                local &&
+                url.protocol === "http:" &&
+                process.env.JARVIS_BROWSER_ALLOW_LOCALHOST === "true"
+              ))
+          )
+            throw new Error("INVALID_BROWSER_ORIGIN");
+          if (local && process.env.JARVIS_BROWSER_ALLOW_LOCALHOST !== "true")
+            throw new Error("LOCAL_BROWSER_DISABLED");
+          if (!local && options.egressVerified !== true)
+            throw new Error("BROWSER_EGRESS_UNVERIFIED");
+          return origin;
+        }),
     );
-    if (!this.origins.size) throw new Error("INVALID_BROWSER_ORIGIN");
+    if (!this.origins.size && !this.anyOrigin) throw new Error("INVALID_BROWSER_ORIGIN");
     this.createTools =
       options.createTools ??
       (() => {
@@ -117,7 +137,7 @@ export class InteractiveBrowserExecutor implements Executor {
         return new McpToolPort({
           ...server,
           env: {
-            PLAYWRIGHT_MCP_ALLOWED_ORIGINS: [...this.origins].join(";"),
+            ...(!this.anyOrigin && { PLAYWRIGHT_MCP_ALLOWED_ORIGINS: [...this.origins].join(";") }),
             PLAYWRIGHT_MCP_BLOCK_SERVICE_WORKERS: "true",
             PLAYWRIGHT_MCP_TIMEOUT_ACTION: "5000",
             PLAYWRIGHT_MCP_TIMEOUT_NAVIGATION: "15000",
@@ -143,7 +163,11 @@ export class InteractiveBrowserExecutor implements Executor {
   private allowed(value: string): boolean {
     try {
       const url = new URL(value);
-      return !url.username && !url.password && this.origins.has(url.origin);
+      if (url.username || url.password) return false;
+      return (
+        this.origins.has(url.origin) ||
+        (this.anyOrigin && url.protocol === "https:" && !privateHost.test(url.hostname))
+      );
     } catch {
       return false;
     }
@@ -169,7 +193,15 @@ export class InteractiveBrowserExecutor implements Executor {
       ? { ok: false, text: "Browser operation failed" }
       : response;
   }
+  // Nothing the vault holds, nor anything key-shaped on a page, reaches a model.
   async execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
+    const out = await this.run(task, signal);
+    let text = out.text.replace(keyShaped, "[secret]");
+    for (const secret of (await this.vault?.secrets()) ?? [])
+      text = text.split(secret).join("[secret]");
+    return { ...out, text };
+  }
+  private async run(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     signal.throwIfAborted();
     const input = z
       .strictObject({ action: z.string(), args: z.record(z.string(), z.unknown()) })
@@ -185,7 +217,12 @@ export class InteractiveBrowserExecutor implements Executor {
     const floor =
       action === "browser.click"
         ? "HIGH"
-        : action === "browser.fill" || action === "browser.navigate"
+        : [
+              "browser.fill",
+              "browser.fill_password",
+              "browser.navigate",
+              "browser.save_key",
+            ].includes(action)
           ? "MEDIUM"
           : "LOW";
     if (
@@ -259,8 +296,27 @@ export class InteractiveBrowserExecutor implements Executor {
               text: args.text,
             })
           : result(false, "failed", "Expected text was not present");
+      if (action === "browser.save_key") {
+        if (!this.vault) return result(false, "refused", "No credential vault is configured");
+        const keys = [...new Set(before.body.match(keyShaped) ?? [])];
+        if (keys.length !== 1 || !keys[0])
+          return result(
+            false,
+            "incomplete",
+            keys.length
+              ? "More than one key is visible on the page"
+              : "No key is visible on the page",
+          );
+        await this.vault.save(args.name ?? "", keys[0]);
+        return result(true, "observed", `Key saved to the vault as ${args.name}`, {
+          url: before.url,
+        });
+      }
+      const typing = action === "browser.fill" || action === "browser.fill_password";
+      if (action === "browser.fill_password" && !this.vault)
+        return result(false, "refused", "No credential vault is configured");
       const candidates = elements(before.body).filter((element) =>
-        action === "browser.fill"
+        typing
           ? ["textbox", "searchbox", "spinbutton"].includes(element.role) &&
             element.name === args.label
           : ["button", "link", "checkbox", "radio", "menuitem", "tab"].includes(element.role) &&
@@ -274,11 +330,15 @@ export class InteractiveBrowserExecutor implements Executor {
         );
       const element = candidates[0];
       if (!element) return result(false, "refused", "Named element is not present");
+      const text =
+        action === "browser.fill_password"
+          ? await (this.vault as CredentialVault).password(new URL(before.url).origin)
+          : args.value;
       const response = await this.call(
         session,
-        action === "browser.fill" ? "browser_type" : "browser_click",
-        action === "browser.fill"
-          ? { element: element.name, target: element.ref, text: args.value, submit: false }
+        typing ? "browser_type" : "browser_click",
+        typing
+          ? { element: element.name, target: element.ref, text, submit: false }
           : { element: element.name, target: element.ref },
         bounded,
       );
@@ -292,6 +352,11 @@ export class InteractiveBrowserExecutor implements Executor {
           "Browser left the approved origins or its location could not be verified",
         );
       }
+      if (action === "browser.fill_password")
+        return result(true, "observed", "Vault password typed; masked fields are not read back", {
+          url: after.url,
+          label: element.name,
+        });
       if (action === "browser.fill") {
         const values = elements(after.body).filter(
           (value) => value.role === element.role && value.name === element.name,

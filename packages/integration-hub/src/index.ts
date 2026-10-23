@@ -95,7 +95,7 @@ export function createIntegrationHub(settings: {
         input: {},
         risk: "HIGH",
         privacy: "private",
-        budget: { maxCalls: 1, maxDurationMs: 300000, maxOutputTokens: 4096 },
+        budget: { maxCalls: 1, maxDurationMs: 86_400_000, maxOutputTokens: 4096 },
         verification: { kind: "postcondition" },
       };
     });
@@ -109,7 +109,7 @@ export function createIntegrationHub(settings: {
         input: {},
         risk: "HIGH",
         privacy: "private",
-        budget: { maxCalls: 1, maxDurationMs: 300000, maxOutputTokens: 8192 },
+        budget: { maxCalls: 1, maxDurationMs: 86_400_000, maxOutputTokens: 8192 },
         verification: { kind: "postcondition" },
       };
     });

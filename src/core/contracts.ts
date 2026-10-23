@@ -121,7 +121,8 @@ export const TaskSpecSchema = z
     budget: z
       .strictObject({
         maxCalls: z.number().int().min(1).max(8).default(2),
-        maxDurationMs: z.number().int().min(100).max(300_000).default(60_000),
+        // Up to a day, so delegated agent work can run in the background to completion.
+        maxDurationMs: z.number().int().min(100).max(86_400_000).default(60_000),
         maxOutputTokens: z.number().int().min(1).max(8192).default(1024),
       })
       .default({ maxCalls: 2, maxDurationMs: 60_000, maxOutputTokens: 1024 }),
