@@ -44,6 +44,8 @@ export type Reply = {
   lang: "tr" | "en";
   display: DisplayBlock[];
   intent?: unknown;
+  // Lasting facts the model noticed this turn; Core stores them without being asked.
+  learn?: string[];
 };
 export type TurnResult = Reply & {
   id: string;
@@ -88,6 +90,7 @@ export function parseReply(text: string): Reply {
       lang: z.enum(["tr", "en"]).optional().catch(undefined),
       display: z.array(z.unknown()).catch([]),
       intent: z.unknown().optional(),
+      learn: z.array(z.unknown()).catch([]),
     })
     .safeParse(value);
   if (!parsed.success) {
@@ -95,6 +98,10 @@ export function parseReply(text: string): Reply {
     return { addressed: true, say, lang: detect(say), display: [] };
   }
   const { addressed, say, lang, display } = parsed.data;
+  const learn = parsed.data.learn
+    .flatMap((fact) => (typeof fact === "string" ? [fact.trim()] : []))
+    .filter((fact) => fact.length >= 3 && fact.length <= 200)
+    .slice(0, 2);
   return {
     addressed,
     say: say.trim(),
@@ -106,6 +113,7 @@ export function parseReply(text: string): Reply {
       })
       .slice(0, 3),
     ...(parsed.data.intent !== undefined ? { intent: parsed.data.intent } : {}),
+    ...(learn.length ? { learn } : {}),
   };
 }
 
@@ -358,6 +366,9 @@ export class ConversationService {
       await this.tasks.db.transaction((tx) =>
         this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
       );
+    const memory = this.options.memory;
+    if (memory && reply.addressed && reply.learn)
+      for (const fact of reply.learn) await learned(() => memory.save(fact));
     if (learning && reply.addressed && understood)
       await learned(() =>
         learning.experience({

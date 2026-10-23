@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { Pool, type PoolClient } from "pg";
 
 export interface Sql {
@@ -14,7 +15,8 @@ export function postgres(
   url: string,
   pool = new Pool({
     connectionString: url,
-    max: 5,
+    // Every worker may hold a connection while HTTP routes still need theirs.
+    max: 10 + availableParallelism() * 2,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10_000,
   }),

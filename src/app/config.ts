@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { access, mkdir, readFile } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import path from "node:path";
 import { ThinkingLevel } from "@google/genai";
 import { catalog, McpToolPort, containedPath as profilePath } from "@jarvis/action-engine";
@@ -36,6 +37,7 @@ const generated = (value: string) => !value.includes("REPLACE_");
 // for another project would otherwise be migrated silently.
 const localDatabase = (value: string) =>
   ["127.0.0.1", "localhost", "[::1]", "postgres"].includes(new URL(value).hostname);
+const cores = availableParallelism();
 export const ConfigSchema = z
   .object({
     DATABASE_URL: z
@@ -46,12 +48,13 @@ export const ConfigSchema = z
     JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     PORT: z.coerce.number().int().min(1024).max(65535).default(2160),
-    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
+    // Background work scales with this machine; model calls are mostly waiting on the network.
+    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(cores * 2).default(Math.max(2, cores)),
     // Extra workers that only take spoken turns, so conversation never queues behind work.
     INTERACTIVE_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
-    MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(2),
+    MODEL_CONCURRENCY: z.coerce.number().int().min(1).max(cores * 2).default(Math.max(2, cores)),
     BROWSER_CONCURRENCY: z.coerce.number().int().min(1).max(1).default(1),
-    WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(4).default(1),
+    WORKFLOW_CONCURRENCY: z.coerce.number().int().min(1).max(cores).default(1),
     // Optional push of n8n-submitted task outcomes to a registered n8n webhook.
     N8N_CALLBACK_URL: z.preprocess((v) => v || undefined, z.url().optional()),
     N8N_CALLBACK_TOKEN: z.preprocess(

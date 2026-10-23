@@ -45,6 +45,16 @@ describe("reply parsing", () => {
       '{"addressed": true, "say": "Kübitlerle çalışır, efendim.", "lang": "tr"}\n\n{"kind": "reply"}';
     expect(parseReply(text)).toMatchObject({ say: "Kübitlerle çalışır, efendim.", lang: "tr" });
   });
+  it("keeps at most two learned facts of sensible length", () => {
+    const reply = parseReply(
+      JSON.stringify({
+        say: "Tamam",
+        learn: ["ab", "Operatör çay sever.", 5, "x".repeat(300), "Operatör İzmirli.", "Fazla."],
+      }),
+    );
+    expect(reply.learn).toEqual(["Operatör çay sever.", "Operatör İzmirli."]);
+    expect(parseReply(JSON.stringify({ say: "Tamam" }))).not.toHaveProperty("learn");
+  });
   it("keeps prose whose braces are not a reply object", () => {
     expect(parseReply("Kullanım: f() {} efendim").say).toBe("Kullanım: f() {} efendim");
   });

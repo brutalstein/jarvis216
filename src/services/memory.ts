@@ -5,7 +5,7 @@ import type { Database } from "../core/database.js";
 import { ProviderFailure } from "../core/routing.js";
 
 export type Memory = { id: string; note: string; createdAt: number };
-export const maxMemories = 200;
+export const maxMemories = 1000;
 // The prompt carries the newest notes only, within this many characters.
 const promptChars = 3000;
 
@@ -25,8 +25,8 @@ const refused = (observation: string): Evidence => ({
   observation,
 });
 
-// Long-term memory the operator approved note by note (directive §12: its own data class, not
-// conversation history). Notes reach conversation providers as personal context, so a note that
+// Long-term memory (directive §12: its own data class, not conversation history): notes the
+// operator asked for and lasting facts the conversation model noticed on its own. Notes reach conversation providers as personal context, so a note that
 // holds a credential is never stored.
 export class MemoryStore {
   constructor(private db: Database) {}
