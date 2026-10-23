@@ -216,6 +216,62 @@ describe("permissions in plans and the gateway", () => {
     expect(executed).toEqual(["text.generate"]);
   });
 
+  it("an allowed typed tool runs when its compiled arguments add schema defaults", async () => {
+    const hub = new IntegrationHub();
+    hub.register("github.repositories", () => ({
+      capability: "tool.execute",
+      providers: ["github-cli"],
+      objective: "Execute github.repositories and verify its postcondition",
+      input: { action: "github.repositories", args: { limit: 10 } },
+      risk: "LOW",
+      privacy: "private",
+      budget: { maxCalls: 1, maxDurationMs: 60_000, maxOutputTokens: 2000 },
+      verification: { kind: "postcondition" },
+    }));
+    await permissions.update({ actions: { "github.repositories": { mode: "allow" } } });
+    tasks = new TaskService(db, { concurrency: 2 });
+    const worker = new Worker(
+      tasks,
+      new ProviderRegistry([
+        {
+          ...provider(
+            "github-cli",
+            "tool.execute",
+            '{"ok":true,"evidence":"postcondition","observation":"3 repositories"}',
+          ),
+          external: true,
+          execute: async (task: Task) => {
+            executed.push(task.spec.capability);
+            return {
+              text: "3 repositories",
+              source: "github-cli",
+              outcome: { status: "completed" as const, verified: true },
+            };
+          },
+        },
+      ]),
+      undefined,
+      {},
+      permissions,
+    );
+    stop = new AbortController();
+    running = worker.run(stop.signal);
+    plans = new PlanService({
+      tasks,
+      wake: () => worker.wake(),
+      onCancel: (id) => worker.cancel(id),
+      conversationProviders: [],
+      privateProviders: [],
+      integrations: hub,
+      permissions,
+    });
+    plans.start(stop.signal);
+    const view = await propose(steps("github.repositories", {}));
+    expect(view.needsApproval).toBe(false);
+    expect((await plans.waitSettled(view.id, 5000)).status).toBe("COMPLETED");
+    expect(executed).toEqual(["tool.execute"]);
+  });
+
   it("turning an action off after admission stops it before execution", async () => {
     await permissions.update({ actions: { "app.close": { mode: "allow" } } });
     tasks = new TaskService(db, { concurrency: 2 });

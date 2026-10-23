@@ -25,11 +25,11 @@ class CoreClient:
     def __init__(
         self, base_url: str, token: str, transport: httpx.AsyncBaseTransport | None = None
     ) -> None:
-        # A turn may repair once (2 x 20 s), then wait 5 s for a quick plan outcome.
+        # A turn may repair once (2 x 30 s), then wait 5 s for a quick plan outcome.
         self.http = httpx.AsyncClient(
             base_url=base_url,
             headers={"authorization": f"Bearer {token}"},
-            timeout=55.0,
+            timeout=70.0,
             transport=transport,
         )
 

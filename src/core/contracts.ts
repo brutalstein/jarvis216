@@ -120,7 +120,7 @@ export const TaskSpecSchema = z
     cachePrefix: z.number().int().min(1).max(16_000).optional(),
     budget: z
       .strictObject({
-        maxCalls: z.number().int().min(1).max(5).default(2),
+        maxCalls: z.number().int().min(1).max(8).default(2),
         maxDurationMs: z.number().int().min(100).max(300_000).default(60_000),
         maxOutputTokens: z.number().int().min(1).max(8192).default(1024),
       })

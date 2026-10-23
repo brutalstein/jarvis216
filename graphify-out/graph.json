@@ -3574,7 +3574,7 @@
       "file_type": "code",
       "norm_label": "desktopupdates()",
       "source_file": "apps/desktop/src/main/updates.ts",
-      "source_location": "L22"
+      "source_location": "L19"
     },
     {
       "id": "apps_desktop_src_main_voice_startvoiceservice",
@@ -20439,7 +20439,7 @@
       "node_kind": "heading",
       "norm_label": "fresh local gates",
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L25"
+      "source_location": "L34"
     },
     {
       "id": "implementation_report_jarvis216_implementation_report_2026_10_21",
@@ -20463,7 +20463,7 @@
       "node_kind": "heading",
       "norm_label": "preservation and remaining trade-offs",
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L34"
+      "source_location": "L43"
     },
     {
       "id": "remaining_limitations",
@@ -64777,7 +64777,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/desktop/src/main/updates.ts",
-      "source_location": "L22",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -70585,7 +70585,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L25",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -70596,7 +70596,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L34",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -88743,7 +88743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L38",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -88754,7 +88754,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "IMPLEMENTATION_REPORT.md",
-      "source_location": "L38",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -91301,5 +91301,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "9754e5fb8b3c22a32d3994b5db3214aee10c6f12"
+  "built_at_commit": "e0257f7979bcb545002088910b88b35fd87a1840"
 }

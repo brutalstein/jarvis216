@@ -110,7 +110,7 @@ export async function configuredProviders(
       authenticated: true,
       enabled: true,
       priority,
-      maxInputChars: 20_000,
+      maxInputChars: 200_000,
       trustedForPrivate,
       // Trust is part of the approved configuration, so granting it invalidates old approvals.
       configuration: trustedForPrivate ? `${configuration}:trusted-private` : configuration,

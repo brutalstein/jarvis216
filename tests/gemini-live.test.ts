@@ -88,8 +88,8 @@ describe("realtime Gemini provider", () => {
     );
     expect(conversationProviders([...ids, "or-a", "claude-code"])).toEqual([
       "gemini-live",
-      "or-a",
       "claude-code",
+      "or-a",
     ]);
   });
 

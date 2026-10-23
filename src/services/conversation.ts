@@ -68,12 +68,15 @@ const detect = (text: string): "tr" | "en" => (turkish.test(text) ? "tr" : "en")
 // Models wrap JSON in fences or prose; anything unparseable is treated as the spoken reply.
 export function parseReply(text: string): Reply {
   const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
+  // The widest object first; if the model wrote more after its reply, the first one that parses.
   let value: unknown;
-  try {
-    value = start >= 0 && end > start ? JSON.parse(text.slice(start, end + 1)) : undefined;
-  } catch {
-    value = undefined;
+  for (let end = text.lastIndexOf("}"); start >= 0 && end > start; ) {
+    try {
+      value = JSON.parse(text.slice(start, end + 1));
+      break;
+    } catch {
+      end = text.lastIndexOf("}", end - 1);
+    }
   }
   // Braces inside prose ("f() {}") are not a reply object.
   if (!value || typeof value !== "object" || !("say" in value || "addressed" in value))
@@ -106,27 +109,28 @@ export function parseReply(text: string): Reply {
   };
 }
 
-// Realtime order: Gemini with minimal thinking first, Claude at low effort next, free models,
-// then constrained subscription profiles. General Codex keeps its HIGH approval floor.
+// Realtime order: Gemini with minimal thinking first, Claude at low effort next, then the
+// Claude Code subscription (no free-tier daily quota), free models, and the constrained Codex
+// profile. General Codex keeps its HIGH approval floor.
 export function conversationProviders(ids: string[]): string[] {
   const rank = (id: string) =>
     id === "gemini-live"
       ? 0
       : id === "claude-live"
         ? 1
-        : id.startsWith("or-")
+        : id === "claude-code"
           ? 2
-          : id.startsWith("nv-")
+          : id.startsWith("or-")
             ? 3
-            : id === "claude-code"
+            : id.startsWith("nv-")
               ? 4
               : id === "codex-live"
-                ? 4
+                ? 5
                 : -1;
   return ids
     .filter((id) => rank(id) >= 0)
     .sort((a, b) => rank(a) - rank(b))
-    .slice(0, 5);
+    .slice(0, 8);
 }
 
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
@@ -166,7 +170,7 @@ export class ConversationService {
       });
   }
   get deadlineMs(): number {
-    return this.options.deadlineMs ?? 20_000;
+    return this.options.deadlineMs ?? 30_000;
   }
   // One spoken request, through layers from fastest to most deliberate:
   // 1. reflexes Core answers itself (stop, status, picking a candidate);

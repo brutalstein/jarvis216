@@ -666,7 +666,7 @@ export class PlanService extends EventEmitter {
           prompt,
           providers,
           privacy,
-          deadlineMs: privacy === "private" ? 60_000 : 20_000,
+          deadlineMs: privacy === "private" ? 60_000 : 30_000,
           maxOutputTokens: 600,
           json,
         },

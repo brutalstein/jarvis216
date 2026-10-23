@@ -2,6 +2,15 @@
 
 JARVIS completed real supported tasks; acceptance is incomplete. Passing fixture/contract tests and a green CI run cannot replace the failed live repeat or missing hardware evidence.
 
+2026-10-23: v0.1.0 is published as an unsigned GitHub Release. The live
+Codex/Core timeout and agent RECOVERY_REQUIRED failures are fixed and retested
+(see E2E_REPORT.md). Still open: Windows SmartScreen warns on the unsigned
+installer; free-tier quotas (Gemini free quota, about 50 OpenRouter free
+requests a day, slow NVIDIA models) limit the free fallbacks; the delegated agent
+keeps its configured turn limit; physical speech, audibility and Bluetooth
+evidence remain BLOCKED. On first start the desktop asks for the JARVIS .env file
+when JARVIS_ENV_FILE is not set.
+
 2026-10-22 release follow-up: a Windows desktop candidate and in-app update button
 are implemented and locally checked. Stable publication remains BLOCKED by the live
 E2E matrix (25 PASS / 3 FAIL / 5 BLOCKED). The candidate is unsigned; production

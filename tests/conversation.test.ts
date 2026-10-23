@@ -40,6 +40,11 @@ describe("reply parsing", () => {
       display: [],
     });
   });
+  it("takes the first reply object when the model writes more after it", () => {
+    const text =
+      '{"addressed": true, "say": "Kübitlerle çalışır, efendim.", "lang": "tr"}\n\n{"kind": "reply"}';
+    expect(parseReply(text)).toMatchObject({ say: "Kübitlerle çalışır, efendim.", lang: "tr" });
+  });
   it("keeps prose whose braces are not a reply object", () => {
     expect(parseReply("Kullanım: f() {} efendim").say).toBe("Kullanım: f() {} efendim");
   });
@@ -116,8 +121,21 @@ describe("conversation prompt and providers", () => {
   it("conversationProviders orders the realtime providers", () => {
     expect(
       conversationProviders(["claude-code", "nv-a", "gemini-live", "or-b", "codex", "claude-live"]),
-    ).toEqual(["gemini-live", "claude-live", "or-b", "nv-a", "claude-code"]);
+    ).toEqual(["gemini-live", "claude-live", "claude-code", "or-b", "nv-a"]);
     expect(conversationProviders(["claude", "gemini"])).toEqual([]);
+    // Several free models must not crowd out the subscription fallbacks.
+    expect(
+      conversationProviders([
+        "codex-live",
+        "claude-code",
+        "nv-a",
+        "nv-b",
+        "or-a",
+        "or-b",
+        "or-c",
+        "gemini-live",
+      ]),
+    ).toEqual(["gemini-live", "claude-code", "or-a", "or-b", "or-c", "nv-a", "nv-b", "codex-live"]);
   });
   it("changes the cached catalog when configured actions change", () => {
     const input = { utterance: "Jarvis", followUp: false, history: [], now: new Date() };

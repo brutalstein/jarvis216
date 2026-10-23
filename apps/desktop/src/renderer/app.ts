@@ -7,7 +7,7 @@ import { captions, el, hydrateIcons, isState, STATES, setIcon, stage } from "./u
 import { updates } from "./updates";
 
 const NOTICES: Record<string, string> = {
-  ENV_MISSING: "Ayar dosyası bulunamadı. JARVIS_ENV_FILE ile yeniden başlatın.",
+  ENV_MISSING: "Ayar dosyası bulunamadı. Uygulamayı yeniden açıp JARVIS .env dosyasını seçin.",
   VOICE_UNAVAILABLE: "Ses servisi başlatılamadı. Yeniden deneyin.",
   VOICE_DISCONNECTED: "Ses bağlantısı koptu. Yeniden bağlanın.",
   VOICE_PIPELINE_FAILED: "Ses hattı durdu. Yeniden deneyin.",

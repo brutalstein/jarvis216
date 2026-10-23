@@ -4,6 +4,43 @@
 
 Code: existing hardening commit `ba81c58830544278ed2c249b9e0e596937700027`, follow-up `c3c76832d85f425c39c38f894f9ab57b70738d4c`, branch `codex/autonomous-agent-hardening`, release base `3886783227328920f65876dee3536234ed69b263`. [Draft PR #6](https://github.com/brutalstein/jarvis216/pull/6) targets `release/v1.0.0`. The earlier report is retained as a historical baseline at the end.
 
+## Live retest and v0.1.0 release — 2026-10-23
+
+Driven through the real Core HTTP API (Docker PostgreSQL, port 2160) with the
+operator's subscription Claude Code, Codex, free OpenRouter and NVIDIA models.
+
+| Request | Result |
+|---|---|
+| Conversation (Turkish), incl. live failover to a free model and to Claude Code | PASS (~5–7 s) |
+| News brief | PASS |
+| GitHub repositories / profile (allowed typed tool) | PASS after fix |
+| List Desktop / Documents (`~/Desktop`, `Masaüstü`) | PASS after fix |
+| File create → read → delete with approvals | PASS (was BLOCKED) |
+| "Claude agent: find today's Istanbul weather" (agent.execute, web) | PASS: COMPLETED in ~45 s with sources (was RECOVERY_REQUIRED) |
+
+Defects fixed in this pass:
+
+- A hanging provider consumed the whole task deadline. Retry-safe attempts now
+  get a third of the time left (at least 8 s) while an untried fallback remains.
+- Typed tools never matched their approved plan step, because the hub adds schema
+  defaults to the arguments. They now match on the action.
+- `~/Desktop` resolved inside the Desktop root. Well-known folder names now map
+  to their root.
+- The delegated agent loaded user settings, so a broken user `apiKeyHelper`
+  replaced the subscription login. It now loads project and local settings only.
+- Agent runs always ended RECOVERY_REQUIRED, because no outcome was reported.
+  The outcome now comes from the CLI's own `terminal_reason` and
+  `permission_denials` fields, never from model prose.
+- A non-autonomous agent could not read the web. It is now allowed WebSearch and
+  WebFetch only.
+- A reply followed by a second JSON object was spoken as raw JSON.
+- Limits raised: input 200 000 characters, 8 calls per task, 5-minute plan
+  window, 30 s conversation deadline, 5-minute agent budget.
+
+Quality gates: `npm run lint`, `npm run typecheck`, `npx vitest run`
+(780 passed, 1 skipped) and `npm --prefix apps/desktop test` (22 passed,
+1 skipped) are green.
+
 ## Release and desktop updates — 2026-10-22 follow-up
 
 **Stable release: BLOCKED.** The original live matrix below remains **25 PASS /

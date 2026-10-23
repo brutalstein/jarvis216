@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 import {
   app,
   BrowserWindow,
+  dialog,
   globalShortcut,
   ipcMain,
   Menu,
@@ -14,7 +15,7 @@ import {
 } from "electron";
 import { autoUpdater } from "electron-updater";
 import type { PermissionChange, PlanView, UiEvent, Voice } from "../shared";
-import { readOperatorEnv } from "./env";
+import { locateEnvFile, readOperatorEnv } from "./env";
 import { streamPlans } from "./plans";
 import { desktopUpdates } from "./updates";
 import { startVoiceService } from "./voice";
@@ -259,12 +260,24 @@ app.whenReady().then(async () => {
   if (testing) ipcMain.on("test:toggle-listening", () => setListening(!listening));
 
   let voiceFailed = false;
+  const envFile = testing
+    ? (process.env.JARVIS_ENV_FILE ?? "")
+    : await locateEnvFile(
+        process.env.JARVIS_ENV_FILE,
+        join(app.getPath("userData"), "jarvis.json"),
+        async () =>
+          (
+            await dialog.showOpenDialog({
+              title: "JARVIS .env dosyasını seçin",
+              properties: ["openFile", "dontAddToRecent"],
+              filters: [{ name: "JARVIS .env", extensions: ["env", "*"] }],
+            })
+          ).filePaths[0],
+      );
   // Installed clients use the existing deployment; application updates never contain operator data.
   const repoRoot =
     process.env.JARVIS_REPO_ROOT ??
-    (app.isPackaged
-      ? dirname(resolve(process.env.JARVIS_ENV_FILE ?? ".env"))
-      : resolve(__dirname, "../../.."));
+    (app.isPackaged ? dirname(resolve(envFile || ".env")) : resolve(__dirname, "../../.."));
   const startVoice = () => {
     voiceFailed = false;
     voice = startVoiceService({
@@ -284,7 +297,7 @@ app.whenReady().then(async () => {
     });
   };
   try {
-    env = readOperatorEnv(process.env.JARVIS_ENV_FILE ?? "");
+    env = readOperatorEnv(envFile);
     if (testing)
       voice = Promise.resolve({
         url: "http://127.0.0.1:1",

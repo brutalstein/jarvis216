@@ -268,7 +268,8 @@ export class CodexExecutor implements Executor {
   readonly id: string;
   readonly capability = "text.generate";
   readonly external = true;
-  readonly retrySafe = false;
+  // The conversation profile runs with every tool disabled, so a rerun has nothing to repeat.
+  readonly retrySafe: boolean;
   readonly riskFloor: "LOW" | "HIGH";
   private client: Codex;
   constructor(
@@ -280,6 +281,7 @@ export class CodexExecutor implements Executor {
   ) {
     this.id = options.conversation ? "codex-live" : "codex";
     this.riskFloor = options.conversation ? "LOW" : "HIGH";
+    this.retrySafe = options.conversation === true;
     const base = codexOptions(auth, codexHome);
     this.client = new Codex({
       ...base,

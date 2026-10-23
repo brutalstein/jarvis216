@@ -1050,21 +1050,21 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/approval.png": {
-    "mtime": 1792622218.8840525,
-    "seen": 1792622400.332057,
-    "ast_hash": "fd6b44d28370137a6b9140ad984db617",
+    "mtime": 1792622548.5007253,
+    "seen": 1792750560.042691,
+    "ast_hash": "3cad06f22d3190c52e42a812dc09df1c",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/candidates-failure.png": {
-    "mtime": 1792622224.1237032,
-    "seen": 1792622400.332057,
-    "ast_hash": "a489f56f80f439306f68ce67f322fd46",
+    "mtime": 1792622548.5047264,
+    "seen": 1792750560.042691,
+    "ast_hash": "62a3f468e4380c027efcd7fdf109863f",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/news.png": {
-    "mtime": 1792622224.3389378,
-    "seen": 1792622400.332057,
-    "ast_hash": "bca138e55f0c2c91d6c7b28e0dfdfe80",
+    "mtime": 1792622548.5107446,
+    "seen": 1792750560.042691,
+    "ast_hash": "146e3e48e24e2c0d2ef6c6f08899e91d",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/overlay-control.png": {
@@ -1074,9 +1074,9 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/progress.png": {
-    "mtime": 1792622224.552823,
-    "seen": 1792622400.332057,
-    "ast_hash": "c83bdd8dfd69572b49a41503915dcf8d",
+    "mtime": 1792622548.514743,
+    "seen": 1792750560.042691,
+    "ast_hash": "17caa2cfee530fbad0780393ce934f08",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/controls.ts": {
@@ -1524,21 +1524,21 @@
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/live-progress.png": {
-    "mtime": 1792622234.2561975,
-    "seen": 1792622400.332057,
-    "ast_hash": "435247231074a5a6b867eb79197755c4",
+    "mtime": 1792622548.5067267,
+    "seen": 1792750560.042691,
+    "ast_hash": "3abce64df82c205cbbaa1e54c79f63ea",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/settings-learning.png": {
-    "mtime": 1792622242.4239433,
-    "seen": 1792622400.332057,
-    "ast_hash": "f11f445b141eee1f983b06902abf337e",
+    "mtime": 1792622548.516745,
+    "seen": 1792750560.042691,
+    "ast_hash": "b28142c7b11380b5371178f369d05cff",
     "semantic_hash": ""
   },
   "apps/desktop/tests/screenshots/settings-permissions.png": {
-    "mtime": 1792622238.3122013,
-    "seen": 1792622400.332057,
-    "ast_hash": "a46789f396a0afd03faadf3de94e2400",
+    "mtime": 1792622548.5197725,
+    "seen": 1792750560.042691,
+    "ast_hash": "01cef3f404692db215831c529961e04b",
     "semantic_hash": ""
   },
   "tests/e2e/matrix/coverage.cases.json": {
@@ -1746,9 +1746,9 @@
     "semantic_hash": ""
   },
   "IMPLEMENTATION_REPORT.md": {
-    "mtime": 1792621276.3356848,
-    "seen": 1792621286.304937,
-    "ast_hash": "baa8f18446c178650e705c02a3e96ac7",
+    "mtime": 1792622542.3140073,
+    "seen": 1792750560.042691,
+    "ast_hash": "41233037662e1597af09066067aa92b1",
     "semantic_hash": ""
   },
   "REMAINING_LIMITATIONS.md": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "apps/desktop/src/main/updates.ts": {
-    "mtime": 1792622498.376585,
-    "seen": 1792622525.7271059,
-    "ast_hash": "be4c4d282820f6be8e30a5a7dc8ffd98",
+    "mtime": 1792622546.65197,
+    "seen": 1792750560.042691,
+    "ast_hash": "c39c2938ec971864e73b11812ff3457b",
     "semantic_hash": ""
   },
   "apps/desktop/src/renderer/updates.ts": {
@@ -1794,15 +1794,21 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-22-desktop-updates.md": {
-    "mtime": 1792621923.8599799,
-    "seen": 1792622400.332057,
-    "ast_hash": "82cd9859acf5b3edc772a4b69a215a27",
+    "mtime": 1792622542.3150065,
+    "seen": 1792750560.042691,
+    "ast_hash": "62d2d5c7b029619f1da58c61839d4738",
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-10-22-desktop-updates-design.md": {
     "mtime": 1792621923.8588665,
     "seen": 1792622400.332057,
     "ast_hash": "d96694693083b4938cee9783942ecfb7",
+    "semantic_hash": ""
+  },
+  "docs/evidence-desktop-update-20261022.json": {
+    "mtime": 1792622548.1863797,
+    "seen": 1792750560.042691,
+    "ast_hash": "67f50004f31e98d51fd7bf92401134d5",
     "semantic_hash": ""
   }
 }

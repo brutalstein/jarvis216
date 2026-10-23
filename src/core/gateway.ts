@@ -199,10 +199,21 @@ export class ActionGateway {
     });
     if (!action) return "WAITING_FOR_APPROVAL";
     const executionStarted = Date.now();
-    const combined = AbortSignal.any([
-      signal,
-      AbortSignal.timeout(Math.max(1, taskDeadline(claim) - Date.now())),
-    ]);
+    const remaining = Math.max(1, taskDeadline(claim) - Date.now());
+    const deadline = AbortSignal.timeout(remaining);
+    // A hanging model must not spend the whole deadline: while an untried fallback and a call
+    // remain, a retry-safe attempt gets a third of the time left (at least 8 s, so a healthy model
+    // can still answer) and then yields to the next provider.
+    const attempted = await this.tasks.attemptedTargets(claim.id);
+    const slice = Math.max(8000, Math.floor(remaining / 3));
+    const sliced =
+      executor.retrySafe &&
+      slice < remaining &&
+      claim.calls + 1 < claim.spec.budget.maxCalls &&
+      claim.spec.providers.some((p) => !attempted.includes(p))
+        ? AbortSignal.timeout(slice)
+        : deadline;
+    const combined = AbortSignal.any([signal, sliced]);
     return trace
       .getTracer("jarvis-core", "0.1.0")
       .startActiveSpan("action.execute", async (span) => {
@@ -313,15 +324,18 @@ export class ActionGateway {
               (error instanceof ProviderFailure && !error.dispatched) ||
               (executor.retrySafe && !signal.aborted);
             const targets = await this.tasks.attemptedTargets(task.id, tx);
+            const sliceExpired = sliced !== deadline && sliced.aborted && !deadline.aborted;
             const fallback =
               safe &&
-              !combined.aborted &&
-              error instanceof ProviderFailure &&
-              (error.retryable || providerBound.has(error.kind)) &&
+              (sliceExpired ||
+                (!combined.aborted &&
+                  error instanceof ProviderFailure &&
+                  (error.retryable || providerBound.has(error.kind)))) &&
               task.calls < task.spec.budget.maxCalls &&
               task.spec.providers.some((p) => !targets.includes(p));
             if (safe) await tx.query("UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
-            if (fallback)
+            // The fallback is always another provider; a waiting operator gets it at once.
+            if (fallback && task.spec.lane !== "interactive")
               await tx.query("UPDATE tasks SET not_before=$2 WHERE id=$1", [
                 task.id,
                 Date.now() +
@@ -369,6 +383,9 @@ export class ActionGateway {
     if (plan?.status !== "RUNNING") return undefined;
     const step = plan.steps[plan.task_ids.indexOf(task.id)];
     if (!step) return undefined;
+    // Typed tools carry the hub's parse of the step's own args (schema defaults filled in).
+    if (task.spec.capability === "tool.execute")
+      return task.spec.input.action === step.action ? step : undefined;
     if ("action" in task.spec.input)
       return fingerprint({ action: step.action, args: step.args }) ===
         fingerprint({ action: task.spec.input.action, args: task.spec.input.args })
