@@ -27,6 +27,7 @@ import {
   GeminiExecutor,
   supportsRefusalFallback,
 } from "../integrations/models.js";
+import { AutomationBuilder, automationActionSchemas } from "../integrations/n8n-builder.js";
 import { OpenAICompatibleExecutor, providerId } from "../integrations/openai-compatible.js";
 import { BrowserExecutor, OpenClawExecutor, WorkflowExecutor } from "../integrations/services.js";
 import { CredentialVault } from "../integrations/vault.js";
@@ -99,6 +100,7 @@ export async function configuredProviders(
   const providers: Provider[] = [];
   let tools: McpToolPort | undefined;
   let workflowNames: string[] = [];
+  let automationBuilder = false;
   let interactiveBrowser: InteractiveBrowserExecutor | undefined;
   const trusted = z
     .string()
@@ -404,6 +406,17 @@ export async function configuredProviders(
       ]),
     );
     register(new WorkflowExecutor(configured), JSON.stringify(workflows), 10);
+    // Optional: with an n8n API key JARVIS may also write and publish its own automations.
+    if (env.N8N_API_KEY?.trim()) {
+      const url = z.url().parse(env.N8N_API_URL?.trim() || "http://127.0.0.1:5678");
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      register(
+        new AutomationBuilder({ url, apiKey: secrets.resolve("N8N_API_KEY"), timezone }),
+        `n8n-builder:${url}:${timezone}:v1`,
+        10,
+      );
+      automationBuilder = true;
+    }
   }
   if (env.ENABLE_DESKTOP === "true") {
     const profile = z.string().min(1).parse(env.USERPROFILE);
@@ -474,6 +487,7 @@ export async function configuredProviders(
   for (const [enabled, provider, schemas] of [
     [env.ENABLE_PLAYWRIGHT === "true", "playwright-mcp", interactiveBrowserActionSchemas],
     [env.ENABLE_GITHUB === "true", "github-cli", githubActionSchemas],
+    [automationBuilder, "n8n-builder", automationActionSchemas],
   ] as const) {
     if (!enabled) continue;
     for (const [action, schema] of Object.entries(schemas)) {

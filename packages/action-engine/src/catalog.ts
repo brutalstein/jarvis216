@@ -24,6 +24,26 @@ const owner = label(39).regex(/^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}$/);
 const repo = label(100).regex(/^[a-zA-Z0-9_.-]+$/);
 const repository = { owner, repo };
 const limit = z.number().int().min(1).max(30).optional();
+// n8n nodes JARVIS may compose into automations. No code, shell, HTTP or n8n-admin nodes.
+export const automationNodeTypes = [
+  "scheduleTrigger",
+  "manualTrigger",
+  "readWriteFile",
+  "youTube",
+  "googleDrive",
+  "set",
+  "if",
+  "filter",
+  "sort",
+  "limit",
+  "removeDuplicates",
+  "splitInBatches",
+  "merge",
+  "wait",
+  "dateTime",
+  "noOp",
+  "rssFeedRead",
+] as const;
 
 const definitions: ActionDef[] = [
   [
@@ -292,6 +312,46 @@ const definitions: ActionDef[] = [
     "Kayıtlı otomasyonu çalıştır",
     "Invoke a registered automation",
     { workflow: label(100), payload: z.record(z.string(), z.json()).default({}) },
+  ],
+  [
+    "automation.create",
+    "integration",
+    "HIGH",
+    "Zamanlanmış n8n otomasyonu oluştur ya da aynı adlıyı güncelle ve yayınla",
+    "Create (or update the same-named) scheduled n8n automation and publish it. " +
+      "nodes: [{name, type, typeVersion?, parameters, credentials?: {credentialType: name or ''}}]; " +
+      "connections: [{from, to, output?}]. One scheduleTrigger or manualTrigger is required. " +
+      "Files: readWriteFile reads only under /home/node/.n8n-files/ (the operator's mounted folder), " +
+      "glob fileSelector, binary in 'data'. youTube upload: resource 'video', operation 'upload', " +
+      "title, regionCode, categoryId, binaryProperty 'data', options.privacyStatus, " +
+      "credentials {youTubeOAuth2Api: ''}. Skip already handled items with removeDuplicates " +
+      "operation 'removeItemsSeenInPreviousExecutions' and dedupeValue.",
+    {
+      name: label(80),
+      nodes: z
+        .array(
+          z.strictObject({
+            name: label(80),
+            type: z.enum(automationNodeTypes),
+            typeVersion: z.number().min(1).max(10).optional(),
+            parameters: z.record(z.string(), z.json()).default({}),
+            credentials: z
+              .record(z.string().regex(/^[A-Za-z0-9]{1,80}$/), z.string().max(120))
+              .optional(),
+          }),
+        )
+        .min(2)
+        .max(30),
+      connections: z
+        .array(
+          z.strictObject({
+            from: label(80),
+            to: label(80),
+            output: z.number().int().min(0).max(9).default(0),
+          }),
+        )
+        .max(60),
+    },
   ],
   [
     "memory.save",
