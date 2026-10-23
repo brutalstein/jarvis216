@@ -1,0 +1,51 @@
+name: Windows desktop candidate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - apps/desktop/**
+      - .github/workflows/desktop-installer.yml
+permissions: { contents: read }
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.0
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/desktop/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix apps/desktop --ignore-scripts
+      - run: node apps/desktop/node_modules/electron/install.js
+      - run: npm --prefix apps/desktop run typecheck
+      - run: npm --prefix apps/desktop test
+      - name: Build unsigned candidate (no publication)
+        run: npm --prefix apps/desktop run package:win:test
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Record candidate checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/desktop-release -File |
+            Where-Object { $_.Extension -in '.exe', '.yml', '.blockmap' } |
+            Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } |
+            Set-Content artifacts/desktop-release/SHA256SUMS.txt
+      - name: Verify archive, manifest and isolated packaged shell
+        run: node apps/desktop/verify-package.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS216-Windows-candidate-${{ github.sha }}
+          path: |
+            artifacts/desktop-release/*.exe
+            artifacts/desktop-release/*.exe.blockmap
+            artifacts/desktop-release/latest.yml
+            artifacts/desktop-release/SHA256SUMS.txt
+            artifacts/desktop-release/verification.json
+            artifacts/desktop-release/packaged-updates.png
+          if-no-files-found: error
+          retention-days: 14

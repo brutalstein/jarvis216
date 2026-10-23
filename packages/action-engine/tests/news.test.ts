@@ -90,6 +90,21 @@ describe("fetchNews", () => {
     expect(await fetchNews({}, ctx(fetch, [down, big, google]))).toHaveLength(4);
   });
 
+  it("drops markup tags from headlines", async () => {
+    const tagged = "https://tagged.example/rss";
+    const { fetch } = web({
+      [tagged]: () =>
+        xml(
+          `<rss><channel><title>Örnek</title><item><title>&lt;b&gt;Son dakika&lt;/b&gt;: Deprem &lt;B&gt;oldu&lt;/B&gt;</title><pubDate>Sun, 18 Oct 2026 10:00:00 GMT</pubDate><link>https://tagged.example/a</link></item><item><title><![CDATA[<b>Borsa</b> 3 < 5 rekor]]></title><pubDate>Sun, 18 Oct 2026 09:00:00 GMT</pubDate><link>https://tagged.example/b</link></item></channel></rss>`,
+        ),
+    });
+    const items = await fetchNews({}, ctx(fetch, [tagged]));
+    expect(items.map((item) => item.headline)).toEqual([
+      "Son dakika: Deprem oldu",
+      "Borsa 3 < 5 rekor",
+    ]);
+  });
+
   it("returns no items when every feed fails", async () => {
     const { fetch } = web({ [google]: () => new Response("busy", { status: 503 }) });
     expect(await fetchNews({}, ctx(fetch, [google, bbc]))).toEqual([]);

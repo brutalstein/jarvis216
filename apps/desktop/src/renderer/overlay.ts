@@ -8,6 +8,7 @@ const presence = new Presence(el<HTMLCanvasElement>("[data-presence]"));
 const caption = captions(el("[data-caption]"));
 const show = stage(el("[data-stage]"), { limit: 2 });
 const showPlan = hud(el("[data-stage]"), true);
+el("[data-restore]").addEventListener("click", () => window.jarvis.restore());
 
 window.jarvis.onEvent((event: UiEvent) => {
   if (!event || typeof event !== "object") return;

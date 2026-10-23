@@ -54,21 +54,27 @@ class BilingualTTS(TTSService):  # type: ignore[misc]
         timing = self.timing.copy()
         voice = self.voices.get(timing.get("lang", "tr"), self.voices["tr"])
         started = time.monotonic()
-        chunks = await asyncio.to_thread(lambda: list(voice.synthesize(text)))
-        first = time.monotonic()
-        total = round((first - timing.get("speechEnd", started)) * 1000)
+        chunks = voice.synthesize(text)
+        first: float | None = None
+        while (chunk := await asyncio.to_thread(next, chunks, None)) is not None:
+            if first is None:
+                first = time.monotonic()
+            yield TTSAudioRawFrame(chunk.audio_int16_bytes, voice.config.sample_rate, 1)
+        completed = time.monotonic()
+        origin = timing.get("speechEnd", started)
         print(
             json.dumps(
                 {
-                    "event": "turn.timing",
+                    "event": "turn.timing" if "speechEnd" in timing else "voice.timing",
+                    **{key: value for key, value in timing.items() if key.endswith("Ms")},
                     "sttMs": timing.get("sttMs", 0),
                     "coreMs": timing.get("coreMs", 0),
-                    "firstAudioMs": total,
-                    "totalMs": total,
-                    "ttsMs": round((first - started) * 1000),
+                    # Server synthesis timing; device playback is measured in the renderer.
+                    "firstAudioMs": round(((first or completed) - origin) * 1000),
+                    "totalMs": round((completed - origin) * 1000),
+                    "ttsMs": round((completed - started) * 1000),
+                    "ttsFirstAudioMs": round(((first or completed) - started) * 1000),
                 }
             ),
             flush=True,
         )
-        for chunk in chunks:
-            yield TTSAudioRawFrame(chunk.audio_int16_bytes, voice.config.sample_rate, 1)

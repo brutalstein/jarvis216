@@ -31,8 +31,8 @@ exit 0
         process.env.SystemRoot ?? "C:/Windows",
         "System32/WindowsPowerShell/v1.0/powershell.exe",
       );
-      const launch = () =>
-        spawnSync(
+      const launch = () => {
+        const result = spawnSync(
           powershell,
           [
             "-NoProfile",
@@ -56,9 +56,13 @@ exit 0
               ANTHROPIC_API_KEY: "unused",
             },
             encoding: "utf8",
-            timeout: 10_000,
+            windowsHide: true,
+            timeout: 30_000,
           },
         );
+        expect(result.error).toBeUndefined();
+        return result;
+      };
       const first = launch();
       expect({ status: first.status, stderr: first.stderr }).toEqual({ status: 0, stderr: "" });
       expect(first.stdout.trim()).toBe("models|status|--agent|jarvis-reader");
@@ -70,4 +74,6 @@ exit 0
       rmSync(root, { recursive: true, force: true });
     }
   },
+  // Two bounded PowerShell cold starts, including hosted Windows process-start overhead.
+  65_000,
 );

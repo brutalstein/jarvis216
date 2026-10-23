@@ -9,6 +9,7 @@ intents, lease fencing, verification, uncertainty and reconciliation.
 | --- | --- | --- | --- |
 | browser.read(url, expectedText) | Browser Use | Exact configured public HTTPS URL and DOM readback | LOW |
 | browser.read_many(pages) | Browser Use | Up to 4 exact allowlisted HTTPS URLs in one ephemeral session | LOW |
+| agent.execute(instruction) | Claude Code agent | Native tools and optional explicitly configured MCP servers; dedicated workspace | HIGH |
 | agent.delegate(instruction) | OpenClaw | Dedicated configured agent, tool-denied OpenResponses | HIGH |
 | automation.invoke(workflow,payload) | n8n | Named, registered published workflow; ≤ 8 KiB JSON | HIGH |
 
@@ -53,3 +54,15 @@ browser worker and n8n calls. The conversation catalog lists only enabled
 integration actions. OpenClaw plan steps share `user=plan:<planId>` for Gateway
 session affinity without Core owning sessions. OpenClaw tools stay denied;
 Browser Use stays Actor DOM readback only (no LLM agent, forms, or credentials).
+
+## Interactive browser automation via Claude
+
+The read-only `browser.read` and `browser.read_many` actions remain unchanged.
+For clicking and filling forms use the separately opt-in official Playwright MCP:
+`ENABLE_CLAUDE_AGENT=true` plus `CLAUDE_AGENT_PLAYWRIGHT=true`.
+JARVIS exposes this tool to the *Claude agent* as an MCP server, not as a
+Core-owned Browser Use action. The agent uses an isolated Chrome profile.
+Settings → İzinler → Tam yetki preauthorizes the top-level `agent.execute`
+and Claude's ordinary tools on new dispatches, but it does not turn MCP tool
+calls into individually audited Core actions. Other MCP servers need separate
+installation, credentials and host-level verification.

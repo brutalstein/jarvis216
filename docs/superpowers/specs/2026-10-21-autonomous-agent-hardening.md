@@ -1,0 +1,28 @@
+# JARVIS216 autonomous-agent hardening design
+
+The user's comprehensive eight-phase request is the binding brief. It explicitly requests implementation after audit, preserving credentials/configuration, existing changes, compatibility and the Core's authority. Implementation choices below are engineering decisions, not additional user requirements.
+
+## Architecture and trust boundary
+
+Core remains the sole task, permission, action, verification and recovery authority. Providers propose typed plans; typed executors perform actions. Reuse the existing PostgreSQL task/plan/event stores, Action Engine catalog, IntegrationHub, provider health/circuits, permission grants and Brain. Do not add another agent framework or task database.
+
+1. A separate Codex conversation profile disables inherited connectors/MCP, shell, editing, browser and delegation tools through runtime SDK configuration; the existing isolated home and model settings are read without edits. Its availability is tested independently, including tool-surface canaries. Keep the existing general Codex HIGH floor. Only a verified tool-free conversational profile can use conversational risk; side effects always return to Core's typed plan path. Fail closed if that surface cannot be constrained.
+2. Add contained typed file create/read/write/delete to the existing catalog/runStep. Create must not overwrite; write requires an existing regular file; delete accepts a regular file only. Bound content and use independent readback/absence checks. Reject outside-root and symlink/junction escapes.
+3. Add a generic `tool.execute` capability for typed integration actions. Interactive browser and GitHub executors validate catalog inputs and return observable evidence; they cannot infer completion from model prose. IntegrationHub recipes bind each action to its configured executor and verifier. Existing text/extraction/workflow contracts remain supported.
+4. Interactive browser operations use pinned official Playwright MCP via the installed MCP SDK, with an isolated browser and explicit allowed origins. Expose navigation, snapshot, named field fill/click and text verification; reject ambiguous elements and unapproved navigation. No arbitrary generated JavaScript or external account creation in tests. Keep Browser Use extraction separate and compatible.
+5. Standalone GitHub operations reuse the official authenticated `gh` CLI rather than host connector assumptions. Expose authenticated profile, repository listing/metadata, bounded file and issue reads and explicitly approved issue creation. Validate inputs, pass write bodies via stdin, bound output and classify failures. E2E performs authenticated reads only; mutation contracts use isolated fixtures.
+6. Runtime capability discovery comes from actual configured executors and MCP tool descriptors, intersected with catalog permissions and provider health. Expose provenance and distinguish configured, reachable, authenticated and independently verified states. Never label configuration as live authentication.
+7. Preserve exact HIGH approvals and scoped, audited standing grants. Full Access uses existing permission semantics for eligible typed plan steps; denial, scope, expiry, external authentication and non-overridable guards remain effective at dispatch.
+8. Structured outcomes distinguish verified success, refusal, unavailable, incomplete, failure and skipped control flow. Generic model text remains text; external-action success requires executor-observed evidence and a verifiable postcondition. Existing persisted results remain readable.
+9. Reuse dependent tasks, durable plan/task checkpoints, cancellation and bounded replanning. Add explicit conditional predicates only at the common task/plan boundary, with references to earlier dependencies, bounded budgets and audited skipped branches; do not create provider-specific workflow engines.
+10. Voice keeps current operator/model settings. Correct timing provenance and measure VAD/segment/transcription/Core/synthesis/playback separately. Add explicit output selection and bounded reconnection/lifecycle recovery using existing transport/device APIs. Optimize inference only after comparable measured runs; recorded input never proves hardware recognition.
+
+## Acceptance and release
+
+Use separate PostgreSQL schemas and temporary process environments with all Claude paths disabled. Fixtures and independent inspections are performed by Codex; execution passes require JARVIS API/desktop evidence. Test natural-language Codex conversation, file CRUD, local registration, mixed-tool plans, fault recovery, memory retrieval/reuse and permission presets. Bluetooth is BLOCKED without connected hardware. Preserve prior E2E report as a baseline artifact.
+
+Run relevant RED→GREEN regressions, full TypeScript checks/build/security tests, real PostgreSQL, Python and Electron checks, and bounded live repetitions. Publish the four requested reports with exact PASS/FAIL/BLOCKED evidence and remaining gates. Commit only related changes on `codex/autonomous-agent-hardening`, push, open a PR against the verified release branch, and merge only when required CI and review gates pass. Existing graph dirt remains distinguishable from implementation changes; refresh graphify after code changes.
+
+## Non-goals and limits
+
+No replacement of stable services for aesthetics; no security/isolation downgrade; no credential copying, account creation, model migration, silent grants or fake success. No claim that every application or arbitrary internet workflow is supported. Missing prerequisites remain explicit blockers, not hidden fallback successes.

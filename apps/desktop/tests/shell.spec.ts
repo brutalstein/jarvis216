@@ -8,6 +8,7 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
     expect(await run.page.evaluate(() => typeof Reflect.get(window, "require"))).toBe("undefined");
     expect(await run.page.evaluate(() => Object.keys(window.jarvis).sort())).toEqual(
       [
+        "updates",
         "voice",
         "onEvent",
         "turns",
@@ -17,6 +18,8 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
         "memories",
         "enrollment",
         "setListening",
+        "mini",
+        "restore",
       ].sort(),
     );
     expect(

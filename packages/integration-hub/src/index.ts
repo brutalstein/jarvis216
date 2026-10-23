@@ -2,14 +2,14 @@ import { z } from "zod";
 
 /** Pure task recipes; Core retains policy, scheduling, credentials, execution and recovery. */
 export type HubTask = {
-  capability: "text.generate" | "browser.extract" | "workflow.invoke";
+  capability: "text.generate" | "browser.extract" | "workflow.invoke" | "tool.execute";
   providers: string[];
   objective: string;
   input: Record<string, unknown>;
   risk: "LOW" | "MEDIUM" | "HIGH";
   privacy: "public" | "private";
   budget: { maxCalls: 1; maxDurationMs: number; maxOutputTokens: number };
-  verification: { kind: "non-empty" } | { kind: "contains"; value: string };
+  verification: { kind: "non-empty" | "postcondition" } | { kind: "contains"; value: string };
 };
 export class IntegrationError extends Error {
   constructor(readonly code: "INTEGRATION_DISABLED" | "INTEGRATION_DENIED") {
@@ -34,6 +34,7 @@ export class IntegrationHub {
   }
 }
 const agent = z.strictObject({ instruction: z.string().trim().min(1).max(2000) });
+const claudeAgent = z.strictObject({ instruction: z.string().trim().min(1).max(8000) });
 const browser = z.strictObject({
   url: z.url({ protocol: /^https$/ }).max(2000),
   expectedText: z.string().trim().min(1).max(4096),
@@ -78,6 +79,7 @@ function exactUrl(value: string): string {
 }
 export function createIntegrationHub(settings: {
   openclaw?: boolean;
+  claudeAgent?: boolean;
   browserUrls?: readonly string[];
   workflows?: readonly string[];
 }): IntegrationHub {
@@ -93,8 +95,22 @@ export function createIntegrationHub(settings: {
         input: {},
         risk: "HIGH",
         privacy: "private",
-        budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 1200 },
-        verification: { kind: "non-empty" },
+        budget: { maxCalls: 1, maxDurationMs: 86_400_000, maxOutputTokens: 4096 },
+        verification: { kind: "postcondition" },
+      };
+    });
+  if (settings.claudeAgent)
+    hub.register("agent.execute", (args) => {
+      const { instruction } = read(claudeAgent, args);
+      return {
+        capability: "text.generate",
+        providers: ["claude-agent"],
+        objective: instruction,
+        input: {},
+        risk: "HIGH",
+        privacy: "private",
+        budget: { maxCalls: 1, maxDurationMs: 86_400_000, maxOutputTokens: 8192 },
+        verification: { kind: "postcondition" },
       };
     });
   if (urls.size) {

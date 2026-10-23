@@ -141,6 +141,43 @@ it("fails a retry-safe call that exhausted the task deadline instead of demandin
   expect(status).toBe("FAILED");
 });
 
+it("gives a hanging model only part of the time left while an untried fallback remains", async () => {
+  const task = await tasks.create(
+    spec({
+      providers: ["slow", "fast"],
+      budget: { maxCalls: 2, maxDurationMs: 12_000, maxOutputTokens: 100 },
+    }),
+    "sliced",
+    "operator",
+  );
+  const hang = (_task: unknown, signal: AbortSignal) =>
+    new Promise<never>((_resolve, reject) =>
+      signal.addEventListener("abort", () => reject(signal.reason), { once: true }),
+    );
+  const gateway = new ActionGateway(tasks);
+  const started = Date.now();
+  const first = await gateway.run(
+    (await tasks.claim("w", 10_000))!,
+    { id: "slow", capability: "text.generate", external: true, retrySafe: true, execute: hang },
+    new AbortController().signal,
+  );
+  expect(first).toBe("READY");
+  expect(Date.now() - started).toBeLessThan(9500);
+  await db.query("UPDATE tasks SET not_before=0 WHERE id=$1", [task.id]);
+  const second = await gateway.run(
+    (await tasks.claim("w", 10_000))!,
+    {
+      id: "fast",
+      capability: "text.generate",
+      external: true,
+      retrySafe: true,
+      execute: async () => ({ text: "verified", source: "fast" }),
+    },
+    new AbortController().signal,
+  );
+  expect(second).toBe("COMPLETED");
+}, 15_000);
+
 it("redacts known secrets from operator reconciliation evidence", async () => {
   const task = await tasks.create(spec({ providers: ["svc"] }), "reconcile-redact", "operator");
   await new ActionGateway(tasks).run(

@@ -104,7 +104,11 @@ function parseFeed(text: string): Parsed[] {
   const channelTitle = textOf(channel.title);
   return [channel.item ?? []].flat().flatMap((node) => {
     const item = node as XmlNode;
-    const title = textOf(item.title);
+    // Some feeds escape highlight markup (&lt;b&gt;) into titles; keep only the words.
+    const title = textOf(item.title)
+      .replace(/<\/?[a-z][^<>]*>/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
     const source = textOf(item.source) || channelTitle;
     // Google News appends " - Source"; the publisher's headline stays verbatim.
     const headline =

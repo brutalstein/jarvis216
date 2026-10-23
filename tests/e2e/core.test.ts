@@ -95,7 +95,11 @@ describe("the HTTP surface", () => {
       if (url === "/healthz") continue;
       const path = url.replaceAll(":id", randomUUID());
       const hook = path.startsWith("/v1/hooks/");
-      for (const token of ["", hook ? running.token : running.webhook]) {
+      for (const token of [
+        "",
+        "generated-wrong-credential",
+        hook ? running.token : running.webhook,
+      ]) {
         const response = await running.api(method, path, method === "GET" ? undefined : {}, token);
         expect([method, url, token ? "wrong" : "none", response.status]).toEqual([
           method,
@@ -104,6 +108,19 @@ describe("the HTTP surface", () => {
           401,
         ]);
       }
+      // The credential for this route must reach the handler, including the live stream.
+      const accepted = await fetch(`${running.url}${path}`, {
+        method,
+        headers: {
+          authorization: `Bearer ${hook ? running.webhook : running.token}`,
+          ...(method !== "GET" && { "content-type": "application/json" }),
+        },
+        ...(method !== "GET" && { body: "{}" }),
+        signal: AbortSignal.timeout(5000),
+      });
+      expect(accepted.status, `${method} ${url}`).not.toBe(401);
+      expect(accepted.status, `${method} ${url}`).toBeLessThan(500);
+      await accepted.body?.cancel();
     }
   });
 });
@@ -246,7 +263,7 @@ describe("desktop actions and approvals", () => {
 });
 
 describe("high-risk integrations", () => {
-  it("delegates to the agent only after the plan tap and the exact action approval", async () => {
+  it("requires both approvals and keeps an agent's unverified report in recovery", async () => {
     model.turns.push(
       plan("Tedarikçileri karşılaştır", [
         { action: "agent.delegate", args: { instruction: "Üç tedarikçiyi karşılaştır" } },
@@ -266,8 +283,8 @@ describe("high-risk integrations", () => {
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     });
     expect(approved.status).toBe(204);
-    const done = await settled(card?.id as string);
-    expect(done?.say).toBe("Ajan üç tedarikçiyi karşılaştırdı, efendim.");
+    const done = await settled(card?.id as string, "RECOVERY_REQUIRED");
+    expect(done?.say).not.toBe("Ajan üç tedarikçiyi karşılaştırdı, efendim.");
     expect(fakes.openclaw.calls[0]).toMatchObject({
       agent: "jarvis-e2e",
       body: { tools: [], tool_choice: "none", input: "Üç tedarikçiyi karşılaştır" },

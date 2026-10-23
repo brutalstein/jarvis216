@@ -48,3 +48,17 @@ word and a faint atmospheric glow:
 - Motion is state, not ornament. Rings are WebGL hairlines; colour transitions use a typed
   `--state` custom property. Reduced motion freezes the presence and removes transitions.
 - All text meets 4.5:1 contrast on its surface; the UI tests measure it.
+
+## Views, feed and colour
+
+- Three toggles in the top bar: Otomatik, Odak, Geniş (remembered per machine). In Otomatik
+  JARVIS picks the layout itself and names it: Geniş while a plan runs, waits for approval or
+  shows news; Standart while cards are on screen; Odak when nothing is.
+- The "Neler oldu" feed lists what was said and done, newest first, text only, 40 items. It
+  appears in Geniş from 900 px and in Standart from 1180 px; Odak never shows it.
+- Mini hides the window to the edge overlay; clicking the overlay orb brings it back.
+- Colour beyond state lives in borders, chips, top rules and glows, never under reading text:
+  sky text cards, mint lists and running work, lavender code and JARVIS, peach news and
+  approvals, lime done, rose problems, butter new cards. The wordmark carries the spectrum.
+- Motion: cards, news (staggered) and feed rows rise in; layout changes use a view transition;
+  running plans glow and their meter shimmers. Reduced motion turns every one of these off.

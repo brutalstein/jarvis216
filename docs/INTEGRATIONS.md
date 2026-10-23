@@ -283,6 +283,26 @@ verification. Core cannot prove external truth from arbitrary webhook JSON. Admi
 and status reads use `N8nClient` with an independently scoped `X-N8N-API-KEY`. Workflow
 discovery is currently a bounded first page. Public execution stopping is explicitly rejected.
 
+### Automations JARVIS writes (optional)
+
+With `ENABLE_N8N=true` and `N8N_API_KEY` (n8n: Settings > n8n API), JARVIS gets
+`automation.create`: it composes a scheduled workflow from a short node list, and Core saves it
+through n8n's public API as `JARVIS · <name>` (same name: updated, not duplicated), links the
+node credentials by type, publishes it and reads it back to confirm it is active. Rules:
+
+- HIGH risk: each create or update needs your exact approval; the card shows every node.
+- Nodes come from a fixed list (triggers, files, YouTube, Google Drive, flow and data nodes). No
+  Code, Execute Command, SSH, HTTP Request or n8n-admin nodes; a trigger is required.
+- Files are read only, only from `/home/node/.n8n-files`, which compose mounts read-only from
+  `JARVIS_MEDIA_DIR`. Literal paths only; expressions in `fileSelector` are refused.
+- Credentials are never created by JARVIS. Connect the account (for example YouTube OAuth) in
+  n8n once; a missing credential is refused before anything is written.
+- JARVIS does not run, stop or delete workflows; do that in n8n.
+
+Verified live against n8n 2.43.7: a compiled workflow read a video from the mounted folder and a
+second run skipped it through Remove Duplicates. The YouTube upload itself needs your credential
+and was not run.
+
 ### Pushed task outcomes (optional)
 
 Instead of polling, n8n can receive each notable status of the tasks it submitted (completed,

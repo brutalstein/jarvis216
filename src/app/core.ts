@@ -68,13 +68,19 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
     ...(embeddings && { embed: embeddings }),
   });
   let brainSettings: () => BrainSettings = () => ({ learning: true, reflexes: true });
-  const { registry, tools, integrations } = await configuredProviders(env, secrets, {
-    memory,
-    // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
-    prefer: (target, candidates) =>
-      brainSettings().reflexes ? brain.preferredChoice(target, candidates) : undefined,
-    ...(options.executors && { executors: options.executors }),
-  });
+  let agentAutonomous = () => false;
+  const { registry, tools, integrations, close, discover } = await configuredProviders(
+    env,
+    secrets,
+    {
+      agentAutonomous: () => agentAutonomous(),
+      memory,
+      // Learned picks among on-screen candidates count as learned shortcuts (Settings: reflexes).
+      prefer: (target, candidates) =>
+        brainSettings().reflexes ? brain.preferredChoice(target, candidates) : undefined,
+      ...(options.executors && { executors: options.executors }),
+    },
+  );
   try {
     await migrate(db);
     // Which catalog actions this configuration can run at all, for the Settings view.
@@ -95,6 +101,9 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         ),
     });
     await permissions.load();
+    // Read the live, possibly expiring Full Access preset on each delegated run.
+    agentAutonomous = () =>
+      permissions.view().preset === "autonomous" && permissions.allows("agent.execute");
     brainSettings = () => permissions.settings();
     await brain.load();
     await brain.consolidate();
@@ -117,6 +126,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
         "desktop.act": 1,
         "info.fetch": 2,
         "memory.write": 1,
+        "tool.execute": 1,
       },
       redact: (text) => secrets.redact(text),
       retrySafe: (target) => registry.retrySafe(target),
@@ -138,7 +148,8 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
     };
     // A task that became claimable (admitted, approved, resumed) or settled (unblocking its
     // dependents) wakes idle workers at once.
-    const onChange = ({ status }: TaskChange) => {
+    const onChange = ({ id, status }: TaskChange) => {
+      if (status === "CANCELLED" || status === "RECOVERY_REQUIRED") onCancel(id);
       if (status === "READY" || terminal.has(status)) wake();
     };
     tasks.changes.on("change", onChange);
@@ -148,7 +159,18 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       wake,
       onCancel,
       conversationProviders: providers,
-      privateProviders: providers.includes("claude-code") ? ["claude-code"] : [],
+      privateProviders: providers.filter(
+        (id) =>
+          id === "claude-code" ||
+          id === "codex-live" ||
+          registry
+            .list()
+            .some(
+              (p) =>
+                (p as { id: string; trustedForPrivate?: boolean }).id === id &&
+                (p as { trustedForPrivate?: boolean }).trustedForPrivate,
+            ),
+      ),
       integrations,
       memory: true,
       permissions,
@@ -199,6 +221,14 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       webhookToken: config.N8N_INGRESS_TOKEN,
       onCancel,
       onAdmit: wake,
+      capabilities: async () => ({
+        actions: permissions
+          .view()
+          .actions.filter((action) => action.available && action.mode !== "deny"),
+        providers: registry.list(),
+        mcp: await discover(),
+        authentication: "configured credentials are not proof of a live authenticated call",
+      }),
       conversation,
       plans,
       memory,
@@ -262,13 +292,13 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
           abort.abort();
           await running;
           tasks.changes.off("change", onChange);
-          await tools?.close();
+          await close();
         })();
         return stopping;
       },
     };
   } catch (error) {
-    await tools?.close();
+    await close();
     throw error;
   }
 }

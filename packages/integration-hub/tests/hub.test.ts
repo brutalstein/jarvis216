@@ -4,6 +4,7 @@ import { createIntegrationHub, IntegrationHub } from "../src/index.js";
 const active = () =>
   createIntegrationHub({
     openclaw: true,
+    claudeAgent: true,
     browserUrls: ["https://example.com/"],
     workflows: ["digest"],
   });
@@ -12,6 +13,7 @@ describe("allowlisted integration recipes", () => {
     expect(createIntegrationHub({}).available()).toEqual([]);
     expect(active().available()).toEqual([
       "agent.delegate",
+      "agent.execute",
       "automation.invoke",
       "browser.read",
       "browser.read_many",
@@ -19,6 +21,20 @@ describe("allowlisted integration recipes", () => {
     expect(() =>
       createIntegrationHub({}).compile("agent.delegate", { instruction: "hi" }),
     ).toThrow();
+  });
+  it("binds Claude Code agent to a durable HIGH Core task", () => {
+    const task = active().compile("agent.execute", { instruction: "Analyze and implement" });
+    expect(task).toMatchObject({
+      capability: "text.generate",
+      providers: ["claude-agent"],
+      risk: "HIGH",
+      privacy: "private",
+      input: {},
+      verification: { kind: "postcondition" },
+    });
+    expect(task.objective).toBe("Analyze and implement");
+    expect(() => createIntegrationHub({}).compile("agent.execute", { instruction: "x" })).toThrow();
+    expect(() => active().compile("agent.execute", { instruction: "" })).toThrow();
   });
   it("binds OpenClaw and n8n to exact HIGH Core tasks", () => {
     expect(active().compile("agent.delegate", { instruction: "analyze" })).toMatchObject({

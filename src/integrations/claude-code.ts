@@ -22,6 +22,8 @@ const Output = z.object({
   is_error: z.boolean(),
   result: z.string().optional(),
   session_id: z.string().optional(),
+  terminal_reason: z.string().optional(),
+  permission_denials: z.array(z.unknown()).optional(),
   usage: z
     .object({ input_tokens: z.number().int().min(0), output_tokens: z.number().int().min(0) })
     .optional()
@@ -41,15 +43,34 @@ function failure(text: string): ProviderFailure {
 
 // Runs the unmodified official binary headless: no tools, no MCP, no user settings or hooks.
 // The OAuth login stays inside Claude Code; Core never sees the token.
+export type ClaudeAgentOptions = {
+  maxTurns: number;
+  permissionMode: "auto" | "acceptEdits" | "plan" | "dontAsk";
+  mcpConfig?: string;
+  // Additional MCP sources are additive; preserve the operator's installed servers.
+  mcpConfigs?: readonly string[];
+  // Core supplies the *current* Settings grant, not a startup snapshot.
+  autonomous?: () => boolean;
+};
 export class ClaudeCodeExecutor implements Executor {
-  readonly id = "claude-code";
+  readonly id: "claude-code" | "claude-agent";
   readonly capability = "text.generate";
   readonly external = true;
-  readonly retrySafe = true;
+  readonly retrySafe: boolean;
+  readonly riskFloor?: "HIGH";
   readonly outputTokenLimitEnforced = false;
   constructor(
-    private options: { command: readonly [string, ...string[]]; model: string; workdir: string },
-  ) {}
+    private options: {
+      command: readonly [string, ...string[]];
+      model: string;
+      workdir: string;
+      agent?: ClaudeAgentOptions;
+    },
+  ) {
+    this.id = options.agent ? "claude-agent" : "claude-code";
+    this.retrySafe = !options.agent;
+    if (options.agent) this.riskFloor = "HIGH";
+  }
   execute(task: Task, signal: AbortSignal): Promise<ExecutionResult> {
     if (signal.aborted) return Promise.reject(signal.reason ?? new Error("aborted"));
     const { command, model, workdir } = this.options;
@@ -57,15 +78,59 @@ export class ClaudeCodeExecutor implements Executor {
       ...Object.fromEntries(
         claudeCodeEnvKeys.flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
       ),
-      // Workdir sits inside this repo: keep its git status and any CLAUDE.md out of the prompt.
-      CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
-      CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+      // Lightweight conversational Claude remains free of workspace context.
+      // The tool-using agent intentionally loads project guidance and skills.
+      ...(!this.options.agent
+        ? {
+            CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1",
+            CLAUDE_CODE_DISABLE_CLAUDE_MDS: "1",
+          }
+        : {}),
     };
-    return new Promise((resolve, reject) => {
-      const child = spawn(
-        command[0],
-        [
-          ...command.slice(1),
+    const autonomous = this.options.agent?.autonomous?.() === true;
+    const flags = this.options.agent
+      ? [
+          "-p",
+          "--output-format",
+          "json",
+          "--model",
+          model,
+          "--tools",
+          "default",
+          "--permission-mode",
+          autonomous ? "acceptEdits" : this.options.agent.permissionMode,
+          ...(this.options.agent.maxTurns > 0
+            ? ["--max-turns", String(this.options.agent.maxTurns)]
+            : []),
+          ...(this.options.agent.mcpConfigs?.length
+            ? ["--mcp-config", ...this.options.agent.mcpConfigs]
+            : this.options.agent.mcpConfig
+              ? ["--strict-mcp-config", "--mcp-config", this.options.agent.mcpConfig]
+              : []),
+          // The operator's Full Access preset preauthorizes native and installed MCP tools.
+          // Still honors Claude-managed deny rules and the Core's per-action admission.
+          ...(autonomous
+            ? [
+                "--allowedTools",
+                "Bash",
+                "Read",
+                "Write",
+                "Edit",
+                "Glob",
+                "Grep",
+                "WebFetch",
+                "WebSearch",
+                "mcp__*",
+              ]
+            : // The operator approved this exact run: reading the web is part of it, nothing more.
+              ["--allowedTools", "WebSearch", "WebFetch"]),
+          // Not "user": an apiKeyHelper or hook there would replace the subscription login or
+          // block the delegated run. The OAuth login itself is not a setting and still applies.
+          "--setting-sources",
+          "project,local",
+          "--no-session-persistence",
+        ]
+      : [
           "-p",
           "--output-format",
           "json",
@@ -79,9 +144,15 @@ export class ClaudeCodeExecutor implements Executor {
           "--disable-slash-commands",
           "--no-session-persistence",
           "--safe-mode",
-        ],
-        { cwd: workdir, env, shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
-      );
+        ];
+    return new Promise((resolve, reject) => {
+      const child = spawn(command[0], [...command.slice(1), ...flags], {
+        cwd: workdir,
+        env,
+        shell: false,
+        windowsHide: true,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       let stdout = "";
       let stderr = "";
       let oversized = false;
@@ -117,9 +188,20 @@ export class ClaudeCodeExecutor implements Executor {
         }
         if (parsed.is_error || code !== 0)
           return reject(failure(`${parsed.result ?? ""} ${stderr}`));
+        // A delegated run's outcome comes from the harness's own result fields, never the model's
+        // prose: the loop finished on its own and no tool it reached for was refused.
+        const done =
+          parsed.subtype === "success" &&
+          parsed.terminal_reason === "completed" &&
+          parsed.permission_denials?.length === 0;
         resolve({
           text: parsed.result ?? "",
-          source: `claude-code:${model}:subscription`,
+          ...(this.options.agent && {
+            outcome: done
+              ? { status: "completed" as const, verified: true }
+              : { status: "blocked" as const, verified: false },
+          }),
+          source: `${this.id}:${model}:subscription`,
           ...(parsed.session_id ? { externalId: parsed.session_id } : {}),
           ...(parsed.usage && {
             usage: {

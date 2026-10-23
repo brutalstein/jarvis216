@@ -163,7 +163,8 @@ test("news, candidates and windows use text-only panels with a running control i
       },
     });
     await expect(run.page.locator("[data-news]")).toHaveCount(5);
-    await expect(run.page.locator("[data-news]").first()).toContainText(items[0].headline);
+    await expect(run.page.locator("[data-news]").first()).toContainText("Haber 1");
+    await expect(run.page.locator("[data-news]").first()).not.toContainText("<b>");
     expect(await run.page.locator("[data-news] b").count()).toBe(0);
     await run.page.screenshot({ path: `${shots}/news.png` });
     await emit(run.app, {

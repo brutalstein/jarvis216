@@ -2,6 +2,168 @@ name: backend-verification
 on: [push, pull_request]
 permissions: { contents: read }
 jobs:
+  windows-service-manager:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell 5.1 service manager
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/jarvis-services.ps1').Path,
+            [ref]$tokens,
+            [ref]$parseErrors
+          ) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Error $_.Message }
+            throw 'PowerShell parser failed.'
+          }
+      - name: Test service manager status and expected missing-env diagnostic
+        shell: powershell
+        run: |
+          .\scripts\jarvis-services.ps1 -Action Status
+          if ($LASTEXITCODE -ne 0) { throw 'Status is not safe without a configured instance.' }
+          .\scripts\jarvis-services.ps1 -Action Logs -Service core -Tail 2
+          if ($LASTEXITCODE -ne 0) { throw 'Logs is not safe without a managed instance.' }
+          $oldPreference = $ErrorActionPreference
+          $ErrorActionPreference = 'Continue'
+          $diagnostic = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action Doctor 2>&1
+          $doctorExitCode = $LASTEXITCODE
+          $ErrorActionPreference = $oldPreference
+          if ($doctorExitCode -eq 0) { throw 'Doctor must refuse a missing .env.' }
+          if (($diagnostic -join ' ') -notmatch 'ENV_MISSING') { throw 'Doctor did not report ENV_MISSING.' }
+          # GitHub's powershell runner propagates the most recent native exit code.
+          # Doctor's nonzero result was the expected/verified behavior.
+          $global:LASTEXITCODE = 0
+      - name: Check unchanged dotenv syntax with duplicate keys, hidden prefix and safe output
+        shell: powershell
+        run: |
+          # All credentials below are deliberately synthetic and never sent to a service.
+          $lines = @(
+            '# Example operator configuration'
+            'POSTGRES_PASSWORD=fixture-not-a-real-password'
+            'DATABASE_URL=postgresql://jarvis:fixture@127.0.0.1:55432/jarvis'
+            "$([char]0x200B)JARVIS_TOKEN=fixture-do-not-log-this-token"
+            'ENABLE_CLAUDE_AGENT=true'
+            'CLAUDE_AGENT_PERMISSION_MODE=auto'
+            'CLAUDE_AGENT_MAX_TURNS=12'
+            '# Browser tools'
+            'CLAUDE_AGENT_PLAYWRIGHT=true'
+            'CLAUDE_AGENT_PLAYWRIGHT_HEADLESS=false'
+            'CLAUDE_AGENT_OPENCLAW_MCP=true'
+            'ENABLE_OPENCLAW=true'
+            'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits'
+            'BROWSER_ALLOWED_URLS=["https://example.com/"]'
+            'CLAUDE_AGENT_WORKSPACE=C:\Users\fixture\OneDrive\Desktop\jarvis216\data\claude-agent'
+          )
+          try {
+            Set-Content -LiteralPath .env -Value $lines -Encoding UTF8
+            $output = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action EnvCheck 2>&1
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw "EnvCheck failed; expected success: $($output -join ' ')" }
+            $result = $output -join ' '
+            if ($result -notmatch 'ENV_PARSED') { throw 'dotenv fixture did not parse.' }
+            if ($result -notmatch 'ENV_DUPLICATE_OVERRIDE: CLAUDE_AGENT_PERMISSION_MODE') { throw 'Duplicate override not detected.' }
+            if ($result -notmatch 'CLAUDE_AGENT_PERMISSION_MODE=acceptEdits') { throw 'Last assignment must win.' }
+            if ($result -match 'fixture-do-not-log-this-token' -or $result -match 'fixture-not-a-real-password') {
+              throw 'Secret value was printed to stdout.'
+            }
+            # The portable CLI is deliberately absent from the parent PATH:
+            # only openclaw-native.ps1 must be able to find the executable.
+            $portable = Join-Path $PWD '.tools\node-v24.22.0-win-x64'
+            New-Item -ItemType Directory -Force -Path $portable | Out-Null
+            New-Item -ItemType File -Force -Path (Join-Path $portable 'node.exe') | Out-Null
+            Set-Content -LiteralPath (Join-Path $portable 'openclaw.cmd') -Encoding ASCII -Value @(
+              '@echo off'
+              'if "%~1"=="--version" exit /b 0'
+              'exit /b 1'
+            )
+            $originalPath = $env:PATH
+            $bin = Join-Path $PWD 'data\ci-bin'
+            New-Item -ItemType Directory -Force -Path $bin | Out-Null
+            Set-Content -LiteralPath (Join-Path $bin 'docker.cmd') -Encoding ASCII -Value '@echo off'
+            $env:PATH = "$bin;$originalPath"
+            try {
+              if (Get-Command openclaw -ErrorAction SilentlyContinue) {
+                throw 'OpenClaw unexpectedly appeared on the parent PATH.'
+              }
+              $doctorOutput = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/jarvis-services.ps1 -Action Doctor 2>&1
+              $doctorCode = $LASTEXITCODE
+              if ($doctorCode -ne 0) { throw "Doctor rejected a working portable OpenClaw wrapper: $($doctorOutput -join ' ')" }
+              if (($doctorOutput -join ' ') -notmatch 'Local .env and prerequisites checked') {
+                throw 'Doctor did not confirm local prerequisites.'
+              }
+            } finally {
+              $env:PATH = $originalPath
+            }
+          } finally {
+            Remove-Item -LiteralPath .env -Force -ErrorAction SilentlyContinue
+            $global:LASTEXITCODE = 0
+          }
+      - name: Verify detached desktop inherits absolute JARVIS_ENV_FILE and can restart alone
+        shell: powershell
+        run: |
+          $fakeDir = Join-Path $PWD 'apps/desktop/node_modules/electron/dist'
+          $exe = Join-Path $fakeDir 'electron.exe'
+          $capture = Join-Path $PWD 'data/ci-electron-env-path.txt'
+          New-Item -ItemType Directory -Force -Path $fakeDir | Out-Null
+          New-Item -ItemType Directory -Force -Path (Split-Path $capture) | Out-Null
+          # Native fixture has no Electron or voice dependencies. It captures only
+          # the env *path*, not .env contents or any token.
+          $code = @'
+          using System;
+          using System.IO;
+          using System.Threading;
+          class FakeDesktop {
+            public static void Main(string[] args) {
+              var destination = Environment.GetEnvironmentVariable("JARVIS_DESKTOP_CAPTURE");
+              if (!string.IsNullOrEmpty(destination))
+                File.WriteAllText(destination, Environment.GetEnvironmentVariable("JARVIS_ENV_FILE") ?? "MISSING");
+              Thread.Sleep(30000);
+            }
+          }
+          '@
+          Add-Type -TypeDefinition $code -OutputAssembly $exe -OutputType ConsoleApplication
+          $original = [Environment]::GetEnvironmentVariable('JARVIS_ENV_FILE','Process')
+          $env:JARVIS_ENV_FILE = 'caller-prior-value'
+          $env:JARVIS_DESKTOP_CAPTURE = $capture
+          Set-Content -LiteralPath .env -Value @(
+            'PORT=2160'
+            'JARVIS_TOKEN=synthetic-token-never-expose'
+          ) -Encoding UTF8
+          try {
+            .\scripts\jarvis-services.ps1 -Action Restart -Service desktop
+            if ($LASTEXITCODE -ne 0) { throw 'Detached desktop startup failed.' }
+            $expected = [IO.Path]::GetFullPath((Join-Path $PWD.Path '.env'))
+            $observed = ''
+            for ($i = 0; $i -lt 30; $i++) {
+              if (Test-Path -LiteralPath $capture) {
+                $observed = [IO.File]::ReadAllText($capture)
+                break
+              }
+              Start-Sleep -Milliseconds 300
+            }
+            if ($observed -ne $expected) {
+              throw 'Desktop child did not inherit the absolute operator .env file path.'
+            }
+            if ($env:JARVIS_ENV_FILE -ne 'caller-prior-value') {
+              throw 'Launcher modified the calling process JARVIS_ENV_FILE.'
+            }
+            $logs = Get-ChildItem -LiteralPath 'data/runtime/service-manager/logs' -File
+            foreach ($log in $logs) {
+              if ((Get-Content -LiteralPath $log.FullName -Raw) -match 'synthetic-token-never-expose') {
+                throw 'Secret was printed in detached desktop logs.'
+              }
+            }
+          } finally {
+            .\scripts\jarvis-services.ps1 -Action Stop -Service desktop
+            [Environment]::SetEnvironmentVariable('JARVIS_ENV_FILE',$original,'Process')
+            Remove-Item Env:JARVIS_DESKTOP_CAPTURE -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath .env -Force -ErrorAction SilentlyContinue
+            $global:LASTEXITCODE = 0
+          }
   typescript:
     strategy:
       matrix: { os: [ubuntu-latest, windows-latest] }
@@ -11,6 +173,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.22.0, cache: npm }
       - run: npm ci --ignore-scripts
+      # Root media regression tests import the desktop's separately locked dependencies.
+      - run: npm ci --prefix apps/desktop --ignore-scripts
+      - run: npm run matrix:check
       # Linux also enforces the coverage floors; Windows runs the same suite without them.
       - run: npm run check:ci
         if: matrix.os == 'ubuntu-latest'
@@ -36,7 +201,9 @@ jobs:
       - run: npm run test:e2e
         env: { E2E_DATABASE_URL: "postgresql://jarvis:ci-only-local-password@127.0.0.1:5432/jarvis_test" }
   desktop:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix: { os: [ubuntu-latest, windows-latest] }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,8 +221,12 @@ jobs:
       - run: |
           sudo chown root:root apps/desktop/node_modules/electron/dist/chrome-sandbox
           sudo chmod 4755 apps/desktop/node_modules/electron/dist/chrome-sandbox
+        if: runner.os == 'Linux'
       - run: npm --prefix apps/desktop run typecheck
       - run: xvfb-run -a npm --prefix apps/desktop test
+        if: runner.os == 'Linux'
+      - run: npm --prefix apps/desktop test
+        if: runner.os == 'Windows'
       - run: npm audit --prefix apps/desktop --audit-level=high
   python:
     runs-on: ubuntu-latest
@@ -75,7 +246,7 @@ jobs:
     defaults: { run: { working-directory: workers/voice } }
     env:
       DEPS: >-
-        --with pipecat-ai[webrtc]==1.12.0 --with httpx==0.28.1 --with aiohttp==3.14.5
+        --with pipecat-ai[webrtc,whisper,piper]==1.12.0 --with httpx==0.28.1 --with aiohttp==3.14.5
         --with numpy==1.26.4
     steps:
       - uses: actions/checkout@v4
@@ -85,5 +256,7 @@ jobs:
       - run: uv run --no-project --python 3.12 --with ruff==0.17.1 ruff format --check jarvis_voice tests
       - run: uv run --no-project --python 3.12 $DEPS --with mypy==2.4.0 mypy jarvis_voice
       - run: >-
-          uv run --no-project --python 3.12 $DEPS python -m unittest -v
-          tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker
+          uv run --no-project --python 3.12 $DEPS
+          --with 'torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.11.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=f82e2ae20c1545bb03997d1cc3143d94e14b800038669ee1aca45808a9acc338'
+          python -m unittest -v
+          tests.test_addressee tests.test_brain tests.test_core_client tests.test_server tests.test_speaker tests.test_voice_timing

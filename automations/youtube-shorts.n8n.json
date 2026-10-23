@@ -1,0 +1,172 @@
+{
+  "name": "YouTube Shorts - günlük yükleme",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 18 * * *" }]
+        }
+      },
+      "name": "Her gün 18:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jarvis-shorts",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "JARVIS tetiklemesi",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 220],
+      "webhookId": "3d6a0c52-8b1e-4f7a-9c3d-5e2f1a7b9c41"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "logic": "removeItemsWithAlreadySeenKeyValues",
+        "dedupeValue": "={{ $json.body.taskId }}",
+        "options": { "scope": "workflow" }
+      },
+      "name": "Tekrarlanan görevi atla",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [220, 220]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": false,
+        "limit": 1,
+        "filter": {
+          "folderId": { "__rl": true, "value": "BEKLEYEN_KLASOR_ID", "mode": "id" },
+          "whatToSearch": "files"
+        },
+        "options": { "fields": ["id", "name"] }
+      },
+      "name": "Sıradaki videoyu bul",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [440, 0],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "6b1f9c2e-0d4a-4e8b-a7f3-2c9d1e5b8a60",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "exists", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Video var mı?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": { "__rl": true, "value": "={{ $json.id }}", "mode": "id" },
+        "options": {}
+      },
+      "name": "Videoyu indir",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [880, -100]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Sıradaki videoyu bul').item.json.name.replace(/\\.[^.]+$/, '') }} #Shorts",
+        "regionCode": "TR",
+        "categoryId": "22",
+        "options": {
+          "description": "#Shorts",
+          "privacyStatus": "public",
+          "selfDeclaredMadeForKids": false
+        }
+      },
+      "name": "YouTube'a yükle",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [1100, -100]
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Sıradaki videoyu bul').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": { "__rl": true, "value": "My Drive", "mode": "list" },
+        "folderId": { "__rl": true, "value": "YAYINLANDI_KLASOR_ID", "mode": "id" }
+      },
+      "name": "Yayınlandı klasörüne taşı",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1320, -100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ text: 'Shorts yüklendi: ' + $('Sıradaki videoyu bul').item.json.name + ' https://youtube.com/shorts/' + $('YouTube\\'a yükle').item.json.id, source: 'n8n:youtube-shorts', externalId: String($execution.id) }) }}",
+        "options": {}
+      },
+      "name": "JARVIS'e sonucu bildir",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1540, -100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ text: 'Bekleyen klasöründe yüklenecek video yok.', source: 'n8n:youtube-shorts', externalId: String($execution.id) }) }}",
+        "options": {}
+      },
+      "name": "JARVIS'e video yok de",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 120]
+    }
+  ],
+  "connections": {
+    "Her gün 18:00": { "main": [[{ "node": "Sıradaki videoyu bul", "type": "main", "index": 0 }]] },
+    "JARVIS tetiklemesi": {
+      "main": [[{ "node": "Tekrarlanan görevi atla", "type": "main", "index": 0 }]]
+    },
+    "Tekrarlanan görevi atla": {
+      "main": [[{ "node": "Sıradaki videoyu bul", "type": "main", "index": 0 }]]
+    },
+    "Sıradaki videoyu bul": { "main": [[{ "node": "Video var mı?", "type": "main", "index": 0 }]] },
+    "Video var mı?": {
+      "main": [
+        [{ "node": "Videoyu indir", "type": "main", "index": 0 }],
+        [{ "node": "JARVIS'e video yok de", "type": "main", "index": 0 }]
+      ]
+    },
+    "Videoyu indir": { "main": [[{ "node": "YouTube'a yükle", "type": "main", "index": 0 }]] },
+    "YouTube'a yükle": {
+      "main": [[{ "node": "Yayınlandı klasörüne taşı", "type": "main", "index": 0 }]]
+    },
+    "Yayınlandı klasörüne taşı": {
+      "main": [[{ "node": "JARVIS'e sonucu bildir", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "timezone": "Europe/Istanbul" }
+}

@@ -7,7 +7,7 @@ import {
   runStep,
   type ToolPort,
 } from "@jarvis/action-engine";
-import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
+import { type ExecutionResult, type Executor, RiskSchema, type Task } from "../core/contracts.js";
 import { ProviderFailure } from "../core/routing.js";
 
 function step(task: Task, kind: Kind) {
@@ -17,7 +17,7 @@ function step(task: Task, kind: Kind) {
     !action ||
     task.spec.capability !== (kind === "desktop" ? "desktop.act" : "info.fetch") ||
     action.kind !== kind ||
-    (action.risk === "MEDIUM" && task.spec.risk === "LOW")
+    RiskSchema.options.indexOf(action.risk) > RiskSchema.options.indexOf(task.spec.risk)
   )
     throw new ProviderFailure("policy-denied", false, false);
   return action;

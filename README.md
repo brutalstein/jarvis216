@@ -49,6 +49,23 @@ Source modules sit in layers with one dependency direction, enforced by
 | `examples/n8n/` | n8n workflows for both directions of the integration |
 | `docs/` | Architecture, ADRs, threat model, runbook, research, engineering report |
 
+## One-command Windows background startup
+
+Use the native detached [service manager](docs/WINDOWS_SERVICE_MANAGER.md) to start
+the configured PostgreSQL, OpenClaw, Browser Use and n8n services and the JARVIS Core
+without keeping PowerShell tabs open. The optional desktop UI owns the voice worker.
+
+```powershell
+.\scripts\jarvis-services.ps1 -Action Start -WithDesktop
+.\scripts\jarvis-services.ps1 -Action Status
+.\scripts\jarvis-services.ps1 -Action Logs -Service core -Tail 50
+.\scripts\jarvis-services.ps1 -Action Stop
+```
+
+This is not a Windows boot service; Docker Desktop and required dependencies must already be installed. The manager
+attempts to launch Docker Desktop if the engine is not running. The manager follows .env flags, never changes them or grants
+additional permissions. See the linked guide for troubleshooting and isolation limits.
+
 ## Windows quick start
 
 Prerequisites: Node.js 24.11+ (24.22.0 tested), Docker Desktop with WSL2, Python 3.12
@@ -112,6 +129,8 @@ to remove the temporary PostgreSQL publication. The engineering report records l
 | --- | --- |
 | `npm run check` | Type check, Biome lint, Vitest suite, build |
 | `npm test` | Unit, property, contract, security, resilience and local E2E tests |
+| `npm run test:e2e` | Core composition-root matrix on PGlite, or disposable schemas when `E2E_DATABASE_URL` is set |
+| `npm run matrix:generate` / `npm run matrix:check` | Regenerate / verify reviewable matrix inputs; see `tests/e2e/matrix/README.md` for executed and pending coverage |
 | `npm run test:postgres` | Opt-in real PostgreSQL suite (`JARVIS_LIVE_POSTGRES_TEST=true`, `TEST_DATABASE_URL`) |
 | `npm run benchmark` | Lifecycle and scheduler baseline (`BENCHMARK_DATABASE_URL` for PostgreSQL) |
 | `npm run contracts` | Regenerate `schemas/*.schema.json` (a test fails if they drift) |

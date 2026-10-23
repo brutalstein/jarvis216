@@ -57,6 +57,21 @@ describe("containedPath", () => {
     expect(await containedPath("Raporlar", [root])).toBe(join(root, "Raporlar"));
   });
 
+  it("maps a home-relative or named well-known folder to its root", async () => {
+    const docs = join(base, "Documents");
+    await mkdir(docs, { recursive: true });
+    const roots = [root, docs];
+    expect(await containedPath("~/Desktop", roots)).toBe(root);
+    expect(await containedPath(String.raw`~\Desktop\Raporlar`, roots)).toBe(join(root, "Raporlar"));
+    expect(await containedPath("Masaüstü/Raporlar", roots)).toBe(join(root, "Raporlar"));
+    expect(await containedPath("~/Belgeler", roots)).toBe(docs);
+    expect(await containedPath("documents/a.txt", roots)).toBe(join(docs, "a.txt"));
+    for (const input of ["~", "~/outside", "~/AppData/x"])
+      await expect(containedPath(input, roots)).rejects.toMatchObject({
+        code: "PATH_OUTSIDE_ROOTS",
+      });
+  });
+
   it("rejects parent traversal, sibling prefixes and junctions leading outside", async () => {
     await rejects(join(root, "..", "outside", "x.txt"));
     await rejects("../outside/x.txt");

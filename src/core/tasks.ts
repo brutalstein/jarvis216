@@ -34,6 +34,7 @@ export const lanes: readonly Lane[] = ["interactive", "background"];
 // States an external submitter needs to hear about: settled, or waiting on the operator.
 const notified = new Set<TaskState>([
   "COMPLETED",
+  "SKIPPED",
   "FAILED",
   "CANCELLED",
   "RECOVERY_REQUIRED",
@@ -198,6 +199,15 @@ export class TaskService {
       429,
     );
     for (const dependency of spec.dependencies) await this.get(dependency, tx);
+    if (spec.condition) {
+      const observed = await this.get(spec.condition.dependencyId, tx);
+      invariant(observed.principal === principal, "CONDITION_DEPENDENCY_FORBIDDEN", 403);
+      invariant(
+        observed.spec.capability !== "text.generate",
+        "CONDITION_REQUIRES_OBSERVATION",
+        400,
+      );
+    }
     if (spec.parentId) {
       let parent: Task | undefined = await this.get(spec.parentId, tx);
       let depth = 1;
@@ -319,7 +329,26 @@ export class TaskService {
           await this.move(tx, task, "BLOCKED", "dependency unavailable");
           continue;
         }
-        if (deps.some((status) => status !== "COMPLETED")) continue;
+        if (deps.some((status) => status !== "COMPLETED" && status !== "SKIPPED")) continue;
+        const condition = task.spec.condition;
+        let skip = !condition && deps.includes("SKIPPED");
+        if (condition) {
+          const dependency = await this.get(condition.dependencyId, tx);
+          const contains = dependency.result?.text.includes(condition.contains) === true;
+          skip =
+            dependency.status !== "COMPLETED" ||
+            !dependency.result ||
+            (condition.not ? contains : !contains);
+        }
+        if (skip) {
+          await this.move(
+            tx,
+            task,
+            "SKIPPED",
+            "conditional branch not selected; no executor dispatched",
+          );
+          continue;
+        }
         const lane = this.laneOf(task);
         if (!open[lane]) continue;
         const defaults = {
@@ -329,6 +358,7 @@ export class TaskService {
           "desktop.act": 1,
           "info.fetch": 2,
           "memory.write": 1,
+          "tool.execute": 1,
         };
         const limit = this.options.limits?.[task.spec.capability] ?? defaults[task.spec.capability];
         if (lane === "background" && (activeByCapability.get(task.spec.capability) ?? 0) >= limit)

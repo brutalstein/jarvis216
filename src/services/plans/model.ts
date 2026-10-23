@@ -101,7 +101,9 @@ export type StepTask = {
 // A spoken turn may narrate a quick outcome itself; announcements wait this long for it.
 export const replyWaitMs = 5000;
 export const stepWindowMs = 15_000;
-export const planWindowMs = 120_000;
+export const planWindowMs = 300_000;
+// The latest a plan's last step may finish: long delegated agent work runs up to a day.
+export const planDeadlineMs = 86_400_000;
 export const active = "status IN ('AWAITING_APPROVAL','RUNNING')";
 export const ended = new Set<PlanStatus>(["COMPLETED", "FAILED", "CANCELLED", "RECOVERY_REQUIRED"]);
 

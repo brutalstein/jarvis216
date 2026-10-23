@@ -242,12 +242,13 @@ export async function boot(
   db: Database,
   env: Record<string, string>,
   model: FakeModel,
+  executors: Executor[] = [model.executor("gemini-live"), model.executor("claude-code")],
 ): Promise<Running> {
   const config = ConfigSchema.parse(env);
   const core = await createCore(config, {
     db,
     env,
-    executors: [model.executor("gemini-live"), model.executor("claude-code")],
+    executors,
   });
   const { port } = await core.start({ host: "127.0.0.1", port: 0 });
   const url = `http://127.0.0.1:${port}`;

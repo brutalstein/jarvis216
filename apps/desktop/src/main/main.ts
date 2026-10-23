@@ -1,20 +1,24 @@
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   app,
   BrowserWindow,
+  dialog,
   globalShortcut,
   ipcMain,
   Menu,
+  Notification,
   nativeImage,
   screen,
   session,
   shell,
   Tray,
 } from "electron";
+import { autoUpdater } from "electron-updater";
 import type { PermissionChange, PlanView, UiEvent, Voice } from "../shared";
-import { readOperatorEnv } from "./env";
+import { locateEnvFile, readOperatorEnv } from "./env";
 import { streamPlans } from "./plans";
+import { desktopUpdates } from "./updates";
 import { startVoiceService } from "./voice";
 
 const testing = process.env.JARVIS_DESKTOP_TEST === "1";
@@ -36,6 +40,14 @@ function receivePlan(event: UiEvent) {
     if (plans.size > 20) plans.delete(plans.keys().next().value ?? "");
   }
   broadcast(event);
+  // Finished background work also reaches the operator when they are away from the window.
+  if (
+    event.type === "announce" &&
+    event.kind === "outcome" &&
+    !testing &&
+    Notification.isSupported()
+  )
+    new Notification({ title: "JARVIS", body: event.text }).show();
   if (event.type === "announce") {
     void voice
       .then(async (connection) => {
@@ -213,6 +225,8 @@ app.whenReady().then(async () => {
     show: false,
     focusable: false,
   });
+  // Windows can ignore the default floating level for a non-focusable overlay.
+  overlay.setAlwaysOnTop(true, "pop-up-menu");
   overlay.setIgnoreMouseEvents(true, { forward: true });
   main.once("ready-to-show", () => main.show());
   main.on("hide", () => overlay.showInactive());
@@ -223,6 +237,24 @@ app.whenReady().then(async () => {
       main.hide();
     }
   });
+  const updates = desktopUpdates({
+    driver: autoUpdater,
+    enabled: app.isPackaged && process.platform === "win32",
+    version: app.getVersion(),
+    notify: (update) => {
+      if (!main.isDestroyed()) main.webContents.send("ui:event", { type: "update", update });
+    },
+    beforeInstall: () => {
+      quitting = true;
+    },
+  });
+  for (const method of ["status", "check", "download", "install"] as const) {
+    ipcMain.handle(`updates:${method}`, (event) => {
+      if (event.sender !== main.webContents || event.senderFrame !== main.webContents.mainFrame)
+        throw new Error("FORBIDDEN");
+      return updates[method]();
+    });
+  }
   // An embedded geometric application mark; no external asset or network request.
   const icon = nativeImage.createFromBuffer(
     Buffer.from(
@@ -237,12 +269,30 @@ app.whenReady().then(async () => {
   if (testing) ipcMain.on("test:toggle-listening", () => setListening(!listening));
 
   let voiceFailed = false;
+  const envFile = testing
+    ? (process.env.JARVIS_ENV_FILE ?? "")
+    : await locateEnvFile(
+        process.env.JARVIS_ENV_FILE,
+        join(app.getPath("userData"), "jarvis.json"),
+        async () =>
+          (
+            await dialog.showOpenDialog({
+              title: "JARVIS .env dosyasını seçin",
+              properties: ["openFile", "dontAddToRecent"],
+              filters: [{ name: "JARVIS .env", extensions: ["env", "*"] }],
+            })
+          ).filePaths[0],
+      );
+  // Installed clients use the existing deployment; application updates never contain operator data.
+  const repoRoot =
+    process.env.JARVIS_REPO_ROOT ??
+    (app.isPackaged ? dirname(resolve(envFile || ".env")) : resolve(__dirname, "../../.."));
   const startVoice = () => {
     voiceFailed = false;
     voice = startVoiceService({
-      repoRoot: resolve(__dirname, "../../.."),
+      repoRoot,
       ...env,
-      dataDir: process.env.VOICE_DATA_DIR ?? resolve(__dirname, "../../../data/voice"),
+      dataDir: process.env.VOICE_DATA_DIR ?? join(repoRoot, "data/voice"),
       onExit: () => {
         voiceFailed = !quitting;
         service = undefined;
@@ -256,7 +306,7 @@ app.whenReady().then(async () => {
     });
   };
   try {
-    env = readOperatorEnv(process.env.JARVIS_ENV_FILE ?? "");
+    env = readOperatorEnv(envFile);
     if (testing)
       voice = Promise.resolve({
         url: "http://127.0.0.1:1",
@@ -428,6 +478,12 @@ app.whenReady().then(async () => {
       ["state", "caption", "display"].includes(data.type)
     )
       overlay.webContents.send("ui:event", data);
+  });
+  ipcMain.on("window:mini", (event) => {
+    if (event.sender === main.webContents) main.hide();
+  });
+  ipcMain.on("window:restore", (event) => {
+    if (event.sender === overlay.webContents) main.show();
   });
   ipcMain.on("overlay:pointer", (event, over: unknown) => {
     if (event.sender === overlay.webContents && typeof over === "boolean")

@@ -11,7 +11,9 @@
     <script defer src="overlay.js"></script>
   </head>
   <body class="overlay" data-state="idle">
-    <div class="presence"><canvas data-presence role="img" aria-label="JARVIS"></canvas></div>
+    <button type="button" class="presence" data-restore aria-label="JARVIS penceresini aç" title="JARVIS penceresini aç">
+      <canvas data-presence aria-hidden="true"></canvas>
+    </button>
     <p class="bubble" data-caption hidden></p>
     <section class="stage" data-stage aria-label="Kartlar"></section>
   </body>

@@ -19,6 +19,7 @@ import {
   type PlanRow,
   type PlanStatus,
   type PlanView,
+  planDeadlineMs,
   planWindowMs,
   replyWaitMs,
   type StepTask,
@@ -84,6 +85,7 @@ export class PlanService extends EventEmitter {
       create: (input, flags) => this.#create(input, flags),
       outcome: (text, lang, planId) => this.#outcome(text, lang, planId),
       optionalActions: () => this.optionalActions(),
+      availableActions: () => this.availableActions(),
       browserUrls: () => this.browserUrls(),
       deniedActions: () => this.deniedActions(),
     };
@@ -106,6 +108,9 @@ export class PlanService extends EventEmitter {
   }
   deniedActions(): string[] {
     return [...(this.options.permissions?.denied() ?? [])].sort();
+  }
+  availableActions(): string[] {
+    return Object.keys(catalog).filter((action) => this.offers(action));
   }
   // Could a plan with this action run here and now: known, configured and not turned off.
   offers(action: string): boolean {
@@ -382,9 +387,11 @@ export class PlanService extends EventEmitter {
     for (const step of input.steps) {
       invariant(this.modeOf(step) !== "deny", "ACTION_DENIED", 403);
       invariant(step.kind !== "memory" || this.options.memory, "MEMORY_DISABLED", 400);
-      if (step.kind !== "integration") continue;
-      invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
-      this.options.integrations.compile(step.action, step.args);
+      if (step.kind === "integration") {
+        invariant(this.options.integrations, "INTEGRATION_DISABLED", 400);
+        this.options.integrations.compile(step.action, step.args);
+      }
+      invariant(this.offers(step.action), "ACTION_UNAVAILABLE", 400);
     }
     // Admission is serialized within this Core; multiple Core hosts need a shared plan lock.
     if (kind === "desktop" && flags.originCreatedAt !== undefined) {
@@ -447,6 +454,8 @@ export class PlanService extends EventEmitter {
       invariant(step.kind !== "integration" || external, "INTEGRATION_DISABLED", 400);
       const duration =
         external?.budget.maxDurationMs ?? (desktop || memory ? stepWindowMs : planWindowMs);
+      const conditionalDependency = step.when ? ids[step.when.step - 1] : undefined;
+      invariant(!step.when || conditionalDependency, "INVALID_CONDITION", 400);
       elapsed += duration;
       const task = await this.options.tasks.createIn(
         tx,
@@ -459,9 +468,25 @@ export class PlanService extends EventEmitter {
           providers: external?.providers ?? [desktop ? "windows-mcp" : memory ? "memory" : "news"],
           risk: external?.risk ?? step.risk,
           privacy: external?.privacy ?? "personal",
-          budget: external?.budget ?? { maxCalls: 1, maxDurationMs: duration },
-          deadline: new Date(started + Math.min(elapsed, planWindowMs)).toISOString(),
-          dependencies: ids.slice(-1),
+          // Tasks share admission time; later steps must retain their dependency wait budget.
+          budget: {
+            ...(external?.budget ?? { maxCalls: 1 }),
+            maxDurationMs: Math.min(elapsed, planDeadlineMs),
+          },
+          deadline: new Date(started + Math.min(elapsed, planDeadlineMs)).toISOString(),
+          dependencies: [
+            ...new Set([
+              ...ids.slice(-1),
+              ...(conditionalDependency ? [conditionalDependency] : []),
+            ]),
+          ],
+          ...(step.when && {
+            condition: {
+              dependencyId: conditionalDependency,
+              contains: step.when.contains,
+              ...(step.when.not !== undefined && { not: step.when.not }),
+            },
+          }),
           verification: external?.verification ?? { kind: "contains", value: '"ok":true' },
           planId: id,
         },
@@ -561,9 +586,9 @@ export class PlanService extends EventEmitter {
 
   async #cancel(plan: PlanRow, silent: boolean): Promise<void> {
     for (const taskId of plan.task_ids) {
-      this.options.onCancel(taskId);
       // A task already settled or uncertain keeps its state.
       await this.options.tasks.cancel(taskId).catch(() => {});
+      this.options.onCancel(taskId);
     }
     const uncertain = (await this.#stepTasks(plan)).some(
       (task) => task?.status === "RECOVERY_REQUIRED",
@@ -594,18 +619,11 @@ export class PlanService extends EventEmitter {
       });
       if (states.includes("RECOVERY_REQUIRED"))
         await this.#settle(plan, "RECOVERY_REQUIRED", say("plan-uncertain"));
-      else if (states.every((state) => state === "COMPLETED"))
+      else if (states.every((state) => state === "COMPLETED" || state === "SKIPPED"))
         this.#detach(plan, () => this.#finish(plan, tasks));
       else if (states.includes("WAITING_FOR_APPROVAL")) {
-        // External HIGH actions need their own exact Core action approval. Keep the plan
-        // active while the operator decides; task deadlines still bound the wait.
-        if (plan.steps.some((step) => step.kind === "integration" && step.risk === "HIGH"))
-          await this.#publish(plan.id);
-        else {
-          for (const taskId of plan.task_ids)
-            await this.options.tasks.cancel(taskId).catch(() => {});
-          await this.#settle(plan, "FAILED", say("plan-failed"));
-        }
+        // Every exact action approval stays actionable; task deadlines still bound the wait.
+        await this.#publish(plan.id);
       } else if (
         states.some(
           (state) => state === "FAILED" || state === "CANCELLED" || state === "BLOCKED",
@@ -649,7 +667,7 @@ export class PlanService extends EventEmitter {
           prompt,
           providers,
           privacy,
-          deadlineMs: privacy === "private" ? 60_000 : 20_000,
+          deadlineMs: privacy === "private" ? 60_000 : 30_000,
           maxOutputTokens: 600,
           json,
         },

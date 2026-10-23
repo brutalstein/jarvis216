@@ -44,6 +44,8 @@ export type Reply = {
   lang: "tr" | "en";
   display: DisplayBlock[];
   intent?: unknown;
+  // Lasting facts the model noticed this turn; Core stores them without being asked.
+  learn?: string[];
 };
 export type TurnResult = Reply & {
   id: string;
@@ -68,12 +70,15 @@ const detect = (text: string): "tr" | "en" => (turkish.test(text) ? "tr" : "en")
 // Models wrap JSON in fences or prose; anything unparseable is treated as the spoken reply.
 export function parseReply(text: string): Reply {
   const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
+  // The widest object first; if the model wrote more after its reply, the first one that parses.
   let value: unknown;
-  try {
-    value = start >= 0 && end > start ? JSON.parse(text.slice(start, end + 1)) : undefined;
-  } catch {
-    value = undefined;
+  for (let end = text.lastIndexOf("}"); start >= 0 && end > start; ) {
+    try {
+      value = JSON.parse(text.slice(start, end + 1));
+      break;
+    } catch {
+      end = text.lastIndexOf("}", end - 1);
+    }
   }
   // Braces inside prose ("f() {}") are not a reply object.
   if (!value || typeof value !== "object" || !("say" in value || "addressed" in value))
@@ -85,6 +90,7 @@ export function parseReply(text: string): Reply {
       lang: z.enum(["tr", "en"]).optional().catch(undefined),
       display: z.array(z.unknown()).catch([]),
       intent: z.unknown().optional(),
+      learn: z.array(z.unknown()).catch([]),
     })
     .safeParse(value);
   if (!parsed.success) {
@@ -92,6 +98,10 @@ export function parseReply(text: string): Reply {
     return { addressed: true, say, lang: detect(say), display: [] };
   }
   const { addressed, say, lang, display } = parsed.data;
+  const learn = parsed.data.learn
+    .flatMap((fact) => (typeof fact === "string" ? [fact.trim()] : []))
+    .filter((fact) => fact.length >= 3 && fact.length <= 200)
+    .slice(0, 2);
   return {
     addressed,
     say: say.trim(),
@@ -103,29 +113,32 @@ export function parseReply(text: string): Reply {
       })
       .slice(0, 3),
     ...(parsed.data.intent !== undefined ? { intent: parsed.data.intent } : {}),
+    ...(learn.length ? { learn } : {}),
   };
 }
 
-// Realtime order: Gemini with minimal thinking first, Claude at low effort next, free models,
-// then the subscription CLI last. Codex is excluded: its HIGH floor would need an approval per
-// turn. Adaptive routing may still demote a provider measured as failing or too slow.
+// Realtime order: Gemini with minimal thinking first, Claude at low effort next, then the
+// Claude Code subscription (no free-tier daily quota), free models, and the constrained Codex
+// profile. General Codex keeps its HIGH approval floor.
 export function conversationProviders(ids: string[]): string[] {
   const rank = (id: string) =>
     id === "gemini-live"
       ? 0
       : id === "claude-live"
         ? 1
-        : id.startsWith("or-")
+        : id === "claude-code"
           ? 2
-          : id.startsWith("nv-")
+          : id.startsWith("or-")
             ? 3
-            : id === "claude-code"
+            : id.startsWith("nv-")
               ? 4
-              : -1;
+              : id === "codex-live"
+                ? 5
+                : -1;
   return ids
     .filter((id) => rank(id) >= 0)
     .sort((a, b) => rank(a) - rank(b))
-    .slice(0, 5);
+    .slice(0, 8);
 }
 
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
@@ -165,7 +178,7 @@ export class ConversationService {
       });
   }
   get deadlineMs(): number {
-    return this.options.deadlineMs ?? 20_000;
+    return this.options.deadlineMs ?? 30_000;
   }
   // One spoken request, through layers from fastest to most deliberate:
   // 1. reflexes Core answers itself (stop, status, picking a candidate);
@@ -174,7 +187,11 @@ export class ConversationService {
   // 4. deliberation: one JSON-mode model call with working memory, long-term notes and learned
   //    examples, one repair, then policy (turned-off actions, low confidence) and the plan;
   // 5. learning: the request and, later, its plan's outcome become experience.
-  async turn(input: { utterance: string; followUp: boolean }): Promise<TurnResult> {
+  async turn(
+    input: { utterance: string; followUp: boolean },
+    signal?: AbortSignal,
+  ): Promise<TurnResult> {
+    signal?.throwIfAborted();
     const started = Date.now();
     const id = randomUUID();
     const settings = this.options.settings?.() ?? { learning: true, reflexes: true };
@@ -203,6 +220,7 @@ export class ConversationService {
       now: new Date(started),
       enabledIntegrations: plans?.integrationCapabilities(),
       optionalActions: plans?.optionalActions(),
+      availableActions: plans?.availableActions(),
       browserUrls: plans?.browserUrls(),
       memories,
       denied: plans?.deniedActions(),
@@ -222,6 +240,7 @@ export class ConversationService {
         json: true,
         lane: "interactive",
         cachePrefix: stable.length,
+        signal,
       },
       `conversation:${id}`,
     );
@@ -243,6 +262,7 @@ export class ConversationService {
             json: true,
             lane: "interactive",
             cachePrefix: stable.length,
+            signal,
           },
           `conversation:${id}:repair`,
         );
@@ -261,10 +281,17 @@ export class ConversationService {
       } else if (
         reply.addressed &&
         decision?.kind === "plan" &&
-        decision.steps.some((step) => plans.modeOf(step) === "deny")
+        decision.steps.some((step) => !plans.offers(step.action))
       ) {
-        // The model proposed something the operator turned off: say so, propose nothing.
-        reply.say = narrate({ type: "denied" }, reply.lang);
+        // Refuse unavailable proposals before asking the operator to clarify them.
+        reply.say = narrate(
+          {
+            type: decision.steps.some((step) => plans.modeOf(step) === "deny")
+              ? "denied"
+              : "unavailable",
+          },
+          reply.lang,
+        );
         reply.display = [];
       } else if (
         reply.addressed &&
@@ -278,6 +305,7 @@ export class ConversationService {
         reply.intent = { kind: "clarify", goal: decision.goal };
         understood = { kind: "clarify", goal: decision.goal };
       } else if (reply.addressed && decision?.kind === "plan") {
+        signal?.throwIfAborted();
         let view: PlanView;
         try {
           view = await plans.propose({
@@ -302,7 +330,11 @@ export class ConversationService {
         await this.#learnPlan(learning, input.utterance, reply.lang, view.id, "model", {
           kind: "plan",
           goal: decision.goal,
-          steps: decision.steps.map(({ action, args }) => ({ action, args })),
+          steps: decision.steps.map(({ action, args, when }) => ({
+            action,
+            args,
+            ...(when && { when }),
+          })),
         });
         reply.display = [];
         reply.say = await this.#planSay(view, reply.lang);
@@ -334,6 +366,9 @@ export class ConversationService {
       await this.tasks.db.transaction((tx) =>
         this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
       );
+    const memory = this.options.memory;
+    if (memory && reply.addressed && reply.learn)
+      for (const fact of reply.learn) await learned(() => memory.save(fact));
     if (learning && reply.addressed && understood)
       await learned(() =>
         learning.experience({
@@ -605,11 +640,11 @@ export class ConversationService {
       const planTasks =
         "principal='operator' AND EXISTS (SELECT 1 FROM plans p LEFT JOIN conversation_turns c ON c.id=p.turn_id WHERE (c.created_at<$1 OR p.created_at<$1) AND idempotency_key LIKE 'plan:' || p.id::text || ':%')";
       await tx.query(
-        `UPDATE actions SET parameters = jsonb_set(jsonb_set(parameters, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${planTasks})`,
+        `UPDATE actions SET parameters = jsonb_set(jsonb_set(parameters-'condition', '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE task_id IN (SELECT id FROM tasks WHERE ${planTasks})`,
         [cutoff],
       );
       await tx.query(
-        `UPDATE tasks SET spec = jsonb_set(jsonb_set(spec, '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE ${planTasks}`,
+        `UPDATE tasks SET spec = jsonb_set(jsonb_set(spec-'condition', '{objective}', '"[deleted]"'), '{input}', '{}'), result = NULL WHERE ${planTasks}`,
         [cutoff],
       );
       await tx.query(

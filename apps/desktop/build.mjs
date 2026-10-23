@@ -11,7 +11,7 @@ await build({
   platform: "node",
   format: "cjs",
   outfile: "dist/main.cjs",
-  external: ["electron"],
+  external: ["electron", "electron-updater"],
 });
 await build({
   entryPoints: ["src/preload/preload.ts"],

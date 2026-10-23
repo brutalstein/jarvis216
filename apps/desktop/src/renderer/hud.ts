@@ -1,9 +1,10 @@
 import type { PlanView } from "../shared";
 
-const states: Record<string, string> = {
+export const states: Record<string, string> = {
   AWAITING_APPROVAL: "Onayınızı bekliyorum",
   RUNNING: "İşlem sürüyor",
   COMPLETED: "Tamamlandı",
+  SKIPPED: "Koşul sağlanmadığı için atlandı",
   FAILED: "Tamamlanamadı",
   CANCELLED: "İptal edildi",
   RECOVERY_REQUIRED: "Sonuç doğrulanamadı",
@@ -204,16 +205,19 @@ export function hud(root: HTMLElement, compact = false) {
         for (const item of panel.items) list.append(node("li", item));
         card.append(node("h3", "Pencereler"), list);
       } else if (panel.type === "news") {
-        card.append(node("h3", panel.title));
+        card.dataset.panel = "news";
+        card.append(node("h3", panel.title, "news-title"));
         const list = node("div", "", "news-grid");
-        for (const item of panel.items) {
+        panel.items.forEach((item, index) => {
           const news = button("", () => window.jarvis.plans.open(item.url), card, plan.id);
           news.className = "news-item";
           news.dataset.news = "";
+          news.style.setProperty("--i", String(index));
           const text = node("span", "", "news-text");
           text.append(
-            node("span", item.headline, "news-headline"),
             node("span", item.source, "news-source"),
+            // Feeds sometimes carry highlight markup; headlines are shown as plain words.
+            node("span", item.headline.replace(/<\/?[a-z][^<>]*>/gi, ""), "news-headline"),
           );
           news.append(text);
           if (
@@ -227,7 +231,7 @@ export function hud(root: HTMLElement, compact = false) {
             news.prepend(image);
           }
           list.append(news);
-        }
+        });
         card.append(list);
       } else if (panel.type === "text") {
         card.append(node("h3", panel.title), node("pre", panel.body, "text-panel"));

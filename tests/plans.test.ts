@@ -163,6 +163,24 @@ const propose = (steps: CompiledStep[], goal = "Not Defteri") =>
   plans.propose({ turnId: crypto.randomUUID(), goal, lang: "tr", steps });
 
 describe("plan admission and approval", () => {
+  it("keeps a HIGH desktop action alive for its exact approval", async () => {
+    start([desktop()]);
+    const view = await propose([
+      { action: "file.delete", args: { path: "isolated.txt" }, kind: "desktop", risk: "HIGH" },
+    ]);
+    await plans.approve(view.id, view.hash);
+    let pending = await plans.get(view.id);
+    for (let i = 0; i < 50 && !pending.steps[0]?.approval; i++) {
+      await delay(20);
+      await plans.refresh();
+      pending = await plans.get(view.id);
+    }
+    expect(pending.status).toBe("RUNNING");
+    expect(pending.steps[0]?.status).toBe("WAITING_FOR_APPROVAL");
+    await tasks.approve(pending.steps[0]!.approval!.id, "operator", Date.now() + 60000);
+    worker?.wake();
+    expect((await plans.waitSettled(view.id, 5000)).status).toBe("COMPLETED");
+  });
   it("maps disabled integrations to a client error", async () => {
     plans = service(new IntegrationHub());
     await expect(
@@ -242,6 +260,15 @@ describe("plan admission and approval", () => {
     await pastReplyWindow(view.id);
     await delay(700);
     expect(announced).toEqual([]);
+  });
+  it("includes dependency waiting in each admitted step's wall-clock budget", async () => {
+    start([desktop()]);
+    const view = await propose([open, open]);
+    const scheduled = await db.query<{
+      spec: { budget: { maxDurationMs: number }; dependencies: string[] };
+    }>("SELECT spec FROM tasks WHERE spec->>'planId'=$1 ORDER BY idempotency_key", [view.id]);
+    expect(scheduled.rows.map((row) => row.spec.budget.maxDurationMs)).toEqual([15000, 30000]);
+    expect(scheduled.rows[1]?.spec.dependencies).toHaveLength(1);
   });
 
   it("holds a MEDIUM plan until the operator approves its exact hash", async () => {

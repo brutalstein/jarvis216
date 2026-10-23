@@ -217,3 +217,107 @@ describe("Claude Code subscription executor", () => {
     );
   });
 });
+
+describe("tool-using Claude Code agent", () => {
+  it("runs native tools through a separate non-retryable HIGH provider", async () => {
+    const record = path.join(dir, `agent-${n++}.json`);
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: { maxTurns: 9, permissionMode: "auto" },
+    });
+    expect(executor).toMatchObject({ id: "claude-agent", retrySafe: false, riskFloor: "HIGH" });
+    const output = await executor.execute(task("Analyze and edit"), new AbortController().signal);
+    expect(output).toMatchObject({
+      text: "verified",
+      source: "claude-agent:test-model:subscription",
+    });
+    const sent = JSON.parse(readFileSync(record, "utf8")) as { argv: string[]; stdin: string };
+    expect(sent.stdin).toBe("Analyze and edit");
+    expect(sent.argv).toContain("default");
+    expect(sent.argv).toContain("auto");
+    expect(sent.argv).toContain("--max-turns");
+    expect(sent.argv).not.toContain("--safe-mode");
+    expect(sent.argv).not.toContain("--dangerously-skip-permissions");
+    expect(sent.argv).not.toContain("--mcp-config");
+    expect(sent.argv).not.toContain("--strict-mcp-config");
+    expect(sent.argv).not.toContain("--disable-slash-commands");
+    // User-level settings may carry an apiKeyHelper or hooks that override the subscription login.
+    expect(sent.argv[sent.argv.indexOf("--setting-sources") + 1]).toBe("project,local");
+    expect(sent.argv).not.toContain("--safe-mode");
+  });
+
+  it("reports a delegated run's outcome from Claude Code's own result fields, never its prose", async () => {
+    const run = async (mode: string, agent: boolean) =>
+      new ClaudeCodeExecutor({
+        command: [process.execPath, fixture, mode, path.join(dir, `agent-outcome-${n++}.json`)],
+        model: "test-model",
+        workdir: dir,
+        ...(agent && { agent: { maxTurns: 5, permissionMode: "auto" as const } }),
+      }).execute(task("research"), new AbortController().signal);
+    expect((await run("agent-done", true)).outcome).toEqual({
+      status: "completed",
+      verified: true,
+    });
+    // A tool the run needed was refused: it did not do everything it was approved for.
+    expect((await run("agent-denied", true)).outcome).toEqual({
+      status: "blocked",
+      verified: false,
+    });
+    expect((await run("agent-done", false)).outcome).toBeUndefined();
+  });
+
+  it("passes the live Full Access grant into native and MCP tool approvals", async () => {
+    const record = path.join(dir, `agent-permission-${n++}.json`);
+    let autonomous = false;
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: {
+        maxTurns: 5,
+        permissionMode: "auto",
+        autonomous: () => autonomous,
+        mcpConfigs: [
+          path.resolve("operator-mcp.json"),
+          JSON.stringify({ mcpServers: { playwright: { command: "npx", args: ["-y"] } } }),
+        ],
+      },
+    });
+    await executor.execute(task("first run"), new AbortController().signal);
+    const restricted = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    // An operator-approved run may read the web, nothing more, without Full Access.
+    const readOnly = restricted.argv.indexOf("--allowedTools");
+    expect(restricted.argv.slice(readOnly + 1, readOnly + 3)).toEqual(["WebSearch", "WebFetch"]);
+    expect(restricted.argv).not.toContain("Bash");
+    expect(restricted.argv).not.toContain("mcp__*");
+    expect(restricted.argv[restricted.argv.indexOf("--permission-mode") + 1]).toBe("auto");
+    expect(restricted.argv).not.toContain("--strict-mcp-config");
+    expect(restricted.argv).toContain(path.resolve("operator-mcp.json"));
+    autonomous = true;
+    await executor.execute(task("second run"), new AbortController().signal);
+    const allowed = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    expect(allowed.argv).toContain("--allowedTools");
+    expect(allowed.argv).toContain("mcp__*");
+    expect(allowed.argv).toContain("Bash");
+    expect(allowed.argv).not.toContain("bypassPermissions");
+    expect(allowed.argv[allowed.argv.indexOf("--permission-mode") + 1]).toBe("acceptEdits");
+  });
+
+  it("accepts an explicit MCP configuration path only", async () => {
+    const record = path.join(dir, `agent-mcp-${n++}.json`);
+    const cfg = path.join(dir, "private-mcp.json");
+    const executor = new ClaudeCodeExecutor({
+      command: [process.execPath, fixture, "success", record],
+      model: "test-model",
+      workdir: dir,
+      agent: { maxTurns: 3, permissionMode: "acceptEdits", mcpConfig: cfg },
+    });
+    await executor.execute(task(), new AbortController().signal);
+    const sent = JSON.parse(readFileSync(record, "utf8")) as { argv: string[] };
+    expect(sent.argv).toContain("--strict-mcp-config");
+    expect(sent.argv).toContain(cfg);
+    expect(sent.argv).toContain("acceptEdits");
+  });
+});

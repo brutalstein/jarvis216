@@ -7,7 +7,7 @@ export function conversationRoutes(
   { app, authenticate }: HttpContext,
   conversation: ConversationService,
 ): void {
-  app.post("/v1/conversation/turns", async (request) => {
+  app.post("/v1/conversation/turns", async (request, reply) => {
     authenticate(request, "operator");
     const body = z
       .strictObject({
@@ -18,7 +18,16 @@ export function conversationRoutes(
     // A turn may wait longer than the server-wide 10 s socket idle limit (injected test
     // requests have no real socket).
     request.raw.socket.setTimeout?.(conversation.deadlineMs * 2 + 10000);
-    return conversation.turn(body);
+    const abort = new AbortController();
+    const disconnected = () => {
+      if (!reply.raw.writableEnded) abort.abort();
+    };
+    reply.raw.on("close", disconnected);
+    try {
+      return await conversation.turn(body, abort.signal);
+    } finally {
+      reply.raw.off("close", disconnected);
+    }
   });
   app.get("/v1/conversation/turns", async (request) => {
     authenticate(request, "operator");

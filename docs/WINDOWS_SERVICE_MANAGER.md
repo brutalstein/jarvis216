@@ -1,0 +1,117 @@
+# Windows native JARVIS service manager
+
+This is a **detached process launcher**, not a Windows Service or Task Scheduler
+installation. Closing the launching PowerShell does not stop running services.
+Windows sign-out/reboot, application crash or explicit Stop can stop them.
+It does **not** provide auto-start at login, crash-restart or production supervision.
+
+Run from the repository with Windows PowerShell 5.1+:
+
+```powershell
+# Once: install dependencies and configure .env
+npm ci --ignore-scripts
+.\scripts\jarvis-services.ps1 -Action Doctor
+
+# Start PostgreSQL, configured external services and JARVIS Core
+.\scripts\jarvis-services.ps1 -Action Start
+
+# Also open Electron; Electron spawns and owns the voice worker
+.\scripts\jarvis-services.ps1 -Action Start -WithDesktop
+
+.\scripts\jarvis-services.ps1 -Action Status
+.\scripts\jarvis-services.ps1 -Action Logs -Service core -Tail 80
+.\scripts\jarvis-services.ps1 -Action Restart -WithDesktop
+.\scripts\jarvis-services.ps1 -Action Stop
+```
+
+Start builds Core unless -NoBuild is specified. For -WithDesktop, install
+Electron dependencies and its binary separately:
+
+```powershell
+npm ci --prefix apps/desktop --ignore-scripts
+node apps/desktop/node_modules/electron/install.js
+```
+
+## Service lifecycle
+
+| Component | When launched | Runtime |
+| --- | --- | --- |
+| PostgreSQL | Native Core requires it | Compose postgres on loopback port 55432 |
+| OpenClaw Gateway | ENABLE_OPENCLAW=true | Native detached process |
+| Legacy Browser Use | ENABLE_BROWSER=true and verified egress | Native detached worker, port 8765 |
+| n8n | ENABLE_N8N=true or CLAUDE_AGENT_N8N_MCP_URL set | Compose n8n, port 5678 |
+| JARVIS Core | Always | Detached Node process, port 2160 |
+| Electron UI | -WithDesktop | Detached desktop app; voice worker managed by Electron |
+| Windows-MCP | ENABLE_DESKTOP=true | Core starts its own child |
+| Claude Playwright MCP | CLAUDE_AGENT_PLAYWRIGHT=true | On demand inside Claude, not a permanent daemon |
+| Claude, Codex, Gemini | Provider enabled | Called on demand: startup spends no model quota |
+
+The launcher does not modify .env, grant permissions or enable unverified
+components. The Tam yetki preset belongs to Core and its operator app.
+
+Readiness checks verify loopback HTTP/TCP endpoints, **not live model credentials
+or tool execution**. External pre-existing processes are never stopped.
+Owned process PID, start time and log locations are kept at
+data/runtime/service-manager/ (gitignored). Stop checks ownership and uses
+Windows taskkill only against verified process trees. Docker volumes are
+retained; never docker down -v. Fresh logs per start are under logs/.
+
+Start is idempotent for healthy services. If one of multiple startup phases
+fails, previous phases are kept for diagnosis; use Stop to clean them up.
+
+## Diagnostic codes
+
+- ENV_MISSING / ENV_SYNTAX / ENV_DUPLICATE: Fix .env; bootstrap preserves it.
+- DEPENDENCY_MISSING / NPM_NOT_INSTALLED: Check Node 24, npm, Docker and enabled uv dependencies.
+- OPENCLAW_CLI_UNAVAILABLE: The manager checks for the OpenClaw executable
+  using the same portable Node PATH as `scripts/openclaw-native.ps1`; it no longer
+  requires the CLI to be on the parent terminal's PATH. This is a non-executing
+  preflight; subsequent Gateway readiness checks validate the running service.
+  No environment variable changes are required.
+- DOCKER_NOT_READY / DOCKER_COMPOSE_FAILED: Docker Desktop launches automatically when installed; otherwise start it manually. Inspect
+  the Compose configuration.
+- BUILD_FAILED / DIST_MISSING: Run npm ci --ignore-scripts then npm run build.
+- CORE_PORT_BUSY / BROWSER_PORT_BUSY: Unknown listener. No destructive killing.
+- SERVICE_EXITED / HEALTH_TIMEOUT: Use -Action Logs and -Action Status.
+- BROWSER_NOT_ATTESTED: Independently verify network isolation before enabling.
+- STATE_INVALID: Back up and inspect state.json; do not kill stale PIDs.
+
+CAUTION: compose.dev.yaml publishes PostgreSQL to the native host. Enabling
+n8n or a legacy browser profile at the same time can weaken network isolation.
+Do not use this combined topology with valued data; see compose.dev.yaml.
+The script does not bypass web authentication, model quotas or other app policy.
+Rotate any credentials that were previously shared in a chat.
+
+## Existing .env values are preserved
+
+The manager only reads the operator's `.env` and **never rewrites it**.
+Run `.\scripts\jarvis-services.ps1 -Action EnvCheck` to validate assignments
+and display only explicitly non-secret feature flags, without starting services.
+Repeated assignments (for example an early Claude permission setting and a
+later override) are accepted: the **last occurrence wins**, with a warning that
+contains the setting name and line number but no value. Leading BOM/zero-width
+characters before a key are tolerated. Malformed lines still report their
+location, without disclosing any secret from that line.
+
+## Desktop says "Ayar dosyası bulunamadı"
+
+Electron expects the **absolute** operator dotenv path in `JARVIS_ENV_FILE`,
+even when native Core is healthy. The service manager supplies
+`JARVIS_ENV_FILE=<repo-root>/.env` to the Electron **child process only**,
+restores any previous caller environment value, and never passes tokens as
+command-line arguments. The file itself is never changed.
+
+To apply an updated manager to an already-open desktop without restarting
+PostgreSQL, Core, or OpenClaw:
+
+```powershell
+git pull --ff-only origin release/v1.0.0
+.\scripts\jarvis-services.ps1 -Action Restart -Service desktop
+.\scripts\jarvis-services.ps1 -Action Status
+```
+
+This desktop-only restart is supported for already-managed Electron processes.
+The UI starts its own voice service; a healthy Core status alone does not verify
+voice/microphone/audio startup. If the UI still shows an error, check the newest
+desktop stderr/stdout log with `-Action Logs -Service desktop`, without sharing
+any token-bearing contents.

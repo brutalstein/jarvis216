@@ -15,6 +15,7 @@ export type TextSpec = {
   lane?: Lane;
   // Characters at the start of the prompt that repeat across requests (prompt caching).
   cachePrefix?: number;
+  signal?: AbortSignal;
 };
 
 // States where waiting longer cannot produce a reply.
@@ -32,6 +33,7 @@ export async function runText(
   spec: TextSpec,
   key: string,
 ): Promise<{ text: string; provider: string | null; taskId: string }> {
+  spec.signal?.throwIfAborted();
   const started = Date.now();
   const task = await tasks.create(
     {
@@ -63,11 +65,20 @@ export async function runText(
     resume();
   };
   tasks.changes.on("change", onChange);
+  const onAbort = () => {
+    dirty = true;
+    resume();
+  };
+  spec.signal?.addEventListener("abort", onAbort, { once: true });
   let current = task;
   try {
     wake();
     // The task deadline aborts the provider call itself; the grace covers Core's bookkeeping.
     while (!settled.has(current.status) && Date.now() < started + spec.deadlineMs + 2000) {
+      if (spec.signal?.aborted) {
+        await tasks.cancel(task.id);
+        throw new CoreError("TURN_CANCELLED", 499);
+      }
       if (!dirty)
         await new Promise<void>((resolve) => {
           const timer = setTimeout(resolve, spec.pollMs ?? 250);
@@ -81,6 +92,7 @@ export async function runText(
     }
   } finally {
     tasks.changes.off("change", onChange);
+    spec.signal?.removeEventListener("abort", onAbort);
   }
   if (current.status !== "COMPLETED" || !current.result) {
     const late = Date.now() >= started + spec.deadlineMs;

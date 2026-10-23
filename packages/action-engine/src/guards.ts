@@ -33,8 +33,30 @@ const inside = (root: string, target: string) => {
   return rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel);
 };
 
-export async function containedPath(input: string, roots: string[]): Promise<string> {
+// Spoken and model-written names of the well-known folders a root may be.
+const folderNames: Record<string, string> = {
+  desktop: "desktop",
+  masaüstü: "desktop",
+  documents: "documents",
+  belgeler: "documents",
+  downloads: "downloads",
+  indirilenler: "downloads",
+};
+// "~/Desktop" or "Masaüstü/x" names a root, not a subfolder of the first one. Any other
+// home-relative path is outside the roots.
+function namedRoot(input: string, roots: string[]): string {
+  const home = /^~(?=$|[\\/])/.test(input);
+  const [head = "", ...rest] = input.replace(/^~[\\/]?/, "").split(/[\\/]+/);
+  const wanted = folderNames[head.toLocaleLowerCase("tr").replace("i̇", "i")];
+  const root = wanted && roots.find((r) => path.basename(r).toLowerCase() === wanted);
+  if (root) return path.join(root, ...rest);
+  if (home) throw new GuardError("PATH_OUTSIDE_ROOTS");
+  return input;
+}
+
+export async function containedPath(raw: string, roots: string[]): Promise<string> {
   const [first] = roots;
+  const input = path.isAbsolute(raw) ? raw : namedRoot(raw, roots);
   // On POSIX, path.resolve treats Windows absolute paths as ordinary relative strings.
   // Reject foreign-root forms rather than ever writing a "C:\\..." file in an allowed folder.
   // UNC and device forms (\\host\share, //host, \\?\, \\.\) are refused on every platform:

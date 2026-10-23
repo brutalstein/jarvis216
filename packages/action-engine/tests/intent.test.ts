@@ -80,6 +80,18 @@ describe("intent instructions", () => {
   it("repair instructions quote the validation errors", () => {
     expect(repairInstructions(['step 1: unknown action "x"'])).toContain('unknown action "x"');
   });
+  it("limits replans to currently available actions", () => {
+    const text = replanPrompt({
+      goal: "Open Notepad",
+      step: { action: "app.open", args: { name: "Notepad" } },
+      observation: "not found",
+      availableActions: ["memory.save"],
+      enabledIntegrations: ["memory.save"],
+    });
+    expect(text).toContain("memory.save(");
+    expect(text).not.toContain("app.open(");
+    expect(text).not.toContain("news.brief(");
+  });
 
   it("replan prompt carries the goal, the failed step, what was seen and the catalog", () => {
     const text = replanPrompt({
