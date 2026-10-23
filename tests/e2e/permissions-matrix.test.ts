@@ -38,7 +38,7 @@ afterAll(async () => {
 describe("every action through the permission API and persistent audit", () => {
   it.each(permissionPolicies())("$id", async (policy) => {
     const rows = cases.permissions.filter((row) => row.policy === policy.id);
-    expect(rows).toHaveLength(44);
+    expect(rows).toHaveLength(45);
     const change =
       "preset" in policy
         ? {

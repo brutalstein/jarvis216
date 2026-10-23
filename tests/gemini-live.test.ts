@@ -82,7 +82,7 @@ describe("realtime Gemini provider", () => {
       new EnvSecrets({ GEMINI_API_KEY: "gemini-test-key" }),
     );
     const ids = registry.list().map((p) => (p as { id: string }).id);
-    expect(ids).toEqual(["gemini", "gemini-live"]);
+    expect(ids).toEqual(["gemini", "gemini-live", "guide"]);
     expect(registry.select({ spec: task.spec } as Task, []).configuration).toBe(
       "gemini-api:m:tools-none:thinking-minimal",
     );
@@ -99,7 +99,7 @@ describe("realtime Gemini provider", () => {
       new EnvSecrets({ ANTHROPIC_API_KEY: "anthropic-test-key" }),
     );
     const listed = registry.list() as { id: string }[];
-    expect(listed.map((p) => p.id)).toEqual(["claude", "claude-live"]);
+    expect(listed.map((p) => p.id)).toEqual(["claude", "claude-live", "guide"]);
     const live = registry.select(
       { spec: { ...task.spec, providers: ["claude-live"] } } as Task,
       [],

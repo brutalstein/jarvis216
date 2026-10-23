@@ -124,7 +124,7 @@ describe("OpenAI-compatible free-model executor", () => {
       { ENABLE_OPENROUTER: "true", OPENROUTER_MODELS: "a/b:free, c/d:free" },
       new EnvSecrets({ OPENROUTER_API_KEY: "openrouter-test-key" }),
     );
-    expect(registry.list().map((p) => (p as { id: string }).id)).toEqual(["or-b", "or-d"]);
+    expect(registry.list().map((p) => (p as { id: string }).id)).toEqual(["or-b", "or-d", "guide"]);
     await expect(
       configuredProviders(
         { ENABLE_NVIDIA: "true", NVIDIA_MODELS: "openai/gpt-oss-20b" },

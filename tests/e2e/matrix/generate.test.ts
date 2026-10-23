@@ -35,7 +35,7 @@ describe("reviewable matrix generation", () => {
   it("records every catalog action and keeps the checked-in table current", async () => {
     const generated = generateCases();
     expect(generated.actions.map((action) => action.id)).toEqual(Object.keys(catalog).sort());
-    expect(generated.actions).toHaveLength(44);
+    expect(generated.actions).toHaveLength(45);
     expect(
       generated.actions.filter((action) => action.risk === "HIGH").map((action) => action.id),
     ).toEqual([

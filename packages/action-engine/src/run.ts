@@ -13,7 +13,16 @@ import type { CompiledStep, ToolPort, ToolResult } from "./types.js";
 export type Panel =
   | { type: "windows"; items: string[] }
   | { type: "news"; title: string; items: NewsItem[] }
-  | { type: "text"; title: string; body: string };
+  | { type: "text"; title: string; body: string }
+  // What only the operator can do (a key, a sign-in), taken from the vendor's official pages.
+  | {
+      type: "guide";
+      title: string;
+      steps: string[];
+      links: { label: string; url: string }[];
+      sources: string[];
+      where?: string;
+    };
 export type Evidence = {
   ok: boolean;
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";

@@ -172,6 +172,23 @@ builds panels from the fetched headlines only. Thumbnails come only from the fee
 URL, private addresses are refused, and only JPEG/PNG/WebP up to 200 KB are sent to the
 renderer as data URIs. The spoken brief is a `personal` text task over those headlines.
 
+## Setup guides (`help.guide`)
+
+Always on, no configuration. When a request needs something only the operator can do (an API
+key, a sign-in, an OAuth connection), JARVIS plans the LOW-risk `help.guide` action. It never
+creates accounts, keys or credentials itself.
+
+- Known topics (`n8n-api-key`, `youtube-n8n`, `gemini-api-key`, `openrouter-api-key`,
+  `anthropic-api-key`, `github-cli`) use curated steps checked against each vendor's docs, with
+  the docs listed as sources. They need no model or network.
+- Any other topic is researched: a text model names the vendor's official domain and its doc
+  pages; Core reads those pages itself (HTTPS, public addresses only, every redirect on that
+  domain, menus stripped) and a model writes the steps only from that text. Links survive only
+  if they open on the official domain; buttons show the page's real title. The configured text
+  models are tried best first, so one rate-limited model is skipped.
+- The desktop shows numbered steps, where the value goes, the source domains and one button per
+  page, and opens the first page by itself when the plan finishes.
+
 ## Long-term memory
 
 Always available; Settings → İzinler decides how it runs ([ADR 0014](ADR/0014-operator-standing-permissions.md)).

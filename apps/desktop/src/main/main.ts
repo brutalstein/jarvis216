@@ -371,14 +371,24 @@ app.whenReady().then(async () => {
     if (!response.ok) throw new Error("ACTION_APPROVAL_FAILED");
   });
   ipcMain.handle("plans:open", async (event, url: unknown) => {
-    if (!allowed(event.sender) || typeof url !== "string" || !url.startsWith("https:"))
+    if (!allowed(event.sender) || typeof url !== "string" || !/^https?:/.test(url))
       throw new Error("FORBIDDEN");
     const parsed = new URL(url);
-    if (parsed.protocol !== "https:" || !parsed.hostname || parsed.username || parsed.password)
+    // Plain http only for this machine's own services (a guide's local n8n page).
+    const local =
+      parsed.protocol === "http:" && ["127.0.0.1", "localhost"].includes(parsed.hostname);
+    if (
+      (parsed.protocol !== "https:" && !local) ||
+      !parsed.hostname ||
+      parsed.username ||
+      parsed.password
+    )
       throw new Error("FORBIDDEN");
     const known = [...plans.values()].some((plan) =>
       plan.panels.some(
-        (panel) => panel.type === "news" && panel.items.some((item) => item.url === url),
+        (panel) =>
+          (panel.type === "news" && panel.items.some((item) => item.url === url)) ||
+          (panel.type === "guide" && panel.links.some((link) => link.url === url)),
       ),
     );
     if (!known) throw new Error("FORBIDDEN");

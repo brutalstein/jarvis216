@@ -17,6 +17,7 @@ import {
   playwrightMcpConfig,
 } from "../integrations/claude-mcp.js";
 import { GitHubExecutor, githubActionSchemas } from "../integrations/github.js";
+import { GuideExecutor, guideActionSchemas, modelAsk } from "../integrations/guide.js";
 import {
   InteractiveBrowserExecutor,
   interactiveBrowserActionSchemas,
@@ -509,6 +510,34 @@ export async function configuredProviders(
       });
     }
   }
+  // Whatever only the operator can do (a key, a sign-in) is shown from official sources; other
+  // topics are written by the configured text models, best first, from pages the guide read.
+  const writers = providers
+    .filter((p) => p.capability === "text.generate" && !p.id.endsWith("-live"))
+    .sort((a, b) => a.priority - b.priority);
+  register(
+    new GuideExecutor({
+      n8nUrl: z.url().parse(env.N8N_API_URL?.trim() || "http://127.0.0.1:5678"),
+      ...(writers.length && { ask: modelAsk(writers) }),
+    }),
+    `guide:v1:${writers.map((p) => p.id).join(",") || "curated"}`,
+    10,
+  );
+  integrations.register("help.guide", (args) => {
+    const parsed = guideActionSchemas["help.guide"].safeParse(args);
+    if (!parsed.success) throw new IntegrationError("INTEGRATION_DENIED");
+    return {
+      capability: "tool.execute",
+      providers: ["guide"],
+      objective: "Show the operator official setup steps and verify they were found",
+      input: { action: "help.guide", args: parsed.data },
+      risk: "LOW",
+      // The topic names what to set up, never the operator's secrets.
+      privacy: "public",
+      budget: { maxCalls: 1, maxDurationMs: 60000, maxOutputTokens: 2000 },
+      verification: { kind: "postcondition" },
+    };
+  });
   // Daily call or token ceilings per provider (e.g. a free tier's request quota). A spent budget
   // skips the provider until its rolling 24-hour usage drops; it never raises another's.
   const budgets = z
