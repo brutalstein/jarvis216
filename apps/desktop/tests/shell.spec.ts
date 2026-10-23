@@ -18,6 +18,8 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
         "memories",
         "enrollment",
         "setListening",
+        "mini",
+        "restore",
       ].sort(),
     );
     expect(

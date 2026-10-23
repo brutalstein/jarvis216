@@ -3,14 +3,37 @@ import exportIcon from "@phosphor-icons/core/assets/light/export-light.svg";
 import gear from "@phosphor-icons/core/assets/light/gear-light.svg";
 import mic from "@phosphor-icons/core/assets/light/microphone-light.svg";
 import micOff from "@phosphor-icons/core/assets/light/microphone-slash-light.svg";
+import news from "@phosphor-icons/core/assets/light/newspaper-light.svg";
+import mini from "@phosphor-icons/core/assets/light/picture-in-picture-light.svg";
+import pulse from "@phosphor-icons/core/assets/light/pulse-light.svg";
 import pin from "@phosphor-icons/core/assets/light/push-pin-light.svg";
 import unpin from "@phosphor-icons/core/assets/light/push-pin-slash-light.svg";
+import wide from "@phosphor-icons/core/assets/light/sidebar-simple-light.svg";
+import auto from "@phosphor-icons/core/assets/light/sparkle-light.svg";
+import focus from "@phosphor-icons/core/assets/light/target-light.svg";
 import trash from "@phosphor-icons/core/assets/light/trash-light.svg";
 import warning from "@phosphor-icons/core/assets/light/warning-light.svg";
 import close from "@phosphor-icons/core/assets/light/x-light.svg";
 import type { Block, State } from "../shared";
 
-const ICONS = { caret, close, export: exportIcon, gear, mic, micOff, pin, unpin, trash, warning };
+const ICONS = {
+  auto,
+  caret,
+  close,
+  export: exportIcon,
+  focus,
+  gear,
+  mic,
+  micOff,
+  mini,
+  news,
+  pin,
+  pulse,
+  unpin,
+  trash,
+  warning,
+  wide,
+};
 export type IconName = keyof typeof ICONS;
 
 export const STATES: Record<State, string> = {
@@ -95,6 +118,7 @@ function render(block: Block): HTMLElement | undefined {
   const card = document.createElement("article");
   card.className = "card";
   card.dataset.card = "";
+  card.dataset.kind = block.type;
   const title = block.type === "code" ? block.language || "Kod" : block.title;
   if (typeof title === "string" && title.trim()) {
     const heading = document.createElement("h2");

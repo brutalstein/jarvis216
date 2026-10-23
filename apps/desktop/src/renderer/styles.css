@@ -161,6 +161,7 @@ body[data-state="error"] {
   justify-items: center;
   gap: 14px;
   transition: transform 800ms var(--ease);
+  view-transition-name: presence;
 }
 
 .presence::before {
@@ -179,6 +180,7 @@ body[data-state="error"] {
     transparent
   );
   pointer-events: none;
+  animation: breathe 7s ease-in-out infinite;
 }
 
 [data-presence] {
@@ -252,20 +254,57 @@ body[data-state="error"] .hint {
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--hairline-strong) transparent;
+  view-transition-name: stage;
 }
 
 .card {
+  /* Each kind carries its own accent on the border, top rule and bullets. */
+  --accent: var(--stone);
   position: relative;
   flex: none;
   padding: 18px 20px 20px;
   overflow: hidden;
-  border: 1px solid var(--hairline);
+  border: 1px solid color-mix(in oklab, var(--accent) 26%, var(--hairline));
   border-radius: var(--radius-card);
-  background: var(--surface);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--accent) 9%, var(--surface)),
+      var(--surface) 45%
+    ),
+    var(--surface);
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.9);
   user-select: text;
   transition:
     opacity 300ms var(--ease),
-    transform 300ms var(--ease);
+    transform 300ms var(--ease),
+    translate 260ms var(--ease),
+    border-color 260ms var(--ease);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent 85%);
+}
+
+.card:hover {
+  translate: 0 -2px;
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--hairline));
+}
+
+.card[data-kind="text"] {
+  --accent: var(--sky);
+}
+
+.card[data-kind="list"] {
+  --accent: var(--mint);
+}
+
+.card[data-kind="code"] {
+  --accent: var(--lavender);
 }
 
 @starting-style {
@@ -318,9 +357,10 @@ body[data-state="error"] .hint {
 .card li::before {
   content: "";
   width: 6px;
-  height: 1px;
-  translate: 0 -4px;
-  background: var(--ink-soft);
+  height: 6px;
+  border-radius: 50%;
+  translate: 0 -1px;
+  background: var(--accent);
 }
 
 .card pre {
@@ -353,8 +393,8 @@ body[data-state="error"] .hint {
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 1px;
-  background: var(--hairline-strong);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
   transform-origin: left;
   animation: lifetime var(--life, 20s) linear forwards;
 }
@@ -955,10 +995,23 @@ body.overlay {
 }
 
 .overlay .presence {
+  /* The orb is the way back to the full window. */
   display: block;
   padding: 10px;
+  border: 0;
   border-radius: 50%;
   background: rgb(12 10 9 / 0.78);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--state) 35%, transparent);
+  transition: box-shadow 220ms var(--ease);
+}
+
+.overlay .presence:hover {
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--state) 70%, transparent),
+    0 0 26px color-mix(in oklab, var(--state) 40%, transparent);
 }
 
 body[data-cards="true"] .presence {
@@ -1043,13 +1096,16 @@ body:has([data-hud-card]) .presence {
   border-top-color: var(--mint);
 }
 .plan-card .plan-status {
-  color: var(--mint);
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
   margin-bottom: 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--accent) 15%, transparent);
+  color: var(--accent);
   font-size: 12px;
-}
-.plan-card[data-plan-status="AWAITING_APPROVAL"] .plan-status {
-  color: var(--peach);
+  font-weight: 600;
 }
 .plan-card[data-plan-status="FAILED"] .plan-status,
 .plan-card[data-plan-status="RECOVERY_REQUIRED"] .plan-status,
@@ -1096,7 +1152,7 @@ body:has([data-hud-card]) .presence {
   padding: 0 0 0 12px;
   margin: 18px 0;
   list-style: none;
-  border-left: 1px solid var(--hairline-strong);
+  border-left: 1px solid color-mix(in oklab, var(--accent) 40%, var(--hairline-strong));
 }
 .progress-rail li {
   display: flex;
@@ -1144,44 +1200,70 @@ body:has([data-hud-card]) .presence {
   text-align: left;
   justify-content: flex-start;
 }
+/* News: in-app cards, one column in the standard stage, two when the stage is wide. */
 .news-grid {
   display: grid;
-  gap: 0;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
 }
 .news-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 0;
-  border: 0;
-  border-top: 1px solid var(--hairline-strong);
-  background: transparent;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  background: var(--canvas);
   color: var(--ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  animation: rise 560ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transition:
+    translate 260ms var(--ease),
+    border-color 260ms var(--ease),
+    box-shadow 260ms var(--ease);
+}
+.news-item:hover,
+.news-item:focus-visible {
+  translate: 0 -3px;
+  border-color: color-mix(in oklab, var(--peach) 55%, var(--hairline-strong));
+  box-shadow: 0 14px 30px -18px color-mix(in oklab, var(--peach) 60%, transparent);
 }
 .news-text {
   display: grid;
-  gap: 5px;
+  align-content: start;
+  gap: 7px;
+  padding: 11px 12px 13px;
 }
 .news-headline {
-  font-size: 13px;
-  line-height: 1.5;
-}
-.news-item:hover .news-headline {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.45;
 }
 .news-source {
-  color: var(--ink-soft);
-  font-size: 11px;
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--peach) 16%, transparent);
+  color: var(--peach);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 .news-item img {
-  width: 56px;
-  height: 56px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 4px;
+  transition: scale 700ms var(--ease);
+}
+.news-item:hover img {
+  scale: 1.05;
 }
 .control-indicator {
   position: absolute;
@@ -1211,4 +1293,487 @@ body:has([data-hud-card]) .presence {
 }
 .overlay .hud .card {
   display: block;
+}
+
+/*
+ * Colour, layout and motion layer. Text stays ink on dark surfaces; colour lives in borders,
+ * chips, glows and the wordmark so every reading surface keeps its contrast.
+ */
+:root {
+  --lime: #c3e8a8;
+  --butter: #ecdca0;
+  --feed-w: clamp(230px, 22vw, 300px);
+  --spectrum: linear-gradient(
+    90deg,
+    var(--mint),
+    var(--sky),
+    var(--lavender),
+    var(--peach),
+    var(--mint)
+  );
+}
+
+body:not(.overlay)::before {
+  /* Slow aurora behind everything; at most a tenth of any hue reaches the canvas. */
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      38% 34% at 14% 18%,
+      color-mix(in oklab, var(--sky) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      34% 30% at 86% 82%,
+      color-mix(in oklab, var(--lavender) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      30% 28% at 58% 8%,
+      color-mix(in oklab, var(--state) 9%, transparent),
+      transparent 70%
+    );
+  animation: drift 40s ease-in-out infinite alternate;
+}
+
+.wordmark {
+  background: var(--spectrum);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: flow 14s linear infinite;
+}
+
+/* View switch: three compact toggles; JARVIS names its own pick in auto mode. */
+.view-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.view-switch {
+  display: inline-flex;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  background: rgb(28 25 23 / 0.72);
+  backdrop-filter: blur(12px);
+}
+.view-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font: 500 13px / 1 var(--font-sans);
+  cursor: pointer;
+  transition:
+    background-color 220ms var(--ease),
+    color 220ms var(--ease),
+    box-shadow 220ms var(--ease);
+}
+.view-switch [data-icon] .icon {
+  width: 16px;
+  height: 16px;
+}
+.view-switch button:hover {
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+.view-switch button[aria-pressed="true"] {
+  background: linear-gradient(120deg, var(--mint), var(--sky) 55%, var(--lavender));
+  color: var(--canvas);
+  box-shadow: 0 6px 20px -8px color-mix(in oklab, var(--sky) 80%, transparent);
+}
+.view-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.view-pick:empty {
+  display: none;
+}
+.view-pick::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--state);
+  animation: ping 2.4s var(--ease) infinite;
+}
+@media (max-width: 1000px) {
+  .view-word,
+  .view-pick {
+    display: none;
+  }
+  .view-switch button {
+    padding: 0 9px;
+  }
+}
+
+/* Activity feed */
+.feed {
+  position: absolute;
+  inset-block: 16px;
+  left: var(--gutter);
+  width: var(--feed-w);
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 12px 12px 14px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--state) 9%, var(--surface)),
+      var(--surface) 55%
+    ),
+    var(--surface);
+  box-shadow: 0 24px 60px -36px rgb(0 0 0 / 0.9);
+  animation: rise 520ms var(--ease) both;
+  view-transition-name: feed;
+}
+.feed h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 2px;
+  color: var(--ink-soft);
+  font: 600 11.5px / 1 var(--font-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.feed [data-icon] .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--state);
+}
+.feed-list {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  margin: 0;
+  padding: 0 4px 24px 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+.feed-list:empty {
+  display: none;
+}
+.feed-list li {
+  --tone: var(--stone);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 10px 12px 11px 15px;
+  border: 1px solid color-mix(in oklab, var(--tone) 20%, transparent);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--tone) 7%, var(--canvas));
+  user-select: text;
+  animation: slide-in 460ms var(--ease) both;
+}
+.feed-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  inset-block: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--tone);
+}
+.feed-list li:first-child {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--tone) 30%, transparent),
+    0 10px 26px -16px var(--tone);
+}
+.feed-list [data-feed-item="user"] {
+  --tone: var(--sky);
+}
+.feed-list [data-feed-item="jarvis"] {
+  --tone: var(--lavender);
+}
+.feed-list [data-feed-item="work"] {
+  --tone: var(--mint);
+}
+.feed-list [data-feed-item="done"] {
+  --tone: var(--lime);
+}
+.feed-list [data-feed-item="wait"] {
+  --tone: var(--peach);
+}
+.feed-list [data-feed-item="fail"] {
+  --tone: var(--rose);
+}
+.feed-list [data-feed-item="card"] {
+  --tone: var(--butter);
+}
+.feed-tag {
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--tone);
+  color: var(--canvas);
+  font: 600 10.5px / 1.4 var(--font-sans);
+  letter-spacing: 0.04em;
+}
+.feed-list time {
+  justify-self: end;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.feed-list li p {
+  grid-column: 1 / -1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.feed-empty {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  margin: 0;
+  padding: 0 12px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-align: center;
+}
+.feed-list:not(:empty) + .feed-empty {
+  display: none;
+}
+
+/* Plan cards: status decides the accent; running work breathes. */
+.plan-card {
+  --accent: var(--sky);
+}
+.plan-card[data-plan-status="RUNNING"] {
+  --accent: var(--mint);
+  animation: glow 2.8s ease-in-out infinite;
+}
+.plan-card[data-plan-status="AWAITING_APPROVAL"] {
+  --accent: var(--peach);
+}
+.plan-card[data-plan-status="COMPLETED"] {
+  --accent: var(--lime);
+}
+.plan-card[data-plan-status="FAILED"],
+.plan-card[data-plan-status="RECOVERY_REQUIRED"] {
+  --accent: var(--rose);
+}
+.plan-card[data-panel="news"] {
+  --accent: var(--peach);
+}
+.plan-card .plan-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.plan-card[data-plan-status="RUNNING"] .plan-status::before {
+  animation: ping 1.8s var(--ease) infinite;
+}
+.plan-meter {
+  height: 5px;
+  border-radius: 5px;
+}
+.plan-meter-fill {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mint), var(--sky));
+}
+.plan-meter-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  translate: -100% 0;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.progress-rail li[data-step="RUNNING"] .step-action {
+  color: var(--mint);
+}
+.news-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Dock: the listen control wears the state colour while JARVIS listens. */
+body[data-listening="true"] .listen {
+  border-color: color-mix(in oklab, var(--state) 55%, var(--hairline-strong));
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--state) 12%, transparent);
+}
+body[data-listening="true"] .listen .icon {
+  color: var(--state);
+}
+#mini:hover {
+  color: var(--sky);
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease);
+}
+
+/* Layouts: focus grows the presence; standard and wide add the feed when the window allows. */
+body[data-layout="focus"] {
+  --presence: clamp(200px, min(52vh, 44vw), 480px);
+}
+body[data-layout="wide"] {
+  --stage-w: clamp(300px, 34vw, 500px);
+}
+body[data-layout="wide"] .news-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+@media (min-width: 900px) {
+  body[data-layout="wide"] .feed {
+    display: flex;
+  }
+  body[data-layout="wide"] .scene {
+    padding-left: calc(var(--feed-w) + 2 * var(--gutter));
+    padding-right: calc(var(--stage-w) + 2 * var(--gutter));
+  }
+  body[data-layout="wide"] .presence {
+    --presence: clamp(
+      120px,
+      min(42vh, calc(100vw - var(--feed-w) - var(--stage-w) - 6 * var(--gutter))),
+      400px
+    );
+    transform: none;
+  }
+  body[data-layout="wide"] .caption {
+    max-width: min(30ch, 100%);
+  }
+  body[data-layout="wide"] .control-indicator {
+    left: calc(var(--feed-w) + 2 * var(--gutter));
+  }
+}
+@media (min-width: 1180px) {
+  body[data-layout="standard"] .feed {
+    display: flex;
+  }
+  body[data-layout="standard"] .scene {
+    padding-left: calc(var(--feed-w) + 2 * var(--gutter));
+    padding-right: calc(var(--stage-w) + 2 * var(--gutter));
+  }
+  body[data-layout="standard"] .presence {
+    --presence: clamp(
+      120px,
+      min(42vh, calc(100vw - var(--feed-w) - var(--stage-w) - 6 * var(--gutter))),
+      420px
+    );
+    transform: none;
+  }
+  body[data-layout="standard"] .caption {
+    max-width: min(30ch, 100%);
+  }
+  body[data-layout="standard"] .control-indicator {
+    left: calc(var(--feed-w) + 2 * var(--gutter));
+  }
+}
+
+.overlay .news-item img {
+  display: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    translate: -14px 0;
+    filter: blur(4px);
+  }
+}
+@keyframes flow {
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes drift {
+  to {
+    transform: translate3d(4%, -3%, 0) rotate(6deg);
+  }
+}
+@keyframes breathe {
+  50% {
+    scale: 1.08;
+    opacity: 0.75;
+  }
+}
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 60%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+@keyframes glow {
+  50% {
+    box-shadow:
+      0 18px 40px -28px rgb(0 0 0 / 0.9),
+      0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
+      0 0 30px -8px color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+}
+@keyframes shimmer {
+  to {
+    translate: 100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  .wordmark,
+  .view-pick::before,
+  .feed,
+  .feed-list li,
+  .news-item,
+  .presence::before,
+  .plan-card,
+  .plan-card .plan-status::before,
+  .plan-meter-fill::after {
+    animation: none;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
 }

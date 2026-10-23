@@ -105,6 +105,10 @@ export interface Bridge {
     remove(): Promise<void>;
   };
   setListening(on: boolean): void;
+  /** Hides the main window; the edge overlay takes over. */
+  mini(): void;
+  /** Brings the main window back from the edge overlay. */
+  restore(): void;
 }
 declare global {
   interface Window {

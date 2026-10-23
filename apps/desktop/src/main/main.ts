@@ -479,6 +479,12 @@ app.whenReady().then(async () => {
     )
       overlay.webContents.send("ui:event", data);
   });
+  ipcMain.on("window:mini", (event) => {
+    if (event.sender === main.webContents) main.hide();
+  });
+  ipcMain.on("window:restore", (event) => {
+    if (event.sender === overlay.webContents) main.show();
+  });
   ipcMain.on("overlay:pointer", (event, over: unknown) => {
     if (event.sender === overlay.webContents && typeof over === "boolean")
       overlay.setIgnoreMouseEvents(!over, { forward: true });
