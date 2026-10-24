@@ -45,10 +45,34 @@ class SpeakerGateTest(unittest.TestCase):
         gate.adapt(np.array([0.3, 0.85, 0.43]))
         self.assertTrue(gate.accepts(headset))
         self.assertFalse(gate.accepts(np.array([0.0, -0.6, 0.8])))
-        # Only this session adapts; nothing new is saved.
-        self.assertFalse(SpeakerGate(self.store, DEFAULT_THRESHOLD).accepts(headset))
+        # Learned for good: a restart still knows the headset; a new print starts over.
+        self.assertTrue(SpeakerGate(self.store, DEFAULT_THRESHOLD).accepts(headset))
         gate.enroll([np.array([1.0, 0.0, 0.0])])
         self.assertFalse(gate.accepts(headset))
+        self.assertFalse(SpeakerGate(self.store, DEFAULT_THRESHOLD).accepts(headset))
+
+    def test_each_microphone_gets_its_own_channel_and_the_rarest_makes_room(self) -> None:
+        gate = SpeakerGate(self.store, threshold=DEFAULT_THRESHOLD)
+        gate.enroll([np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0])])
+        same = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+        gate.adapt(same)
+        gate.adapt(same + np.array([0.0, 0.0, 0.3, 0.0, 0.0, 0.0]))
+        self.assertEqual(gate.counts, [2])
+        for axis in (2, 3, 4):
+            gate.adapt(np.eye(6)[axis])
+        self.assertEqual(gate.counts, [2, 1, 1, 1])
+        gate.adapt(np.eye(6)[5])
+        self.assertEqual(len(gate.channels), 4)
+        self.assertEqual(gate.counts[0], 2)
+        self.assertTrue(gate.accepts(np.eye(6)[5]))
+
+    def test_delete_forgets_the_channels_too(self) -> None:
+        gate = SpeakerGate(self.store, threshold=DEFAULT_THRESHOLD)
+        gate.enroll([np.array([1.0, 0.0])])
+        gate.adapt(np.array([0.0, 1.0]))
+        gate.delete()
+        self.assertFalse((self.store / "operator-channels.npz").exists())
+        self.assertEqual(gate.channels, [])
 
     def test_delete_forgets_the_voice(self) -> None:
         self.gate.enroll([self.voice])

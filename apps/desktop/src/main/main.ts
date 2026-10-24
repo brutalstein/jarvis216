@@ -404,13 +404,35 @@ app.whenReady().then(async () => {
     if (!existsSync(entry)) throw new Error("CORE_NOT_BUILT");
     core?.stop();
     // Electron's own Node runs Core: nothing else to install, and its version ships with the app.
-    core = startService(process.execPath, [entry], {
+    const started = startService(process.execPath, [entry], {
       cwd: repoRoot,
       env: { ...serviceEnv(), ELECTRON_RUN_AS_NODE: "1" },
       log: join(logs, "core.log"),
     });
-    await waitFor(() => httpOk(health), { timeoutMs: 90_000, code: "CORE", exited: core.exited });
+    core = started;
+    const since = Date.now();
+    // Core exits on an uncaught exception for its supervisor to restart it; this app is that
+    // supervisor, so JARVIS keeps listening instead of answering "I can't answer right now".
+    void started.exited.then(() => {
+      if (quitting || core !== started) return;
+      core = undefined;
+      if (Date.now() - since > 300_000) coreRestarts = 0;
+      restartCoreLater();
+    });
+    await waitFor(() => httpOk(health), {
+      timeoutMs: 90_000,
+      code: "CORE",
+      exited: started.exited,
+    });
     return { detail: "Başlatıldı" };
+  };
+  let coreRestarts = 0;
+  // 2 s, 4 s, ... up to a minute between attempts while Core keeps failing.
+  const restartCoreLater = () => {
+    const delay = Math.min(60_000, 2_000 * 2 ** coreRestarts++);
+    setTimeout(() => {
+      if (!quitting && !core) void startCore().catch(restartCoreLater);
+    }, delay);
   };
   const steps: BootStep[] = [
     {

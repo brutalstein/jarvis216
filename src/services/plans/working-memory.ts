@@ -55,8 +55,8 @@ export async function workingMemory(
     ),
   ].slice(0, 8);
   const asked = (
-    await db.query<{ say: string; kind: string | null }>(
-      "SELECT reply->>'say' AS say, reply->'intent'->>'kind' AS kind FROM conversation_turns WHERE created_at>$1 ORDER BY created_at DESC LIMIT 1",
+    await db.query<{ say: string; kind: string | null; utterance: string }>(
+      "SELECT reply->>'say' AS say, reply->'intent'->>'kind' AS kind, utterance FROM conversation_turns WHERE created_at>$1 ORDER BY created_at DESC LIMIT 1",
       [now - 120_000],
     )
   ).rows[0];
@@ -71,7 +71,9 @@ export async function workingMemory(
       },
     }),
     entities,
-    ...(asked?.kind === "clarify" && asked.say ? { asked: asked.say } : {}),
+    ...(asked?.kind === "clarify" && asked.say
+      ? { asked: asked.say, askedAbout: asked.utterance }
+      : {}),
   };
 }
 

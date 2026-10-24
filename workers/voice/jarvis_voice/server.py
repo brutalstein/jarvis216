@@ -17,6 +17,9 @@ from jarvis_voice.enrollment import Enrollment
 from jarvis_voice.events import event
 from jarvis_voice.speaker import DEFAULT_THRESHOLD
 
+# How often the session asks Core for the operator's learned vocabulary.
+VOCABULARY_EVERY_S = 600.0
+
 
 def create_app(token: str, enrollment: Enrollment) -> web.Application:
     if not token:
@@ -288,8 +291,19 @@ async def run_session(
     )
     stt = GatedSTT(enrollment)
     tts = BilingualTTS()
+
+    async def learn_vocabulary() -> None:
+        # What the operator taught Core so far, again every few minutes as they keep talking.
+        while True:
+            stt.vocabulary = await core.vocabulary()
+            await asyncio.sleep(VOCABULARY_EVERY_S)
+
     # Models warm up while the operator is still getting ready to speak.
-    warming = [asyncio.create_task(stt.warm_up()), asyncio.create_task(tts.warm_up())]
+    warming = [
+        asyncio.create_task(stt.warm_up()),
+        asyncio.create_task(tts.warm_up()),
+        asyncio.create_task(learn_vocabulary()),
+    ]
     pipeline = Pipeline(
         [
             transport.input(),
@@ -314,6 +328,7 @@ async def run_session(
 
     @worker.event_handler("on_pipeline_started")  # type: ignore[untyped-decorator]
     async def started(*args: Any) -> None:
+        event("session.started", enrolled=enrollment.gate.enrolled())
         set_brain(brain)
 
     runner = WorkerRunner(handle_sigint=False)
@@ -321,6 +336,7 @@ async def run_session(
         await runner.add_workers(worker)
         await runner.run()
     finally:
+        event("session.ended")
         set_brain(None)
         for task in warming:
             task.cancel()

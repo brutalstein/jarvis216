@@ -31,6 +31,10 @@ export function conversationRoutes(
       reply.raw.off("close", disconnected);
     }
   });
+  app.get("/v1/conversation/vocabulary", async (request) => {
+    authenticate(request, "operator");
+    return { words: await conversation.vocabulary() };
+  });
   app.get("/v1/conversation/turns", async (request) => {
     authenticate(request, "operator");
     const { limit } = z

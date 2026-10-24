@@ -65,7 +65,7 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
                 self.assertGreaterEqual(frame.metadata["segmentQueueMs"], 0)
                 self.assertGreaterEqual(frame.metadata["transcribeMs"], 0)
 
-    async def decode(self, probabilities, segments, voice=None):
+    async def decode(self, probabilities, segments, voice=None, vocabulary=()):
         """One segment through GatedSTT with a fake Whisper; returns (calls, frames, stt).
 
         With `voice`, the gate holds the print [1, 0] and the segment embeds as `voice`.
@@ -83,6 +83,7 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
                 detect_language=lambda *args, **kwargs: ("", 0.0, probabilities),
                 transcribe=transcribe,
             )
+            stt.vocabulary = list(vocabulary)
             if voice is not None:
                 stt.enrollment.gate.threshold = DEFAULT_THRESHOLD
                 stt.enrollment.gate.enroll([np.array([1.0, 0.0])])
@@ -99,6 +100,11 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(calls[0]["language"], "tr")
         self.assertEqual(calls[0]["initial_prompt"], "Jarvis")
         self.assertEqual(frames[0].text, "Jarvis saat kaç?")
+
+    async def test_the_learned_vocabulary_joins_the_name_in_whispers_prompt(self) -> None:
+        speech = SimpleNamespace(text="Jarvis, Ece'yi ara", no_speech_prob=0.0, avg_logprob=-0.4)
+        calls, _, _ = await self.decode([("tr", 0.9)], [speech], vocabulary=["Ece", "Kadıköy"])
+        self.assertEqual(calls[0]["initial_prompt"], "Jarvis, Ece, Kadıköy")
 
     async def test_english_needs_a_clear_lead(self) -> None:
         speech = SimpleNamespace(
@@ -127,7 +133,18 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(frames[0].text, "Jarvis saat kaç?")
             self.assertFalse(frames[0].metadata["verified"])
             # Calling JARVIS by name teaches the gate this microphone's version of the voice.
-            self.assertEqual(len(stt.enrollment.gate.session), 1)
+            self.assertEqual(len(stt.enrollment.gate.channels), 1)
+
+    async def test_reports_how_much_microphone_audio_arrived_each_minute(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, patch.object(WhisperSTTService, "_load"):
+            stt = GatedSTT(Enrollment(Path(directory), 0.7))
+            with patch("jarvis_voice.stt_gated.event") as event:
+                stt.measure(np.array([0, 16384, -100], dtype=np.int16).tobytes())
+                event.assert_not_called()
+                stt.level_at -= 61
+                stt.measure(np.zeros(160, dtype=np.int16).tobytes())
+            event.assert_called_once_with("audio.level", frames=2, peakDb=-6.0)
+            self.assertEqual((stt.audio_frames, stt.audio_peak), (0, 0))
 
     async def test_whispers_subtitle_credits_for_noise_are_dropped(self) -> None:
         noise = SimpleNamespace(
@@ -143,11 +160,11 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
         speech = SimpleNamespace(text="Jarvis saat kaç?", no_speech_prob=0.0, avg_logprob=-0.5)
         _, frames, stt = await self.decode([("tr", 0.9)], [speech], voice=[0.5, 0.866])
         self.assertTrue(frames[0].metadata["verified"])
-        self.assertEqual(len(stt.enrollment.gate.session), 1)
+        self.assertEqual(len(stt.enrollment.gate.channels), 1)
         unnamed = SimpleNamespace(text="saat kaç?", no_speech_prob=0.0, avg_logprob=-0.5)
         _, frames, stt = await self.decode([("tr", 0.9)], [unnamed], voice=[0.5, 0.866])
         self.assertTrue(frames[0].metadata["verified"])
-        self.assertFalse(stt.enrollment.gate.session)
+        self.assertFalse(stt.enrollment.gate.channels)
 
     async def test_synthesis_yields_first_chunk_without_waiting_for_the_rest(self) -> None:
         tts = object.__new__(BilingualTTS)

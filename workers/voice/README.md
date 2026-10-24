@@ -87,9 +87,24 @@ model: a one-second wake phrase from the enrolled speaker scores 0.3-0.8, other 
 0.04-0.17 on average, and the former `0.7` turned the operator away. `VOICE_SPEAKER_THRESHOLD`
 (in the operator `.env` for the desktop app) overrides it. On microphones other than the
 print's the operator's own speech scored 0.08-0.25, so every segment is decoded: speech that
-names JARVIS passes whatever its score, and the print only decides unnamed follow-ups. Each turn
-that names JARVIS is kept in memory (last ten) as a second reference for the current microphone,
-so follow-ups verify against the voice as this microphone hears it; nothing new is saved.
+names JARVIS passes whatever its score, and the print only decides unnamed follow-ups.
+
+JARVIS keeps learning the operator:
+
+- **Voice per microphone.** Each turn that names JARVIS updates one of up to four channel
+  centroids (cosine 0.5 or more joins a channel, older turns weigh at most 50) saved as
+  `operator-channels.npz` beside the print, so follow-ups verify on a headset, the laptop
+  microphone or a webcam alike. Re-enrolling or deleting the print forgets them. Only normalized
+  embeddings are saved, never audio.
+- **Vocabulary.** Every ten minutes the session asks Core for the names and places the operator
+  said at least twice (`GET /v1/conversation/vocabulary`, from their turns and long-term notes)
+  and gives them to Whisper with the name as its prompt, so it spells them as the operator does.
+- **Meaning.** When JARVIS asks "... mı demek istediniz?" and the operator says yes, Core learns
+  the words as recognition heard them, with the plan they meant; recall then maps the same
+  misheard words straight to it, and practice turns them into a reflex.
+
+`session.started` / `session.ended` and a per-minute `audio.level` (frames received, peak dBFS)
+in `voice.log` tell a missing microphone apart from a quiet room.
 
 Each turn's stages go to `VOICE_DATA_DIR/voice.log` as numbers and flags only (segment length,
 speaker score, transcript length and language, whether the name was heard, Core's answer), so a

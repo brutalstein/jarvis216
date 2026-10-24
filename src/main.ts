@@ -5,12 +5,27 @@ import { postgres } from "./core/database.js";
 import { initTracing } from "./core/telemetry.js";
 
 const log = (entry: Record<string, unknown>) => process.stderr.write(`${JSON.stringify(entry)}\n`);
+// Where it failed without what it said: messages may quote secrets or the operator's words,
+// stack frames only name code.
+const origin = (error: unknown) =>
+  error instanceof Error
+    ? {
+        error: error.name,
+        at: (error.stack ?? "")
+          .split("\n")
+          .filter((line) => line.trimStart().startsWith("at "))
+          .slice(0, 6)
+          .map((line) => line.trim()),
+      }
+    : { error: typeof error };
 
 // A stray rejection is logged and the assistant keeps serving; an uncaught exception means
 // state may be inconsistent, so the process exits for its supervisor to restart it.
-process.on("unhandledRejection", () => log({ level: "error", code: "UNHANDLED_REJECTION" }));
-process.on("uncaughtException", () => {
-  log({ level: "fatal", code: "UNCAUGHT_EXCEPTION" });
+process.on("unhandledRejection", (reason) =>
+  log({ level: "error", code: "UNHANDLED_REJECTION", ...origin(reason) }),
+);
+process.on("uncaughtException", (error) => {
+  log({ level: "fatal", code: "UNCAUGHT_EXCEPTION", ...origin(error) });
   process.exit(1);
 });
 

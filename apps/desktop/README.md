@@ -26,6 +26,9 @@ token. It launches an authenticated loopback voice service automatically and ter
 process tree on exit. Provider credentials are never copied into the desktop directory or voice
 child environment. The voice models live in the gitignored `data/voice/models`.
 
+Core exits on an uncaught exception (logging the error's name and code frames, never its
+message); the app restarts it after 2 s, doubling up to a minute while it keeps failing.
+
 `VOICE_SPEAKER_THRESHOLD` (default `0.25`) in the operator `.env` is passed to the voice
 service for calibration with the operator's microphone; each speaker score is written to
 `data/voice/voice.log` in the checkout.
