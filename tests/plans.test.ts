@@ -341,6 +341,43 @@ describe("one desktop plan at a time", () => {
   });
 });
 
+describe("plan cancellation", () => {
+  it("a refresh while cancelling leaves the plan cancelled, not failed", async () => {
+    // A retry-safe step is cancelled cleanly, as a page read is.
+    tasks = new TaskService(db, { concurrency: 2, retrySafe: () => true });
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    runWorker([desktop(() => gate.then(() => ok()))]);
+    let during: Promise<void> | undefined;
+    plans = new PlanService({
+      tasks,
+      wake: () => worker?.wake(),
+      // Refresh runs between the step's cancellation and the plan's, as a change event does.
+      onCancel: (id) => {
+        worker?.cancel(id);
+        during = plans.refresh();
+      },
+      conversationProviders: ["gemini-live"],
+      privateProviders: ["claude-code"],
+    });
+    plans.start(stop.signal);
+    const view = await propose([open, step("app.focus", { name: "Not Defteri" })]);
+    await until(
+      () => prompts["windows-mcp"],
+      (seen) => Boolean(seen),
+    );
+    await plans.cancel(view.id);
+    await during;
+    await delay(200);
+    const settled = await plans.get(view.id);
+    expect(settled.status).toBe("CANCELLED");
+    expect(settled.say).toBe("İptal ettim, efendim.");
+    release();
+  });
+});
+
 describe("plan outcomes", () => {
   it("a failed step blocks the rest and fails the plan", async () => {
     start([desktop((input) => (input.action === "app.open" ? refused : ok()))]);

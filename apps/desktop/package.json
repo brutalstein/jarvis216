@@ -1,6 +1,6 @@
 {
   "name": "jarvis-desktop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "JARVIS operator desktop: presence, captions and display cards over the local voice service.",
   "author": "brutalstein",
@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "com.brutalstein.jarvis216",
-    "productName": "JARVIS216",
+    "productName": "J.A.R.V.I.S",
     "forceCodeSigning": true,
     "asar": true,
     "directories": {
@@ -36,6 +36,7 @@
         "nsis"
       ],
       "verifyUpdateCodeSignature": true,
+      "icon": "build/icon.png",
       "artifactName": "JARVIS216-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {

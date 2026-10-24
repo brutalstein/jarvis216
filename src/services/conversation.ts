@@ -360,24 +360,31 @@ export class ConversationService {
       if (!reply.display.length) throw new CoreError("TURN_FAILED", 502);
       reply.say = onScreen[reply.lang];
     }
-    // Speech that was not meant for JARVIS is not kept, not even in the task record.
-    if (reply.addressed) await this.#remember(id, started, input, taskId, reply, provider);
-    else
-      await this.tasks.db.transaction((tx) =>
-        this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
-      );
+    // The turn record, learned facts and the experience are independent writes: together they
+    // cost one database round trip before the reply, not one each.
+    const writes: Promise<unknown>[] = [
+      // Speech that was not meant for JARVIS is not kept, not even in the task record.
+      reply.addressed
+        ? this.#remember(id, started, input, taskId, reply, provider)
+        : this.tasks.db.transaction((tx) =>
+            this.forget(tx, "idempotency_key LIKE $1", `conversation:${id}%`),
+          ),
+    ];
     const memory = this.options.memory;
     if (memory && reply.addressed && reply.learn)
-      for (const fact of reply.learn) await learned(() => memory.save(fact));
+      for (const fact of reply.learn) writes.push(learned(() => memory.save(fact)));
     if (learning && reply.addressed && understood)
-      await learned(() =>
-        learning.experience({
-          utterance: input.utterance,
-          lang: reply.lang,
-          intent: understood,
-          source: "model",
-        }),
+      writes.push(
+        learned(() =>
+          learning.experience({
+            utterance: input.utterance,
+            lang: reply.lang,
+            intent: understood,
+            source: "model",
+          }),
+        ),
       );
+    await Promise.all(writes);
     return {
       id,
       taskId,

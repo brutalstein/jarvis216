@@ -2,7 +2,7 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <title>JARVIS Overlay</title>
+    <title>J.A.R.V.I.S Mini</title>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'"
@@ -11,6 +11,11 @@
     <script defer src="overlay.js"></script>
   </head>
   <body class="overlay" data-state="idle">
+    <div class="window-bar" data-window-bar data-listening="true" role="toolbar" aria-label="Pencere">
+      <button type="button" class="listen-state" data-listen aria-pressed="true" title="Dinlemeyi aç / kapat · Ctrl+Alt+J"><span class="listen-dot" aria-hidden="true"></span><span data-icon="mic" data-listen-icon></span><span data-listen-label>Dinliyor</span></button>
+      <button type="button" data-restore aria-label="Pencereyi büyüt" title="Pencereyi büyüt · Ctrl+Alt+M"><span data-icon="expand"></span><span>Büyüt</span></button>
+      <button type="button" data-quit aria-label="J.A.R.V.I.S'i kapat" title="J.A.R.V.I.S'i kapat"><span data-icon="close"></span></button>
+    </div>
     <button type="button" class="presence" data-restore aria-label="JARVIS penceresini aç" title="JARVIS penceresini aç">
       <canvas data-presence aria-hidden="true"></canvas>
     </button>

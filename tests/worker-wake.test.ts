@@ -85,7 +85,7 @@ describe("worker wake", () => {
     const seen: TaskChange[] = [];
     tasks.changes.on("change", (change: TaskChange) => seen.push(change));
     const task = await tasks.create(TaskSpecSchema.parse(spec()), "events", "operator");
-    expect(seen).toEqual([{ id: task.id, status: "READY" }]);
+    expect(seen).toEqual([{ id: task.id, status: "READY", lane: "background" }]);
     await expect(
       tasks.locked(async (tx) => {
         await tasks.move(tx, await tasks.get(task.id, tx), "CANCELLED", "rolled back");
@@ -99,7 +99,7 @@ describe("worker wake", () => {
       throw new Error("listener");
     });
     await expect(tasks.cancel(task.id)).resolves.toMatchObject({ status: "CANCELLED" });
-    expect(seen.at(-1)).toEqual({ id: task.id, status: "CANCELLED" });
+    expect(seen.at(-1)).toEqual({ id: task.id, status: "CANCELLED", lane: "background" });
   });
 
   it("a text turn returns as soon as its task completes, not on the next poll", async () => {

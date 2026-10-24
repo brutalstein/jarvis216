@@ -1,5 +1,5 @@
 import type { Capability } from "./contracts.js";
-import type { Sql } from "./database.js";
+import { type Sql, write } from "./database.js";
 
 // One provider attempt as Core saw it. Neutral attempts (operator cancel, lease loss, policy
 // refusal, an outcome the executor observed in the environment) count toward usage only.
@@ -48,7 +48,8 @@ function percentile(sorted: number[], q: number): number | null {
 }
 
 export async function recordObservation(tx: Sql, observation: Observation): Promise<void> {
-  await tx.query(
+  await write(
+    tx,
     "INSERT INTO provider_observations(provider,capability,outcome,kind,duration_ms,input_tokens,output_tokens,observed_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
     [
       observation.provider,

@@ -22,7 +22,12 @@ await build({
   external: ["electron"],
 });
 await build({
-  entryPoints: ["src/renderer/app.ts", "src/renderer/overlay.ts", "src/renderer/styles.css"],
+  entryPoints: [
+    "src/renderer/app.ts",
+    "src/renderer/overlay.ts",
+    "src/renderer/splash.ts",
+    "src/renderer/styles.css",
+  ],
   bundle: true,
   platform: "browser",
   outdir: "dist",
@@ -31,5 +36,7 @@ await build({
   loader: { ".svg": "text", ".woff2": "file" },
   assetNames: "fonts/[name]-[hash]",
 });
-for (const name of ["index.html", "overlay.html"])
+for (const name of ["index.html", "overlay.html", "splash.html"])
   await copyFile(`src/renderer/${name}`, `dist/${name}`);
+// Window, taskbar and tray mark; the installer takes build/icon.png itself.
+await copyFile("build/icon.png", "dist/icon.png");

@@ -23,7 +23,7 @@ test("update button is beside Settings; development builds show their limit with
     ]);
     const denied = await run.app.evaluate(async ({ BrowserWindow }) => {
       const overlay = BrowserWindow.getAllWindows().find(
-        (win) => win.getTitle() === "JARVIS Overlay",
+        (win) => win.getTitle() === "J.A.R.V.I.S Mini",
       );
       return overlay?.webContents.executeJavaScript(
         "window.jarvis.updates.check().then(() => 'ALLOWED', error => String(error))",

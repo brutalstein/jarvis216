@@ -2,7 +2,7 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <title>JARVIS</title>
+    <title>J.A.R.V.I.S</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
@@ -20,7 +20,7 @@
     data-layout="focus"
   >
     <header class="topbar">
-      <h1 class="wordmark">JARVIS</h1>
+      <h1 class="wordmark">J.A.R.V.I.S</h1>
       <div class="view-bar">
         <fieldset class="view-switch">
           <legend class="sr-only">Görünüm</legend>
@@ -37,7 +37,7 @@
         <span class="view-pick" data-layout-label></span>
       </div>
       <div class="topbar-actions">
-      <button type="button" class="icon-button" id="mini" aria-label="Mini" title="Kenar moduna geç">
+      <button type="button" class="icon-button" id="mini" aria-label="Mini mod" title="Mini moda geç · Ctrl+Alt+M">
         <span data-icon="mini"></span>
       </button>
       <button type="button" class="btn outline" id="updates-open" aria-haspopup="dialog">Güncellemeler</button>
@@ -128,6 +128,24 @@
             <select id="speaker"><option value="">Varsayılan ses çıkışı</option></select>
             <span data-icon="caret"></span>
           </div>
+        </section>
+
+        <section class="group" aria-labelledby="window-title">
+          <h3 id="window-title">Pencere ve kısayollar</h3>
+          <dl class="shortcuts">
+            <div>
+              <dt>Dinlemeyi aç / kapat</dt>
+              <dd class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>J</kbd></dd>
+            </div>
+            <div>
+              <dt>Mini mod / tam pencere</dt>
+              <dd class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>M</kbd></dd>
+            </div>
+          </dl>
+          <p class="note">
+            Pencereyi kapatınca veya küçültünce JARVIS sağ üstte küçük bir çubuk olarak dinlemeye devam
+            eder. Çubuktaki kapat düğmesi JARVIS'i ve başlattığı tüm servisleri durdurur.
+          </p>
         </section>
 
         <section class="group" data-enroll="none" aria-labelledby="voice-title">

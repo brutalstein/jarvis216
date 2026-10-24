@@ -199,14 +199,93 @@ test("Mini sends JARVIS to the screen edge and the orb brings it back", async ()
             ?.isVisible(),
         title,
       );
-    await expect.poll(() => visible("JARVIS")).toBe(true);
+    await expect.poll(() => visible("J.A.R.V.I.S")).toBe(true);
     await run.page.getByRole("button", { name: "Mini" }).click();
-    await expect.poll(() => visible("JARVIS")).toBe(false);
-    await expect.poll(() => visible("JARVIS Overlay")).toBe(true);
+    await expect.poll(() => visible("J.A.R.V.I.S")).toBe(false);
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(true);
     const overlay = await overlayPage(run.app);
-    await overlay.locator("[data-restore]").evaluate((node) => (node as HTMLElement).click());
-    await expect.poll(() => visible("JARVIS")).toBe(true);
-    await expect.poll(() => visible("JARVIS Overlay")).toBe(false);
+    await overlay.locator(".presence").evaluate((node) => (node as HTMLElement).click());
+    await expect.poll(() => visible("J.A.R.V.I.S")).toBe(true);
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(false);
+  } finally {
+    await run.close();
+  }
+});
+
+test("closing the window leaves a mini bar that restores or quits JARVIS", async () => {
+  const run = await launch();
+  try {
+    const visible = (title: string) =>
+      run.app.evaluate(
+        ({ BrowserWindow }, name) =>
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === name)
+            ?.isVisible(),
+        title,
+      );
+    // The window's own close button hides it to the edge, as before.
+    await run.app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() === "J.A.R.V.I.S")
+        ?.close(),
+    );
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(true);
+    const overlay = await overlayPage(run.app);
+    const bar = overlay.getByRole("toolbar", { name: "Pencere" });
+    await expect(bar.getByRole("button", { name: "Pencereyi büyüt" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "J.A.R.V.I.S'i kapat" })).toBeVisible();
+    // The bar says whether JARVIS hears you, and flips listening for both windows.
+    const listen = bar.getByRole("button", { name: "Dinliyor" });
+    await expect(listen).toHaveAttribute("aria-pressed", "true");
+    await listen.evaluate((node) => (node as HTMLElement).click());
+    await expect(bar.getByRole("button", { name: "Dinlemiyor" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await expect(run.page.locator("body")).toHaveAttribute("data-listening", "false");
+    await run.app.evaluate(({ ipcMain }) => {
+      ipcMain.emit("test:toggle-listening");
+    });
+    await expect(bar.getByRole("button", { name: "Dinliyor" })).toBeVisible();
+    await overlay.waitForTimeout(500);
+    const png = await run.app.evaluate(async ({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows().find((w) => w.getTitle() === "J.A.R.V.I.S Mini");
+      return (await window?.capturePage())?.toPNG().toString("base64") ?? "";
+    });
+    await mkdir(shots, { recursive: true });
+    await writeFile(`${shots}/mini-bar.png`, Buffer.from(png, "base64"));
+
+    await bar
+      .getByRole("button", { name: "Pencereyi büyüt" })
+      .evaluate((node) => (node as HTMLElement).click());
+    await expect.poll(() => visible("J.A.R.V.I.S")).toBe(true);
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(false);
+
+    // Ctrl+Alt+M trades the two; a minimized window also leaves the bar on screen.
+    const toggle = () =>
+      run.app.evaluate(({ ipcMain }) => {
+        ipcMain.emit("test:toggle-window");
+      });
+    await toggle();
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(true);
+    await toggle();
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(false);
+    await run.app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() === "J.A.R.V.I.S")
+        ?.minimize(),
+    );
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(true);
+    await toggle();
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(false);
+
+    await run.page.getByRole("button", { name: "Mini" }).click();
+    await expect.poll(() => visible("J.A.R.V.I.S Mini")).toBe(true);
+    const closed = run.app.waitForEvent("close");
+    await bar
+      .getByRole("button", { name: "J.A.R.V.I.S'i kapat" })
+      .evaluate((node) => (node as HTMLElement).click());
+    await closed;
   } finally {
     await run.close();
   }
@@ -233,7 +312,7 @@ test("listening toggles from the button and the tray path; shortcut and overlay 
       await run.app.evaluate(({ BrowserWindow }) =>
         Boolean(
           BrowserWindow.getAllWindows()
-            .find((w) => w.getTitle() === "JARVIS Overlay")
+            .find((w) => w.getTitle() === "J.A.R.V.I.S Mini")
             ?.isAlwaysOnTop(),
         ),
       ),
@@ -332,7 +411,7 @@ test("the overlay mirrors state, caption and cards", async () => {
     const overlay = await overlayPage(run.app);
     await run.app.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()
-        .find((w) => w.getTitle() === "JARVIS Overlay")
+        .find((w) => w.getTitle() === "J.A.R.V.I.S Mini")
         ?.showInactive();
     });
     await emit(run.app, { type: "state", value: "speaking" });
@@ -347,7 +426,7 @@ test("the overlay mirrors state, caption and cards", async () => {
     await overlay.waitForTimeout(700);
     // CDP screenshots stall on a transparent, unfocusable window; the native capture does not.
     const png = await run.app.evaluate(async ({ BrowserWindow }) => {
-      const window = BrowserWindow.getAllWindows().find((w) => w.getTitle() === "JARVIS Overlay");
+      const window = BrowserWindow.getAllWindows().find((w) => w.getTitle() === "J.A.R.V.I.S Mini");
       return (await window?.capturePage())?.toPNG().toString("base64") ?? "";
     });
     expect(png.length).toBeGreaterThan(0);
@@ -381,7 +460,7 @@ test("the layout holds from the minimum window to a large one", async () => {
       await run.app.evaluate(
         ({ BrowserWindow }, size) => {
           BrowserWindow.getAllWindows()
-            .find((w) => w.getTitle() === "JARVIS")
+            .find((w) => w.getTitle() === "J.A.R.V.I.S")
             ?.setContentSize(size[0], size[1]);
         },
         [width, height],

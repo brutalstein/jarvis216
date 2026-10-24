@@ -63,6 +63,12 @@ export type BrainView = {
 };
 export type MemoryNote = { id: string; note: string; createdAt: number };
 export type Enrollment = { enrolled: boolean; seconds: number };
+export type BootStepState = "waiting" | "running" | "ready" | "skipped" | "failed";
+/** What the loading screen shows while the main process brings every service up. */
+export type BootStatus = {
+  phase: "running" | "ready" | "failed";
+  steps: { id: string; label: string; state: BootStepState; detail?: string }[];
+};
 export interface Bridge {
   updates: {
     status(): Promise<UpdateState>;
@@ -114,6 +120,9 @@ export interface Bridge {
   mini(): void;
   /** Brings the main window back from the edge overlay. */
   restore(): void;
+  /** Quits JARVIS and the services it started. */
+  quit(): void;
+  boot: { onStatus(cb: (status: BootStatus) => void): void; retry(): void };
 }
 declare global {
   interface Window {

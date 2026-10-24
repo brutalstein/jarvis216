@@ -1,4 +1,4 @@
-import { CoreError, type TaskState, terminal } from "./contracts.js";
+import { CoreError, type Task, type TaskState, terminal } from "./contracts.js";
 import type { Lane, TaskChange, TaskService } from "./tasks.js";
 
 export type TextSpec = {
@@ -56,11 +56,25 @@ export async function runText(
     key,
     "operator",
   );
-  // Woken by the task's committed transitions; the short poll is only a safety net.
+  // Woken by the task's committed transitions; the short poll is only a safety net. A change
+  // carries the new state, so only a settled task is read back: with its provider, in one query.
+  const read = async () => {
+    const row = (
+      await tasks.db.query<Task & { provider: string | null }>(
+        "SELECT t.*, (SELECT target FROM actions a WHERE a.task_id=t.id AND a.status='SUCCEEDED' ORDER BY a.id LIMIT 1) AS provider FROM tasks t WHERE t.id=$1",
+        [task.id],
+      )
+    ).rows[0];
+    if (!row) throw new CoreError("TASK_NOT_FOUND", 404);
+    return row;
+  };
+  let current: Task & { provider?: string | null } = task;
   let dirty = false;
   let resume = () => {};
   const onChange = (change: TaskChange) => {
     if (change.id !== task.id) return;
+    current = { ...current, status: change.status };
+    if (!settled.has(change.status)) return;
     dirty = true;
     resume();
   };
@@ -70,7 +84,6 @@ export async function runText(
     resume();
   };
   spec.signal?.addEventListener("abort", onAbort, { once: true });
-  let current = task;
   try {
     wake();
     // The task deadline aborts the provider call itself; the grace covers Core's bookkeeping.
@@ -79,26 +92,26 @@ export async function runText(
         await tasks.cancel(task.id);
         throw new CoreError("TURN_CANCELLED", 499);
       }
-      if (!dirty)
+      if (!dirty && !settled.has(current.status))
         await new Promise<void>((resolve) => {
-          const timer = setTimeout(resolve, spec.pollMs ?? 250);
+          const timer = setTimeout(resolve, spec.pollMs ?? 2000);
           resume = () => {
             clearTimeout(timer);
             resolve();
           };
         });
+      if (spec.signal?.aborted) continue;
       dirty = false;
-      current = await tasks.get(task.id);
+      current = await read();
     }
   } finally {
     tasks.changes.off("change", onChange);
     spec.signal?.removeEventListener("abort", onAbort);
   }
+  if (!("provider" in current)) current = await read();
   if (current.status !== "COMPLETED" || !current.result) {
     const late = Date.now() >= started + spec.deadlineMs;
     throw new CoreError(late ? "TURN_TIMEOUT" : "TURN_FAILED", late ? 504 : 502);
   }
-  const provider =
-    (await tasks.actions(task.id)).find((action) => action.status === "SUCCEEDED")?.target ?? null;
-  return { text: current.result.text, provider, taskId: task.id };
+  return { text: current.result.text, provider: current.provider ?? null, taskId: task.id };
 }

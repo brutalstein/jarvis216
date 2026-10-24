@@ -78,7 +78,8 @@ export async function startVoiceService(options: {
       stop();
       reject(new Error("VOICE_UNAVAILABLE"));
     };
-    const timeout = setTimeout(fail, 30000);
+    // Warm starts take 1-2 s; the first one after a reboot loads torch and models from a cold disk.
+    const timeout = setTimeout(fail, 90_000);
     child.once("error", fail);
     child.once("exit", () => {
       if (!ready) fail();

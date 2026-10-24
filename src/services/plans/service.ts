@@ -33,6 +33,8 @@ import { statusSay, workingMemory } from "./working-memory.js";
 export class PlanService extends EventEmitter {
   #seen = new Map<string, string>();
   #finishing = new Set<string>();
+  // Plans being cancelled: refresh would read their cancelled steps as a failure.
+  #cancelling = new Set<string>();
   // When Core first saw each step task running, and when each plan's finisher started.
   #stepStarted = new Map<string, number>();
   #timers = new Set<ReturnType<typeof setTimeout>>();
@@ -41,6 +43,8 @@ export class PlanService extends EventEmitter {
   #again = false;
   // Any plan running or awaiting approval at the last refresh (sets the poll cadence).
   #active = true;
+  // Aborted to end the idle poll's wait early.
+  #kick = new AbortController();
   #creating = Promise.resolve();
   #viewContext: ViewContext;
   #finisher: FinisherContext;
@@ -352,8 +356,12 @@ export class PlanService extends EventEmitter {
     void (async () => {
       while (!signal.aborted) {
         await this.refresh().catch(failed);
-        // Idle, a slower poll is enough: new plans and step transitions refresh at once.
-        await delay(this.#active ? 500 : 2000, undefined, { signal }).catch(() => {});
+        // Idle, nothing can expire: new plans and step transitions refresh at once, so the slow
+        // poll only keeps a remote database from being asked the same thing every few seconds.
+        await delay(this.#active ? 500 : 30_000, undefined, {
+          signal: AbortSignal.any([signal, this.#kick.signal]),
+        }).catch(() => {});
+        if (this.#kick.signal.aborted) this.#kick = new AbortController();
       }
     })();
   }
@@ -536,6 +544,11 @@ export class PlanService extends EventEmitter {
 
   // Emits the view when it changed since it was last emitted.
   async #publish(id: string): Promise<PlanView> {
+    // A plan changed outside a refresh (created, approved, finished): back to the quick poll.
+    if (!this.#refreshing) {
+      this.#active = true;
+      this.#kick.abort();
+    }
     return this.#emitChanged(await this.get(id));
   }
   #emitChanged(view: PlanView): PlanView {
@@ -585,20 +598,25 @@ export class PlanService extends EventEmitter {
   }
 
   async #cancel(plan: PlanRow, silent: boolean): Promise<void> {
-    for (const taskId of plan.task_ids) {
-      // A task already settled or uncertain keeps its state.
-      await this.options.tasks.cancel(taskId).catch(() => {});
-      this.options.onCancel(taskId);
+    this.#cancelling.add(plan.id);
+    try {
+      for (const taskId of plan.task_ids) {
+        // A task already settled or uncertain keeps its state.
+        await this.options.tasks.cancel(taskId).catch(() => {});
+        this.options.onCancel(taskId);
+      }
+      const uncertain = (await this.#stepTasks(plan)).some(
+        (task) => task?.status === "RECOVERY_REQUIRED",
+      );
+      await this.#settle(
+        plan,
+        uncertain ? "RECOVERY_REQUIRED" : "CANCELLED",
+        { say: narrate({ type: uncertain ? "plan-uncertain" : "cancelled" }, plan.lang) },
+        { narrated: silent },
+      );
+    } finally {
+      this.#cancelling.delete(plan.id);
     }
-    const uncertain = (await this.#stepTasks(plan)).some(
-      (task) => task?.status === "RECOVERY_REQUIRED",
-    );
-    await this.#settle(
-      plan,
-      uncertain ? "RECOVERY_REQUIRED" : "CANCELLED",
-      { say: narrate({ type: uncertain ? "plan-uncertain" : "cancelled" }, plan.lang) },
-      { narrated: silent },
-    );
   }
 
   async #refresh(): Promise<boolean> {
@@ -639,7 +657,7 @@ export class PlanService extends EventEmitter {
   }
 
   #detach(plan: PlanRow, work: () => Promise<void>): void {
-    if (this.#finishing.has(plan.id)) return;
+    if (this.#finishing.has(plan.id) || this.#cancelling.has(plan.id)) return;
     this.#finishing.add(plan.id);
     void work()
       .catch(() => {
