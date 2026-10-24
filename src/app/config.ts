@@ -16,6 +16,12 @@ import {
   openClawMcpConfig,
   playwrightMcpConfig,
 } from "../integrations/claude-mcp.js";
+import {
+  ComputerUseExecutor,
+  chatTurn,
+  computerActionSchemas,
+  geminiTurn,
+} from "../integrations/computer-use.js";
 import { GitHubExecutor, githubActionSchemas } from "../integrations/github.js";
 import { GuideExecutor, guideActionSchemas, modelAsk } from "../integrations/guide.js";
 import {
@@ -459,6 +465,75 @@ export async function configuredProviders(
       10,
     );
   }
+  // Open-ended computer tasks through munim-computer-use: Claude Code on the operator's
+  // subscription first, then Gemini and the free models in order, each taking over from the last.
+  let computerUse = false;
+  if (env.ENABLE_COMPUTER_USE === "true") {
+    const munim = ["-y", "munim-computer-use@0.7.3"];
+    const [command, ...args] = z
+      .tuple([z.string().min(1)])
+      .rest(z.string())
+      .parse(
+        env.COMPUTER_USE_COMMAND_JSON?.trim()
+          ? JSON.parse(env.COMPUTER_USE_COMMAND_JSON)
+          : // On Windows, npx is a .cmd shim: launch via cmd.exe.
+            process.platform === "win32"
+            ? ["cmd", "/d", "/s", "/c", `npx ${munim.join(" ")}`]
+            : ["npx", ...munim],
+      );
+    const claude =
+      env.ENABLE_CLAUDE_CODE === "true" || env.ENABLE_CLAUDE_AGENT === "true"
+        ? {
+            command: [z.string().refine(path.isAbsolute).parse(env.CLAUDE_CODE_PATH)] as const,
+            model: z
+              .string()
+              .trim()
+              .min(1)
+              .parse(env.COMPUTER_USE_CLAUDE_MODEL?.trim() || env.CLAUDE_CODE_MODEL),
+          }
+        : undefined;
+    const list = (value: string | undefined) => [
+      ...new Set(
+        (value ?? "")
+          .split(",")
+          .map((model) => model.trim())
+          .filter(Boolean),
+      ),
+    ];
+    const turns = [
+      ...(env.ENABLE_GEMINI === "true"
+        ? list(
+            env.COMPUTER_USE_GEMINI_MODELS?.trim() || `${env.GEMINI_MODEL},gemini-3.5-flash-lite`,
+          ).map((model) => ({
+            id: `gemini:${model}`,
+            turn: geminiTurn(secrets.resolve("GEMINI_API_KEY"), model),
+          }))
+        : []),
+      ...freeModels.flatMap((free) =>
+        env[free.flag] !== "true"
+          ? []
+          : list(env[free.models]).map((model) => ({
+              id: `${free.prefix}:${model}`,
+              turn: chatTurn({
+                base: free.base,
+                key: secrets.resolve(free.key),
+                model,
+                ...("extraBody" in free ? { extraBody: free.extraBody } : {}),
+              }),
+            })),
+      ),
+    ];
+    if (!claude && !turns.length) throw new Error("COMPUTER_USE_NEEDS_A_MODEL");
+    register(
+      new ComputerUseExecutor(
+        turns.map((item) => item.turn),
+        { command, args, ...(claude && { claude }) },
+      ),
+      `munim-computer-use:${JSON.stringify([command, ...args])}:claude-${claude?.model ?? "none"}:${turns.map((item) => item.id).join(",")}:v2`,
+      10,
+    );
+    computerUse = true;
+  }
   // Local and governed per action by the operator's permissions (default: ask).
   if (local.memory) register(new MemoryExecutor(local.memory), "memory:v1:local", 10);
   for (const executor of local.executors ?? []) register(executor, `injected:${executor.id}`, 10);
@@ -519,8 +594,9 @@ export async function configuredProviders(
     new GuideExecutor({
       n8nUrl: z.url().parse(env.N8N_API_URL?.trim() || "http://127.0.0.1:5678"),
       ...(writers.length && { ask: modelAsk(writers) }),
+      envNames: Object.keys(env).filter((name) => /_(KEY|TOKEN|SECRET|ID)$/.test(name)),
     }),
-    `guide:v1:${writers.map((p) => p.id).join(",") || "curated"}`,
+    `guide:v2:${writers.map((p) => p.id).join(",") || "none"}`,
     10,
   );
   integrations.register("help.guide", (args) => {
@@ -534,10 +610,28 @@ export async function configuredProviders(
       risk: "LOW",
       // The topic names what to set up, never the operator's secrets.
       privacy: "public",
-      budget: { maxCalls: 1, maxDurationMs: 60000, maxOutputTokens: 2000 },
+      // Up to three model answers and two rounds of official pages.
+      budget: { maxCalls: 1, maxDurationMs: 120000, maxOutputTokens: 2000 },
       verification: { kind: "postcondition" },
     };
   });
+  if (computerUse)
+    integrations.register("computer.use", (args) => {
+      const parsed = computerActionSchemas["computer.use"].safeParse(args);
+      if (!parsed.success) throw new IntegrationError("INTEGRATION_DENIED");
+      return {
+        capability: "tool.execute",
+        providers: ["computer-use"],
+        objective: "Do the operator's task on this computer and report what was observed",
+        input: { action: "computer.use", args: parsed.data },
+        risk: "HIGH",
+        // The task and what is on screen reach the model.
+        privacy: "private",
+        // Many look-act-verify steps, with waits for free-tier rate limits.
+        budget: { maxCalls: 1, maxDurationMs: 900000, maxOutputTokens: 4000 },
+        verification: { kind: "non-empty" },
+      };
+    });
   // Daily call or token ceilings per provider (e.g. a free tier's request quota). A spent budget
   // skips the provider until its rolling 24-hour usage drops; it never raises another's.
   const budgets = z

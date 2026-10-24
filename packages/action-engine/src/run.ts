@@ -22,7 +22,11 @@ export type Panel =
       links: { label: string; url: string }[];
       sources: string[];
       where?: string;
+      // The value the operator obtains goes to this .env name; `verify` proves it works.
+      check?: { env: string; verify?: GuideProbe };
     };
+// A GET that succeeds only with a valid value, read from the vendor's own documentation.
+export type GuideProbe = { url: string; in: "header" | "query"; name: string; prefix?: string };
 export type Evidence = {
   ok: boolean;
   evidence: "postcondition" | "tool-ok" | "observed-failure" | "refused";

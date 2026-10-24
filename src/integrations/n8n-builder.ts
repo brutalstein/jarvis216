@@ -162,7 +162,7 @@ export class AutomationBuilder implements Executor {
             false,
             "refused",
             `n8n has no ${type} credential${wanted ? ` named ${wanted}` : ""}; connect it in n8n ` +
-              `first (help.guide topic: ${type === "youTubeOAuth2Api" ? "youtube-n8n" : `n8n ${type} credential`})`,
+              `first (help.guide topic: connect ${type} credential in n8n)`,
           );
         linked[type] = { id: found.id, name: found.name };
       }

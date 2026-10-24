@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { createServer, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
@@ -262,8 +262,14 @@ test("authenticated SSE delivers plans; arbitrary external URLs cannot open", as
   }
 });
 
-test("a guide shows numbered steps, opens its first official page once and only its own links", async () => {
+test("a guide tracks ticked steps, opens its first official page once and verifies the pasted key", async () => {
   stream = undefined;
+  // The vendor's check address: accepts only the right key, in the header the guide named.
+  const vendor = createServer((request, response) => {
+    response.writeHead(request.headers["x-n8n-api-key"] === "good-key" ? 200 : 401).end("{}");
+  });
+  await new Promise<void>((done) => vendor.listen(0, "127.0.0.1", done));
+  const port = (vendor.address() as { port: number }).port;
   const run = await launch();
   try {
     await expect.poll(() => Boolean(stream)).toBe(true);
@@ -284,7 +290,7 @@ test("a guide shows numbered steps, opens its first official page once and only 
       steps: [
         {
           action: "help.guide",
-          args: { topic: "n8n-api-key" },
+          args: { topic: "n8n API key for JARVIS automations" },
           risk: "LOW",
           mode: "allow",
           status: "RUNNING",
@@ -311,11 +317,47 @@ test("a guide shows numbered steps, opens its first official page once and only 
           ],
           sources: ["https://docs.n8n.io/api/authentication/"],
           where: ".env içindeki N8N_API_KEY= satırına yapıştır.",
+          check: {
+            env: "N8N_API_KEY",
+            verify: {
+              url: `http://127.0.0.1:${port}/api/v1/workflows?limit=1`,
+              in: "header",
+              name: "X-N8N-API-KEY",
+            },
+          },
         },
       ],
     });
     const card = run.page.locator("[data-panel=guide]");
     await expect(card.locator(".guide-steps li")).toHaveCount(2);
+    const status = card.locator(".guide-status");
+    await expect(status).toContainText("Bekliyorum");
+    await expect(card.locator(".guide-steps li").first()).toHaveAttribute("data-state", "active");
+    await card.locator(".guide-step").first().click();
+    await expect(card.locator(".guide-progress")).toHaveText("1/2 adım tamam");
+    await expect(card.locator(".guide-steps li").nth(1)).toHaveAttribute("data-state", "active");
+    // Another plan's update re-renders the HUD; the ticks and the field survive it.
+    send({ ...plan, id: "other-plan", status: "RUNNING" });
+    await expect(card.locator(".guide-progress")).toHaveText("1/2 adım tamam");
+    const field = card.locator(".guide-check input");
+    await expect(field).toHaveAttribute("type", "password");
+    await field.fill("bad-key");
+    await card.locator(".guide-check button").click();
+    await expect(status).toContainText("çalışmadı");
+    await expect(field).toHaveValue("");
+    expect(await readFile(run.file, "utf8")).not.toContain("N8N_API_KEY");
+    await field.fill("good-key");
+    await card.locator(".guide-check button").click();
+    await expect(status).toContainText("Doğrulandı");
+    await expect(card.locator(".guide-progress")).toHaveText("2/2 adım tamam");
+    await expect(field).toBeHidden();
+    const saved = await readFile(run.file, "utf8");
+    expect(saved).toContain("N8N_API_KEY=good-key");
+    expect(saved).toContain(`JARVIS_TOKEN=${coreSecret}`);
+    // The renderer never learns what .env holds, and cannot check a plan without a guide.
+    await expect(run.page.evaluate(() => window.jarvis.plans.guide("other-plan"))).rejects.toThrow(
+      "FORBIDDEN",
+    );
     await expect(card.locator(".guide-where")).toContainText("N8N_API_KEY");
     await expect(card.locator(".guide-sources")).toHaveText("Resmi kaynak: docs.n8n.io");
     await expect.poll(opened).toEqual(["http://127.0.0.1:5678/settings/api"]);
@@ -329,6 +371,7 @@ test("a guide shows numbered steps, opens its first official page once and only 
     ).rejects.toThrow("FORBIDDEN");
   } finally {
     await run.close();
+    vendor.close();
   }
 });
 

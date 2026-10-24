@@ -82,7 +82,10 @@ export class McpToolPort implements ToolPort {
       const text = (result.content ?? [])
         .flatMap((part) => (part.type === "text" ? [part.text] : []))
         .join("\n");
-      return { ok: !result.isError, text };
+      const images = (result.content ?? []).flatMap((part) =>
+        part.type === "image" ? [{ data: part.data, mimeType: part.mimeType }] : [],
+      );
+      return { ok: !result.isError, text, ...(images.length && { images }) };
     } catch (error) {
       // The child exited mid-call: the outcome is unknown; the next call starts a fresh child.
       if (this.#client !== client) throw new Error("MCP_CHANNEL_LOST", { cause: error });

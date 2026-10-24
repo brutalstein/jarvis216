@@ -80,6 +80,11 @@ export interface Bridge {
     cancel(id: string): Promise<void>;
     choose(id: string, index: number): Promise<PlanView>;
     open(url: string): Promise<void>;
+    // Without a value: test what .env holds. With one: test it, then save it and restart Core.
+    guide(
+      id: string,
+      value?: string,
+    ): Promise<{ state: "missing" | "rejected" | "present" | "verified"; restarting: boolean }>;
   };
   permissions: {
     get(): Promise<PermissionView>;

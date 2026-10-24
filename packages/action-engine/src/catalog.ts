@@ -361,10 +361,24 @@ const definitions: ActionDef[] = [
     "Show, from the vendor's official pages, the exact steps the operator must do (API key, " +
       "sign-in, OAuth connection, account setting) and open the page. Plan it whenever a request " +
       "needs something only the operator can provide or an action is missing because it is not " +
-      "configured. Known topics: n8n-api-key (lets JARVIS write n8n automations), youtube-n8n " +
-      "(YouTube uploads from n8n), gemini-api-key, openrouter-api-key, anthropic-api-key, " +
-      "github-cli; any other topic is researched on official sites.",
+      "configured. Any vendor or service works: the topic is researched live on its official " +
+      "site. Write the topic as the need in plain words (e.g. 'n8n API key for JARVIS " +
+      "automations', 'connect YouTube OAuth2 credential in n8n', 'Spotify client id').",
     { topic: label(200) },
+  ],
+  [
+    "computer.use",
+    "integration",
+    "HIGH",
+    "Bilgisayarda istenen işi baştan sona kendisi yap (uygulamalar, ayarlar, dosyalar, tarayıcı)",
+    "Do a whole task on the operator's computer by itself: any desktop app, window, setting, " +
+      "file dialog or the operator's signed-in Chrome, looking at the screen and acting step by " +
+      "step until it is done. Plan it for anything to do on this computer that no narrower " +
+      "action covers, or when a narrower one failed. Write the task as one complete goal in " +
+      "plain words with every detail the operator gave (e.g. 'open Spotify and play my Discover " +
+      "Weekly', 'turn on dark mode in Windows settings', 'rename the newest screenshot on the " +
+      "Desktop to receipt.png').",
+    { task: label(2000) },
   ],
   [
     "memory.save",

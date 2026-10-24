@@ -17,7 +17,7 @@ export const interactiveBrowserActionSchemas = {
   "browser.save_key": z.strictObject({ name: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]{0,59}$/) }),
 };
 // API keys and tokens as sites show them: known prefixes, or long mixed letter-digit runs.
-const keyShaped =
+export const keyShaped =
   /\b(?:sk|pk|rk|ghp|gho|ghs|github_pat|xox[abpr]|nvapi|hf|glpat)[-_][A-Za-z0-9_-]{16,}|\bAIza[A-Za-z0-9_-]{30,}|\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{32,}\b/g;
 // "*" opens every public https site; this machine and its local network stay out of reach.
 const privateHost =

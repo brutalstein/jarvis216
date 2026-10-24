@@ -1254,6 +1254,73 @@ body:has([data-hud-card]) .presence {
   color: var(--ink-soft);
   font-size: 0.85em;
 }
+/* Steps are ticked by the operator; the next one is lit, finished ones turn mint. */
+.guide-step {
+  all: unset;
+  cursor: pointer;
+  border-radius: var(--radius-input);
+  transition: color 200ms var(--ease);
+}
+.guide-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.guide-steps li[data-state="active"]::before {
+  background: var(--accent);
+  color: var(--canvas);
+}
+.guide-steps li[data-state="done"]::before {
+  content: "✓";
+  background: color-mix(in oklab, var(--mint) 24%, transparent);
+  color: var(--mint);
+}
+.guide-steps li[data-state="done"] .guide-step {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+.guide-progress {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85em;
+}
+.guide-check {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.guide-check label,
+.guide-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.85em;
+}
+.guide-check input {
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.guide-check input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.guide-check[data-check="verified"] .guide-status {
+  color: var(--mint);
+  font-weight: 600;
+}
+.guide-check[data-check="rejected"] .guide-status {
+  color: var(--rose);
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-step {
+    transition: none;
+  }
+}
 /* News: in-app cards, one column in the standard stage, two when the stage is wide. */
 .news-grid {
   display: grid;
