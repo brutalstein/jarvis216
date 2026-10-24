@@ -1,6 +1,6 @@
 {
   "name": "jarvis-desktop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "JARVIS operator desktop: presence, captions and display cards over the local voice service.",
   "author": "brutalstein",
