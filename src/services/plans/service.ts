@@ -33,6 +33,8 @@ import { statusSay, workingMemory } from "./working-memory.js";
 export class PlanService extends EventEmitter {
   #seen = new Map<string, string>();
   #finishing = new Set<string>();
+  // Plans being cancelled: refresh would read their cancelled steps as a failure.
+  #cancelling = new Set<string>();
   // When Core first saw each step task running, and when each plan's finisher started.
   #stepStarted = new Map<string, number>();
   #timers = new Set<ReturnType<typeof setTimeout>>();
@@ -596,20 +598,25 @@ export class PlanService extends EventEmitter {
   }
 
   async #cancel(plan: PlanRow, silent: boolean): Promise<void> {
-    for (const taskId of plan.task_ids) {
-      // A task already settled or uncertain keeps its state.
-      await this.options.tasks.cancel(taskId).catch(() => {});
-      this.options.onCancel(taskId);
+    this.#cancelling.add(plan.id);
+    try {
+      for (const taskId of plan.task_ids) {
+        // A task already settled or uncertain keeps its state.
+        await this.options.tasks.cancel(taskId).catch(() => {});
+        this.options.onCancel(taskId);
+      }
+      const uncertain = (await this.#stepTasks(plan)).some(
+        (task) => task?.status === "RECOVERY_REQUIRED",
+      );
+      await this.#settle(
+        plan,
+        uncertain ? "RECOVERY_REQUIRED" : "CANCELLED",
+        { say: narrate({ type: uncertain ? "plan-uncertain" : "cancelled" }, plan.lang) },
+        { narrated: silent },
+      );
+    } finally {
+      this.#cancelling.delete(plan.id);
     }
-    const uncertain = (await this.#stepTasks(plan)).some(
-      (task) => task?.status === "RECOVERY_REQUIRED",
-    );
-    await this.#settle(
-      plan,
-      uncertain ? "RECOVERY_REQUIRED" : "CANCELLED",
-      { say: narrate({ type: uncertain ? "plan-uncertain" : "cancelled" }, plan.lang) },
-      { narrated: silent },
-    );
   }
 
   async #refresh(): Promise<boolean> {
@@ -650,7 +657,7 @@ export class PlanService extends EventEmitter {
   }
 
   #detach(plan: PlanRow, work: () => Promise<void>): void {
-    if (this.#finishing.has(plan.id)) return;
+    if (this.#finishing.has(plan.id) || this.#cancelling.has(plan.id)) return;
     this.#finishing.add(plan.id);
     void work()
       .catch(() => {
