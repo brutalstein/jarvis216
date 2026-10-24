@@ -33,6 +33,7 @@ export async function launch(
   return {
     app,
     page,
+    file,
     async close() {
       await app.close();
       await rm(dir, { recursive: true, force: true });

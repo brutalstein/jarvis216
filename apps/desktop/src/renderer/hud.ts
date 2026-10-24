@@ -30,9 +30,11 @@ export function liveText(progress: Progress, now: number): string {
       ? `${progress.detail} açılıyor${position}`
       : progress.detail && progress.stage === "read"
         ? `${progress.detail} okundu${position}`
-        : progress.detail
-          ? `${progress.detail} okunuyor${position}`
-          : `${progress.step}/${progress.steps}. adım · ${progress.action}`;
+        : progress.detail && progress.stage === "acting"
+          ? `${progress.detail} · ${progress.index ?? 1}. hamle`
+          : progress.detail
+            ? `${progress.detail} okunuyor${position}`
+            : `${progress.step}/${progress.steps}. adım · ${progress.action}`;
   const left =
     progress.etaAt === undefined
       ? ""
@@ -56,6 +58,14 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, text = "", classNam
   return element;
 }
 
+type GuidePanel = Extract<PlanView["panels"][number], { type: "guide" }>;
+const guideStates: Record<string, string> = {
+  missing: "Bekliyorum: değeri alınca buraya yapıştır (ya da .env'e yaz, kendim fark ederim).",
+  rejected: "Bu değer çalışmadı. Yenisini oluşturup tekrar yapıştır.",
+  present: "Kaydedildi. Bu değer için resmi bir test adresi yok; JARVIS onu kullanacak.",
+  verified: "Doğrulandı: değer çalışıyor, tüm adımlar tamam.",
+};
+
 export function hud(root: HTMLElement, compact = false) {
   const stage = node("div", "", "hud");
   root.prepend(stage);
@@ -67,6 +77,95 @@ export function hud(root: HTMLElement, compact = false) {
   const plans = new Map<string, PlanView>();
   const busy = new Set<string>();
   const watched = new Set<string>();
+  // A guide's ticked steps and its check outlive re-renders (and keep a half-typed value).
+  const trackers = new Map<string, { steps: HTMLElement; check?: HTMLElement }>();
+
+  function tracker(id: string, panel: GuidePanel) {
+    const cached = trackers.get(id);
+    if (cached) return cached;
+    const steps = node("div", "", "guide-track");
+    const list = node("ol", "", "guide-steps");
+    const progress = node("p", "", "guide-progress");
+    const done = new Set<number>();
+    const items = panel.steps.map((text, index) => {
+      const item = node("li");
+      const tick = node("button", text, "guide-step");
+      tick.type = "button";
+      tick.addEventListener("click", () => {
+        if (!done.delete(index)) done.add(index);
+        paint();
+      });
+      item.style.setProperty("--i", String(index));
+      item.append(tick);
+      list.append(item);
+      return { item, tick };
+    });
+    function paint() {
+      const active = panel.steps.findIndex((_, index) => !done.has(index));
+      items.forEach(({ item, tick }, index) => {
+        item.dataset.state = done.has(index) ? "done" : index === active ? "active" : "todo";
+        tick.setAttribute("aria-pressed", String(done.has(index)));
+      });
+      progress.textContent = `${done.size}/${panel.steps.length} adım tamam`;
+    }
+    paint();
+    steps.append(list, progress);
+    const entry: { steps: HTMLElement; check?: HTMLElement } = { steps };
+    trackers.set(id, entry);
+    const check = panel.check;
+    // The edge overlay mirrors plans; only the main window checks and saves.
+    if (!check || compact) return entry;
+    const form = node("form", "", "guide-check");
+    const input = node("input");
+    input.type = "password";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.id = `guide-${id}`;
+    input.placeholder = check.env;
+    const label = node("label", `${check.env} değerini buraya yapıştır`);
+    label.htmlFor = input.id;
+    const submit = node("button", check.verify ? "Kaydet ve doğrula" : "Kaydet", "btn primary");
+    submit.type = "submit";
+    const status = node("p", "", "guide-status");
+    status.setAttribute("aria-live", "polite");
+    form.append(label, input, submit, status);
+    entry.check = form;
+    let state = "";
+    let checking = false;
+    const run = async (value?: string) => {
+      if (checking) return;
+      checking = true;
+      try {
+        const result = await window.jarvis.plans.guide(id, value);
+        state = result.state;
+        form.dataset.check = state;
+        status.textContent =
+          guideStates[state] + (result.restarting ? " JARVIS yeni değerle yeniden başlıyor." : "");
+        if (state === "verified") {
+          for (let index = 0; index < panel.steps.length; index++) done.add(index);
+          paint();
+          input.hidden = submit.hidden = label.hidden = true;
+        }
+      } catch {
+        status.textContent = "Kontrol edilemedi. Değeri kontrol edip yeniden dene.";
+      } finally {
+        checking = false;
+      }
+    };
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const value = input.value.trim();
+      input.value = "";
+      if (value) void run(value);
+    });
+    void run();
+    // A value typed into .env by hand is noticed too; polling stops once the plan leaves the HUD.
+    const timer = setInterval(() => {
+      if (trackers.get(id) !== entry) clearInterval(timer);
+      else if (form.isConnected && (state === "" || state === "missing")) void run();
+    }, 5000);
+    return entry;
+  }
 
   function button(
     label: string,
@@ -239,13 +338,8 @@ export function hud(root: HTMLElement, compact = false) {
       } else if (panel.type === "guide") {
         card.dataset.panel = "guide";
         card.append(node("h3", panel.title, "guide-title"));
-        const steps = node("ol", "", "guide-steps");
-        panel.steps.forEach((step, index) => {
-          const item = node("li", step);
-          item.style.setProperty("--i", String(index));
-          steps.append(item);
-        });
-        card.append(steps);
+        const track = tracker(plan.id, panel);
+        card.append(track.steps);
         if (panel.where) card.append(node("p", panel.where, "guide-where"));
         const links = node("div", "", "guide-links");
         panel.links.forEach((link, index) => {
@@ -260,6 +354,7 @@ export function hud(root: HTMLElement, compact = false) {
           links.append(open);
         });
         card.append(links);
+        if (track.check) card.append(track.check);
         const hosts = [...new Set(panel.sources.map((source) => new URL(source).hostname))];
         card.append(node("p", `Resmi kaynak: ${hosts.join(", ")}`, "guide-sources"));
       }
@@ -290,7 +385,10 @@ export function hud(root: HTMLElement, compact = false) {
         ) ??
         [...plans.values()].find((item) => item.kind === "info") ??
         plans.values().next().value;
-      if (old) plans.delete(old.id);
+      if (old) {
+        plans.delete(old.id);
+        trackers.delete(old.id);
+      }
     }
     indicator.hidden = ![...plans.values()].some(
       (item) => item.kind === "desktop" && item.status === "RUNNING",

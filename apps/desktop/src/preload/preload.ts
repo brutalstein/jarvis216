@@ -24,6 +24,7 @@ const bridge: Bridge = {
     cancel: (id) => ipcRenderer.invoke("plans:cancel", id),
     choose: (id, index) => ipcRenderer.invoke("plans:choose", id, index),
     open: (url) => ipcRenderer.invoke("plans:open", url),
+    guide: (id, value) => ipcRenderer.invoke("guide:check", id, value),
   },
   permissions: {
     get: () => ipcRenderer.invoke("permissions:get"),

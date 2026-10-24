@@ -30,7 +30,7 @@ const Output = z.object({
     .catch(undefined),
 });
 
-function failure(text: string): ProviderFailure {
+export function failure(text: string): ProviderFailure {
   if (/organization has disabled Claude subscription access/i.test(text))
     return new ProviderFailure("policy-denied", false, false);
   if (/\/login|not logged in|authenticat|oauth/i.test(text))

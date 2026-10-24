@@ -8,7 +8,11 @@ export type Step = {
   when?: { step: number; contains: string; not?: boolean };
 };
 export type CompiledStep = Step & { risk: Risk; kind: Kind };
-export type ToolResult = { ok: boolean; text: string };
+export type ToolResult = {
+  ok: boolean;
+  text: string;
+  images?: { data: string; mimeType: string }[];
+};
 export interface ToolPort {
   call(name: string, args: Record<string, unknown>, signal: AbortSignal): Promise<ToolResult>;
 }

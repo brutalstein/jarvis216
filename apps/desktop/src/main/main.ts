@@ -17,6 +17,7 @@ import {
 import { autoUpdater } from "electron-updater";
 import type { PermissionChange, PlanView, UiEvent, Voice } from "../shared";
 import { locateEnvFile, readOperatorEnv } from "./env";
+import { checkGuide, restartCore } from "./guide";
 import { streamPlans } from "./plans";
 import { desktopUpdates } from "./updates";
 import { startVoiceService } from "./voice";
@@ -393,6 +394,24 @@ app.whenReady().then(async () => {
     );
     if (!known) throw new Error("FORBIDDEN");
     await shell.openExternal(url);
+  });
+  // The check comes from Core's own plan, never the renderer; the pasted value goes only to the
+  // operator's .env and to the address the vendor's pages named.
+  ipcMain.handle("guide:check", async (event, id: unknown, value: unknown) => {
+    const panel =
+      typeof id === "string"
+        ? plans.get(id)?.panels.find((item) => item.type === "guide")
+        : undefined;
+    if (
+      !allowed(event.sender) ||
+      panel?.type !== "guide" ||
+      !panel.check ||
+      !envFile ||
+      (value !== undefined && typeof value !== "string")
+    )
+      throw new Error("FORBIDDEN");
+    const result = await checkGuide(envFile, panel.check, value);
+    return { state: result.state, restarting: result.saved && restartCore(envFile) };
   });
   ipcMain.handle("voice", async (event) => {
     if (!allowed(event.sender) || event.sender !== main.webContents) throw new Error("FORBIDDEN");

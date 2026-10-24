@@ -160,6 +160,42 @@ and Downloads unless `JARVIS_FILE_ROOTS` lists other folders under the user prof
 inherits only system variables, never Core's secrets. If it crashes Core restarts it once; the
 running step is then uncertain and is not replayed.
 
+## Computer use (`computer.use`)
+
+`computer.use {task}` does a whole task on this computer: any desktop app, window, setting or file
+dialog, and the operator's signed-in Chrome. It runs through
+[munim-computer-use](https://github.com/munimtechnologies/munim-computer-use) 0.7.3, an MCP server
+that reads each app's accessibility tree with stable element ids (OCR when an app has none), acts
+through UI Automation without the operator's pointer where the app allows it, and waits for the
+app to settle after each action.
+
+```dotenv
+ENABLE_COMPUTER_USE=true
+COMPUTER_USE_CLAUDE_MODEL=
+COMPUTER_USE_GEMINI_MODELS=
+COMPUTER_USE_COMMAND_JSON=
+```
+
+- Who drives it: Claude Code on the operator's subscription first (`CLAUDE_CODE_PATH`,
+  `COMPUTER_USE_CLAUDE_MODEL` or `CLAUDE_CODE_MODEL`), headless with munim as its only tools
+  (`--tools ""`, `--strict-mcp-config`, `--allowedTools mcp__munim`, `dontAsk`) and a structured
+  success/summary report. If Claude cannot start (usage limit, login) before its first move, the
+  Gemini models (`COMPUTER_USE_GEMINI_MODELS`, default `GEMINI_MODEL,gemini-3.5-flash-lite`) and
+  then the free OpenRouter/NVIDIA models drive munim's tools from Core, each taking over the same
+  conversation when the previous one fails. A spent Gemini daily quota hands over at once; a
+  per-minute limit waits. Once Claude has acted, nothing starts over.
+- Every task is HIGH risk: the operator approves each one. The model is told not to buy, pay,
+  delete or send beyond the task, never to type passwords (`browser_request_credentials` lets the
+  operator sign in), and to leave the operator's open documents alone.
+- Which apps and sites it may touch is munim's `policy.json` (allow/ask/block per app or site) in
+  `%LOCALAPPDATA%\munim-computer-use`; `ask` prompts the operator once per task.
+- The `browser_*` tools need munim's Chrome extension and `npx -y munim-computer-use
+  install-native-host`; without them the model drives the browser window like any other app.
+- What the screen shows reaches the driving model. On the Core-driven path key-shaped text is
+  masked before it does; Claude Code reads munim's results itself. Keep secrets off screen.
+- Progress streams as `acting` moves ("click · notepad · 3. hamle"). The report is the agent's own
+  after looking at the screen, so it is not an independent postcondition.
+
 ## News (RSS)
 
 ```dotenv
@@ -178,16 +214,30 @@ Always on, no configuration. When a request needs something only the operator ca
 key, a sign-in, an OAuth connection), JARVIS plans the LOW-risk `help.guide` action. It never
 creates accounts, keys or credentials itself.
 
-- Known topics (`n8n-api-key`, `youtube-n8n`, `gemini-api-key`, `openrouter-api-key`,
-  `anthropic-api-key`, `github-cli`) use curated steps checked against each vendor's docs, with
-  the docs listed as sources. They need no model or network.
-- Any other topic is researched: a text model names the vendor's official domain and its doc
-  pages; Core reads those pages itself (HTTPS, public addresses only, every redirect on that
-  domain, menus stripped) and a model writes the steps only from that text. Links survive only
-  if they open on the official domain; buttons show the page's real title. The configured text
-  models are tried best first, so one rate-limited model is skipped.
-- The desktop shows numbered steps, where the value goes, the source domains and one button per
-  page, and opens the first page by itself when the plan finishes.
+- There is no fixed topic list: every topic is researched live. A text model names the vendor's
+  official domain and its doc pages; Core reads those pages itself (HTTPS, public addresses only,
+  every redirect on that domain, menus stripped) and a model writes the steps only from that
+  text. The vendor is its whole registrable domain, so docs moved to a sibling subdomain still
+  count. Guessed pages that moved or are blocked fall back to the vendor's own front pages
+  (`docs.`, `developers.`, `developer.`, bare), and one more hop follows the pages those pages
+  link: the model's pick, or else the links whose words best match the topic. The configured text models are tried best
+  first, so one rate-limited model is skipped; a finished guide is reused for six hours.
+- Buttons open only addresses the official pages themselves link (labelled as the vendor labels
+  them) or this machine's n8n. The model also sees the names (never the values) of keys already
+  in `.env`, so the guide names the right `.env` line.
+- When the operator must obtain a value (a key, token or id), the guide carries a check: its
+  `.env` name and, when the vendor documents one, a GET that only succeeds with a valid value.
+  The check address must be on the official domain, a host its pages name, or the local n8n;
+  Core's own secrets (`JARVIS_*`, `POSTGRES_*`, `DATABASE_*`, `VOICE_*`) are never a target.
+- The desktop shows the steps as a checklist the operator ticks (the next step is lit), where the
+  value goes, the source domains and one button per page, and opens the first page by itself.
+  A password field takes the obtained value: the desktop tests it against the vendor first (a
+  made-up value is sent before it and must be refused, so a page that answers anything never
+  counts as proof),
+  saves it to the operator's `.env` only if the vendor did not refuse it, and restarts Core with
+  `scripts/jarvis-services.ps1`. A value typed into `.env` by hand is noticed and tested too. The
+  value never reaches Core's models or the renderer's view of `.env`. Outcomes the desktop cannot
+  test (an OAuth connection made inside another app) stay as ticked steps.
 
 ## Long-term memory
 

@@ -5,7 +5,7 @@ import type { ExecutionResult, Executor, Task } from "../core/contracts.js";
 import { ProviderFailure } from "../core/routing.js";
 import { networkCode, neverDispatched } from "./http.js";
 
-async function classify<T>(fn: () => Promise<T>): Promise<T> {
+export async function classify<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (error) {

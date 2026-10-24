@@ -92,6 +92,11 @@
       "kind": "desktop"
     },
     {
+      "id": "computer.use",
+      "risk": "HIGH",
+      "kind": "integration"
+    },
+    {
       "id": "file.copy",
       "risk": "MEDIUM",
       "kind": "desktop"
@@ -523,6 +528,13 @@
       "expectedMode": "ask"
     },
     {
+      "id": "custom-ask/computer.use",
+      "policy": "custom-ask",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "custom-ask/memory.save",
       "policy": "custom-ask",
       "action": "memory.save",
@@ -835,6 +847,13 @@
       "policy": "custom-allow",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "custom-allow/computer.use",
+      "policy": "custom-allow",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -1153,6 +1172,13 @@
       "expectedMode": "deny"
     },
     {
+      "id": "custom-deny/computer.use",
+      "policy": "custom-deny",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "deny"
+    },
+    {
       "id": "custom-deny/memory.save",
       "policy": "custom-deny",
       "action": "memory.save",
@@ -1465,6 +1491,13 @@
       "policy": "allow-3600000-active",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-3600000-active/computer.use",
+      "policy": "allow-3600000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -1783,6 +1816,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-3600000-expired/computer.use",
+      "policy": "allow-3600000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-3600000-expired/memory.save",
       "policy": "allow-3600000-expired",
       "action": "memory.save",
@@ -2095,6 +2135,13 @@
       "policy": "allow-28800000-active",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-28800000-active/computer.use",
+      "policy": "allow-28800000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -2413,6 +2460,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-28800000-expired/computer.use",
+      "policy": "allow-28800000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-28800000-expired/memory.save",
       "policy": "allow-28800000-expired",
       "action": "memory.save",
@@ -2725,6 +2779,13 @@
       "policy": "allow-86400000-active",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "allow-86400000-active/computer.use",
+      "policy": "allow-86400000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -3043,6 +3104,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "allow-86400000-expired/computer.use",
+      "policy": "allow-86400000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "allow-86400000-expired/memory.save",
       "policy": "allow-86400000-expired",
       "action": "memory.save",
@@ -3356,6 +3424,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded/computer.use",
+      "policy": "preset-guarded",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded/memory.save",
@@ -3673,6 +3748,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-3600000-active/computer.use",
+      "policy": "preset-guarded-3600000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-3600000-active/memory.save",
       "policy": "preset-guarded-3600000-active",
       "action": "memory.save",
@@ -3986,6 +4068,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-3600000-expired/computer.use",
+      "policy": "preset-guarded-3600000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-3600000-expired/memory.save",
@@ -4303,6 +4392,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-28800000-active/computer.use",
+      "policy": "preset-guarded-28800000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-28800000-active/memory.save",
       "policy": "preset-guarded-28800000-active",
       "action": "memory.save",
@@ -4616,6 +4712,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-28800000-expired/computer.use",
+      "policy": "preset-guarded-28800000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-28800000-expired/memory.save",
@@ -4933,6 +5036,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-guarded-86400000-active/computer.use",
+      "policy": "preset-guarded-86400000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-guarded-86400000-active/memory.save",
       "policy": "preset-guarded-86400000-active",
       "action": "memory.save",
@@ -5246,6 +5356,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-guarded-86400000-expired/computer.use",
+      "policy": "preset-guarded-86400000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-guarded-86400000-expired/memory.save",
@@ -5563,6 +5680,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted/computer.use",
+      "policy": "preset-trusted",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted/memory.save",
       "policy": "preset-trusted",
       "action": "memory.save",
@@ -5876,6 +6000,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-3600000-active/computer.use",
+      "policy": "preset-trusted-3600000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-3600000-active/memory.save",
@@ -6193,6 +6324,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-3600000-expired/computer.use",
+      "policy": "preset-trusted-3600000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-3600000-expired/memory.save",
       "policy": "preset-trusted-3600000-expired",
       "action": "memory.save",
@@ -6506,6 +6644,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-28800000-active/computer.use",
+      "policy": "preset-trusted-28800000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-28800000-active/memory.save",
@@ -6823,6 +6968,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-28800000-expired/computer.use",
+      "policy": "preset-trusted-28800000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-28800000-expired/memory.save",
       "policy": "preset-trusted-28800000-expired",
       "action": "memory.save",
@@ -7136,6 +7288,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-trusted-86400000-active/computer.use",
+      "policy": "preset-trusted-86400000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-trusted-86400000-active/memory.save",
@@ -7453,6 +7612,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-trusted-86400000-expired/computer.use",
+      "policy": "preset-trusted-86400000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-trusted-86400000-expired/memory.save",
       "policy": "preset-trusted-86400000-expired",
       "action": "memory.save",
@@ -7765,6 +7931,13 @@
       "policy": "preset-autonomous",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous/computer.use",
+      "policy": "preset-autonomous",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -8083,6 +8256,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-active/computer.use",
+      "policy": "preset-autonomous-3600000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "allow"
+    },
+    {
       "id": "preset-autonomous-3600000-active/memory.save",
       "policy": "preset-autonomous-3600000-active",
       "action": "memory.save",
@@ -8398,6 +8578,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-3600000-expired/computer.use",
+      "policy": "preset-autonomous-3600000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-3600000-expired/memory.save",
       "policy": "preset-autonomous-3600000-expired",
       "action": "memory.save",
@@ -8710,6 +8897,13 @@
       "policy": "preset-autonomous-28800000-active",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-28800000-active/computer.use",
+      "policy": "preset-autonomous-28800000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -9028,6 +9222,13 @@
       "expectedMode": "allow"
     },
     {
+      "id": "preset-autonomous-28800000-expired/computer.use",
+      "policy": "preset-autonomous-28800000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
+    },
+    {
       "id": "preset-autonomous-28800000-expired/memory.save",
       "policy": "preset-autonomous-28800000-expired",
       "action": "memory.save",
@@ -9340,6 +9541,13 @@
       "policy": "preset-autonomous-86400000-active",
       "action": "help.guide",
       "risk": "LOW",
+      "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-active/computer.use",
+      "policy": "preset-autonomous-86400000-active",
+      "action": "computer.use",
+      "risk": "HIGH",
       "expectedMode": "allow"
     },
     {
@@ -9656,6 +9864,13 @@
       "action": "help.guide",
       "risk": "LOW",
       "expectedMode": "allow"
+    },
+    {
+      "id": "preset-autonomous-86400000-expired/computer.use",
+      "policy": "preset-autonomous-86400000-expired",
+      "action": "computer.use",
+      "risk": "HIGH",
+      "expectedMode": "ask"
     },
     {
       "id": "preset-autonomous-86400000-expired/memory.save",
