@@ -204,14 +204,14 @@ export function chatMessages(system: string, contents: Content[]): ChatMessage[]
       });
       continue;
     }
-    let n = 0;
-    for (const part of parts)
-      if (part.functionResponse)
-        messages.push({
-          role: "tool",
-          tool_call_id: part.functionResponse.id ?? pending[n++] ?? `call_${index}_${n}`,
-          content: JSON.stringify(part.functionResponse.response ?? {}),
-        });
+    // Results answer the calls in order, so the nth result pairs with the nth call.
+    const results = parts.flatMap((part) => (part.functionResponse ? [part.functionResponse] : []));
+    for (const [n, result] of results.entries())
+      messages.push({
+        role: "tool",
+        tool_call_id: result.id ?? pending[n] ?? `call_${index}_${n}`,
+        content: JSON.stringify(result.response ?? {}),
+      });
     const images = parts.flatMap((part) =>
       part.inlineData
         ? [
