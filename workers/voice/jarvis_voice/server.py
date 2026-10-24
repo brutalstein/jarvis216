@@ -14,6 +14,8 @@ from aiohttp import web
 
 from jarvis_voice.brain import Brain
 from jarvis_voice.enrollment import Enrollment
+from jarvis_voice.events import event
+from jarvis_voice.speaker import DEFAULT_THRESHOLD
 
 
 def create_app(token: str, enrollment: Enrollment) -> web.Application:
@@ -202,6 +204,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                             f"VOICE_PIPELINE_FAILED: {type(error).__name__}: {error}",
                             file=sys.stderr,
                         )
+                        event("pipeline.failed", error=type(error).__name__)
 
                 task.add_done_callback(finished)
 
@@ -331,8 +334,14 @@ async def main() -> None:
     # Vendor debug logs include transcripts. Keep them out of persistent process logs.
     logger.remove()
     logger.add(sys.stderr, level="ERROR", format="{message}")
+    # Vendor errors reach voice.log by origin only: their messages may quote speech.
+    logger.add(
+        lambda message: event("vendor.error", origin=message.record["name"]),
+        level="ERROR",
+    )
     enrollment = Enrollment(
-        Path(os.environ["VOICE_DATA_DIR"]), float(os.environ.get("VOICE_SPEAKER_THRESHOLD", "0.7"))
+        Path(os.environ["VOICE_DATA_DIR"]),
+        float(os.environ.get("VOICE_SPEAKER_THRESHOLD") or DEFAULT_THRESHOLD),
     )
     runner = web.AppRunner(create_app(os.environ["VOICE_TOKEN"], enrollment), access_log=None)
     await runner.setup()

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from jarvis_voice.speaker import SpeakerGate
+from jarvis_voice.speaker import DEFAULT_THRESHOLD, SpeakerGate
 
 
 class SpeakerGateTest(unittest.TestCase):
@@ -26,6 +26,29 @@ class SpeakerGateTest(unittest.TestCase):
         self.assertTrue((self.store / "operator.npy").exists())
         self.assertTrue(SpeakerGate(self.store, threshold=0.6).accepts(self.voice))
         self.assertFalse(self.gate.accepts(np.array([0.0, 0.0, 1.0])))
+
+    def test_default_accepts_the_operator_saying_only_the_name(self) -> None:
+        # Measured ECAPA cosine: the enrolled speaker's own 0.8-1.2 s clips scored 0.29-0.82,
+        # other voices 0.04-0.17 on average. 0.7 turned the operator away after enrollment.
+        gate = SpeakerGate(self.store, threshold=DEFAULT_THRESHOLD)
+        gate.enroll([np.array([1.0, 0.0])])
+        self.assertTrue(gate.accepts(np.array([0.3, 0.954])))
+        self.assertFalse(gate.accepts(np.array([0.1, 0.995])))
+
+    def test_the_operators_own_turns_adapt_the_print_to_the_current_microphone(self) -> None:
+        # A Bluetooth headset put the operator's follow-ups at 0.21-0.25 against a print made
+        # on another microphone; their own named turns on that headset match them far better.
+        gate = SpeakerGate(self.store, threshold=DEFAULT_THRESHOLD)
+        gate.enroll([np.array([1.0, 0.0, 0.0])])
+        headset = np.array([0.22, 0.9, 0.38])
+        self.assertFalse(gate.accepts(headset))
+        gate.adapt(np.array([0.3, 0.85, 0.43]))
+        self.assertTrue(gate.accepts(headset))
+        self.assertFalse(gate.accepts(np.array([0.0, -0.6, 0.8])))
+        # Only this session adapts; nothing new is saved.
+        self.assertFalse(SpeakerGate(self.store, DEFAULT_THRESHOLD).accepts(headset))
+        gate.enroll([np.array([1.0, 0.0, 0.0])])
+        self.assertFalse(gate.accepts(headset))
 
     def test_delete_forgets_the_voice(self) -> None:
         self.gate.enroll([self.voice])

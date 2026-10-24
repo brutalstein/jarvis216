@@ -102,6 +102,8 @@ describe("conversation prompt and providers", () => {
     expect(prompt).toMatch(/never claim/i);
     expect(prompt).not.toMatch(/follow-up window/i);
     expect(conversationPrompt({ ...input, followUp: true })).toMatch(/follow-up window/i);
+    expect(prompt).not.toMatch(/recognition was unsure/i);
+    expect(conversationPrompt({ ...input, uncertain: true })).toMatch(/recognition was unsure/i);
   });
   it("keeps the leading part identical across turns so providers can cache it", () => {
     const first = conversationPromptParts({

@@ -13,6 +13,8 @@ export function conversationRoutes(
       .strictObject({
         utterance: z.string().trim().min(1).max(4000),
         followUp: z.boolean().default(false),
+        // Speech recognition doubted the words; JARVIS confirms its reading before acting.
+        uncertain: z.boolean().default(false),
       })
       .parse(request.body);
     // A turn may wait longer than the server-wide 10 s socket idle limit (injected test

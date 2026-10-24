@@ -9,6 +9,8 @@ export async function startVoiceService(options: {
   coreUrl: string;
   coreToken: string;
   dataDir: string;
+  // The operator .env's VOICE_SPEAKER_THRESHOLD; the worker's default when unset.
+  threshold?: string;
   onExit?(): void;
 }): Promise<Voice & { stop(): void }> {
   const token = randomBytes(32).toString("hex");
@@ -37,6 +39,7 @@ export async function startVoiceService(options: {
     PYTHONIOENCODING: "utf-8",
     PYTHONUNBUFFERED: "1",
   });
+  if (options.threshold) env.VOICE_SPEAKER_THRESHOLD = options.threshold;
   const child = spawn(
     "uv",
     [

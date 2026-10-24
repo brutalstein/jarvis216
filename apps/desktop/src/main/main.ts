@@ -348,6 +348,7 @@ app.whenReady().then(async () => {
       repoRoot,
       ...env,
       dataDir: process.env.VOICE_DATA_DIR ?? join(repoRoot, "data/voice"),
+      threshold: operator?.values.VOICE_SPEAKER_THRESHOLD,
       onExit: () => {
         voiceFailed = !quitting;
         service = undefined;

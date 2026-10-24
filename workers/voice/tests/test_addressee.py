@@ -1,6 +1,6 @@
 import unittest
 
-from jarvis_voice.addressee import FollowUpWindow, is_named
+from jarvis_voice.addressee import FollowUpWindow, is_named, unfinished
 
 
 class IsNamedTest(unittest.TestCase):
@@ -24,6 +24,25 @@ class IsNamedTest(unittest.TestCase):
         for text in ["servis geldi mi", "Travis Scott", "bugün hava güzel"]:
             with self.subTest(text=text):
                 self.assertFalse(is_named(text))
+
+
+class UnfinishedTest(unittest.TestCase):
+    def test_a_bare_name_or_a_dangling_word_waits_for_the_rest(self) -> None:
+        for text in [
+            "Jarvis.",
+            "Jarvis,",
+            "Jarvis, bana",
+            "müziği aç ve",
+            "Jarvis, şey...",
+            "Jarvis -",
+        ]:
+            with self.subTest(text=text):
+                self.assertTrue(unfinished(text))
+
+    def test_a_whole_request_does_not(self) -> None:
+        for text in ["Jarvis, saat kaç?", "Jarvis müziği aç.", "peki yarın", "Jarvis kim o"]:
+            with self.subTest(text=text):
+                self.assertFalse(unfinished(text))
 
 
 class FollowUpWindowTest(unittest.TestCase):

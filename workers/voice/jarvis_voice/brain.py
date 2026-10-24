@@ -25,8 +25,9 @@ from pipecat.frames.frames import (
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
-from jarvis_voice.addressee import FollowUpWindow, is_named
+from jarvis_voice.addressee import FollowUpWindow, is_named, unfinished
 from jarvis_voice.core_client import FALLBACK, Turn
+from jarvis_voice.events import event
 
 Kind = Literal["progress", "outcome"]
 FILLERS = {
@@ -36,10 +37,17 @@ FILLERS = {
 # A progress line older than this says something no longer true; outcomes are always spoken.
 PROGRESS_TTL_S = 12.0
 QUEUE_LIMIT = 8
+# Whisper's mean token log-probability below which the words may be misheard (clear speech
+# measured -0.2 to -0.8, garbled -1.2 to -1.4); Core then confirms what it understood.
+UNSURE_LOGPROB = -0.9
+# The longest an unfinished sentence waits while the operator is still talking.
+SPEAKING_LIMIT_S = 8.0
 
 
 class Core(Protocol):
-    async def turn(self, utterance: str, follow_up: bool) -> Turn | None: ...
+    async def turn(
+        self, utterance: str, follow_up: bool, uncertain: bool = False
+    ) -> Turn | None: ...
 
 
 @dataclass
@@ -65,6 +73,8 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         hold_s: float = 1.5,
         # Pause between JARVIS's own sentences so the operator can come in.
         gap_s: float = 0.6,
+        # How long an unfinished sentence ("Jarvis, bana ...") waits for the rest.
+        continue_s: float = 1.5,
     ) -> None:
         super().__init__()
         self.core = core
@@ -80,6 +90,11 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         self.filler_s = filler_s
         self.hold_s = hold_s
         self.gap_s = gap_s
+        self.continue_s = continue_s
+        # The request JARVIS has not answered yet: text, follow-up, uncertain recognition.
+        self.request: tuple[str, bool, bool] | None = None
+        # The turn waiting for the rest of an unfinished sentence.
+        self.holding: int | None = None
         self.queue: list[Announcement] = []
         self.heard_at = float("-inf")
         self.drainer: asyncio.Task[None] | None = None
@@ -107,9 +122,34 @@ class Brain(FrameProcessor):  # type: ignore[misc]
         if isinstance(frame, TranscriptionFrame):
             text = frame.text.strip()[:4000]
             named = is_named(text)
-            # Without a voice print anyone could speak in the window, so the name is required.
-            follow_up = not named and self.window.is_open() and self.enrolled()
+            verified = bool(frame.metadata.get("verified"))
+            # Mid-sentence ("Jarvis, bana ..."), the next words finish the same request.
+            continuing = self.holding is not None
+            # Once addressed, JARVIS keeps listening to the operator without its name while it
+            # works or speaks and for a while after. Only their verified voice counts there;
+            # without a voice print anyone could speak, so the name is required.
+            follow_up = not named and (
+                continuing
+                or (verified and self.enrolled() and (self.window.is_open() or self.busy()))
+            )
+            event(
+                "brain.heard",
+                chars=len(text),
+                named=named,
+                verified=verified,
+                continuing=continuing,
+                followUp=follow_up,
+            )
             if text and (named or follow_up):
+                self.window.open()
+                uncertain = float(frame.metadata.get("logprob", 0.0)) < UNSURE_LOGPROB
+                if self.pending is not None and not self.pending.done() and self.request:
+                    # JARVIS has not answered yet: these words continue or add to the request.
+                    earlier, earlier_follow_up, earlier_uncertain = self.request
+                    text = f"{earlier} {text}"[:4000]
+                    follow_up = follow_up and earlier_follow_up
+                    uncertain = uncertain or earlier_uncertain
+                self.request = (text, follow_up, uncertain)
                 self.timing = frame.metadata.copy()
                 self.timing["lang"] = "en" if str(frame.language) == "en" else "tr"
                 # Neither unverified VAD nor unrelated speech can interrupt a reply.
@@ -117,7 +157,9 @@ class Brain(FrameProcessor):  # type: ignore[misc]
                 if self.pending:
                     self.pending.cancel()
                 await self.broadcast_frame(InterruptionFrame)
-                self.pending = self.create_task(self.reply(text, follow_up, self.sequence))
+                self.pending = self.create_task(
+                    self.reply(text, follow_up, self.sequence, uncertain)
+                )
             return
         if isinstance(frame, BotStoppedSpeakingFrame):
             if self.filler_playing:
@@ -220,8 +262,21 @@ class Brain(FrameProcessor):  # type: ignore[misc]
             self.filler_done.set()
             raise
 
-    async def reply(self, text: str, follow_up: bool, sequence: int) -> None:
+    async def reply(
+        self, text: str, follow_up: bool, sequence: int, uncertain: bool = False
+    ) -> None:
         await self.send({"type": "caption", "role": "user", "text": text})
+        if unfinished(text):
+            # The operator is mid-sentence: give them time to go on, and longer while they talk.
+            self.holding = sequence
+            try:
+                await asyncio.sleep(self.continue_s)
+                deadline = time.monotonic() + SPEAKING_LIMIT_S
+                while self.user_speaking and time.monotonic() < deadline:
+                    await asyncio.sleep(0.05)
+            finally:
+                if self.holding == sequence:
+                    self.holding = None
         await self.send({"type": "state", "value": "thinking"})
         started = time.monotonic()
         timing = self.timing.copy()
@@ -231,8 +286,16 @@ class Brain(FrameProcessor):  # type: ignore[misc]
             else None
         )
         try:
-            result = await self.core.turn(text, follow_up)
+            result = await self.core.turn(text, follow_up, uncertain)
             core_done = time.monotonic()
+            event(
+                "core.turn",
+                answered=result is not None,
+                addressed=bool(result and result.addressed),
+            )
+        except Exception as error:
+            event("core.failed", error=type(error).__name__)
+            raise
         finally:
             if filler is not None:
                 filler.cancel()

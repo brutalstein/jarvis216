@@ -188,7 +188,7 @@ export class ConversationService {
   //    examples, one repair, then policy (turned-off actions, low confidence) and the plan;
   // 5. learning: the request and, later, its plan's outcome become experience.
   async turn(
-    input: { utterance: string; followUp: boolean },
+    input: { utterance: string; followUp: boolean; uncertain?: boolean },
     signal?: AbortSignal,
   ): Promise<TurnResult> {
     signal?.throwIfAborted();
@@ -296,10 +296,12 @@ export class ConversationService {
       } else if (
         reply.addressed &&
         decision?.kind === "plan" &&
-        decision.confidence !== undefined &&
-        decision.confidence < 0.5
+        (input.uncertain
+          ? (decision.confidence ?? 0) < 0.8
+          : decision.confidence !== undefined && decision.confidence < 0.5)
       ) {
-        // Unsure what was meant: ask before acting. The answer comes back as a clarification.
+        // Unsure what was meant, or the words may be misheard and the model is not sure of its
+        // reading: ask before acting. The answer comes back as a clarification.
         reply.say = narrate({ type: "confirm", goal: decision.goal }, reply.lang);
         reply.display = [];
         reply.intent = { kind: "clarify", goal: decision.goal };

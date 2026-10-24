@@ -33,11 +33,13 @@ class CoreClient:
             transport=transport,
         )
 
-    async def turn(self, utterance: str, follow_up: bool) -> Turn | None:
+    async def turn(self, utterance: str, follow_up: bool, uncertain: bool = False) -> Turn | None:
+        body: dict[str, Any] = {"utterance": utterance, "followUp": follow_up}
+        if uncertain:
+            # Speech recognition doubted these words; Core confirms what it understood.
+            body["uncertain"] = True
         try:
-            response = await self.http.post(
-                "/v1/conversation/turns", json={"utterance": utterance, "followUp": follow_up}
-            )
+            response = await self.http.post("/v1/conversation/turns", json=body)
         except httpx.HTTPError:
             return None
         if response.status_code != 200:

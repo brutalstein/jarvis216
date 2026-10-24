@@ -58,8 +58,20 @@ optional request-handler helper imports FastAPI, which this aiohttp environment 
 Smart Turn decides the semantic end before speaker verification and STT. Raw VAD cannot interrupt
 playback. Accepted transcripts are checked for the name/follow-up window, then Core is called once.
 A newer addressed turn cancels the pending request and stale replies are dropped. Core failure
-speaks a fixed apology in the detected Turkish/English language. The follow-up window (only with a voice print) opens after
-bot playback stops, after replies and announcements alike. Enrollment never sends its speech to Core.
+speaks a fixed apology in the detected Turkish/English language. With a voice print, JARVIS
+keeps listening once addressed: the operator's verified voice needs no name while JARVIS works
+or speaks and for eight seconds after each addressed turn and after it stops speaking, so
+"Jarvis" ... "saat kaç?" and a new request during a reply are both heard.
+
+Turn-taking has two layers. Smart Turn ends a segment acoustically; then the words decide. A bare
+name or a sentence ending on a conjunction or an object pronoun ("Jarvis, bana", "müziği aç ve")
+waits 1.5 seconds for the rest, longer while the operator is still talking, and the rest joins it
+even before their voice verifies. Anything said before JARVIS answers joins the pending request
+(Core is asked again with the whole of it) instead of replacing it; once JARVIS speaks, a new turn
+interrupts. Whisper's subtitle credits for noise ("İzlediğiniz için teşekkür ederim.") are
+dropped. When Whisper's mean log-probability is below -0.9 the turn goes to Core as `uncertain`,
+and Core confirms its reading ("... mı demek istediniz, efendim?") before acting on it.
+Enrollment never sends its speech to Core.
 
 JARVIS keeps the conversation going while Core works
 ([ADR 0016](../../docs/ADR/0016-duplex-conversation-and-live-progress.md)). Announcements wait
@@ -70,8 +82,23 @@ Core has not answered within `VOICE_FILLER_SECONDS` (default 1.2; 0 turns it off
 filler such as "Bir saniye, efendim." and the answer follows it. STT, the speaker model and both
 Piper voices warm up when a session opens, so the first turn does not pay their first-use cost.
 
-The default speaker threshold is `0.7`; `VOICE_SPEAKER_THRESHOLD`, set before launching the
-desktop or a manual voice process, overrides it for calibration. This print filters conversation, not security approvals.
+The default speaker threshold is `0.25`, SpeechBrain's own verification threshold for this ECAPA
+model: a one-second wake phrase from the enrolled speaker scores 0.3-0.8, other voices about
+0.04-0.17 on average, and the former `0.7` turned the operator away. `VOICE_SPEAKER_THRESHOLD`
+(in the operator `.env` for the desktop app) overrides it. On microphones other than the
+print's the operator's own speech scored 0.08-0.25, so every segment is decoded: speech that
+names JARVIS passes whatever its score, and the print only decides unnamed follow-ups. Each turn
+that names JARVIS is kept in memory (last ten) as a second reference for the current microphone,
+so follow-ups verify against the voice as this microphone hears it; nothing new is saved.
+
+Each turn's stages go to `VOICE_DATA_DIR/voice.log` as numbers and flags only (segment length,
+speaker score, transcript length and language, whether the name was heard, Core's answer), so a
+turn that never reaches Core shows where it stopped; `bandwidthHz` near 3400 means a Bluetooth
+hands-free microphone. On that narrowband audio Whisper's free language pick heard "Jarvis, saat
+kaç?" as Urdu and "Jarvis" as "Yani", so decoding is Turkish unless English leads clearly, with
+"Jarvis" as the initial prompt, and a segment is skipped only when Whisper doubts both speech and
+words (`no_speech_prob >= 0.6` and `avg_logprob < -1.0`). A wired or built-in microphone still
+recognizes better than a Bluetooth headset's. This print filters conversation, not security approvals.
 Vendor debug logging is disabled to avoid transcript logs. Numeric `turn.timing` output reports
 STT, Core, synthesis and first-generated-audio latency; speaker score logs support local calibration.
 Physical output-device latency is not measured. Current full-path observations: 3.25–4.75 seconds

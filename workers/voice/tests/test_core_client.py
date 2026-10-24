@@ -35,6 +35,11 @@ class CoreClientTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             json.loads(request.content), {"utterance": "Jarvis, orada mısın?", "followUp": True}
         )
+        await client.turn("Jarvis spotifiyi aç", follow_up=False, uncertain=True)
+        self.assertEqual(
+            json.loads(seen[1].content),
+            {"utterance": "Jarvis spotifiyi aç", "followUp": False, "uncertain": True},
+        )
 
     async def test_timeout_reply_is_none(self) -> None:
         client = CoreClient(

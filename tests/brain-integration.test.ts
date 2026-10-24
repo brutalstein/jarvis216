@@ -192,6 +192,19 @@ describe("learning from conversation", () => {
     expect(prompts[1]).toContain("You just asked the operator");
   });
 
+  it("confirms its reading of words speech recognition doubted", async () => {
+    start();
+    responses.push({ ...open("Spotify"), confidence: 0.7 });
+    const doubtful = await conversation().turn({
+      utterance: "Jarvis, spotifiyi aç",
+      followUp: false,
+      uncertain: true,
+    });
+    expect(doubtful.say).toBe("Spotify aç: bunu mu istiyorsunuz, efendim?");
+    expect(doubtful.planId).toBeUndefined();
+    expect(prompts[0]).toContain("Speech recognition was unsure");
+  });
+
   it("learning off records nothing; reflexes off always deliberate", async () => {
     start();
     settings = { learning: false, reflexes: true };

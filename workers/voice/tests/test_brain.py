@@ -17,18 +17,22 @@ from jarvis_voice.brain import Brain
 from jarvis_voice.core_client import FALLBACK, Turn
 
 
-def transcript(text: str) -> TranscriptionFrame:
-    return TranscriptionFrame(text, "operator", "now")
+def transcript(text: str, verified: bool = True) -> TranscriptionFrame:
+    frame = TranscriptionFrame(text, "operator", "now")
+    frame.metadata["verified"] = verified
+    return frame
 
 
 class FakeCore:
     def __init__(self, *, addressed: bool = True, fail: bool = False) -> None:
         self.calls: list[tuple[str, bool]] = []
+        self.uncertain: list[bool] = []
         self.addressed = addressed
         self.fail = fail
 
-    async def turn(self, utterance: str, follow_up: bool) -> Turn | None:
+    async def turn(self, utterance: str, follow_up: bool, uncertain: bool = False) -> Turn | None:
         self.calls.append((utterance, follow_up))
+        self.uncertain.append(uncertain)
         await asyncio.sleep(0.08 if "ilk" in utterance else 0)
         if self.fail:
             return None
@@ -89,16 +93,19 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
             send.assert_not_awaited()
             push.assert_not_awaited()
 
-    async def exercise(self, core: FakeCore, texts: list[str]) -> tuple[Brain, list[object]]:
+    async def exercise(
+        self, core: FakeCore, texts: list[str | TranscriptionFrame]
+    ) -> tuple[Brain, list[object]]:
         messages: list[dict] = []
 
         async def send(message: dict) -> None:
             messages.append(message)
 
-        brain = Brain(core, send, lambda: True, filler_s=0)
+        brain = Brain(core, send, lambda: True, filler_s=0, continue_s=0.05)
         frames = []
         for text in texts:
-            frames.extend([transcript(text), UserStoppedSpeakingFrame(), SleepFrame(0.02)])
+            heard = text if isinstance(text, TranscriptionFrame) else transcript(text)
+            frames.extend([heard, UserStoppedSpeakingFrame(), SleepFrame(0.02)])
         frames.extend([SleepFrame(0.12), BotStoppedSpeakingFrame()])
         down, _ = await run_test(brain, frames_to_send=frames)
         self.messages = messages
@@ -155,14 +162,71 @@ class BrainTest(unittest.IsolatedAsyncioTestCase):
         down, _ = await run_test(brain, frames_to_send=[frame, SleepFrame(0.03)])
         self.assertEqual([f.text for f in down if isinstance(f, TTSSpeakFrame)], [FALLBACK["en"]])
 
-    async def test_new_turn_drops_the_pending_reply(self) -> None:
+    async def test_a_new_turn_before_the_answer_joins_the_pending_request(self) -> None:
         core = FakeCore()
         _, speech = await self.exercise(core, ["Jarvis ilk", "Jarvis ikinci"])
-        self.assertEqual([f.text for f in speech], ["Jarvis ikinci"])
+        self.assertEqual(core.calls[-1], ("Jarvis ilk Jarvis ikinci", False))
+        self.assertEqual([f.text for f in speech], ["Jarvis ilk Jarvis ikinci"])
 
     async def test_unaddressed_speech_does_not_cancel_an_addressed_turn(self) -> None:
-        _, speech = await self.exercise(FakeCore(), ["Jarvis ilk", "televizyon konuşması"])
+        _, speech = await self.exercise(
+            FakeCore(), ["Jarvis ilk", transcript("televizyon konuşması", verified=False)]
+        )
         self.assertEqual([f.text for f in speech], ["Jarvis ilk"])
+
+    async def test_the_command_after_a_bare_name_is_heard_while_jarvis_answers(self) -> None:
+        # "Jarvis" ... "saat kaç?": the command arrived while JARVIS was still answering the
+        # name ("Dinliyorum, efendim"), before any follow-up window had opened, and was lost.
+        # A bare name now waits for the rest, which joins it even before the voice verifies.
+        core = FakeCore()
+        _, speech = await self.exercise(core, ["Jarvis", transcript("saat kaç", verified=False)])
+        self.assertEqual(core.calls, [("Jarvis saat kaç", False)])
+        self.assertEqual([f.text for f in speech], ["Jarvis saat kaç"])  # type: ignore[attr-defined]
+
+    async def test_an_unfinished_sentence_waits_for_the_rest(self) -> None:
+        core = FakeCore()
+        _, speech = await self.exercise(
+            core, ["Jarvis, bana", transcript("yarının hava durumunu söyle", verified=False)]
+        )
+        self.assertEqual(core.calls, [("Jarvis, bana yarının hava durumunu söyle", False)])
+
+    async def test_doubtful_recognition_is_passed_to_core(self) -> None:
+        core = FakeCore()
+        heard = transcript("Jarvis spotifiyi aç")
+        heard.metadata["logprob"] = -1.2
+        await self.exercise(core, [heard])
+        self.assertEqual(core.uncertain, [True])
+
+    async def test_the_operator_keeps_talking_without_the_name_while_jarvis_works(self) -> None:
+        core = FakeCore()
+        _, speech = await self.exercise(core, ["Jarvis ilk iş", "bir de hava nasıl"])
+        self.assertEqual(core.calls[-1], ("Jarvis ilk iş bir de hava nasıl", False))
+        self.assertEqual([f.text for f in speech], ["Jarvis ilk iş bir de hava nasıl"])  # type: ignore[attr-defined]
+
+    async def test_after_the_answer_the_operator_goes_on_without_the_name(self) -> None:
+        core = FakeCore()
+        brain = Brain(core, self.discard, lambda: True, filler_s=0)
+        await run_test(
+            brain,
+            frames_to_send=[
+                transcript("Jarvis saat kaç"),
+                SleepFrame(0.05),
+                BotStoppedSpeakingFrame(),
+                transcript("peki yarın"),
+                SleepFrame(0.05),
+            ],
+        )
+        self.assertEqual(core.calls, [("Jarvis saat kaç", False), ("peki yarın", True)])
+
+    async def test_another_voice_without_the_name_is_ignored_even_in_the_window(self) -> None:
+        core = FakeCore()
+        brain = Brain(core, self.discard, lambda: True, filler_s=0)
+        brain.window.open()
+        await run_test(
+            brain,
+            frames_to_send=[transcript("akşam yemeği hazır", verified=False), SleepFrame(0.02)],
+        )
+        self.assertEqual(core.calls, [])
 
 
 class DuplexTest(unittest.IsolatedAsyncioTestCase):
@@ -235,7 +299,9 @@ class DuplexTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_a_slow_answer_gets_a_filler_and_then_the_answer(self) -> None:
         class SlowCore(FakeCore):
-            async def turn(self, utterance: str, follow_up: bool) -> Turn | None:
+            async def turn(
+                self, utterance: str, follow_up: bool, uncertain: bool = False
+            ) -> Turn | None:
                 await asyncio.sleep(0.08)
                 return Turn("t", "k", True, "Haberlere bakıyorum, efendim.", "tr", [], "fake", 1)
 
