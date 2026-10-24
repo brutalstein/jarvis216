@@ -1,4 +1,5 @@
 import caret from "@phosphor-icons/core/assets/light/caret-down-light.svg";
+import expand from "@phosphor-icons/core/assets/light/corners-out-light.svg";
 import exportIcon from "@phosphor-icons/core/assets/light/export-light.svg";
 import gear from "@phosphor-icons/core/assets/light/gear-light.svg";
 import mic from "@phosphor-icons/core/assets/light/microphone-light.svg";
@@ -20,6 +21,7 @@ const ICONS = {
   auto,
   caret,
   close,
+  expand,
   export: exportIcon,
   focus,
   gear,

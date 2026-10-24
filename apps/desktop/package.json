@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "com.brutalstein.jarvis216",
-    "productName": "JARVIS216",
+    "productName": "J.A.R.V.I.S",
     "forceCodeSigning": true,
     "asar": true,
     "directories": {
@@ -36,6 +36,7 @@
         "nsis"
       ],
       "verifyUpdateCodeSignature": true,
+      "icon": "build/icon.png",
       "artifactName": "JARVIS216-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {

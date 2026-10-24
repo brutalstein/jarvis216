@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { Bridge, UiEvent } from "../shared";
+import type { BootStatus, Bridge, UiEvent } from "../shared";
 
 const bridge: Bridge = {
   updates: {
@@ -54,6 +54,13 @@ const bridge: Bridge = {
   },
   mini: () => ipcRenderer.send("window:mini"),
   restore: () => ipcRenderer.send("window:restore"),
+  quit: () => ipcRenderer.send("app:quit"),
+  boot: {
+    onStatus: (cb) => {
+      ipcRenderer.on("boot:status", (_event, status: BootStatus) => cb(status));
+    },
+    retry: () => ipcRenderer.send("boot:retry"),
+  },
 };
 contextBridge.exposeInMainWorld("jarvis", bridge);
 window.addEventListener("jarvis:ui", (event) => {
@@ -66,7 +73,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.send(
       "overlay:pointer",
       event.target instanceof Element &&
-        Boolean(event.target.closest("[data-card], [data-hud-card], [data-restore]")),
+        Boolean(
+          event.target.closest("[data-card], [data-hud-card], [data-restore], [data-window-bar]"),
+        ),
     );
   });
   window.addEventListener("mouseleave", () => ipcRenderer.send("overlay:pointer", false));

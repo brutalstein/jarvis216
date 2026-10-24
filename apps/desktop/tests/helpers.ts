@@ -5,7 +5,13 @@ import { _electron, type ElectronApplication, expect } from "@playwright/test";
 
 export const coreSecret = "core-test-secret-must-never-reach-the-renderer";
 export async function launch(
-  options: { missing?: boolean; extraEnv?: Record<string, string>; args?: string[] } = {},
+  options: {
+    missing?: boolean;
+    extraEnv?: Record<string, string>;
+    args?: string[];
+    /** Start behind the loading screen; `page` is then the loading screen. */
+    boot?: boolean;
+  } = {},
 ) {
   const dir = await mkdtemp(join(tmpdir(), "jarvis-desktop-"));
   const file = join(dir, ".env");
@@ -14,6 +20,7 @@ export async function launch(
     ...process.env,
     JARVIS_ENV_FILE: file,
     JARVIS_DESKTOP_TEST: "1",
+    ...(options.boot && { JARVIS_BOOT: "1" }),
     ...options.extraEnv,
   };
   delete env.ELECTRON_RUN_AS_NODE;
@@ -24,10 +31,9 @@ export async function launch(
     args: [resolve("."), `--user-data-dir=${join(dir, "profile")}`, ...(options.args ?? [])],
     env: cleanEnv,
   });
-  await expect
-    .poll(() => app.windows().find((page) => page.url().endsWith("/index.html")))
-    .toBeTruthy();
-  const page = app.windows().find((page) => page.url().endsWith("/index.html"));
+  const first = options.boot ? "/splash.html" : "/index.html";
+  await expect.poll(() => app.windows().find((page) => page.url().endsWith(first))).toBeTruthy();
+  const page = app.windows().find((page) => page.url().endsWith(first));
   if (!page) throw new Error("MAIN_WINDOW_MISSING");
   await page.waitForLoadState("domcontentloaded");
   return {

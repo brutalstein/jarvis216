@@ -66,6 +66,25 @@ This is not a Windows boot service; Docker Desktop and required dependencies mus
 attempts to launch Docker Desktop if the engine is not running. The manager follows .env flags, never changes them or grants
 additional permissions. See the linked guide for troubleshooting and isolation limits.
 
+## Desktop app without Docker (Supabase)
+
+The J.A.R.V.I.S desktop app starts everything itself and opens only when every check passes.
+Its loading screen shows each one: configuration, Core, the database, OpenClaw (when
+`ENABLE_OPENCLAW=true`) and the voice service, with a retry and the reason when one fails.
+
+- Database: a free Supabase project. Use the **session pooler** (IPv4) with verified TLS:
+  `DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=certs/supabase-root-2021.crt`.
+  Core accepts a remote database only with `sslmode=verify-full`. Pick the region closest to
+  you; Core batches its writes so each spoken turn costs one round trip per read.
+- Core runs on the app's own Node (Electron), from this checkout's `dist/` (`npm run build`).
+- `.env`: picked once, then kept encrypted with Windows DPAPI in `%APPDATA%\jarvis-desktop\operator.env`.
+  Edits to `.env` are picked up on the next start; without the file, the encrypted copy still starts JARVIS.
+- OpenClaw takes about a minute to start, so it stays up after the app quits; later starts
+  find it ready. Core and the voice service stop with the app.
+- Logs: `%APPDATA%\jarvis-desktop\logs\core.log` and `openclaw.log`.
+
+Supabase pauses a free project after a week without use; restore it from the dashboard.
+
 ## Windows quick start
 
 Prerequisites: Node.js 24.11+ (24.22.0 tested), Docker Desktop with WSL2, Python 3.12
@@ -90,9 +109,10 @@ and `npm start`. Do not run the n8n or browser profiles in that mode with valued
 published port is reachable from the other Compose networks.
 
 `node --env-file=.env` never overrides a variable already set in your shell. Core refuses a
-`DATABASE_URL` that is not this host or the Compose `postgres` service, so an inherited value
-for another project fails startup instead of being migrated. Clear it with
-`Remove-Item Env:DATABASE_URL` for the session.
+`DATABASE_URL` that is not this host, the Compose `postgres` service or a remote server with
+`sslmode=verify-full`, so an inherited value for another project fails startup instead of being
+migrated. Clear it with `Remove-Item Env:DATABASE_URL` for the session. The desktop app passes
+the `.env` values explicitly, so an inherited value never reaches the Core it starts.
 
 Shutdown: `docker compose stop` (Core drains in-flight actions for up to 20 s, then exits).
 `docker compose down` keeps data volumes. Never use `down -v` on valued data.

@@ -1,11 +1,18 @@
-import { availableParallelism } from "node:os";
-import { Pool, type PoolClient } from "pg";
+import { Pool, type PoolClient, type QueryResult } from "pg";
 
 export interface Sql {
   query<T extends object = Record<string, unknown>>(
     text: string,
     params?: readonly unknown[],
   ): Promise<{ rows: T[] }>;
+  // A write whose result nobody reads: it may travel with the next statement or the COMMIT.
+  defer?(text: string, params?: readonly Scalar[]): void;
+}
+export type Scalar = string | number | boolean | null;
+// Inside a transaction, a write that can wait for the next statement; elsewhere it runs now.
+export async function write(tx: Sql, text: string, params?: readonly Scalar[]): Promise<void> {
+  if (tx.defer) tx.defer(text, params);
+  else await tx.query(text, params);
 }
 export interface Database extends Sql {
   transaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T>;
@@ -15,9 +22,13 @@ export function postgres(
   url: string,
   pool = new Pool({
     connectionString: url,
-    // Every worker may hold a connection while HTTP routes still need theirs.
-    max: 10 + availableParallelism() * 2,
-    connectionTimeoutMillis: 5000,
+    // Transactions are short, so a dozen connections serve every worker and route; it also stays
+    // under a hosted session pooler's per-database limit (Supabase: 15).
+    max: 12,
+    // A remote database pays a TLS and auth handshake per new connection: keep them open.
+    idleTimeoutMillis: 0,
+    keepAlive: true,
+    connectionTimeoutMillis: 10_000,
     statement_timeout: 10_000,
   }),
 ): Database {
@@ -32,17 +43,53 @@ export function postgres(
     async transaction(fn) {
       const client = await pool.connect();
       let broken = false;
+      // BEGIN and deferred writes wait here and travel in one simple-protocol message with the
+      // next statement or the COMMIT (manual pipelining): against a remote database a
+      // transaction costs one round trip per read, not one per statement.
+      const pending = ["BEGIN"];
+      let open = false;
+      const literal = (value: unknown): string => {
+        if (value === null || value === undefined) return "NULL";
+        if (typeof value === "boolean") return value ? "true" : "false";
+        if (typeof value === "number" || typeof value === "bigint" || typeof value === "string")
+          return client.escapeLiteral(String(value));
+        throw new TypeError("DEFERRED_PARAMETER_NOT_SCALAR");
+      };
+      const inline = (sql: string, params?: readonly unknown[]) =>
+        params?.length ? sql.replace(/\$(\d+)/g, (_, n: string) => literal(params[+n - 1])) : sql;
+      const scalar = (params?: readonly unknown[]) =>
+        (params ?? []).every(
+          (p) => p === null || ["string", "number", "boolean"].includes(typeof p),
+        );
+      const batch = async (statements: string[]): Promise<QueryResult> => {
+        if (statements[0] === "BEGIN") open = true;
+        const results = (await client.query(statements.join(";"))) as unknown as
+          | QueryResult
+          | QueryResult[];
+        return (Array.isArray(results) ? results[results.length - 1] : results) as QueryResult;
+      };
+      const tx: Sql = {
+        async query(sql, params) {
+          if (!pending.length) return client.query(sql, params ? [...params] : undefined);
+          if (scalar(params)) return batch(pending.splice(0).concat(inline(sql, params)));
+          await batch(pending.splice(0));
+          return client.query(sql, params ? [...params] : undefined);
+        },
+        defer(sql, params) {
+          pending.push(inline(sql, params));
+        },
+      };
       try {
-        await client.query("BEGIN");
-        const value = await fn(wrap(client));
-        await client.query("COMMIT");
+        const value = await fn(tx);
+        if (open || pending.length > 1) await batch(pending.splice(0).concat("COMMIT"));
         return value;
       } catch (error) {
         // A failed ROLLBACK means the session is unusable; the server already aborted the
         // transaction. Destroy the client and surface the original error.
-        await client.query("ROLLBACK").catch(() => {
-          broken = true;
-        });
+        if (open)
+          await client.query("ROLLBACK").catch(() => {
+            broken = true;
+          });
         throw error;
       } finally {
         client.release(broken);

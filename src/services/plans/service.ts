@@ -41,6 +41,8 @@ export class PlanService extends EventEmitter {
   #again = false;
   // Any plan running or awaiting approval at the last refresh (sets the poll cadence).
   #active = true;
+  // Aborted to end the idle poll's wait early.
+  #kick = new AbortController();
   #creating = Promise.resolve();
   #viewContext: ViewContext;
   #finisher: FinisherContext;
@@ -352,8 +354,12 @@ export class PlanService extends EventEmitter {
     void (async () => {
       while (!signal.aborted) {
         await this.refresh().catch(failed);
-        // Idle, a slower poll is enough: new plans and step transitions refresh at once.
-        await delay(this.#active ? 500 : 2000, undefined, { signal }).catch(() => {});
+        // Idle, nothing can expire: new plans and step transitions refresh at once, so the slow
+        // poll only keeps a remote database from being asked the same thing every few seconds.
+        await delay(this.#active ? 500 : 30_000, undefined, {
+          signal: AbortSignal.any([signal, this.#kick.signal]),
+        }).catch(() => {});
+        if (this.#kick.signal.aborted) this.#kick = new AbortController();
       }
     })();
   }
@@ -536,6 +542,11 @@ export class PlanService extends EventEmitter {
 
   // Emits the view when it changed since it was last emitted.
   async #publish(id: string): Promise<PlanView> {
+    // A plan changed outside a refresh (created, approved, finished): back to the quick poll.
+    if (!this.#refreshing) {
+      this.#active = true;
+      this.#kick.abort();
+    }
     return this.#emitChanged(await this.get(id));
   }
   #emitChanged(view: PlanView): PlanView {

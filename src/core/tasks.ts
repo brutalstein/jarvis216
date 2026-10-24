@@ -18,10 +18,11 @@ import {
   terminal,
   verified,
 } from "./contracts.js";
-import type { Database, Sql } from "./database.js";
+import { type Database, type Sql, write } from "./database.js";
 
 // planId: the plan a step task belongs to, so plan bookkeeping can ignore unrelated tasks.
-export type TaskChange = { id: string; status: TaskState; planId?: string };
+// lane: who claims it, so a change wakes only a worker that can act on it.
+export type TaskChange = { id: string; status: TaskState; planId?: string; lane?: Lane };
 export type TaskProgress = Progress & { at: number };
 const bounded = (text: string | undefined, max: number) =>
   text === undefined ? undefined : text.replace(/\s+/g, " ").trim().slice(0, max) || undefined;
@@ -32,6 +33,10 @@ const count = (value: number | undefined) =>
 export type Lane = "interactive" | "background";
 export const lanes: readonly Lane[] = ["interactive", "background"];
 // States an external submitter needs to hear about: settled, or waiting on the operator.
+// One round trip per event: the previous event's id becomes causationId inside the INSERT.
+// Every caller holds the scheduler lock, so the previous event is stable.
+const insertEvent =
+  "INSERT INTO events(task_id,envelope) SELECT $1::uuid, jsonb_set($2::jsonb,'{causationId}',COALESCE((SELECT to_jsonb(envelope->>'messageId') FROM events WHERE task_id=$1::uuid ORDER BY sequence DESC LIMIT 1),'null'::jsonb))";
 const notified = new Set<TaskState>([
   "COMPLETED",
   "SKIPPED",
@@ -50,7 +55,7 @@ export class TaskService {
   // "progress" fires with { id, ...TaskProgress } when a running executor reports progress.
   readonly progress = new EventEmitter().setMaxListeners(100);
   #progress = new Map<string, TaskProgress>();
-  #moved = new WeakMap<Sql, Map<string, { status: TaskState; planId?: string }>>();
+  #moved = new WeakMap<Sql, Map<string, { status: TaskState; planId?: string; lane: Lane }>>();
   constructor(
     public readonly db: Database,
     private options: {
@@ -66,25 +71,37 @@ export class TaskService {
       // Providers whose interrupted calls are harmless: cancelling or losing such a call is a
       // definite outcome, not one to reconcile.
       retrySafe?: (target: string) => boolean;
+      // A task created READY on its own (not inside a caller's transaction), after commit.
+      admitted?: (task: Task) => void;
     } = {
       concurrency: 2,
     },
   ) {}
 
   async locked<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
-    const moved = new Map<string, { status: TaskState; planId?: string }>();
+    const moved = new Map<string, { status: TaskState; planId?: string; lane: Lane }>();
     const value = await this.db.transaction(async (tx) => {
       this.#moved.set(tx, moved);
-      await tx.query("SELECT id FROM scheduler_lock WHERE id=1 FOR UPDATE");
+      // Deferred: the lock travels with the transaction's first statement.
+      await write(tx, "SELECT id FROM scheduler_lock WHERE id=1 FOR UPDATE");
       return fn(tx);
     });
     // The transaction has committed: a failing listener must neither make it look failed nor
     // keep the other listeners from hearing about it.
-    for (const [id, { status, planId }] of moved) {
+    for (const [id, { status, planId, lane }] of moved) {
       if (status !== "RUNNING" && status !== "VERIFYING") this.#progress.delete(id);
+      if (terminal.has(status) || status === "BLOCKED" || status === "RECOVERY_REQUIRED") {
+        this.#speculative.get(id)?.abort.abort();
+        this.#speculative.delete(id);
+      }
       for (const listener of this.changes.listeners("change"))
         try {
-          (listener as (change: TaskChange) => void)({ id, status, ...(planId && { planId }) });
+          (listener as (change: TaskChange) => void)({
+            id,
+            status,
+            lane,
+            ...(planId && { planId }),
+          });
         } catch {
           process.stderr.write('{"level":"error","code":"TASK_CHANGE_LISTENER_FAILED"}\n');
         }
@@ -127,19 +144,20 @@ export class TaskService {
     type: EventType,
     payload: Record<string, never> | Record<string, string | number | boolean | null> = {},
   ): Promise<void> {
+    await write(tx, insertEvent, [task.id, this.#envelope(task, type, payload)]);
+  }
+  // causationId is filled in by insertEvent, inside the same statement.
+  #envelope(
+    task: Task,
+    type: EventType,
+    payload: Record<string, never> | Record<string, string | number | boolean | null>,
+  ): string {
     const id = randomUUID();
-    // Every caller holds the scheduler lock, so the previous event is stable.
-    const previous = (
-      await tx.query<{ id: string }>(
-        "SELECT envelope->>'messageId' AS id FROM events WHERE task_id=$1 ORDER BY sequence DESC LIMIT 1",
-        [task.id],
-      )
-    ).rows[0];
     const envelope = EnvelopeSchema.parse({
       protocolVersion: 1,
       messageId: id,
       correlationId: task.correlation_id,
-      causationId: previous?.id ?? null,
+      causationId: null,
       taskId: task.id,
       sender: "jarvis-core",
       recipient: "task-events",
@@ -151,47 +169,54 @@ export class TaskService {
       idempotencyKey: id,
       payload,
     });
-    await tx.query("INSERT INTO events(task_id,envelope) VALUES ($1,$2)", [
-      task.id,
-      JSON.stringify(envelope),
-    ]);
+    return JSON.stringify(envelope);
   }
   async move(tx: Sql, task: Task, state: TaskState, reason: string): Promise<void> {
     invariant(canTransition(task.status, state), "INVALID_TRANSITION");
-    await tx.query("UPDATE tasks SET status=$2 WHERE id=$1", [task.id, state]);
-    await this.event(tx, task, "task.transition", { from: task.status, to: state, reason });
+    // The status change and its transition event travel as one statement.
+    await write(tx, `WITH moved AS (UPDATE tasks SET status=$3 WHERE id=$1) ${insertEvent}`, [
+      task.id,
+      this.#envelope(task, "task.transition", { from: task.status, to: state, reason }),
+      state,
+    ]);
     task.status = state;
-    this.#moved.get(tx)?.set(task.id, { status: state, planId: task.spec?.planId });
+    this.#moved.get(tx)?.set(task.id, {
+      status: state,
+      planId: task.spec?.planId,
+      lane: task.spec ? this.laneOf(task) : "background",
+    });
     if (this.options.outbox?.principals.includes(task.principal) && notified.has(state))
-      await tx.query(
+      await write(
+        tx,
         "INSERT INTO deliveries(id,task_id,status,created_at,next_attempt_at) VALUES($1,$2,$3,$4,$4)",
         [randomUUID(), task.id, state, Date.now()],
       );
   }
   async create(raw: unknown, key: string, principal: string): Promise<Task> {
-    return this.locked((tx) => this.createIn(tx, raw, key, principal));
+    const task = await this.locked((tx) => this.createIn(tx, raw, key, principal));
+    if (task.status === "READY") this.options.admitted?.(task);
+    return task;
   }
   // For callers already holding the scheduler lock: the task commits or rolls back with them.
   async createIn(tx: Sql, raw: unknown, key: string, principal: string): Promise<Task> {
     invariant(key.length >= 1 && key.length <= 200, "INVALID_IDEMPOTENCY_KEY", 400);
     const spec = TaskSpecSchema.parse(raw);
-    const prior = (
-      await tx.query<Task & { request_hash: string }>(
-        "SELECT * FROM tasks WHERE principal=$1 AND idempotency_key=$2",
+    // The idempotent replay and the queue quota in one round trip.
+    const { prior, ...queued } = (
+      await tx.query<{
+        prior: (Task & { request_hash: string }) | null;
+        total: string;
+        mine: string;
+      }>(
+        "SELECT (SELECT to_jsonb(t) FROM tasks t WHERE principal=$1 AND idempotency_key=$2) AS prior, count(*) AS total, count(*) FILTER (WHERE principal=$1) AS mine FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
         [principal, key],
       )
-    ).rows[0];
+    ).rows[0] ?? { prior: null, total: "0", mine: "0" };
     if (prior) {
       invariant(prior.request_hash === fingerprint(spec), "IDEMPOTENCY_CONFLICT");
-      return prior;
+      return this.get(prior.id, tx);
     }
     invariant(Date.parse(spec.deadline) > Date.now(), "DEADLINE_EXPIRED", 400);
-    const queued = (
-      await tx.query<{ total: string; mine: string }>(
-        "SELECT count(*) AS total, count(*) FILTER (WHERE principal=$1) AS mine FROM tasks WHERE status IN ('READY','WAITING_FOR_DEPENDENCY','WAITING_FOR_APPROVAL')",
-        [principal],
-      )
-    ).rows[0];
     // Automation ingress gets its own quota so it cannot crowd out the operator.
     invariant(
       Number(queued?.total) < 1000 && (principal === "operator" || Number(queued?.mine) < 100),
@@ -218,23 +243,25 @@ export class TaskService {
       }
     }
     const id = randomUUID();
-    await tx.query(
-      "INSERT INTO tasks(id,correlation_id,principal,idempotency_key,request_hash,spec,status,created_at) VALUES($1,$2,$3,$4,$5,$6,'CREATED',$7)",
-      [
-        id,
-        randomUUID(),
-        principal,
-        key,
-        fingerprint(spec),
-        JSON.stringify({ ...spec, context: [] }),
-        Date.now(),
-      ],
-    );
-    const task = await this.get(id, tx);
+    const task = (
+      await tx.query<Task>(
+        "INSERT INTO tasks(id,correlation_id,principal,idempotency_key,request_hash,spec,status,created_at) VALUES($1,$2,$3,$4,$5,$6,'CREATED',$7) RETURNING *",
+        [
+          id,
+          randomUUID(),
+          principal,
+          key,
+          fingerprint(spec),
+          JSON.stringify({ ...spec, context: [] }),
+          Date.now(),
+        ],
+      )
+    ).rows[0] as Task;
     for (const entry of spec.context)
       await insertContext(tx, task, entry, this.options.redact ?? ((text) => text));
     for (const dependency of spec.dependencies)
-      await tx.query(
+      await write(
+        tx,
         "INSERT INTO dependencies(task_id,dependency_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
         [id, dependency],
       );
@@ -366,11 +393,12 @@ export class TaskService {
         if (task.status === "WAITING_FOR_DEPENDENCY")
           await this.move(tx, task, "READY", "dependencies completed");
         await this.move(tx, task, "RUNNING", "lease acquired");
-        await tx.query(
-          "UPDATE tasks SET owner=$2, fence=fence+1, lease_until=$3, attempt=attempt+1 WHERE id=$1",
-          [task.id, owner, Date.now() + leaseMs],
-        );
-        return this.get(task.id, tx);
+        return (
+          await tx.query<Task>(
+            "UPDATE tasks SET owner=$2, fence=fence+1, lease_until=$3, attempt=attempt+1 WHERE id=$1 RETURNING *",
+            [task.id, owner, Date.now() + leaseMs],
+          )
+        ).rows[0] as Task;
       }
       return null;
     });
@@ -390,8 +418,59 @@ export class TaskService {
       await tx.query("UPDATE tasks SET lease_until=$2 WHERE id=$1", [id, Date.now() + leaseMs]);
     });
   }
+  // Model calls started at admission (see core's speculate): a spoken turn's call runs while
+  // the claim and the write-ahead intent travel to the database, and the gateway adopts it.
+  #speculative = new Map<
+    string,
+    { target: string; objective: string; result: Promise<unknown>; abort: AbortController }
+  >();
+  speculate(task: Task, target: string, run: (signal: AbortSignal) => Promise<unknown>): void {
+    if (this.#speculative.has(task.id)) return;
+    const abort = new AbortController();
+    const deadline = AbortSignal.timeout(Math.max(1, taskDeadline(task) - Date.now()));
+    const result = run(AbortSignal.any([abort.signal, deadline]));
+    // Handled here too: an unadopted call's failure must not become an unhandled rejection.
+    result.catch(() => {});
+    this.#speculative.set(task.id, { target, objective: task.spec.objective, result, abort });
+  }
+  // The speculative call for exactly this provider and prompt, bounded by the gateway's signal;
+  // anything else is aborted and the gateway calls the provider itself.
+  adopt(
+    id: string,
+    target: string,
+    objective: string,
+    signal: AbortSignal,
+  ): Promise<unknown> | undefined {
+    const call = this.#speculative.get(id);
+    if (!call) return undefined;
+    this.#speculative.delete(id);
+    if (call.target !== target || call.objective !== objective) {
+      call.abort.abort();
+      return undefined;
+    }
+    return new Promise((resolve, reject) => {
+      const stop = () => {
+        call.abort.abort(signal.reason);
+        reject(signal.reason);
+      };
+      if (signal.aborted) return stop();
+      signal.addEventListener("abort", stop, { once: true });
+      call.result.then(resolve, reject).finally(() => signal.removeEventListener("abort", stop));
+    });
+  }
+  #due = Number.POSITIVE_INFINITY;
+  // A backoff: the task is claimable again at `until`. Idle workers sleep until the earliest one
+  // instead of polling for it.
+  async defer(tx: Sql, id: string, until: number): Promise<void> {
+    await write(tx, "UPDATE tasks SET not_before=$2 WHERE id=$1", [id, until]);
+    this.#due = Math.min(this.#due, until);
+  }
+  nextDue(): number | undefined {
+    if (this.#due <= Date.now()) this.#due = Number.POSITIVE_INFINITY;
+    return Number.isFinite(this.#due) ? this.#due : undefined;
+  }
   async release(tx: Sql, id: string): Promise<void> {
-    await tx.query("UPDATE tasks SET owner=NULL,lease_until=NULL WHERE id=$1", [id]);
+    await write(tx, "UPDATE tasks SET owner=NULL,lease_until=NULL WHERE id=$1", [id]);
   }
   // The only way into RECOVERY_REQUIRED: in-flight actions become reconcilable UNCERTAIN.
   async quarantine(tx: Sql, task: Task, reason: string): Promise<void> {

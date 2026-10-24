@@ -13,11 +13,16 @@ export interface WorkerTiming {
   drainMs: number;
   // Idle wait between claim attempts when nothing wakes the worker.
   idleMs: number;
+  // Minimum gap between expired-lease and deadline sweeps.
+  recoverMs: number;
 }
 export class Worker {
   private running = new Map<string, AbortController>();
-  // Aborted to end the current idle wait early; replaced after each wake.
+  // Aborted to end the current idle wait early; replaced after each wake. Aborted while the
+  // worker is claiming, it makes the worker claim once more instead of sleeping.
   private idle = new AbortController();
+  // What the worker is doing, so a wake goes to one worker that can act on it.
+  state: "claiming" | "executing" | "idle" = "claiming";
   private gateway: ActionGateway;
   private timing: WorkerTiming;
   constructor(
@@ -27,7 +32,9 @@ export class Worker {
     timing: Partial<WorkerTiming> = {},
     grants?: StandingGrants,
     // Lanes this worker claims from; an interactive-only worker is never busy with background work.
-    private serve: readonly Lane[] = lanes,
+    readonly serve: readonly Lane[] = lanes,
+    // Called after each successful claim: more work may be waiting for a peer.
+    private onClaim?: () => void,
   ) {
     this.gateway = new ActionGateway(
       tasks,
@@ -35,12 +42,21 @@ export class Worker {
       (observation) => registry.record(observation),
       grants,
     );
-    this.timing = { leaseMs: 30_000, renewMs: 10_000, drainMs: 20_000, idleMs: 500, ...timing };
+    this.timing = {
+      leaseMs: 30_000,
+      renewMs: 10_000,
+      drainMs: 20_000,
+      idleMs: 500,
+      recoverMs: 1000,
+      ...timing,
+    };
   }
   cancel(id: string): void {
     this.running.get(id)?.abort();
   }
   wake(): void {
+    // Counted as claiming at once, so the next wake in the same tick picks another worker.
+    if (this.state === "idle") this.state = "claiming";
     this.idle.abort();
   }
   async once(): Promise<boolean> {
@@ -48,6 +64,8 @@ export class Worker {
     const owner = `worker:${randomUUID()}`;
     const task = await this.tasks.claim(owner, leaseMs, this.serve);
     if (!task) return false;
+    this.state = "executing";
+    this.onClaim?.();
     const controller = new AbortController();
     this.running.set(task.id, controller);
     let heartbeat: ReturnType<typeof setTimeout> | undefined;
@@ -90,7 +108,7 @@ export class Worker {
         : task;
       const { provider: selected, reason } = this.registry.choose(executionTask, attempted);
       // The routing explanation commits with the action intent: one scheduler lock, not two.
-      await this.gateway.run(executionTask, selected, controller.signal, reason);
+      await this.gateway.run(executionTask, selected, controller.signal, reason, attempted);
     } catch (error) {
       await this.tasks.locked(async (tx) => {
         const current = await this.tasks.get(task.id, tx);
@@ -130,8 +148,9 @@ export class Worker {
     );
     while (!signal.aborted) {
       let worked = false;
+      this.state = "claiming";
       try {
-        await this.tasks.recoverDue();
+        await this.tasks.recoverDue(this.timing.recoverMs);
         worked = await this.once();
       } catch {
         process.stderr.write('{"level":"error","code":"WORKER_CYCLE_FAILED"}\n');
@@ -139,7 +158,11 @@ export class Worker {
       // A finished task may have unblocked the next step of a chain: claim again at once.
       if (worked) continue;
       try {
-        await delay(this.timing.idleMs, undefined, {
+        // Sleep until woken, the next backed-off task is due, or the safety poll.
+        const due = this.tasks.nextDue();
+        const idle = Math.max(1, Math.min(this.timing.idleMs, (due ?? Infinity) - Date.now()));
+        this.state = "idle";
+        await delay(idle, undefined, {
           signal: AbortSignal.any([signal, this.idle.signal]),
         });
       } catch {

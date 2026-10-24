@@ -42,10 +42,16 @@ import { MemoryExecutor, type MemoryStore } from "../services/memory.js";
 
 // .env.example placeholders are long enough to pass length checks; never accept them.
 const generated = (value: string) => !value.includes("REPLACE_");
-// Local-first: node --env-file never overrides a shell variable, so an inherited DATABASE_URL
-// for another project would otherwise be migrated silently.
-const localDatabase = (value: string) =>
-  ["127.0.0.1", "localhost", "[::1]", "postgres"].includes(new URL(value).hostname);
+// node --env-file never overrides a shell variable, so an inherited DATABASE_URL for another
+// project would otherwise be migrated silently. A hosted database (Supabase) is a deliberate
+// choice: it must name verified TLS, so credentials and data never travel to an unproven server.
+const ownDatabase = (value: string) => {
+  const url = new URL(value);
+  return (
+    ["127.0.0.1", "localhost", "[::1]", "postgres"].includes(url.hostname) ||
+    url.searchParams.get("sslmode") === "verify-full"
+  );
+};
 const cores = availableParallelism();
 export const ConfigSchema = z
   .object({
@@ -53,7 +59,10 @@ export const ConfigSchema = z
       .string()
       .url()
       .refine(generated, "Run scripts/bootstrap.ps1")
-      .refine(localDatabase, "DATABASE_URL must be this host or the Compose postgres service"),
+      .refine(
+        ownDatabase,
+        "DATABASE_URL must be this host, the Compose postgres service or sslmode=verify-full",
+      ),
     JARVIS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     N8N_INGRESS_TOKEN: z.string().min(32).refine(generated, "Run scripts/bootstrap.ps1"),
     PORT: z.coerce.number().int().min(1024).max(65535).default(2160),

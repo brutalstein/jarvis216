@@ -451,6 +451,25 @@ body[data-state="error"] .hint {
   gap: 4px;
 }
 
+.shortcuts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.shortcuts div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.shortcuts dt {
+  color: var(--ink);
+  font-size: 13.5px;
+}
+.shortcuts dd {
+  margin: 0;
+}
+
 kbd {
   display: inline-grid;
   place-items: center;
@@ -1895,6 +1914,313 @@ body[data-layout="wide"] .news-grid {
   }
   ::view-transition-old(*),
   ::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+/* Mini mode: the way back to the full window and out of JARVIS, always in sight. */
+.window-bar {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  background: rgb(12 10 9 / 0.82);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.9);
+}
+.window-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font: 500 12.5px / 1 var(--font-sans);
+  cursor: pointer;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease);
+}
+.window-bar button:last-child {
+  width: 30px;
+  padding: 0;
+  justify-content: center;
+}
+.window-bar button:hover,
+.window-bar button:focus-visible {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+.window-bar [data-quit]:hover,
+.window-bar [data-quit]:focus-visible {
+  background: color-mix(in oklab, var(--rose) 22%, var(--surface));
+}
+.window-bar [data-icon] {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+}
+.window-bar svg {
+  width: 16px;
+  height: 16px;
+}
+/* Mini bar listening state: a live mint dot while JARVIS hears you, a muted one when not. */
+.window-bar .listen-state {
+  color: var(--mint);
+}
+.listen-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ping 2s ease-out infinite;
+}
+.window-bar[data-listening="false"] .listen-state {
+  color: var(--ink-soft);
+}
+.window-bar[data-listening="false"] .listen-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .listen-dot {
+    animation: none;
+  }
+}
+
+/* Loading screen: a frameless card that stays until every service has answered. */
+html:has(body.splash) {
+  overflow: hidden;
+  background: transparent;
+}
+body.splash {
+  --presence: 120px;
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 22px;
+  /* Clips the aurora too, so the rounded corners of the transparent window stay clear. */
+  clip-path: inset(0 round 22px);
+  background:
+    radial-gradient(
+      70% 55% at 50% 0%,
+      color-mix(in oklab, var(--state) 12%, transparent),
+      transparent 70%
+    ),
+    var(--canvas);
+  -webkit-app-region: drag;
+}
+.boot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 30px 40px 28px;
+}
+.boot-orb {
+  display: grid;
+  place-items: center;
+  width: var(--presence);
+  height: var(--presence);
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 28px color-mix(in oklab, var(--state) 35%, transparent));
+}
+.boot-mark {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  /* The tracking trails the last letter; pull it back so the mark stays centred. */
+  margin: 0 -0.3em 0 0;
+}
+.boot-line {
+  margin: 10px 0 18px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.boot-progress {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+}
+.boot-progress [data-bar] {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--spectrum);
+  background-size: 200% 100%;
+  animation: flow 3s linear infinite;
+  transition: width 600ms var(--ease);
+}
+body.splash[data-phase="failed"] .boot-progress [data-bar] {
+  background: var(--rose);
+  animation: none;
+}
+.boot-steps {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.boot-steps li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  transition: background-color 300ms var(--ease);
+}
+.boot-steps li[data-state="running"] {
+  background: rgb(41 37 36 / 0.55);
+}
+.boot-label {
+  color: var(--ink);
+}
+.boot-detail {
+  color: var(--ink-soft);
+  font: 400 12px / 1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.boot-steps li[data-state="waiting"] .boot-label,
+.boot-steps li[data-state="skipped"] .boot-label {
+  color: var(--ink-soft);
+}
+.boot-dot {
+  --dot: var(--hairline-strong);
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--dot);
+  border-radius: 50%;
+}
+.boot-steps li[data-state="running"] .boot-dot {
+  --dot: var(--sky);
+  border-color: color-mix(in oklab, var(--dot) 25%, transparent);
+  border-top-color: var(--dot);
+  animation: spin 900ms linear infinite;
+}
+.boot-steps li[data-state="ready"] .boot-dot {
+  --dot: var(--mint);
+  background: var(--dot);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--dot) 55%, transparent);
+}
+.boot-steps li[data-state="ready"] .boot-dot::after {
+  /* A check mark drawn in the dot. */
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 1.2px;
+  width: 3.5px;
+  height: 7px;
+  border: solid var(--canvas);
+  border-width: 0 1.6px 1.6px 0;
+  rotate: 45deg;
+}
+.boot-steps li[data-state="skipped"] .boot-dot {
+  border-style: dashed;
+}
+.boot-steps li[data-state="failed"] .boot-dot {
+  --dot: var(--rose);
+  background: var(--dot);
+}
+.boot-steps li[data-state="failed"] .boot-detail {
+  color: var(--rose);
+}
+.boot-error {
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--rose) 35%, transparent);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--rose) 8%, transparent);
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+  white-space: pre-line;
+  -webkit-app-region: no-drag;
+  user-select: text;
+}
+.boot-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+.boot-button,
+.boot-close {
+  -webkit-app-region: no-drag;
+}
+.boot-button {
+  height: 36px;
+  padding: 0 18px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+  font: 500 13px / 1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color 180ms var(--ease);
+}
+.boot-button:hover {
+  background: var(--surface-raised);
+}
+.boot-button.primary {
+  border-color: transparent;
+  background: var(--ink);
+  color: var(--canvas);
+}
+.boot-button.primary:hover {
+  background: var(--mint);
+}
+.boot-button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.boot-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.boot-close:hover {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+.boot-close svg {
+  width: 16px;
+  height: 16px;
+}
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-progress [data-bar],
+  .boot-steps li[data-state="running"] .boot-dot {
     animation: none;
   }
 }

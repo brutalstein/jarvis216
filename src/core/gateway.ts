@@ -8,6 +8,7 @@ import {
   fingerprint,
   invariant,
   verified as meetsVerification,
+  type Progress,
   ResultSchema,
   type Risk,
   RiskSchema,
@@ -15,7 +16,7 @@ import {
   type TaskState,
   taskDeadline,
 } from "./contracts.js";
-import type { Sql } from "./database.js";
+import { type Sql, write } from "./database.js";
 import { type Observation, recordObservation } from "./reliability.js";
 import { ProviderFailure } from "./routing.js";
 import type { TaskService } from "./tasks.js";
@@ -70,6 +71,8 @@ export class ActionGateway {
     executor: Executor,
     signal: AbortSignal,
     selection?: Record<string, string | number | boolean | null>,
+    // Providers already tried before this call, when the caller just read them.
+    tried?: readonly string[],
   ): Promise<TaskState> {
     invariant(
       executor.capability === claim.spec.capability && claim.spec.providers.includes(executor.id),
@@ -115,12 +118,14 @@ export class ActionGateway {
       ).rows[0];
       if (!current) {
         // Parameters changed (e.g. context expiry, configuration): older proposals are void.
-        await tx.query(
+        await write(
+          tx,
           "UPDATE actions SET status='SUPERSEDED' WHERE task_id=$1 AND status='AWAITING_APPROVAL'",
           [task.id],
         );
         const id = randomUUID();
-        await tx.query(
+        await write(
+          tx,
           "INSERT INTO actions(id,task_id,hash,target,risk,parameters,status) VALUES($1,$2,$3,$4,$5,$6,'AWAITING_APPROVAL')",
           [id, task.id, hash, executor.id, risk, JSON.stringify(parameters)],
         );
@@ -188,8 +193,8 @@ export class ActionGateway {
           });
       }
       invariant(!signal.aborted, "CANCELLED");
-      await tx.query("UPDATE actions SET status='EXECUTING' WHERE id=$1", [current.id]);
-      await tx.query("UPDATE tasks SET calls=calls+1 WHERE id=$1", [task.id]);
+      await write(tx, "UPDATE actions SET status='EXECUTING' WHERE id=$1", [current.id]);
+      await write(tx, "UPDATE tasks SET calls=calls+1 WHERE id=$1", [task.id]);
       await this.tasks.event(tx, task, "action.intended", {
         actionId: current.id,
         hash,
@@ -204,7 +209,7 @@ export class ActionGateway {
     // A hanging model must not spend the whole deadline: while an untried fallback and a call
     // remain, a retry-safe attempt gets a third of the time left (at least 8 s, so a healthy model
     // can still answer) and then yields to the next provider.
-    const attempted = await this.tasks.attemptedTargets(claim.id);
+    const attempted = tried ? [...tried, executor.id] : await this.tasks.attemptedTargets(claim.id);
     const slice = Math.max(8000, Math.floor(remaining / 3));
     const sliced =
       executor.retrySafe &&
@@ -224,10 +229,10 @@ export class ActionGateway {
         });
         let responded = false;
         try {
+          const report = (update: Progress) => this.tasks.report(claim.id, update);
           const received = ResultSchema.parse(
-            await executor.execute(claim, combined, (update) =>
-              this.tasks.report(claim.id, update),
-            ),
+            await (this.tasks.adopt(claim.id, executor.id, claim.spec.objective, combined) ??
+              executor.execute(claim, combined, report)),
           );
           responded = true;
           const result = ResultSchema.parse({
@@ -272,12 +277,12 @@ export class ActionGateway {
               : executor.retrySafe || executor.outcomeObservable
                 ? "FAILED"
                 : null;
-            await tx.query("UPDATE actions SET status=$2,result=$3 WHERE id=$1", [
+            await write(tx, "UPDATE actions SET status=$2,result=$3 WHERE id=$1", [
               action.id,
               verified ? "SUCCEEDED" : outcome ? "FAILED" : "EXECUTING",
               JSON.stringify(result),
             ]);
-            await tx.query("UPDATE tasks SET result=$2 WHERE id=$1", [
+            await write(tx, "UPDATE tasks SET result=$2 WHERE id=$1", [
               task.id,
               JSON.stringify(result),
             ]);
@@ -333,15 +338,17 @@ export class ActionGateway {
                   (error.retryable || providerBound.has(error.kind)))) &&
               task.calls < task.spec.budget.maxCalls &&
               task.spec.providers.some((p) => !targets.includes(p));
-            if (safe) await tx.query("UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
+            if (safe)
+              await write(tx, "UPDATE actions SET status='FAILED' WHERE id=$1", [action.id]);
             // The fallback is always another provider; a waiting operator gets it at once.
             if (fallback && task.spec.lane !== "interactive")
-              await tx.query("UPDATE tasks SET not_before=$2 WHERE id=$1", [
+              await this.tasks.defer(
+                tx,
                 task.id,
                 Date.now() +
                   Math.min(30_000, 500 * 2 ** task.calls) +
                   Math.floor(Math.random() * 250),
-              ]);
+              );
             await this.tasks.event(tx, task, "execution.failed", {
               actionId: action.id,
               kind: error instanceof ProviderFailure ? error.kind : "internal-or-transport",

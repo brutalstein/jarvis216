@@ -336,17 +336,22 @@ function Stop-Docker($State,[string]$Name,$Config) {
   [void]$State.docker.Remove($Name)
   Write-State $State
 }
+# Docker PostgreSQL only for a localhost DATABASE_URL; a hosted database needs no container.
+function Local-Database($Config) { return (Value $Config 'DATABASE_URL') -match '@(127\.0\.0\.1|localhost):([0-9]+)/' }
 function Validate-Config($Config) {
-  foreach ($key in @('POSTGRES_PASSWORD','DATABASE_URL','JARVIS_TOKEN')) {
+  foreach ($key in @('DATABASE_URL','JARVIS_TOKEN')) {
     if (-not (Value $Config $key)) { Die 'ENV_INCOMPLETE' "Set required $key in .env." }
   }
   $db=Value $Config 'DATABASE_URL'
   if ($db -notmatch '^postgres(ql)?://') { Die 'DATABASE_URL_INVALID' 'Expected PostgreSQL connection string; value omitted.' }
-  if ($db -notmatch '@(127\.0\.0\.1|localhost):([0-9]+)/') {
-    Die 'DATABASE_ADDRESS' 'This manager requires PostgreSQL on a localhost TCP port.'
-  }
-  if ([int]$Matches[2] -ne [int](Value $Config 'POSTGRES_HOST_PORT' '55432')) {
-    Die 'POSTGRES_PORT_MISMATCH' 'DATABASE_URL port and POSTGRES_HOST_PORT differ.'
+  if (Local-Database $Config) {
+    if (-not (Value $Config 'POSTGRES_PASSWORD')) { Die 'ENV_INCOMPLETE' 'Set required POSTGRES_PASSWORD in .env.' }
+    $null=$db -match '@(127\.0\.0\.1|localhost):([0-9]+)/'
+    if ([int]$Matches[2] -ne [int](Value $Config 'POSTGRES_HOST_PORT' '55432')) {
+      Die 'POSTGRES_PORT_MISMATCH' 'DATABASE_URL port and POSTGRES_HOST_PORT differ.'
+    }
+  } elseif ($db -notmatch '[?&]sslmode=verify-full(&|$)') {
+    Die 'DATABASE_ADDRESS' 'A hosted PostgreSQL (Supabase) needs sslmode=verify-full; Docker PostgreSQL needs localhost.'
   }
   if ((Enabled $Config 'ENABLE_BROWSER') -and -not (Enabled $Config 'BROWSER_EGRESS_VERIFIED')) {
     Die 'BROWSER_NOT_ATTESTED' 'Legacy browser worker needs verified network egress isolation. Do not set verified=true without checking.'
@@ -432,7 +437,7 @@ try {
     Validate-Config $config
     Require-Command node 'Install Node 24 and add it to PATH.'
     Require-Command npm 'Install npm with Node.'
-    Require-Command docker 'Install Docker Desktop.'
+    if (Local-Database $config) { Require-Command docker 'Install Docker Desktop.' }
     Say 'OK' 'Local .env and prerequisites checked; remote provider login not tested.'
     if (-not (Test-Path (Join-Path $root 'dist\main.js'))) { Say 'WARN' 'Core not built; Start will run npm run build.' }
     if ($WithDesktop -and -not (Test-Path (Join-Path $root 'apps\desktop\node_modules\electron\dist\electron.exe'))) {
@@ -481,7 +486,9 @@ try {
   if (-not $coreExternal -and (Test-Port $port) -and -not (Process-Alive $state 'core')) {
     Die 'CORE_PORT_BUSY' "Port $port is occupied by an unknown/unhealthy process; refusing to start a duplicate."
   }
-  if (-not $coreExternal -and -not (Process-Alive $state 'core')) {
+  if (-not (Local-Database $config)) {
+    Say 'INFO' 'Hosted PostgreSQL in DATABASE_URL; no Docker container needed.'
+  } elseif (-not $coreExternal -and -not (Process-Alive $state 'core')) {
     Start-Docker $state 'postgres' $config
   } else { Say 'INFO' 'Core already online/managed; leaving PostgreSQL lifecycle alone.' }
   if (Enabled $config 'ENABLE_OPENCLAW') {

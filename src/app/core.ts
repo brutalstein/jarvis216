@@ -1,10 +1,10 @@
 import { catalog, parseSnapshot, screenSummary } from "@jarvis/action-engine";
 import { Brain } from "@jarvis/brain";
 import type { FastifyInstance } from "fastify";
-import { type Executor, terminal } from "../core/contracts.js";
+import { type Executor, type Task, terminal } from "../core/contracts.js";
 import { type Database, migrate } from "../core/database.js";
 import { loadObservations, purgeObservations } from "../core/reliability.js";
-import type { ProviderRegistry } from "../core/routing.js";
+import type { Provider, ProviderRegistry } from "../core/routing.js";
 import { EnvSecrets } from "../core/security.js";
 import { type Lane, type TaskChange, TaskService } from "../core/tasks.js";
 import { Worker } from "../core/worker.js";
@@ -131,32 +131,82 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       redact: (text) => secrets.redact(text),
       retrySafe: (target) => registry.retrySafe(target),
       ...(outbox && { outbox: { principals: ["n8n"] } }),
+      admitted: (task) => speculate(task),
     });
+    // A spoken turn's model call starts the moment its task is admitted, so the claim and the
+    // write-ahead intent travel to the database while the model thinks; the gateway adopts the
+    // call. Only where the gateway would run it at once and a stray call harms nothing:
+    // retry-safe LOW-risk text generation, no approval and no data the provider may not see.
+    const speculate = (task: Task) => {
+      if (
+        task.spec.capability !== "text.generate" ||
+        tasks.laneOf(task) !== "interactive" ||
+        task.spec.risk !== "LOW"
+      )
+        return;
+      let provider: Provider;
+      try {
+        provider = registry.choose(task, []).provider;
+      } catch {
+        return;
+      }
+      const external = provider.external;
+      if (
+        !provider.retrySafe ||
+        (provider.riskFloor ?? "LOW") !== "LOW" ||
+        (external && task.spec.privacy === "local-only") ||
+        (external && task.spec.privacy === "private" && !provider.trustedForPrivate)
+      )
+        return;
+      tasks.speculate(task, provider.id, (signal) =>
+        provider.execute(task, signal, (update) => tasks.report(task.id, update)),
+      );
+    };
     await tasks.recover();
+    // Every task change wakes the workers (onChange below) and backoffs wake them on time, so
+    // the polls are only a safety net: an idle Core sends almost nothing to a remote database.
     const worker = (serve?: readonly Lane[]) =>
-      new Worker(tasks, registry, (text) => secrets.redact(text), {}, permissions, serve);
+      new Worker(
+        tasks,
+        registry,
+        (text) => secrets.redact(text),
+        { idleMs: 60_000, recoverMs: 60_000 },
+        permissions,
+        serve,
+        // A claim may leave more work behind: the next worker looks, so a burst spreads.
+        () => wake(serve?.length === 1 ? serve[0] : "background"),
+      );
     // General workers take either lane; the interactive ones stay free for spoken turns.
     const workers = [
       ...Array.from({ length: config.WORKER_CONCURRENCY }, () => worker()),
       ...Array.from({ length: config.INTERACTIVE_CONCURRENCY }, () => worker(["interactive"])),
     ];
-    const wake = () => {
-      for (const worker of workers) worker.wake();
+    const general = workers.filter((w) => w.serve.includes("background"));
+    const interactive = workers.filter((w) => !w.serve.includes("background"));
+    // One worker per wake, not all of them: the rest would only queue on the scheduler lock,
+    // each claim costing round trips to a remote database. A worker already about to claim
+    // takes the wake, so repeated wakes for one task cost one claim.
+    const wake = (lane: Lane = "background") => {
+      const group = lane === "interactive" && interactive.length ? interactive : general;
+      (group.find((w) => w.state === "claiming") ?? group.find((w) => w.state === "idle"))?.wake();
     };
     const onCancel = (id: string) => {
       for (const worker of workers) worker.cancel(id);
     };
-    // A task that became claimable (admitted, approved, resumed) or settled (unblocking its
-    // dependents) wakes idle workers at once.
-    const onChange = ({ id, status }: TaskChange) => {
+    // A task that became claimable (admitted, approved, resumed) wakes a worker of its lane at
+    // once; a settled one may unblock dependents, which spoken turns never have.
+    const onChange = ({ id, status, lane }: TaskChange) => {
       if (status === "CANCELLED" || status === "RECOVERY_REQUIRED") onCancel(id);
-      if (status === "READY" || terminal.has(status)) wake();
+      if (status === "READY") wake(lane);
+      else if (terminal.has(status) && lane !== "interactive") wake();
     };
+    // Services wake after their own task writes; those commits already woke a worker above.
+    const alreadyWoken = () => {};
     tasks.changes.on("change", onChange);
     const providers = conversationProviders(registry.list().map((p) => (p as { id: string }).id));
     const plans = new PlanService({
       tasks,
-      wake,
+      wake: alreadyWoken,
       onCancel,
       conversationProviders: providers,
       privateProviders: providers.filter(
@@ -204,7 +254,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
     });
     const conversation = new ConversationService(tasks, {
       providers,
-      wake,
+      wake: alreadyWoken,
       plans,
       memory,
       brain,
@@ -220,7 +270,7 @@ export async function createCore(config: Config, options: CoreOptions): Promise<
       operatorToken: config.JARVIS_TOKEN,
       webhookToken: config.N8N_INGRESS_TOKEN,
       onCancel,
-      onAdmit: wake,
+      onAdmit: alreadyWoken,
       capabilities: async () => ({
         actions: permissions
           .view()

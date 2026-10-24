@@ -4,7 +4,7 @@ import { coreSecret, launch } from "./helpers";
 test("isolated shell exposes only the bounded bridge and no Core token", async () => {
   const run = await launch();
   try {
-    await expect(run.page).toHaveTitle("JARVIS");
+    await expect(run.page).toHaveTitle("J.A.R.V.I.S");
     expect(await run.page.evaluate(() => typeof Reflect.get(window, "require"))).toBe("undefined");
     expect(await run.page.evaluate(() => Object.keys(window.jarvis).sort())).toEqual(
       [
@@ -20,6 +20,8 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
         "setListening",
         "mini",
         "restore",
+        "quit",
+        "boot",
       ].sort(),
     );
     expect(
@@ -37,7 +39,7 @@ test("isolated shell exposes only the bounded bridge and no Core token", async (
     expect(
       await run.app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()
-          .find((win) => win.getTitle() === "JARVIS")
+          .find((win) => win.getTitle() === "J.A.R.V.I.S")
           ?.webContents.getURL(),
       ),
     ).toMatch(/^file:/);

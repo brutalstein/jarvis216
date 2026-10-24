@@ -63,7 +63,8 @@ export class Outbox {
     void (async () => {
       while (!signal.aborted) {
         await this.deliverDue().catch(failed);
-        await delay(1000, undefined, { signal }).catch(() => {});
+        // Task changes trigger passes; this only picks up retries that came due.
+        await delay(15_000, undefined, { signal }).catch(() => {});
       }
     })();
   }
