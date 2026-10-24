@@ -192,6 +192,34 @@ describe("learning from conversation", () => {
     expect(prompts[1]).toContain("You just asked the operator");
   });
 
+  it("a confirmed guess teaches what the misheard words meant, not that yes opens it", async () => {
+    start();
+    responses.push({ ...open("Spotify"), confidence: 0.3 });
+    await say("Jarvis, spotifiyi aç");
+    responses.push(open("Spotify"));
+    await say("Evet");
+    const examples = await until(
+      () => brain.recall("Jarvis, spotifiyi aç"),
+      (found) => found.length > 0,
+    );
+    expect(examples[0]?.utterance).toBe("Jarvis, spotifiyi aç");
+    expect(examples[0]?.intent).toMatchObject({ kind: "plan", goal: "Spotify aç" });
+    expect(await brain.recall("Evet")).toEqual([]);
+  });
+
+  it("confirms its reading of words speech recognition doubted", async () => {
+    start();
+    responses.push({ ...open("Spotify"), confidence: 0.7 });
+    const doubtful = await conversation().turn({
+      utterance: "Jarvis, spotifiyi aç",
+      followUp: false,
+      uncertain: true,
+    });
+    expect(doubtful.say).toBe("Spotify aç: bunu mu istiyorsunuz, efendim?");
+    expect(doubtful.planId).toBeUndefined();
+    expect(prompts[0]).toContain("Speech recognition was unsure");
+  });
+
   it("learning off records nothing; reflexes off always deliberate", async () => {
     start();
     settings = { learning: false, reflexes: true };

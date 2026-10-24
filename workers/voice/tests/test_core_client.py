@@ -35,6 +35,20 @@ class CoreClientTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             json.loads(request.content), {"utterance": "Jarvis, orada mısın?", "followUp": True}
         )
+        await client.turn("Jarvis spotifiyi aç", follow_up=False, uncertain=True)
+        self.assertEqual(
+            json.loads(seen[1].content),
+            {"utterance": "Jarvis spotifiyi aç", "followUp": False, "uncertain": True},
+        )
+
+    async def test_vocabulary_is_the_learned_words_or_nothing(self) -> None:
+        learned = httpx.MockTransport(
+            lambda request: httpx.Response(200, json={"words": ["Ece", "Spotify", 3]})
+        )
+        client = CoreClient("http://127.0.0.1:2161", "secret", learned)
+        self.assertEqual(await client.vocabulary(), ["Ece", "Spotify"])
+        down = httpx.MockTransport(lambda request: httpx.Response(503, json={}))
+        self.assertEqual(await CoreClient("http://x", "s", down).vocabulary(), [])
 
     async def test_timeout_reply_is_none(self) -> None:
         client = CoreClient(

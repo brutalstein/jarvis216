@@ -14,6 +14,11 @@ from aiohttp import web
 
 from jarvis_voice.brain import Brain
 from jarvis_voice.enrollment import Enrollment
+from jarvis_voice.events import event
+from jarvis_voice.speaker import DEFAULT_THRESHOLD
+
+# How often the session asks Core for the operator's learned vocabulary.
+VOCABULARY_EVERY_S = 600.0
 
 
 def create_app(token: str, enrollment: Enrollment) -> web.Application:
@@ -202,6 +207,7 @@ def create_app(token: str, enrollment: Enrollment) -> web.Application:
                             f"VOICE_PIPELINE_FAILED: {type(error).__name__}: {error}",
                             file=sys.stderr,
                         )
+                        event("pipeline.failed", error=type(error).__name__)
 
                 task.add_done_callback(finished)
 
@@ -285,8 +291,19 @@ async def run_session(
     )
     stt = GatedSTT(enrollment)
     tts = BilingualTTS()
+
+    async def learn_vocabulary() -> None:
+        # What the operator taught Core so far, again every few minutes as they keep talking.
+        while True:
+            stt.vocabulary = await core.vocabulary()
+            await asyncio.sleep(VOCABULARY_EVERY_S)
+
     # Models warm up while the operator is still getting ready to speak.
-    warming = [asyncio.create_task(stt.warm_up()), asyncio.create_task(tts.warm_up())]
+    warming = [
+        asyncio.create_task(stt.warm_up()),
+        asyncio.create_task(tts.warm_up()),
+        asyncio.create_task(learn_vocabulary()),
+    ]
     pipeline = Pipeline(
         [
             transport.input(),
@@ -311,6 +328,7 @@ async def run_session(
 
     @worker.event_handler("on_pipeline_started")  # type: ignore[untyped-decorator]
     async def started(*args: Any) -> None:
+        event("session.started", enrolled=enrollment.gate.enrolled())
         set_brain(brain)
 
     runner = WorkerRunner(handle_sigint=False)
@@ -318,6 +336,7 @@ async def run_session(
         await runner.add_workers(worker)
         await runner.run()
     finally:
+        event("session.ended")
         set_brain(None)
         for task in warming:
             task.cancel()
@@ -331,8 +350,14 @@ async def main() -> None:
     # Vendor debug logs include transcripts. Keep them out of persistent process logs.
     logger.remove()
     logger.add(sys.stderr, level="ERROR", format="{message}")
+    # Vendor errors reach voice.log by origin only: their messages may quote speech.
+    logger.add(
+        lambda message: event("vendor.error", origin=message.record["name"]),
+        level="ERROR",
+    )
     enrollment = Enrollment(
-        Path(os.environ["VOICE_DATA_DIR"]), float(os.environ.get("VOICE_SPEAKER_THRESHOLD", "0.7"))
+        Path(os.environ["VOICE_DATA_DIR"]),
+        float(os.environ.get("VOICE_SPEAKER_THRESHOLD") or DEFAULT_THRESHOLD),
     )
     runner = web.AppRunner(create_app(os.environ["VOICE_TOKEN"], enrollment), access_log=None)
     await runner.setup()

@@ -1,7 +1,7 @@
 """Local STT after semantic end-of-turn and speaker verification. No audio is persisted."""
 
 import asyncio
-import json
+import re
 import time
 from collections import deque
 from collections.abc import AsyncGenerator
@@ -10,8 +10,10 @@ from typing import Any
 
 import numpy as np
 import torch  # noqa: F401 -- load bundled CUDA DLLs before faster-whisper
+from numpy.typing import NDArray
 from pipecat.frames.frames import (
     Frame,
+    InputAudioRawFrame,
     TranscriptionFrame,
     UserStoppedSpeakingFrame,
     VADUserStoppedSpeakingFrame,
@@ -19,8 +21,45 @@ from pipecat.frames.frames import (
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.services.whisper.stt import WhisperSTTService
 
+from jarvis_voice.addressee import fold, is_named
 from jarvis_voice.enrollment import Enrollment
+from jarvis_voice.events import event
 from jarvis_voice.speaker import embed
+
+
+def bandwidth(samples: NDArray[np.float32], rate: int) -> int:
+    """Frequency under which 99% of the energy lies: ~3.4 kHz from a Bluetooth hands-free mic."""
+    power = np.abs(np.fft.rfft(samples)) ** 2
+    total = power.sum()
+    if not total:
+        return 0
+    edge = int(np.searchsorted(np.cumsum(power) / total, 0.99))
+    return int(np.fft.rfftfreq(len(samples), 1 / rate)[min(edge, len(power) - 1)])
+
+
+# What Whisper writes for silence, noise or music: subtitle credits from its training data.
+HALLUCINATIONS = frozenset(
+    {
+        "izlediğiniz için teşekkür ederim",
+        "izlediğiniz için teşekkürler",
+        "abone olmayı unutmayın",
+        "beğenmeyi ve abone olmayı unutmayın",
+        "thank you for watching",
+        "thanks for watching",
+        "please subscribe",
+    }
+)
+
+
+def hallucinated(text: str) -> bool:
+    words = re.sub(r"[^\w\s]", " ", fold(text)).split()
+    phrase = " ".join(words)
+    return phrase in HALLUCINATIONS or phrase.startswith(("altyazı", "subtitles by"))
+
+
+# How often voice.log says how much microphone audio arrived and how loud it peaked: a silent
+# log then tells a missing microphone apart from a quiet room.
+LEVEL_EVERY_S = 60.0
 
 
 class GatedSTT(WhisperSTTService):  # type: ignore[misc]
@@ -34,6 +73,12 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
         self.enrollment = enrollment
         self.speech_end = time.monotonic()
         self.segment_timing: deque[tuple[float, float]] = deque()
+        # The operator's names and places, learned by Core from their turns; refreshed by the
+        # session. Whisper takes them as its prompt so it spells them as the operator does.
+        self.vocabulary: list[str] = []
+        self.audio_frames = 0
+        self.audio_peak = 0
+        self.level_at = time.monotonic()
 
     async def _handle_user_stopped_speaking(self, frame: VADUserStoppedSpeakingFrame) -> None:
         # Pipecat queues audio separately from inference; keep provenance in the same FIFO order.
@@ -57,7 +102,20 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
         with suppress(Exception):
             await asyncio.to_thread(run)
 
+    def measure(self, audio: bytes) -> None:
+        samples = np.frombuffer(audio, dtype=np.int16)
+        self.audio_frames += 1
+        if samples.size:
+            self.audio_peak = max(self.audio_peak, int(np.abs(samples.astype(np.int32)).max()))
+        now = time.monotonic()
+        if now - self.level_at >= LEVEL_EVERY_S:
+            peak = 20 * np.log10(max(self.audio_peak, 1) / 32768)
+            event("audio.level", frames=self.audio_frames, peakDb=round(float(peak), 1))
+            self.audio_frames, self.audio_peak, self.level_at = 0, 0, now
+
     async def process_frame(self, frame: Frame, direction: FrameDirection) -> None:
+        if isinstance(frame, InputAudioRawFrame):
+            self.measure(frame.audio)
         # Smart Turn ends the segment; a brief VAD pause must not launch a model call.
         if isinstance(frame, VADUserStoppedSpeakingFrame):
             self.speech_end = time.monotonic() - frame.stop_secs
@@ -74,6 +132,9 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
         )
         speaker_ms = 0
         enrollment = self.enrollment
+        event("stt.segment", seconds=round(len(audio) / (self.sample_rate * 2), 2))
+        vector = None
+        verified = False
         if enrollment.active or enrollment.gate.enrolled():
             vector = await asyncio.to_thread(embed, audio, self.sample_rate)
             speaker_ms = round((time.monotonic() - started) * 1000)
@@ -84,25 +145,60 @@ class GatedSTT(WhisperSTTService):  # type: ignore[misc]
                     enrollment.seconds += len(audio) / (self.sample_rate * 2)
                 return
             similarity = enrollment.gate.similarity(vector)
-            print(
-                json.dumps({"event": "speaker.score", "similarity": round(similarity, 3)}),
-                flush=True,
-            )
-            if not enrollment.gate.accepts(vector):
-                return
+            verified = similarity >= enrollment.gate.threshold
+            # Every segment is decoded: the operator's own "Jarvis, saat kaç?" scored 0.08-0.25
+            # on other microphones than the print's. Unverified speech passes only with the name.
+            event("speaker.score", similarity=round(similarity, 3), accepted=verified)
 
-        def transcribe() -> tuple[str, Any]:
+        def transcribe() -> tuple[str, Any, dict[str, Any]]:
             samples = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768
-            segments, info = self._model.transcribe(samples, language=None, hotwords="Jarvis")
-            text = " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6)
-            return text, info
+            # Measured on a Bluetooth hands-free mic (narrowband): Whisper's free pick heard
+            # "Jarvis, saat kaç?" as Urdu (Turkish not in its top five) and wrote "Javi Sattach".
+            # JARVIS is Turkish-first, so English needs a clear lead, and the name prompt turns
+            # "Yani saat kaç?" back into "Jarvis saat kaç?" without putting the name into
+            # silence, noise or speech that lacks it.
+            scores = dict(self._model.detect_language(samples)[2])
+            english = scores.get("en", 0.0)
+            language = "en" if english >= 0.5 and english > scores.get("tr", 0.0) else "tr"
+            prompt = ", ".join(["Jarvis", *self.vocabulary])
+            segments, info = self._model.transcribe(
+                samples, language=language, initial_prompt=prompt, hotwords="Jarvis"
+            )
+            # Whisper's own rule: skip only when it doubts both speech and words. The prompt
+            # alone raised no_speech_prob to 0.81 on clear speech.
+            kept = [s for s in segments if not (s.no_speech_prob >= 0.6 and s.avg_logprob < -1.0)]
+            text = " ".join(s.text.strip() for s in kept)
+            detail = {
+                "tr": round(scores.get("tr", 0.0), 3),
+                "en": round(english, 3),
+                "bandwidthHz": bandwidth(samples, self.sample_rate),
+                "noSpeech": round(max((s.no_speech_prob for s in kept), default=0.0), 2),
+                "logprob": round(min((s.avg_logprob for s in kept), default=0.0), 2),
+            }
+            return text, info, detail
 
         decoding = time.monotonic()
-        text, info = await asyncio.to_thread(transcribe)
+        text, info, detail = await asyncio.to_thread(transcribe)
         completed = time.monotonic()
+        event(
+            "stt.text",
+            chars=len(text),
+            language=str(info.language),
+            decodeMs=round((completed - decoding) * 1000),
+            **detail,
+        )
+        if text and hallucinated(text):
+            event("stt.hallucination", chars=len(text))
+            return
         if text:
+            if vector is not None and is_named(text):
+                # Whoever calls JARVIS by name is taken as the operator on this microphone, so
+                # their unnamed follow-ups verify even when the print came from another one.
+                enrollment.gate.adapt(vector)
             frame = TranscriptionFrame(text, "operator", "", language=info.language, finalized=True)
             frame.metadata.update(
+                verified=verified,
+                logprob=detail["logprob"],
                 speechEnd=speech_end,
                 turnEndMs=round(max(0, queued - speech_end) * 1000),
                 segmentQueueMs=round(max(0, started - queued) * 1000),

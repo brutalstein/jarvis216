@@ -26,8 +26,12 @@ token. It launches an authenticated loopback voice service automatically and ter
 process tree on exit. Provider credentials are never copied into the desktop directory or voice
 child environment. The voice models live in the gitignored `data/voice/models`.
 
-`VOICE_SPEAKER_THRESHOLD` (default `0.7`), when set before launch, is passed to the voice
-service for calibration with the operator's microphone.
+Core exits on an uncaught exception (logging the error's name and code frames, never its
+message); the app restarts it after 2 s, doubling up to a minute while it keeps failing.
+
+`VOICE_SPEAKER_THRESHOLD` (default `0.25`) in the operator `.env` is passed to the voice
+service for calibration with the operator's microphone; each speaker score is written to
+`data/voice/voice.log` in the checkout.
 
 ## Use
 
@@ -38,8 +42,8 @@ service for calibration with the operator's microphone.
   produces a retryable error, not an installation.
 
 - Say “Jarvis” (Turkish spelling variations are accepted), then speak normally. Without a voice
-  print, the assistant requires its name. With a print, an eight-second
-  follow-up window opens after each reply.
+  print, the assistant requires its name. With a print, once addressed it keeps listening to
+  your voice without the name while it works or speaks and for eight seconds after.
 - Settings (gear, top right) → **Sesimi tanıt**: read the rotating sentences aloud while the line
   fills; **Tamamla** unlocks after 25 of 30 seconds. **Vazgeç**, or closing the sheet, cancels and
   returns the service to listening. Only an embedding is saved, never a recording. **Ses izini

@@ -19,6 +19,7 @@ import type { MemoryStore } from "./memory.js";
 import type { BrainSettings } from "./permissions.js";
 import { conversationPromptParts } from "./persona.js";
 import type { PlanService, PlanView } from "./plans/index.js";
+import { vocabulary } from "./vocabulary.js";
 
 export const DisplayBlockSchema = z.discriminatedUnion("type", [
   z.strictObject({
@@ -142,6 +143,12 @@ export function conversationProviders(ids: string[]): string[] {
 }
 
 const conversationTasks = "principal='operator' AND idempotency_key LIKE 'conversation:%'";
+// A short yes to the question JARVIS asked: "Evet", "Aynen öyle", "Jarvis, doğru".
+const confirms = (utterance: string) =>
+  utterance.trim().split(/\s+/u).length <= 4 &&
+  /^(?:[jcç][ae]rv[iı]s\S*[\s,]*)?(?:evet|aynen|doğru|tabii|tabi|olur|yes|yeah|yep|right|correct|exactly)(?![\p{L}])/iu.test(
+    utterance.trim(),
+  );
 // Learning is best-effort: a failing brain store never costs the operator a turn.
 async function learned(work: () => Promise<unknown>): Promise<void> {
   try {
@@ -188,7 +195,7 @@ export class ConversationService {
   //    examples, one repair, then policy (turned-off actions, low confidence) and the plan;
   // 5. learning: the request and, later, its plan's outcome become experience.
   async turn(
-    input: { utterance: string; followUp: boolean },
+    input: { utterance: string; followUp: boolean; uncertain?: boolean },
     signal?: AbortSignal,
   ): Promise<TurnResult> {
     signal?.throwIfAborted();
@@ -296,10 +303,12 @@ export class ConversationService {
       } else if (
         reply.addressed &&
         decision?.kind === "plan" &&
-        decision.confidence !== undefined &&
-        decision.confidence < 0.5
+        (input.uncertain
+          ? (decision.confidence ?? 0) < 0.8
+          : decision.confidence !== undefined && decision.confidence < 0.5)
       ) {
-        // Unsure what was meant: ask before acting. The answer comes back as a clarification.
+        // Unsure what was meant, or the words may be misheard and the model is not sure of its
+        // reading: ask before acting. The answer comes back as a clarification.
         reply.say = narrate({ type: "confirm", goal: decision.goal }, reply.lang);
         reply.display = [];
         reply.intent = { kind: "clarify", goal: decision.goal };
@@ -326,8 +335,18 @@ export class ConversationService {
           return this.#finish(id, started, input, taskId, reply, provider, learning, undefined);
         }
         planId = view.id;
+        // "Evet" to "Spotify'ı açmamı mı istediniz?" teaches what the words JARVIS asked about
+        // meant, as this operator's voice reaches the recognizer, not that "evet" opens Spotify.
+        const meant =
+          working?.askedAbout && confirms(input.utterance) ? working.askedAbout : input.utterance;
+        if (learning && meant !== input.utterance) {
+          // Answered: the misheard words now teach the plan, not to ask the same question again.
+          const asked = learning.latest(120_000);
+          if (asked?.intent.kind === "clarify" && asked.utterance === meant)
+            await learned(() => learning.outcome(asked.id, "corrected"));
+        }
         // Learn before narrating: a quick plan may finish while the reply waits for it.
-        await this.#learnPlan(learning, input.utterance, reply.lang, view.id, "model", {
+        await this.#learnPlan(learning, meant, reply.lang, view.id, "model", {
           kind: "plan",
           goal: decision.goal,
           steps: decision.steps.map(({ action, args, when }) => ({
@@ -574,6 +593,16 @@ export class ConversationService {
       "INSERT INTO conversation_turns(id,created_at,utterance,follow_up,task_id,reply,provider) VALUES($1,$2,$3,$4,$5,$6,$7)",
       [id, started, input.utterance, input.followUp, taskId, JSON.stringify(reply), provider],
     );
+  }
+
+  // The operator's names and places, for the voice service to expect (see vocabulary.ts).
+  // Long-term notes count double: they are facts the operator confirmed.
+  async vocabulary(): Promise<string[]> {
+    const turns = await this.tasks.db.query<{ utterance: string }>(
+      "SELECT utterance FROM conversation_turns ORDER BY created_at DESC LIMIT 500",
+    );
+    const notes = (await this.options.memory?.promptNotes()) ?? [];
+    return vocabulary([...turns.rows.map((turn) => turn.utterance), ...notes, ...notes]);
   }
 
   async list(limit: number): Promise<TurnRecord[]> {

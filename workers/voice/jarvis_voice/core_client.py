@@ -33,11 +33,13 @@ class CoreClient:
             transport=transport,
         )
 
-    async def turn(self, utterance: str, follow_up: bool) -> Turn | None:
+    async def turn(self, utterance: str, follow_up: bool, uncertain: bool = False) -> Turn | None:
+        body: dict[str, Any] = {"utterance": utterance, "followUp": follow_up}
+        if uncertain:
+            # Speech recognition doubted these words; Core confirms what it understood.
+            body["uncertain"] = True
         try:
-            response = await self.http.post(
-                "/v1/conversation/turns", json={"utterance": utterance, "followUp": follow_up}
-            )
+            response = await self.http.post("/v1/conversation/turns", json=body)
         except httpx.HTTPError:
             return None
         if response.status_code != 200:
@@ -48,3 +50,12 @@ class CoreClient:
             return Turn(**{f.name: data[f.name] for f in fields(Turn)})
         except (ValueError, KeyError, TypeError):
             return None
+
+    async def vocabulary(self) -> list[str]:
+        """The operator's names and places Core learned from their turns; empty on any failure."""
+        try:
+            response = await self.http.get("/v1/conversation/vocabulary")
+            words = response.json()["words"] if response.status_code == 200 else []
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            return []
+        return [word for word in words if isinstance(word, str)][:40]

@@ -31,6 +31,8 @@ export type WorkingMemory = {
   last?: { goal: string; status: PlanStatus; say: string | null; agoMs: number };
   entities: string[];
   asked?: string;
+  // What the operator said that JARVIS asked about, as speech recognition heard it.
+  askedAbout?: string;
 };
 export type PlanView = {
   id: string;

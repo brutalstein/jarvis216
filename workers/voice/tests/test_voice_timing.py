@@ -9,12 +9,14 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+import numpy as np
 from pipecat.frames.frames import VADUserStoppedSpeakingFrame
 from pipecat.services.whisper.stt import WhisperSTTService
 
 from jarvis_voice.brain import Brain
 from jarvis_voice.core_client import Turn
 from jarvis_voice.enrollment import Enrollment
+from jarvis_voice.speaker import DEFAULT_THRESHOLD
 from jarvis_voice.stt_gated import GatedSTT
 from jarvis_voice.tts import BilingualTTS
 
@@ -30,7 +32,7 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
         loop = asyncio.get_running_loop()
         done = loop.call_later(0.1, brain.filler_done.set)
         try:
-            await brain.reply("Jarvis", False, 0)
+            await brain.reply("Jarvis saat kaç", False, 0)
         finally:
             done.cancel()
         timing = brain.push_frame.call_args.args[0].metadata
@@ -42,10 +44,11 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
             stt = GatedSTT(Enrollment(Path(directory), 0.7))
             stt._sample_rate = 16000
             stt._model = SimpleNamespace(
+                detect_language=lambda *args, **kwargs: ("tr", 0.9, [("tr", 0.9)]),
                 transcribe=lambda *args, **kwargs: (
-                    [SimpleNamespace(text="Jarvis", no_speech_prob=0)],
+                    [SimpleNamespace(text="Jarvis", no_speech_prob=0, avg_logprob=0)],
                     SimpleNamespace(language="tr"),
-                )
+                ),
             )
             for ended in [time.monotonic() - 2, time.monotonic() - 1]:
                 stt.speech_end = ended
@@ -61,6 +64,107 @@ class VoiceTimingTest(unittest.IsolatedAsyncioTestCase):
             for frame in frames:
                 self.assertGreaterEqual(frame.metadata["segmentQueueMs"], 0)
                 self.assertGreaterEqual(frame.metadata["transcribeMs"], 0)
+
+    async def decode(self, probabilities, segments, voice=None, vocabulary=()):
+        """One segment through GatedSTT with a fake Whisper; returns (calls, frames, stt).
+
+        With `voice`, the gate holds the print [1, 0] and the segment embeds as `voice`.
+        """
+        calls = []
+
+        def transcribe(*args, **kwargs):
+            calls.append(kwargs)
+            return segments, SimpleNamespace(language=kwargs["language"])
+
+        with tempfile.TemporaryDirectory() as directory, patch.object(WhisperSTTService, "_load"):
+            stt = GatedSTT(Enrollment(Path(directory), 0.7))
+            stt._sample_rate = 16000
+            stt._model = SimpleNamespace(
+                detect_language=lambda *args, **kwargs: ("", 0.0, probabilities),
+                transcribe=transcribe,
+            )
+            stt.vocabulary = list(vocabulary)
+            if voice is not None:
+                stt.enrollment.gate.threshold = DEFAULT_THRESHOLD
+                stt.enrollment.gate.enroll([np.array([1.0, 0.0])])
+            with patch("jarvis_voice.stt_gated.embed", return_value=np.array(voice or [1.0, 0.0])):
+                frames = [frame async for frame in stt.run_stt(bytes(3200))]
+        return calls, frames, stt
+
+    async def test_narrowband_turkish_decodes_as_turkish_with_the_name_prompt(self) -> None:
+        # A Bluetooth hands-free "Jarvis, saat kaç?": Urdu 0.71, English 0.05, Turkish not in
+        # the top five. Free decoding wrote "Javi Sattach"; Turkish with the name prompt wrote
+        # "Jarvis saat kaç?".
+        speech = SimpleNamespace(text="Jarvis saat kaç?", no_speech_prob=0.0, avg_logprob=-0.74)
+        calls, frames, _ = await self.decode([("ur", 0.71), ("pt", 0.05), ("en", 0.046)], [speech])
+        self.assertEqual(calls[0]["language"], "tr")
+        self.assertEqual(calls[0]["initial_prompt"], "Jarvis")
+        self.assertEqual(frames[0].text, "Jarvis saat kaç?")
+
+    async def test_the_learned_vocabulary_joins_the_name_in_whispers_prompt(self) -> None:
+        speech = SimpleNamespace(text="Jarvis, Ece'yi ara", no_speech_prob=0.0, avg_logprob=-0.4)
+        calls, _, _ = await self.decode([("tr", 0.9)], [speech], vocabulary=["Ece", "Kadıköy"])
+        self.assertEqual(calls[0]["initial_prompt"], "Jarvis, Ece, Kadıköy")
+
+    async def test_english_needs_a_clear_lead(self) -> None:
+        speech = SimpleNamespace(
+            text="Jarvis, what time is it?", no_speech_prob=0.0, avg_logprob=-0.3
+        )
+        calls, _, _ = await self.decode([("en", 0.93), ("tr", 0.02)], [speech])
+        self.assertEqual(calls[0]["language"], "en")
+        calls, _, _ = await self.decode([("en", 0.41), ("tr", 0.3)], [speech])
+        self.assertEqual(calls[0]["language"], "tr")
+
+    async def test_drops_a_segment_only_when_whisper_doubts_both_speech_and_words(self) -> None:
+        # The name prompt raised no_speech_prob to 0.81 on clear speech (avg_logprob -0.21).
+        kept = SimpleNamespace(text="Jarvis bugün", no_speech_prob=0.81, avg_logprob=-0.21)
+        dropped = SimpleNamespace(text="Altyazı M.K.", no_speech_prob=0.9, avg_logprob=-1.4)
+        _, frames, _ = await self.decode([("tr", 0.9)], [kept, dropped])
+        self.assertEqual(frames[0].text, "Jarvis bugün")
+
+    async def test_an_unverified_voice_is_still_decoded_so_its_name_can_pass(self) -> None:
+        # The operator's own "Jarvis, saat kaç?" scored 0.08-0.25 on microphones other than
+        # the print's and was dropped before decoding. Now it is decoded, marked unverified,
+        # and only the name lets it reach Core.
+        speech = SimpleNamespace(text="Jarvis saat kaç?", no_speech_prob=0.0, avg_logprob=-0.5)
+        for voice in ([0.22, 0.975], [0.05, 0.999]):
+            calls, frames, stt = await self.decode([("tr", 0.9)], [speech], voice=voice)
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(frames[0].text, "Jarvis saat kaç?")
+            self.assertFalse(frames[0].metadata["verified"])
+            # Calling JARVIS by name teaches the gate this microphone's version of the voice.
+            self.assertEqual(len(stt.enrollment.gate.channels), 1)
+
+    async def test_reports_how_much_microphone_audio_arrived_each_minute(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, patch.object(WhisperSTTService, "_load"):
+            stt = GatedSTT(Enrollment(Path(directory), 0.7))
+            with patch("jarvis_voice.stt_gated.event") as event:
+                stt.measure(np.array([0, 16384, -100], dtype=np.int16).tobytes())
+                event.assert_not_called()
+                stt.level_at -= 61
+                stt.measure(np.zeros(160, dtype=np.int16).tobytes())
+            event.assert_called_once_with("audio.level", frames=2, peakDb=-6.0)
+            self.assertEqual((stt.audio_frames, stt.audio_peak), (0, 0))
+
+    async def test_whispers_subtitle_credits_for_noise_are_dropped(self) -> None:
+        noise = SimpleNamespace(
+            text=" İzlediğiniz için teşekkür ederim.", no_speech_prob=0.0, avg_logprob=-0.3
+        )
+        _, frames, _ = await self.decode([("tr", 0.9)], [noise])
+        self.assertEqual(frames, [])
+        thanks = SimpleNamespace(text="Teşekkür ederim.", no_speech_prob=0.0, avg_logprob=-0.3)
+        _, frames, _ = await self.decode([("tr", 0.9)], [thanks])
+        self.assertEqual(frames[0].text, "Teşekkür ederim.")
+
+    async def test_a_verified_named_turn_adapts_the_print(self) -> None:
+        speech = SimpleNamespace(text="Jarvis saat kaç?", no_speech_prob=0.0, avg_logprob=-0.5)
+        _, frames, stt = await self.decode([("tr", 0.9)], [speech], voice=[0.5, 0.866])
+        self.assertTrue(frames[0].metadata["verified"])
+        self.assertEqual(len(stt.enrollment.gate.channels), 1)
+        unnamed = SimpleNamespace(text="saat kaç?", no_speech_prob=0.0, avg_logprob=-0.5)
+        _, frames, stt = await self.decode([("tr", 0.9)], [unnamed], voice=[0.5, 0.866])
+        self.assertTrue(frames[0].metadata["verified"])
+        self.assertFalse(stt.enrollment.gate.channels)
 
     async def test_synthesis_yields_first_chunk_without_waiting_for_the_rest(self) -> None:
         tts = object.__new__(BilingualTTS)
