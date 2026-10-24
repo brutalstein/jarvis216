@@ -1,13 +1,15 @@
 {
   "name": "jarvis-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "JARVIS operator desktop: presence, captions and display cards over the local voice service.",
   "author": "brutalstein",
   "repository": "https://github.com/brutalstein/jarvis216",
   "main": "dist/main.cjs",
   "overrides": {
-    "@electron/get": { "global-agent": "4.1.3" }
+    "@electron/get": {
+      "global-agent": "4.1.3"
+    }
   },
   "scripts": {
     "build": "node build.mjs",
